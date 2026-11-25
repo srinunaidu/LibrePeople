@@ -151,6 +151,15 @@ class Settings(BaseSettings):
     OCI_CONFIG_FILE: str = "~/.oci/config"
     OCI_PROFILE: str = "DEFAULT"
 
+    # Object Storage (Cloudflare R2, S3-compatible) — for documents & offer
+    # letters. Selected with STORAGE_BACKEND=s3 plus all four R2_* values.
+    # The bucket is assumed private: reads go through signed URLs.
+    R2_ENDPOINT_URL: str | None = None
+    R2_BUCKET: str | None = None
+    R2_ACCESS_KEY_ID: str | None = None
+    R2_SECRET_ACCESS_KEY: str | None = None
+    R2_REGION: str = "auto"
+
     # Email delivery (LP-NOT-002) — provider selection for notifications.
     # "log" records the send in the logs (default, no SMTP needed);
     # "smtp" sends through any SMTP relay with the stdlib only (no vendor SDK).
