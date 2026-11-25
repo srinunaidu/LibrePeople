@@ -480,13 +480,13 @@ check("the shipped demo pack is a draft",
 check("the shipped demo pack is synthetic",
       "SYNTHETIC" in json.dumps(shipped).upper(),
       "the pack does not say it is synthetic")
-check("shipped packs verified are only us-standard-verified.json and in-standard.json (live IN)",
+check("shipped packs verified are only in-standard.json (live IN)",
       all(
-          path.name in ("us-standard-verified.json", "in-standard.json")
+          path.name in ("in-standard.json",)
           or json.loads(path.read_text()).get("status") != "verified"
           for path in SHIPPED_PACK_DIR.glob("*.json")
       ),
-      "a shipped pack other than us-standard-verified.json / in-standard.json is in the verified state")
+      "a shipped pack other than in-standard.json is in the verified state")
 expect_refusal(
     "the demo jurisdiction",
     [],
