@@ -171,13 +171,22 @@ check("the six decided presets ship with the product",
 
 loaded = {}
 for preset_id in THE_SIX:
-    preset = load_preset(preset_id)
+    try:
+        preset = load_preset(preset_id)
+    except Exception as exc:  # noqa: BLE001 - per-preset isolation: one broken preset must not hide the other five
+        check(f"{preset_id} loads", False, str(exc)[:300])
+        continue
     loaded[preset_id] = preset
     check(f"{preset_id} loads", preset.preset_id == preset_id, preset.preset_id)
 
+check("every one of the six presets loads",
+      sorted(loaded) == sorted(THE_SIX),
+      f"loaded={sorted(loaded)}")
+
 check("the loader reports the version it loaded",
-      all(loaded[p].version == "1.0.0" for p in THE_SIX),
-      str({p: loaded[p].version for p in THE_SIX}))
+      all(preset.version == "1.0.0" for preset in loaded.values())
+      and sorted(loaded) == sorted(THE_SIX),
+      str({p: (loaded[p].version if p in loaded else "<did not load>") for p in THE_SIX}))
 
 check("every preset validates against the contract",
       all(not schema_errors(document_of(p)) for p in THE_SIX),
@@ -185,8 +194,9 @@ check("every preset validates against the contract",
                 if schema_errors(document_of(p))))
 
 check("every preset is published",
-      all(loaded[p].status == "published" for p in THE_SIX),
-      str({p: loaded[p].status for p in THE_SIX}))
+      sorted(loaded) == sorted(THE_SIX)
+      and all(loaded[p].status == "published" for p in loaded),
+      str({p: (loaded[p].status if p in loaded else "<did not load>") for p in THE_SIX}))
 
 check("the bundled schema copy is the contract, byte for byte",
       (Path(__file__).resolve().parent / "app" / "core" / "presets" / "preset.schema.json").read_bytes()
@@ -447,11 +457,16 @@ check("a preset that enables a module by default without its dependency is refus
       str(preset_problems(offending)[:2]))
 
 # 7. The graph of a preset keeps the product's own edges.
-graph = ModuleGraph.for_preset(loaded["retail"])
-check("the product's own dependency edge is kept in the effective graph",
-      "workforce" in graph.dependencies("leave"),
-      str(graph.dependencies("leave")))
-check("the effective graph has no cycle", graph.find_cycle() is None, str(graph.find_cycle()))
+if "retail" not in loaded:
+    check("the product's own dependency edge is kept in the effective graph",
+          False, "retail preset did not load")
+    check("the effective graph has no cycle", False, "retail preset did not load")
+else:
+    graph = ModuleGraph.for_preset(loaded["retail"])
+    check("the product's own dependency edge is kept in the effective graph",
+          "workforce" in graph.dependencies("leave"),
+          str(graph.dependencies("leave")))
+    check("the effective graph has no cycle", graph.find_cycle() is None, str(graph.find_cycle()))
 
 # ==========================================================================
 print()
@@ -460,20 +475,28 @@ print("THE LOADER — it reports what it would change, and changes nothing")
 print("=" * 68)
 
 empty_state = TenantState()
-difference = diff_preset(loaded["retail"], empty_state)
-check("the difference against an empty tenant adds the preset's settings",
-      len(difference.adds) > 0, str(len(difference.adds)))
-check("the difference against an empty tenant has nothing to overwrite",
-      len(difference.overwrites) == 0, str(len(difference.overwrites)))
-check("the difference reports what the preset cannot decide",
-      len(difference.undecided) > 0, str(len(difference.undecided)))
-check("the difference reports the modules it would switch on",
-      len(difference.modules_to_enable) > 0, str(difference.modules_to_enable))
-check("the difference carries the preset's exclusions",
-      len(difference.exclusions) > 0, str(len(difference.exclusions)))
+if "retail" not in loaded:
+    check("the difference against an empty tenant adds the preset's settings",
+          False, "retail preset did not load")
+else:
+    difference = diff_preset(loaded["retail"], empty_state)
+    check("the difference against an empty tenant adds the preset's settings",
+          len(difference.adds) > 0, str(len(difference.adds)))
+    check("the difference against an empty tenant has nothing to overwrite",
+          len(difference.overwrites) == 0, str(len(difference.overwrites)))
+    check("the difference reports what the preset cannot decide",
+          len(difference.undecided) > 0, str(len(difference.undecided)))
+    check("the difference reports the modules it would switch on",
+          len(difference.modules_to_enable) > 0, str(difference.modules_to_enable))
+    check("the difference carries the preset's exclusions",
+          len(difference.exclusions) > 0, str(len(difference.exclusions)))
 
 for preset_id in THE_SIX:
-    preset = loaded[preset_id]
+    preset = loaded.get(preset_id)
+    if preset is None:
+        check(f"{preset_id} reports its differences against an empty tenant",
+              False, "preset did not load")
+        continue
     report = diff_preset(preset, TenantState())
     check(f"{preset_id} reports its differences against an empty tenant",
           len(report.adds) > 0 and len(report.undecided) > 0,
@@ -487,21 +510,25 @@ own_state = TenantState(
         "leave.custom_holiday_calendar": {"value": "closed", "source": "tenant_set"},
     },
 )
-difference = diff_preset(loaded["retail"], own_state)
-overwritten = {change.path: change for change in difference.overwrites}
-check("a setting the tenant changed is reported as an overwrite",
-      "leave.approval_required" in overwritten,
-      str(sorted(overwritten)))
-check("the tenant's value is the one that stands",
-      overwritten["leave.approval_required"].tenant_value is False,
-      str(overwritten["leave.approval_required"]))
-check("a setting the tenant set where the preset said nothing is left alone",
-      len(difference.tenant_only) == 1
-      and difference.tenant_only[0].path == "leave.custom_holiday_calendar",
-      str([change.path for change in difference.tenant_only]))
-check("the modules the tenant switched on that the preset does not are left alone",
-      "leave" not in difference.modules_to_enable,
-      str(difference.modules_to_enable))
+if "retail" not in loaded:
+    check("a setting the tenant changed is reported as an overwrite",
+          False, "retail preset did not load")
+else:
+    difference = diff_preset(loaded["retail"], own_state)
+    overwritten = {change.path: change for change in difference.overwrites}
+    check("a setting the tenant changed is reported as an overwrite",
+          "leave.approval_required" in overwritten,
+          str(sorted(overwritten)))
+    check("the tenant's value is the one that stands",
+          overwritten["leave.approval_required"].tenant_value is False,
+          str(overwritten["leave.approval_required"]))
+    check("a setting the tenant set where the preset said nothing is left alone",
+          len(difference.tenant_only) == 1
+          and difference.tenant_only[0].path == "leave.custom_holiday_calendar",
+          str([change.path for change in difference.tenant_only]))
+    check("the modules the tenant switched on that the preset does not are left alone",
+          "leave" not in difference.modules_to_enable,
+          str(difference.modules_to_enable))
 
 # ==========================================================================
 print()
@@ -520,41 +547,45 @@ provenance_state = TenantState(
         "leave.some_other_setting": {"value": "x", "source": "tenant_set"},
     },
 )
-records = {record.path: record for record in provenance_report(loaded["retail"], provenance_state)}
-check("a value that came from the preset is distinguishable",
-      records["leave.approval_required"].state == "preset_default",
-      records["leave.approval_required"].state)
-check("a value the customer changed is distinguishable",
-      records["leave.allow_negative_balance"].state == "tenant_override",
-      records["leave.allow_negative_balance"].state)
-check("a value the customer set is distinguishable",
-      records["leave.some_other_setting"].state == "tenant_set",
-      records["leave.some_other_setting"].state)
-check("the recorded provenance is honoured rather than derived",
-      records["leave.approval_required"].origin == "recorded",
-      records["leave.approval_required"].origin)
+if "retail" not in loaded:
+    check("provenance distinguishes preset defaults from tenant values",
+          False, "retail preset did not load")
+else:
+    records = {record.path: record for record in provenance_report(loaded["retail"], provenance_state)}
+    check("a value that came from the preset is distinguishable",
+          records["leave.approval_required"].state == "preset_default",
+          records["leave.approval_required"].state)
+    check("a value the customer changed is distinguishable",
+          records["leave.allow_negative_balance"].state == "tenant_override",
+          records["leave.allow_negative_balance"].state)
+    check("a value the customer set is distinguishable",
+          records["leave.some_other_setting"].state == "tenant_set",
+          records["leave.some_other_setting"].state)
+    check("the recorded provenance is honoured rather than derived",
+          records["leave.approval_required"].origin == "recorded",
+          records["leave.approval_required"].origin)
 
-# A value that is not recorded is derived by comparison.
-derived = TenantState(
-    modules={"leave": True},
-    settings={"leave.approval_required": {"value": True}},
-)
-records = {record.path: record for record in provenance_report(loaded["retail"], derived)}
-check("a value that matches the preset is derived as the preset's default",
-      records["leave.approval_required"].state == "preset_default",
-      records["leave.approval_required"].state)
-check("the derived provenance says where it came from",
-      records["leave.approval_required"].origin == "derived",
-      records["leave.approval_required"].origin)
+    # A value that is not recorded is derived by comparison.
+    derived = TenantState(
+        modules={"leave": True},
+        settings={"leave.approval_required": {"value": True}},
+    )
+    records = {record.path: record for record in provenance_report(loaded["retail"], derived)}
+    check("a value that matches the preset is derived as the preset's default",
+          records["leave.approval_required"].state == "preset_default",
+          records["leave.approval_required"].state)
+    check("the derived provenance says where it came from",
+          records["leave.approval_required"].origin == "derived",
+          records["leave.approval_required"].origin)
 
-derived = TenantState(
-    modules={"leave": True},
-    settings={"leave.approval_required": {"value": False}},
-)
-records = {record.path: record for record in provenance_report(loaded["retail"], derived)}
-check("a value that differs from the preset is derived as the customer's change",
-      records["leave.approval_required"].state == "tenant_override",
-      records["leave.approval_required"].state)
+    derived = TenantState(
+        modules={"leave": True},
+        settings={"leave.approval_required": {"value": False}},
+    )
+    records = {record.path: record for record in provenance_report(loaded["retail"], derived)}
+    check("a value that differs from the preset is derived as the customer's change",
+          records["leave.approval_required"].state == "tenant_override",
+          records["leave.approval_required"].state)
 
 # ==========================================================================
 print()
@@ -569,54 +600,58 @@ try:
 finally:
     db.close()
 
-report = check_readiness(state, loaded["retail"], facts)
-check("the readiness check reports what is configured",
-      len(report.configured) > 0, str(len(report.configured)))
-check("the readiness check reports what is missing",
-      len(report.missing) > 0, str(len(report.missing)))
-check("the readiness check reports what is recommended",
-      len(report.recommended) > 0, str(len(report.recommended)))
-check("every finding names a fix target",
-      all(finding.fix_target for finding in report.findings),
-      str([finding.rule_id for finding in report.findings if not finding.fix_target]))
-check("every finding has a severity",
-      all(finding.severity in ("blocking", "warning", "info") for finding in report.findings),
-      str([finding.severity for finding in report.findings]))
-check("the readiness check finds the missing preset",
-      any(finding.rule_id == "setup.preset_selected" for finding in report.missing),
-      str([finding.rule_id for finding in report.missing]))
-# The data findings follow the modules that are switched on: a module that
-# is off is not a gap.
-with_modules = check_readiness(
-    TenantState(modules={"workforce": True, "leave": True}), loaded["retail"], facts
-)
-check("the readiness check reports on the data of the modules that are on",
-      any(finding.rule_id.startswith("data.") for finding in with_modules.findings),
-      str([finding.rule_id for finding in with_modules.findings]))
-check("a module that is switched off is not reported as a gap",
-      not any(finding.rule_id == "data.shift_templates"
-              for finding in with_modules.findings),
-      str([finding.rule_id for finding in with_modules.findings]))
+if "retail" not in loaded:
+    check("the readiness check reports what is configured",
+          False, "retail preset did not load")
+else:
+    report = check_readiness(state, loaded["retail"], facts)
+    check("the readiness check reports what is configured",
+          len(report.configured) > 0, str(len(report.configured)))
+    check("the readiness check reports what is missing",
+          len(report.missing) > 0, str(len(report.missing)))
+    check("the readiness check reports what is recommended",
+          len(report.recommended) > 0, str(len(report.recommended)))
+    check("every finding names a fix target",
+          all(finding.fix_target for finding in report.findings),
+          str([finding.rule_id for finding in report.findings if not finding.fix_target]))
+    check("every finding has a severity",
+          all(finding.severity in ("blocking", "warning", "info") for finding in report.findings),
+          str([finding.severity for finding in report.findings]))
+    check("the readiness check finds the missing preset",
+          any(finding.rule_id == "setup.preset_selected" for finding in report.missing),
+          str([finding.rule_id for finding in report.missing]))
+    # The data findings follow the modules that are switched on: a module that
+    # is off is not a gap.
+    with_modules = check_readiness(
+        TenantState(modules={"workforce": True, "leave": True}), loaded["retail"], facts
+    )
+    check("the readiness check reports on the data of the modules that are on",
+          any(finding.rule_id.startswith("data.") for finding in with_modules.findings),
+          str([finding.rule_id for finding in with_modules.findings]))
+    check("a module that is switched off is not reported as a gap",
+          not any(finding.rule_id == "data.shift_templates"
+                  for finding in with_modules.findings),
+          str([finding.rule_id for finding in with_modules.findings]))
 
-# An inconsistent configuration is reported as inconsistent.
-broken_state = TenantState(
-    preset_id="retail",
-    preset_version="1.0.0",
-    modules={"leave": True},
-    settings={"leave.approval_required": {"value": True}},
-)
-broken = check_readiness(broken_state, loaded["retail"], facts)
-check("a module enabled without its dependency is inconsistent",
-      any(finding.rule_id == "modules.dependency_met" for finding in broken.inconsistent),
-      str([finding.rule_id for finding in broken.inconsistent]))
-check("an unresolved sentinel is inconsistent",
-      any(finding.rule_id == "settings.rule_pack_resolved"
-          for finding in check_readiness(
-              TenantState(preset_id="retail", preset_version="1.0.0",
-                          modules={"leave": True},
-                          settings={"leave.entitlement": {"value": SENTINEL}}),
-              loaded["retail"], facts).inconsistent),
-      "no sentinel finding")
+    # An inconsistent configuration is reported as inconsistent.
+    broken_state = TenantState(
+        preset_id="retail",
+        preset_version="1.0.0",
+        modules={"leave": True},
+        settings={"leave.approval_required": {"value": True}},
+    )
+    broken = check_readiness(broken_state, loaded["retail"], facts)
+    check("a module enabled without its dependency is inconsistent",
+          any(finding.rule_id == "modules.dependency_met" for finding in broken.inconsistent),
+          str([finding.rule_id for finding in broken.inconsistent]))
+    check("an unresolved sentinel is inconsistent",
+          any(finding.rule_id == "settings.rule_pack_resolved"
+              for finding in check_readiness(
+                  TenantState(preset_id="retail", preset_version="1.0.0",
+                              modules={"leave": True},
+                              settings={"leave.entitlement": {"value": SENTINEL}}),
+                  loaded["retail"], facts).inconsistent),
+          "no sentinel finding")
 
 # The endpoint writes nothing.
 before = db_counts()

@@ -200,11 +200,15 @@ def served_router_tags() -> set[str]:
 
     FastAPI >=0.118 keeps included routers lazy: the registry holds an
     ``_IncludedRouter`` placeholder instead of the endpoint routes. The
-    placeholder carries the ``tags=[...]`` passed to ``include_router``
-    while the inner routes carry the endpoint-module tags, so the walk
-    takes the union of the placeholder tags and the inner tags, the same
-    way the security matrix enumerates served operations, so the
-    inventory reflects the application that runs.
+    ``tags=[...]`` passed to ``include_router`` live on the placeholder's
+    ``include_context`` while the placeholder's own ``tags`` stay empty and
+    the inner routes carry only the endpoint-module tags, so the walk takes
+    the union of the placeholder tags, the include-context tags and the
+    inner tags — the same way the security matrix enumerates served
+    operations — so the inventory reflects the application that runs.
+    On FastAPI <=0.111 the routers are expanded eagerly and the tags sit on
+    each route, which the same walk still reads, so the detector works on
+    both layouts.
     """
     from app.api.v1.api import api_router  # noqa: PLC0415 - deferred on purpose
 
@@ -213,6 +217,9 @@ def served_router_tags() -> set[str]:
     def _walk(routes) -> None:
         for route in routes:
             for tag in getattr(route, "tags", None) or ():
+                tags.add(str(tag))
+            context = getattr(route, "include_context", None)
+            for tag in getattr(context, "tags", None) or ():
                 tags.add(str(tag))
             original = getattr(route, "original_router", None)
             if original is not None and hasattr(original, "routes"):

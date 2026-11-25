@@ -68,9 +68,9 @@ app.add_middleware(
     expose_headers=["Retry-After"],
     max_age=600,
 )
-if settings.is_production and (not _cors_origins or _cors_origins == ["*"]):
-    print(
-        "[startup] WARNING: BACKEND_CORS_ORIGINS is unset or '*' in production. "
+if settings.is_production and (not _cors_origins or "*" in _cors_origins):
+    raise RuntimeError(
+        "BACKEND_CORS_ORIGINS is unset or wildcard in production. "
         "Set it to the exact frontend origin(s)."
     )
 

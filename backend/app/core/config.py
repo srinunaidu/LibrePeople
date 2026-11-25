@@ -278,5 +278,20 @@ class Settings(BaseSettings):
                     "FIELD_ENCRYPTION_ACTIVE_KEY_ID; there is no fallback "
                     "to SECRET_KEY."
                 )
+            # CORS fail-closed: a token API must never answer cross-origin
+            # reads from an unspecified set of origins in production. An
+            # empty allow-list (same-origin default) or any wildcard entry
+            # would either be a misconfigured deploy or, with Starlette's
+            # CORSMiddleware, an allow-all (`"*"` anywhere in allow_origins
+            # enables allow-all-origins). Refuse to start instead of
+            # warning and serving.
+            origins = self.cors_origins
+            if not origins or "*" in origins:
+                raise RuntimeError(
+                    "Production refuses to start with BACKEND_CORS_ORIGINS "
+                    f"unset or wildcard (got {origins!r}). Set it to the "
+                    "exact frontend origin(s), e.g. "
+                    "BACKEND_CORS_ORIGINS=https://app.example.com."
+                )
 settings = Settings()
 settings.validate()
