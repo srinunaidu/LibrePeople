@@ -330,6 +330,15 @@ ALLOWLIST: dict[str, str] = {
         "Local test password in startup_test_suite.py env-seed fixtures "
         "(lines 161, 210). Used only against a throwaway factory/SQLite "
         "file. Never deployed.",
+    # --- backend/mfa_column_regression_test_suite.py:91 PASSWORD ------------ #
+    # Local-only fixture password, same precedent as the 8 entries above:
+    # created at run time, authenticates only against the throwaway SQLite
+    # file the suite builds. Never deployed. No rule disabled, no file
+    # exempted: allowlisted by its exact string.
+    "MfaColRegPass123!":
+        "Local test password in mfa_column_regression_test_suite.py. "
+        "Created at run time, authenticates only against the throwaway "
+        "SQLite file. Never deployed.",
 }
 
 #: Files that are exempt from the high-entropy heuristic because they are
