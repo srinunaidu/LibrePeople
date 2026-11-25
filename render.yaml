@@ -65,8 +65,12 @@ services:
         sync: false
       - key: R2_SECRET_ACCESS_KEY
         sync: false
+      # Free tier skips preDeployCommand and has no release step, so the
+      # web process itself must migrate at boot: single instance, so no
+      # concurrent-migration risk; migrations are idempotent; the admin
+      # seed is fail-closed (no-op unless zero users exist).
       - key: MIGRATE_ON_STARTUP
-        value: "false"
+        value: "true"
       - key: RULE_PACK_DIR
         value: /app/rule_packs
       - key: LOG_LEVEL

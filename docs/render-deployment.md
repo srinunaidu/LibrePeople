@@ -4,6 +4,17 @@ Dated, append-only record of Render testing-deploy observations.
 (Karmathy-era history lives in `docs/DEPLOYMENT.md`; this file starts
 with the LibrePeople `librepeople-backend` service.)
 
+## 2026-11-25 — free-tier fix: MIGRATE_ON_STARTUP true (no release step on free tier)
+
+- `render.yaml`: `MIGRATE_ON_STARTUP` `false` → `true` (+ comment).
+  Deploy `dep-dc3ieoss728c739783ng` proved preDeployCommand never runs on
+  free tier, so the release step the runbook relies on does not exist
+  there; startup migrate+seed is the only in-platform bootstrap path.
+  Safe: `numInstances: 1` (no concurrent migration), alembic upgrades
+  idempotent, `seed_initial_admin` fail-closed (seeds only at zero users).
+- `ADMIN_INITIAL_PASSWORD` left as-is for the first boot; rotation after.
+- No redeploy triggered (lead's push decides).
+
 ## 2026-11-25 — deploy dep-dc3ieoss728c739783ng LIVE @ 4d21662 (driver fix verified; bootstrap blocked on free tier)
 
 - Branch: `agent/ops/render-smoke` from `4d21662` (origin/main, includes
