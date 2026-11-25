@@ -4,6 +4,43 @@ Dated, append-only record of Render testing-deploy observations.
 (Karmathy-era history lives in `docs/DEPLOYMENT.md`; this file starts
 with the LibrePeople `librepeople-backend` service.)
 
+## 2026-11-25 — deploy dep-dc3ihvs9v7es7388mhe0 LIVE @ 072c86c BUT seed still off (dashboard env overrides render.yaml)
+
+- Branch: `agent/ops/render-bootstrap` from `072c86c` (origin/main).
+  Deploy `dep-dc3ihvs9v7es7388mhe0`, created `18:29:19Z`, `live`
+  `18:30:56Z`. Commit built: `072c86c` — matches. **Not stale.**
+- Startup logs (verbatim): `[startup] MIGRATE_ON_STARTUP is disabled;
+  skipping migrations.` (18:30:51Z) then worker start, startup complete.
+  No seed line; no `Seeded initial SuperAdmin` / `already-exists`.
+  Migration no-op confirmed instead via CMD:
+  `[migrate] Database is now at 0048_mfa_secret_envelope` (18:30:02Z).
+- Root cause: Render dashboard env still holds `MIGRATE_ON_STARTUP=false`
+  (verified via API); dashboard-set values override `render.yaml`, so the
+  `71c11e9` blueprint change did not take effect. **Lead action: flip the
+  variable in the dashboard (or Blueprint-sync) — that edit redeploys by
+  itself.** Untouched here (no dashboard writes, no redeploy from this agent).
+- Authenticated smoke blocked again: no users exist (nothing has ever
+  seeded this DB). HR-admin account creation therefore pending bootstrap.
+
+### Smoke table
+
+| Check | Result |
+|---|---|
+| `GET /health` → 200 | pass, 0.2 s |
+| Migration `current == head` incl. `0048` | pass via logs (CMD no-op at 0048); `GET /health/db` 401-gated |
+| `POST /api/v1/auth/login` | 401 (zero users; generic no-enumeration response) |
+| `GET /api/v1/employees` (no token) | 401 (auth-gated) |
+| Frontend `/` | 200, 0.5 s |
+| Synthetic HR-admin account | pending bootstrap (needs SuperAdmin token) |
+
+### Gaps / costs
+
+- Cost: $0 (free tier).
+- `ADMIN_INITIAL_PASSWORD`: **left set** — portals need provisioning next;
+  rotation happens only after Admin/ESS accounts are verified working.
+- Still open: R2 vars absent; `JOB_WORKER_ENABLED` value uninspected; no
+  custom domains (default `*.onrender.com` TLS).
+
 ## 2026-11-25 — free-tier fix: MIGRATE_ON_STARTUP true (no release step on free tier)
 
 - `render.yaml`: `MIGRATE_ON_STARTUP` `false` → `true` (+ comment).
