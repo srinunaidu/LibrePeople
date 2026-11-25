@@ -1,0 +1,24 @@
+# FY 2026-27 Reviewer Package (India Standard — skeleton, NOT verified)
+
+- Skeleton: `backend/rule_packs/in-standard-fy2627-skeleton.json` v0.1.0-fy2627-skeleton, `status: pending_verification`, `effective_from: 2026-04-01`, `effective_to: open`. FY25-26 (`in-standard.json` v1.0.0, `verified`) untouched.
+- Skeleton source block: title "India Standard FY 2026-27 — skeleton only (no instrument transcribed yet)", publisher "TBD by FY26-27 verification", reference "TBD — skeleton carries no statutory values", retrieved_on 2026-03-31. **No statutory values are encoded: every rate/amount is 0, thresholds/overtime numerics null, golden cases are 14 TEST-ONLY zero placeholders.**
+- Engine behaviour: resolver returns `pack=None` for IN on/after 2026-04-01; pay-run, direct-write and payslip paths refuse with `rule_pack_not_verified`. No fallback to FY25-26.
+- FY25-26 reference source (frozen, for context only): IT Act §115BAC/§16(ia)/§87A Finance Act 2025; EPF Act §6 + Scheme para 26A; ESI Act 1948; PT Acts KA-1976, MH-1975, TN-1992, TG-AP adapted, WB-1979. 11 golden cases (`gc-in-standard-001-*`).
+- Reviewer workflow per rule: (1) transcribe the FY26-27 instrument into the skeleton table, (2) write golden cases the engine reproduces line for line, (3) set `"in_scope": true` only for tables the engine may emit, (4) fill the five verification fields, flip to `verified`, (5) re-run the five gate suites (`india`, `payroll`, `migration`, `framework`, `app/rules`), (6) commit with verifier name. Full scaffold: `backend/rule_packs/in-standard-FY2627-SIGNOFF.md`.
+- No values below are asserted — "TBD by verifier" means exactly that.
+
+| Rule | Population | Jurisdiction | Effective date | Primary source (to be confirmed) | Methodology | Test cases | Implementation status | Reviewer status |
+|---|---|---|---|---|---|---|---|---|
+| TDS (new-regime bands) | Salaried employees, IN payroll | India (Income Tax) | 2026-04-01 | Finance Act 2026 (TBD) → `tax_bands` | Transcribe annual slabs; monthly = annual/12 as engine pins | Placeholder `gc-fy2627-p5-01-tds-band` (zero) — real cases TBD | Skeleton, rates 0 | PENDING |
+| Marginal relief | Taxpayers just above rebate limit | India (Income Tax) | 2026-04-01 | Finance Act 2026 (TBD) → `tax_rebates`/`tax_adjustments` | Encode relief formula if statute provides it (FY25-26 v1 has none — see VERIFICATION.md checklist) | TBD | Skeleton, rates 0 | PENDING |
+| Cess (health & education) | Taxable employees | India (Income Tax) | 2026-04-01 | Finance Act 2026 (TBD) → `tax_adjustments` | Transcribe cess rate/base | TBD | Skeleton, rates 0 | PENDING |
+| EPF / EPS | Covered establishments/employees | India (EPFO) | 2026-04-01 | EPF Act + Scheme updates 2026 (TBD) → `social_insurance_employee/employer/ceilings` | Transcribe 12% heads, EPS split + ₹15,000 ceiling treatment (FY25-26 v1 flat-12% simplification — see checklist) | TBD | Skeleton, rates 0 | PENDING |
+| ESI | Covered employees (wage ≤ threshold) | India (ESIC) | 2026-04-01 | ESI Act updates 2026 (TBD) → `social_insurance_*` | Transcribe 0.75%/3.25% heads + wage-limit edge (FY25-26: applies at exactly 21000, skipped above) | TBD | Skeleton, rates 0 | PENDING |
+| PT — KA / MH / TN / TG / WB | Employees in each state | KA, MH, TN, TG, WB respectively | 2026-04-01 | State PT notifications 2026 (TBD) → `pt_ka/mh/tn/tg/wb` | Transcribe monthly tables incl. known FY25-26 exceptions to confirm: MH Feb ₹300 + ₹2,500 cap; TN half-yearly→monthly; WB 10 rows | TBD | Skeleton, rates 0 | PENDING |
+| Basic / DA (PF-able wages) | All IN employees | India (EPF definition) | 2026-04-01 | EPF wages definition (TBD) | Decide Basic+DA split vs single `base_salary` field (FY25-26 v1 uses full gross — see checklist) | TBD | Design decision for verifier | PENDING |
+| Bonus (Payment of Bonus Act) | Eligible employees | India | 2026-04-01 | Bonus Act + 2026 updates (TBD) → `bonus_act` | Transcribe eligibility/wage-limit/formula | TBD | Skeleton, rates 0 | PENDING |
+| Form 16 / Form 24Q | Employers / deductors | India (Income Tax Dept) | Quarterly (24Q due within 31 days) | Income-tax filing instruments (TBD) → `reporting_obligations` IN_TDS_RETURN | Confirm template_refs IN-24Q / Form 16 mapping | TBD (no generator verified) | Structure only | PENDING |
+| Gratuity | — (out of scope unless verifier scopes it) | India (Payment of Gratuity Act 1972) | — | TBD, only if scoped → `gratuity_accrual` | Verifier must both scope (`in_scope: true`) and verify | None | Explicitly excluded v1 | PENDING (deferred) |
+| LWF | Employees in applicable states | State-wise | 2026-04-01 | State LWF notifications (TBD) → `lwf_state` | Transcribe state rows | TBD | Skeleton, rates 0 | PENDING |
+
+FY25-26 checklist items the verifier must confirm or ticket carry over: MH Feb/cap, TN half-yearly, WB rows, EPS split, marginal relief, Basic/DA split, band rounding, ESI edge, gratuity deferral (`in-standard-VERIFICATION.md`).
