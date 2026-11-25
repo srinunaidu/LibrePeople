@@ -276,4 +276,33 @@ def get_storage() -> StorageBackend:
                 "the OCI storage backend is unavailable; falling back to local",
                 exc_type=type(exc).__name__,
             )
+    if settings.STORAGE_BACKEND == "s3":
+        # R2 speaks the S3 API; every R2_* value is required, and a partial
+        # configuration falls back to local rather than crashing the boot.
+        if (
+            settings.R2_ENDPOINT_URL
+            and settings.R2_BUCKET
+            and settings.R2_ACCESS_KEY_ID
+            and settings.R2_SECRET_ACCESS_KEY
+        ):
+            try:
+                from app.storage.s3 import S3CompatibleStorage
+
+                return S3CompatibleStorage(
+                    endpoint_url=settings.R2_ENDPOINT_URL,
+                    bucket=settings.R2_BUCKET,
+                    access_key_id=settings.R2_ACCESS_KEY_ID,
+                    secret_access_key=settings.R2_SECRET_ACCESS_KEY,
+                    region=settings.R2_REGION,
+                )
+            except Exception as exc:  # noqa: BLE001
+                log.error(
+                    "the S3 storage backend is unavailable; falling back to local",
+                    exc_type=type(exc).__name__,
+                )
+        else:
+            log.error(
+                "STORAGE_BACKEND=s3 without the full R2 configuration; "
+                "falling back to local"
+            )
     return LocalStorage(settings.LOCAL_STORAGE_DIR)

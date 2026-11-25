@@ -1,14 +1,40 @@
+# LibrePeople — Render blueprint (testing deploy)
+#
+# Backend: FastAPI on Docker. Frontend: static SPA. Database: EXTERNAL Neon
+# Postgres via DATABASE_URL (sync:false) — there is intentionally NO managed
+# Render Postgres in this file. Object storage: Cloudflare R2 over its
+# S3-compatible endpoint (env vars below, secrets via sync:false).
+#
+# No managed-database or wallet-mount entries for this testing deploy: the
+# backend keeps its local compose-database fallback path in code
+# (.env.example documents it), but nothing here mounts or points at one.
+#
+# Secrets policy: no secret VALUES in this file. Secrets are Render dashboard
+# entries referenced with `sync: false`; SECRET_KEY uses `generateValue`.
+# Full variable reference: docs/env-inventory.md.
+# Deploy pipeline: .github/workflows/deploy.yml (deploy hooks, health + smoke).
+# Local docker-compose path is unchanged: docs/runbooks/local-deploy.md.
+
 services:
   # ---------- Backend API (FastAPI + Docker) ----------
   - type: web
-    name: karmathy-backend
+    name: librepeople-backend
     runtime: docker
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
     plan: free
     region: singapore
     healthCheckPath: /health
+    # Single instance: the migration step must never run concurrently.
+    # preDeployCommand runs to completion BEFORE the new release goes live,
+    # so two releases can never migrate at once; with numInstances: 1 there
+    # is also only ever one app process (MIGRATE_ON_STARTUP=false, so the
+    # web process itself never migrates).
+    numInstances: 1
+    preDeployCommand: python -m scripts.migrate upgrade
     envVars:
+      # External Neon Postgres. Set the full URL once in the Render
+      # dashboard (Neon connection string with ?sslmode=require).
       - key: DATABASE_URL
         sync: false
       - key: SECRET_KEY
@@ -19,25 +45,42 @@ services:
         value: "30"
       - key: ENVIRONMENT
         value: production
+      # Exact frontend origin(s), comma-separated. No wildcard default:
+      # production refuses to start with an empty or wildcard value.
       - key: BACKEND_CORS_ORIGINS
         sync: false
-      # Render mounts Secret Files at /etc/secrets/<filename>.
-      # Upload each wallet file (cwallet.sso, tnsnames.ora, sqlnet.ora, ewallet.p12, truststore.jks).
-      - key: ORACLE_WALLET_DIR
-        value: /etc/secrets
+      # Field encryption at rest. Production refuses to start without both.
+      - key: FIELD_ENCRYPTION_KEYS
+        sync: false
+      - key: FIELD_ENCRYPTION_ACTIVE_KEY_ID
+        sync: false
+      # S3-compatible object storage (Cloudflare R2).
       - key: STORAGE_BACKEND
-        value: local
+        value: s3
+      - key: R2_ENDPOINT_URL
+        value: https://ACCOUNTID.r2.cloudflarestorage.com
+      - key: R2_BUCKET
+        value: librepeople-docs
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: MIGRATE_ON_STARTUP
+        value: "false"
       - key: RULE_PACK_DIR
         value: /app/rule_packs
+      - key: LOG_LEVEL
+        value: INFO
 
   # ---------- Frontend (React static site) ----------
   - type: web
-    name: karmathy-frontend
+    name: librepeople-frontend
     runtime: static
     rootDir: frontend
     buildCommand: npm ci && npm run build
     staticPublishPath: ./dist
     envVars:
+      # Baked into the static bundle at build time; points at the backend above.
       - key: VITE_API_URL
         sync: false
     routes:
