@@ -4,6 +4,51 @@ Dated, append-only record of Render testing-deploy observations.
 (Karmathy-era history lives in `docs/DEPLOYMENT.md`; this file starts
 with the LibrePeople `librepeople-backend` service.)
 
+## 2026-11-25 — deploy dep-dc3ieoss728c739783ng LIVE @ 4d21662 (driver fix verified; bootstrap blocked on free tier)
+
+- Branch: `agent/ops/render-smoke` from `4d21662` (origin/main, includes
+  fix `41a1a27`). Deploy `dep-dc3ieoss728c739783ng`, trigger
+  `new_commit`, created `18:22:27Z`, `live` at `18:25:38Z`.
+  Commit built: `4d21662` — matches. **Not stale.**
+- preDeployCommand: **skipped by the platform** —
+  `Predeploy command not run. Commands can only run on paid instance types`
+  (18:23:50Z). Migrations still ran via the Dockerfile CMD
+  (`python -m scripts.migrate upgrade && exec uvicorn ...`): full chain
+  `0001_baseline → … → 0048_mfa_secret_envelope` on the fresh Neon DB,
+  ending `[migrate] Database is now at 0048_mfa_secret_envelope`
+  (18:24:43Z). Repo chain is linear (50 files, one head: `0048`).
+  Caveat: on free tier the runbook's "preDeploy proves migration" step
+  does not execute; the CMD fallback is the actual migration path.
+- Bootstrap: **zero users exist** (no prior live deploy; startup skips
+  `_seed_admin_users()` when `MIGRATE_ON_STARTUP=false`, confirmed in
+  code + logs). One-off job `python -m scripts.seed_admin` refused:
+  `400 new paid services not allowed` — paid-tier STOP applies. Owner
+  must run the seed from the Render dashboard Shell, then sign in and
+  rotate. `ADMIN_INITIAL_PASSWORD` **kept** (deletion deferred until
+  post-bootstrap smoke — deleting now would destroy the only bootstrap
+  credential).
+
+### Smoke table
+
+| Check | Result |
+|---|---|
+| `GET /health` → 200 `{"status":"healthy"}` | pass, 0.2 s |
+| Migration `current == head` incl. `0048` | pass via deploy logs (above); `GET /health/db` 401-gated, needs SuperAdmin |
+| `POST /api/v1/auth/login` seeded admin | 401 (zero users — expected, not a failure) |
+| `GET /api/v1/employees` | 307 unauthenticated (auth-gated; token smoke pending bootstrap) |
+| Frontend `/` | 200, 0.4 s (already live) |
+| Post-smoke: delete `ADMIN_INITIAL_PASSWORD`, redeploy if required, re-verify `/health` | deferred (see Bootstrap) |
+
+### Gaps / costs
+
+- Cost: $0 (free tier; one-off jobs unavailable = paid feature).
+- R2 vars still absent while `STORAGE_BACKEND` set — verify before file smoke.
+- `JOB_WORKER_ENABLED` key exists (value uninspected).
+- No custom domains (default `*.onrender.com` TLS).
+- Follow-ups for lead: (1) owner Shell bootstrap + login/token smoke +
+  secret deletion; (2) decide whether free-tier deploys should rely on
+  CMD migrations or move seeding into an always-run startup path.
+
 ## 2026-11-25 — deploy dep-dc3hph49v7es73875p8g FAILED in preDeployCommand (STALE? no — SHA matches)
 
 - Service: `librepeople-backend` (`srv-dc3g9q4ipgvc738jo7ug`,
