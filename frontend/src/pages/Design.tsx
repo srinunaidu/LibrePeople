@@ -29,7 +29,7 @@ export default function DesignShowcase() {
       <PageHeader compact
         icon={<IconGrid />}
         title="Design System"
-        description="Component library and token reference for the Karmathy HCM revamp."
+        description="Component library and token reference for the LibrePeople HCM revamp."
         actions={
           <div className="flex gap-2">
             <Button variant="secondary" size="sm" onClick={() => toast.success("Toast works!", { description: "This is a Sonner toast." })}>

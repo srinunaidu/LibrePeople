@@ -1,5 +1,5 @@
 /**
- * Karmathy design system — "The Thread" (Phase T).
+ * LibrePeople design system — "The Thread" (Phase T).
  *
  * The single design concept for the marketing website: one continuous
  * record for every employee, from first application to last day. The

@@ -99,7 +99,7 @@ export default function ProjectStatus() {
     <Layout>
       <div className="max-w-[900px] mx-auto px-4">
         <h1 className="text-xl font-bold mt-5 mb-1 text-[var(--fg)] tabular-nums">
-          Karmathy HCM — Project Status
+          LibrePeople HCM — Project Status
         </h1>
         <p className="text-sm text-[var(--fg-muted)] m-0 tabular-nums">
           Rendered {now} · commit <code className={codeCls}>{commit}</code> on <code className={codeCls}>main</code> ·{" "}

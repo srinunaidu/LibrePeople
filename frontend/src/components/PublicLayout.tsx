@@ -99,10 +99,10 @@ export function PublicLayout({ children }: { children: ReactNode }) {
                   boxShadow: "0 2px 10px rgba(37,99,235,0.5), inset 0 1px 0 rgba(255,255,255,0.25)",
                 }}
               >
-                K
+                L
               </span>
               <span className="text-lg font-bold tracking-tight" style={{ fontFamily: "var(--font-display)" }}>
-                <span className="mk-gradient-blue">Karmathy</span>
+                <span className="mk-gradient-blue">LibrePeople</span>
               </span>
             </Link>
 
@@ -166,10 +166,10 @@ export function PublicLayout({ children }: { children: ReactNode }) {
                   className="grid h-7 w-7 place-items-center rounded-lg text-white font-bold text-xs"
                   style={{ background: "linear-gradient(135deg, var(--brand-600) 0%, var(--teal-400) 100%)" }}
                 >
-                  K
+                  L
                 </span>
                 <span className="font-bold" style={{ fontFamily: "var(--font-display)" }}>
-                  Karmathy
+                  LibrePeople
                 </span>
               </div>
               <p className="mt-3 text-sm text-fg-muted">People. Potential. Progress.</p>
@@ -195,11 +195,11 @@ export function PublicLayout({ children }: { children: ReactNode }) {
 
           {/* giant wordmark */}
           <div aria-hidden="true" className="mk-wordmark mt-14 text-center">
-            Karmathy
+            LibrePeople
           </div>
 
           <div className="mt-8 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-fg-subtle">
-            <p>&copy; 2026 Karmathy. All rights reserved.</p>
+            <p>&copy; 2026 LibrePeople. All rights reserved.</p>
             <p>Controls operating today · certifications in progress · one record per person</p>
           </div>
         </div>

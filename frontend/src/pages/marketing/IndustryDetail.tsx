@@ -122,7 +122,7 @@ export default function IndustryDetail() {
 
       {/* Workflow */}
       <section className="max-w-container mx-auto px-4 sm:px-6 lg:px-8 pb-8">
-        <h2 className="text-h2 font-semibold text-fg mb-4">Karmathy workflow</h2>
+        <h2 className="text-h2 font-semibold text-fg mb-4">LibrePeople workflow</h2>
         <div className="flex flex-col gap-3">
           {industry.workflow.map((w, idx) => (
             <div key={w.step} className="flex gap-3">

@@ -33,7 +33,7 @@ export default function NotFound() {
           <h1 className="mt-6 mk-h2 md:!text-[clamp(2.2rem,4.6vw,3.4rem)] text-white">This page isn’t on the thread</h1>
 
           <p className="text-body text-fg-muted mt-3 max-w-2xl mx-auto">
-            The Karmathy thread runs from a first application to a last day — Recruit, Onboard, Time,
+            The LibrePeople thread runs from a first application to a last day — Recruit, Onboard, Time,
             Leave, Pay, Perform, Grow, Offboard. The address you followed doesn’t match a node on the
             lifecycle path, so the record can’t continue here.
           </p>

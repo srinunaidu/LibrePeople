@@ -73,7 +73,7 @@ export default function ChangePassword() {
           <div className="flex h-16 items-center">
             <span className="flex items-center gap-2.5">
               <span className="brand-mark" aria-hidden="true">K</span>
-              <span className="text-[var(--font-size-lg)] font-bold text-[var(--semantic-brand-text)] tracking-tight">Karmathy</span>
+              <span className="text-[var(--font-size-lg)] font-bold text-[var(--semantic-brand-text)] tracking-tight">LibrePeople</span>
             </span>
           </div>
         </div>

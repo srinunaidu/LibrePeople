@@ -14,8 +14,8 @@ export default function About() {
     <PublicLayout>
       <PageHero
         kicker="Company"
-        title="About Karmathy"
-        intro="Karmathy is a global, end-to-end Human Capital Management (HCM) SaaS platform that brings together the employee lifecycle, workforce management, HR operations, talent, payroll, analytics, and connected people processes in one configurable platform."
+        title="About LibrePeople"
+        intro="LibrePeople is a global, end-to-end Human Capital Management (HCM) SaaS platform that brings together the employee lifecycle, workforce management, HR operations, talent, payroll, analytics, and connected people processes in one configurable platform."
       />
 
       <PageBody narrow>

@@ -4,11 +4,11 @@ import { PageHero, PageBody } from "@/components/marketing/PageHero"
 const SECTIONS: { h: string; p: string }[] = [
   {
     h: "Use of service",
-    p: "Karmathy provides a cloud-based HCM platform. You are responsible for maintaining the confidentiality of your account credentials.",
+    p: "LibrePeople provides a cloud-based HCM platform. You are responsible for maintaining the confidentiality of your account credentials.",
   },
   {
     h: "Data ownership",
-    p: "You retain ownership of all data you enter into Karmathy. We process your data solely to provide the service.",
+    p: "You retain ownership of all data you enter into LibrePeople. We process your data solely to provide the service.",
   },
   {
     h: "Service availability",
@@ -22,7 +22,7 @@ export default function Terms() {
       <PageHero
         kicker="Legal · Terms"
         title="Terms of Service"
-        intro="By using Karmathy, you agree to these terms of service."
+        intro="By using LibrePeople, you agree to these terms of service."
       />
 
       <PageBody narrow>

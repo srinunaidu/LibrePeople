@@ -66,7 +66,7 @@ export default function DashboardFallback() {
         compact
         icon={<IconChart />}
         title="Dashboard"
-        description="Welcome to Karmathy HCM. Select a module from the workspace rail to get started."
+        description="Welcome to LibrePeople HCM. Select a module from the workspace rail to get started."
       />
       <NextBestActionCards cards={actionCards} />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">

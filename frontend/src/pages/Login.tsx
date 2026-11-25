@@ -82,7 +82,7 @@ export default function Login() {
           <div className="flex h-16 items-center">
             <span className="flex items-center gap-2.5">
               <span className="brand-mark" aria-hidden="true">K</span>
-              <span className="text-[var(--font-size-lg)] font-bold text-[var(--semantic-brand-text)] tracking-tight">Karmathy</span>
+              <span className="text-[var(--font-size-lg)] font-bold text-[var(--semantic-brand-text)] tracking-tight">LibrePeople</span>
             </span>
           </div>
         </div>
@@ -91,7 +91,7 @@ export default function Login() {
       <main id="main-content" tabIndex={-1} className="flex-1 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
           <div className="text-center mb-7">
-            <h1 className="text-[var(--font-size-2xl)] font-bold text-fg tracking-tight">Sign in to Karmathy</h1>
+            <h1 className="text-[var(--font-size-2xl)] font-bold text-fg tracking-tight">Sign in to LibrePeople</h1>
             <p className="text-sm text-text-secondary mt-1.5">
               Access your organisation's HCM workspace.
             </p>

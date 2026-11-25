@@ -306,7 +306,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
       .then((r) => {
         const found = r.data
         if (!found) {
-          setThemeError(`No tenant matches "${slug}". Showing the default Karmathy experience.`)
+          setThemeError(`No tenant matches "${slug}". Showing the default LibrePeople experience.`)
           setLoading(false)
           return
         }
@@ -350,15 +350,15 @@ export function TenantProvider({ children }: { children: ReactNode }) {
         } else {
           setThemeError(
             `Tenant "${found.name}" has an accent colour that fails WCAG AA contrast. ` +
-              `Using default Karmathy branding.`
+              `Using default LibrePeople branding.`
           )
         }
         // Gate tenant-aware styling so the global site is never affected.
         root.setAttribute("data-tenant", found.slug.toLowerCase())
-        document.title = `${found.name} — Karmathy`
+        document.title = `${found.name} — LibrePeople`
       })
       .catch(() => {
-        setThemeError("Could not load tenant branding. Using default Karmathy branding.")
+        setThemeError("Could not load tenant branding. Using default LibrePeople branding.")
       })
       .finally(() => setLoading(false))
   }, [slug])

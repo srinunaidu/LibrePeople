@@ -17,7 +17,7 @@ export default function Solutions() {
       <PageHero
         kicker="Solutions"
         title="Solutions for every stage of scale"
-        intro="Karmathy adapts to your industry, size, and existing systems. Explore the solutions that fit your organization."
+        intro="LibrePeople adapts to your industry, size, and existing systems. Explore the solutions that fit your organization."
       />
 
       <PageBody>

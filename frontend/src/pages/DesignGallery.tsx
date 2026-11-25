@@ -147,7 +147,7 @@ function MiniPreview({ d }: { d: Direction }) {
       {/* fake top bar */}
       <div className="flex items-center gap-2 px-3 py-2 border-b" style={topBarStyle}>
         <div className="h-6 w-6 rounded-md shrink-0" style={accentBg} />
-        <span className="text-xs font-semibold" style={karmathyColor}>Karmathy</span>
+        <span className="text-xs font-semibold" style={karmathyColor}>LibrePeople</span>
         <span className="ml-auto flex gap-1">
           <span className="h-2 w-6 rounded-full" style={accentBgOpacity} />
           <span className="h-2 w-2 rounded-full" style={accentBg} />
@@ -219,7 +219,7 @@ export default function DesignGallery() {
       <PageHeader
         compact
         title="Design Gallery — Pick a Direction"
-        description="Five distinct visual directions for the entire Karmathy product. Each card previews the same UI in a different palette, radius and density. Click a card to expand it — or apply it live to this page with the theme switcher."
+        description="Five distinct visual directions for the entire LibrePeople product. Each card previews the same UI in a different palette, radius and density. Click a card to expand it — or apply it live to this page with the theme switcher."
         actions={
           <div className="flex items-center gap-2 shrink-0">
             <span className="text-xs text-fg-muted hidden sm:inline">Live preview theme:</span>

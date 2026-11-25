@@ -25,7 +25,7 @@ export function ProductMockup() {
           <span className="h-2.5 w-2.5 rounded-full bg-[rgba(239,68,68,0.7)]" aria-hidden="true" />
           <span className="h-2.5 w-2.5 rounded-full bg-[var(--amber-300)]" aria-hidden="true" />
           <span className="h-2.5 w-2.5 rounded-full bg-[var(--semantic-status-success)]" aria-hidden="true" />
-          <span className="ml-3 text-xs font-medium text-fg-muted">app.karmathy.com — Payroll · November run</span>
+          <span className="ml-3 text-xs font-medium text-fg-muted">Payroll · November run</span>
           <span className="ml-auto inline-flex items-center gap-1.5 text-xs text-fg-muted">
             <span className="mk-pulse inline-block h-1.5 w-1.5 rounded-full bg-[var(--teal-400)]" aria-hidden="true" />
             Live
@@ -43,7 +43,7 @@ export function ProductMockup() {
               >
                 K
               </span>
-              <span className="hidden sm:block text-sm font-semibold tracking-tight">Karmathy</span>
+              <span className="hidden sm:block text-sm font-semibold tracking-tight">LibrePeople</span>
             </div>
             {[
               { label: "People", active: false },

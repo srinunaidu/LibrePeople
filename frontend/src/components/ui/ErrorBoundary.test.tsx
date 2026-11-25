@@ -162,8 +162,8 @@ describe("ErrorBoundary", () => {
     )
 
     // TopBar should be visible (shell stays intact)
-    // TopBar contains "Karmathy" brand or similar
-    expect(screen.getByText("Karmathy")).toBeInTheDocument()
+    // TopBar contains "LibrePeople" brand or similar
+    expect(screen.getByText("LibrePeople")).toBeInTheDocument()
 
     // But the failing route content shows fallback
     expect(screen.getByText("Something went wrong")).toBeInTheDocument()
