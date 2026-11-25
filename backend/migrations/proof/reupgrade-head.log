@@ -1,0 +1,375 @@
+/Users/srinivas/LLM/Workforce/wt-database/backend/app/core/idempotency.py:49: StarletteDeprecationWarning: 'HTTP_422_UNPROCESSABLE_ENTITY' is deprecated. Use 'HTTP_422_UNPROCESSABLE_CONTENT' instead.
+  from app.core.errors import ApiError, ErrorCategory, conflict, concurrency_conflict
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 0001_baseline, baseline: adopt the schema that predates Alembic
+INFO  [alembic.runtime.migration] Running upgrade 0001_baseline -> 0002_credential_lifecycle, credential lifecycle: refresh token table and user credential columns
+INFO  [alembic.runtime.migration] Running upgrade 0002_credential_lifecycle -> 0003_mfa, mfa: add multi-factor authentication fields to users
+INFO  [alembic.runtime.migration] Running upgrade 0003_mfa -> 0004_job_queue, job_queue: add background job queue table
+INFO  [alembic.runtime.migration] Running upgrade 0004_job_queue -> 0005_forecasting, forecasting: add forecasting tables
+INFO  [alembic.runtime.migration] Running upgrade 0005_forecasting -> 0006_schema_alignment, schema_alignment: add the columns the models expect
+INFO  [alembic.runtime.migration] Running upgrade 0006_schema_alignment -> 0007_import_dry_runs, import_dry_runs: the table that holds a validated import waiting to be committed
+INFO  [alembic.runtime.migration] Running upgrade 0007_import_dry_runs -> 0008_fk_indexes, fk_indexes: index every foreign key
+INFO  [alembic.runtime.migration] Running upgrade 0008_fk_indexes -> 0009_credential_role_constraint, credential role constraint: the role column holds one of the five roles
+INFO  [alembic.runtime.migration] Running upgrade 0009_credential_role_constraint -> 0010_payroll_jurisdiction, payroll_jurisdiction: the jurisdiction and the rule pack of a pay run
+INFO  [alembic.runtime.migration] Running upgrade 0010_payroll_jurisdiction -> 0011_tenant_preset_state, tenant_preset_state: the deployment's preset state
+INFO  [alembic.runtime.migration] Running upgrade 0011_tenant_preset_state -> 0012_leave_ledger, leave_ledger: the leave ledger, and the genesis of the balances
+INFO  [alembic.runtime.migration] Running upgrade 0012_leave_ledger -> 0013_public_intake, public_intake: the fields a message from the public form needs
+INFO  [alembic.runtime.migration] Running upgrade 0013_public_intake -> 0014_payslip_contributions, payslip_contributions: the statutory contributions of a payslip
+INFO  [alembic.runtime.migration] Running upgrade 0014_payslip_contributions -> 0006_forecast_run_location_role, forecasting: add location_id and role_id to forecast_runs
+INFO  [alembic.runtime.migration] Running upgrade 0006_forecast_run_location_role -> 0015_forecast_scenarios, forecast_scenarios: add scenario tables for what-if forecasting
+INFO  [alembic.runtime.migration] Running upgrade 0015_forecast_scenarios -> 0016_attendance_roster_link, attendance: link time entries to the published roster (SC-05)
+INFO  [alembic.runtime.migration] Running upgrade 0016_attendance_roster_link -> 0017_forecast_costs, forecast_costs: stored, versioned labour cost forecasts (AN-04)
+INFO  [alembic.runtime.migration] Running upgrade 0017_forecast_costs -> 0018_scenario_versions, scenario_versions: versioning columns for forecast scenarios (AN-05)
+INFO  [alembic.runtime.migration] Running upgrade 0018_scenario_versions -> 0019_forecast_accuracy, forecast_accuracy_records: forecast-vs-actual accuracy history (AN-06)
+INFO  [alembic.runtime.migration] Running upgrade 0019_forecast_accuracy -> 0020_payslip_inputs, payslip_inputs: the approved time and leave a payslip was paid from
+INFO  [alembic.runtime.migration] Running upgrade 0020_payslip_inputs -> 0021_audit_source_address, audit_source_address: the hashed client address of an audited action
+INFO  [alembic.runtime.migration] Running upgrade 0021_audit_source_address -> 0022_audit_hash_chain, audit_hash_chain: chain columns, the head row and the append-only guards
+INFO  [alembic.runtime.migration] Running upgrade 0022_audit_hash_chain -> 0023_audit_hash_chain_contract, audit_hash_chain_contract: the chain columns become NOT NULL
+INFO  [alembic.runtime.migration] Running upgrade 0023_audit_hash_chain_contract -> 0024_job_input_payload, job_input_payload: a job remembers what it was asked to do
+INFO  [alembic.runtime.migration] Running upgrade 0024_job_input_payload -> 0025_job_result_payload, job_result_payload: a job remembers what it produced
+INFO  [alembic.runtime.migration] Running upgrade 0025_job_result_payload -> 0026_employment_history, employment_history: effective-dated employment changes and lifecycle fields
+INFO  [alembic.runtime.migration] Running upgrade 0026_employment_history -> 0027_payroll_currency, payroll_currency: ISO 4217 currency on pay runs and payslips
+INFO  [alembic.runtime.migration] Running upgrade 0027_payroll_currency -> 0028_tenant_discriminator, tenant_discriminator: shared-schema multi-tenancy tenant_id column
+INFO  [alembic.runtime.migration] Running upgrade 0028_tenant_discriminator -> 0029_schema_drift_fix, schema_drift_fix: the model columns and tables the earlier revisions missed
+INFO  [alembic.runtime.migration] Running upgrade 0029_schema_drift_fix -> 0030_india_employee_fields, india_employee_fields: the India payroll data model (india-payroll slice 1)
+INFO  [alembic.runtime.migration] Running upgrade 0030_india_employee_fields -> 0031_india_fnf_basic_da, india F&F + Basic/DA split (india-payroll slice 5)
+INFO  [alembic.runtime.migration] Running upgrade 0031_india_fnf_basic_da -> 0032_india_aadhaar_encryption, india aadhaar encryption + identity (india-payroll slice 6)
+INFO  [alembic.runtime.migration] Running upgrade 0032_india_aadhaar_encryption -> 0033_login_failure_window, login failure window (LibrePeople Phase 2, item 5)
+INFO  [alembic.runtime.migration] Running upgrade 0033_login_failure_window -> lp_files_url_rewrite, rewrite stored /files URLs to the authorised route (LibrePeople, item 9)
+INFO  [alembic.runtime.migration] Running upgrade lp_files_url_rewrite -> 0034_pg_foundations, PostgreSQL foundations (LibrePeople Stage 3)
+INFO  [alembic.runtime.migration] Running upgrade 0034_pg_foundations -> 0035_time_corrections_locks, time corrections and attendance period locks (LP-TIME-004+005)
+INFO  [alembic.runtime.migration] Running upgrade 0035_time_corrections_locks -> 0036_legal_entities, legal entities master + employee legal-entity link (LP-CORE-003+010)
+INFO  [alembic.runtime.migration] Running upgrade 0036_legal_entities -> 0037_expenses, expense categories, claims and receipts (LP-EXP-001+002)
+INFO  [alembic.runtime.migration] Running upgrade 0037_expenses -> 0038_legal_entity_tenant_code, legal entities: tenant-scoped code uniqueness (LP-CORE-003+010 fix)
+INFO  [alembic.runtime.migration] Running upgrade 0038_legal_entity_tenant_code -> 0039_custom_fields, configurable employee fields (LP-CORE-005)
+INFO  [alembic.runtime.migration] Running upgrade 0039_custom_fields -> 0040_document_lifecycle, versioned documents, acknowledgements and access logs (LP-DOC-002)
+INFO  [alembic.runtime.migration] Running upgrade 0040_document_lifecycle -> 0041_case_comment_attachments, case comment attachments (LP-SVC-001+003)
+INFO  [alembic.runtime.migration] Running upgrade 0041_case_comment_attachments -> 0042_notification_delivery, notification delivery tracking (LP-NOT-003)
+INFO  [alembic.runtime.migration] Running upgrade 0042_notification_delivery -> 0043_integrity_expand, integrity expand: enforce the safe NFR-014 constraints (LP-NFR-014)
+INFO  [alembic.runtime.migration] Running upgrade 0043_integrity_expand -> 0044_forecasting_tenant_isolation, forecasting tenant isolation: shared-schema multi-tenancy tenant_id column
+INFO  [alembic.runtime.migration] Running upgrade 0044_forecasting_tenant_isolation -> 0045_payroll_pipeline_run_type, payroll pipeline run_type + reversal link (expand-only)
+INFO  [alembic.runtime.migration] Running upgrade 0045_payroll_pipeline_run_type -> 0046_assets, asset register and custody assignments
+INFO  [alembic.runtime.migration] Running upgrade 0046_assets -> 0047_expense_category_tenant_code, expense categories: tenant-scoped code uniqueness (Team D hardening)
+[0002_credential_lifecycle] created index ix_refresh_tokens_user_id
+[0002_credential_lifecycle] created index ix_refresh_tokens_family_id
+[0004_job_queue] created job_queue
+[0004_job_queue] created index ix_job_queue_state_type
+[0004_job_queue] job_queue (lease_expires_at) is already indexed; ix_job_queue_lease_expires was not created
+[0006_schema_alignment] case_comments.comment is already not null; skipping
+[0006_schema_alignment] compensation_bands.level is already not null; skipping
+[0007_import_dry_runs] created import_dry_runs
+[0007_import_dry_runs] created index ix_dryrun_token
+[0007_import_dry_runs] created index ix_dryrun_entity
+[0007_import_dry_runs] created index ix_dryrun_file_hash
+[0007_import_dry_runs] created index ix_dryrun_result_hash
+[0007_import_dry_runs] created index ix_dryrun_user_id
+[0007_import_dry_runs] created index ix_dryrun_tenant_id
+[0007_import_dry_runs] created index ix_dryrun_status
+[0007_import_dry_runs] created index ix_dryrun_expires_at
+[0007_import_dry_runs] created index ix_dryrun_upload_expires_at
+[0008_fk_indexes] created ix_fk_announcements_created_by
+[0008_fk_indexes] created ix_fk_applications_re_69c5396f
+[0008_fk_indexes] created ix_fk_applications_ca_4849db07
+[0008_fk_indexes] created ix_fk_background_chec_83e90ff8
+[0008_fk_indexes] created ix_fk_benefit_enrollm_f3148579
+[0008_fk_indexes] created ix_fk_benefit_enrollm_2720225f
+[0008_fk_indexes] created ix_fk_case_comments_case_id
+[0008_fk_indexes] created ix_fk_certifications__db27a77d
+[0008_fk_indexes] created ix_fk_compensation_ba_02a7d13a
+[0008_fk_indexes] created ix_fk_compliance_chec_c7ee8d49
+[0008_fk_indexes] created ix_fk_compliance_viol_3e53754b
+[0008_fk_indexes] created ix_fk_compliance_viol_21e190f1
+[0008_fk_indexes] created ix_fk_continuous_feed_23e6c83c
+[0008_fk_indexes] created ix_fk_continuous_feed_efaeef35
+[0008_fk_indexes] created ix_fk_cost_centers_de_2836d071
+[0008_fk_indexes] created ix_fk_course_enrollme_50756d77
+[0008_fk_indexes] created ix_fk_course_enrollme_6008e7af
+[0008_fk_indexes] created ix_fk_employee_docume_5946f6e8
+[0008_fk_indexes] created ix_fk_employee_files__2459443a
+[0008_fk_indexes] created ix_fk_employees_job_id
+[0008_fk_indexes] created ix_fk_employees_department_id
+[0008_fk_indexes] created ix_fk_employees_manager_id
+[0008_fk_indexes] created ix_fk_goal_alignments_goal_id
+[0008_fk_indexes] created ix_fk_goal_alignments_e3114534
+[0008_fk_indexes] created ix_fk_goals_employee_id
+[0008_fk_indexes] created ix_fk_headcount_plans_5f20279a
+[0008_fk_indexes] created ix_fk_hr_cases_employee_id
+[0008_fk_indexes] created ix_fk_integrations_client_id
+[0008_fk_indexes] created ix_fk_job_requisition_8406ab77
+[0008_fk_indexes] created ix_fk_job_requisitions_job_id
+[0008_fk_indexes] created ix_fk_jobs_department_id
+[0008_fk_indexes] created ix_fk_leave_balances__76b38917
+[0008_fk_indexes] leave_ledger is not present; skipping
+[0008_fk_indexes] leave_ledger is not present; skipping
+[0008_fk_indexes] leave_ledger is not present; skipping
+[0008_fk_indexes] leave_ledger is not present; skipping
+[0008_fk_indexes] created ix_fk_leave_requests__e5751373
+[0008_fk_indexes] created ix_fk_leave_requests__b47558f6
+[0008_fk_indexes] created ix_fk_leave_requests__b289a10b
+[0008_fk_indexes] created ix_fk_leaves_of_absen_16b717ca
+[0008_fk_indexes] created ix_fk_leaves_of_absen_2ee4b337
+[0008_fk_indexes] created ix_fk_life_events_employee_id
+[0008_fk_indexes] created ix_fk_merit_allocatio_b7f469cf
+[0008_fk_indexes] created ix_fk_merit_allocatio_7d0e1d74
+[0008_fk_indexes] created ix_fk_migration_jobs_client_id
+[0008_fk_indexes] created ix_fk_migration_jobs__c309583a
+[0008_fk_indexes] created ix_fk_notifications_r_e68b830a
+[0008_fk_indexes] created ix_fk_offboarding_ite_07f095d1
+[0008_fk_indexes] created ix_fk_offboarding_ite_13920997
+[0008_fk_indexes] created ix_fk_offers_application_id
+[0008_fk_indexes] created ix_fk_offers_job_id
+[0008_fk_indexes] created ix_fk_onboarding_docu_d39857f1
+[0008_fk_indexes] created ix_fk_onboarding_task_1f341db9
+[0008_fk_indexes] created ix_fk_org_chart_nodes_76ac7486
+[0008_fk_indexes] created ix_fk_pay_runs_period_id
+[0008_fk_indexes] created ix_fk_pay_runs_processed_by
+[0008_fk_indexes] created ix_fk_pay_runs_approved_by
+[0008_fk_indexes] created ix_fk_pay_runs_finalized_by
+[0008_fk_indexes] created ix_fk_pay_slips_employee_id
+[0008_fk_indexes] created ix_fk_performance_rev_47020c0c
+[0008_fk_indexes] created ix_fk_performance_rev_e18dbc1c
+[0008_fk_indexes] created ix_fk_positions_job_id
+[0008_fk_indexes] created ix_fk_positions_department_id
+[0008_fk_indexes] created ix_fk_positions_location_id
+[0008_fk_indexes] created ix_fk_positions_repor_4201f33b
+[0008_fk_indexes] created ix_fk_report_definiti_0ecc98f0
+[0008_fk_indexes] created ix_fk_review_feedback_479f439e
+[0008_fk_indexes] created ix_fk_review_feedback_4bad06a3
+[0008_fk_indexes] created ix_fk_roster_entries__2396884e
+[0008_fk_indexes] created ix_fk_roster_entries__d8fa880d
+[0008_fk_indexes] created ix_fk_saved_reports_d_d8353528
+[0008_fk_indexes] created ix_fk_scenarios_base_plan_id
+[0008_fk_indexes] created ix_fk_shift_swaps_ros_2dc28cd0
+[0008_fk_indexes] created ix_fk_shift_swaps_requester_id
+[0008_fk_indexes] created ix_fk_shift_swaps_target_id
+[0008_fk_indexes] created ix_fk_shift_swaps_decided_by
+[0008_fk_indexes] created ix_fk_succession_plan_542ab267
+[0008_fk_indexes] created ix_fk_succession_plan_adf3702a
+[0008_fk_indexes] created ix_fk_succession_plan_60f191a2
+[0008_fk_indexes] created ix_fk_talent_pool_mem_91333374
+[0008_fk_indexes] created ix_fk_talent_pool_mem_9451d793
+[0008_fk_indexes] created ix_fk_terminations_employee_id
+[0008_fk_indexes] created ix_fk_terminations_in_da5db9e7
+[0008_fk_indexes] created ix_fk_terminations_decided_by
+[0008_fk_indexes] created ix_fk_time_entries_employee_id
+[0008_fk_indexes] created ix_fk_timesheets_employee_id
+[0008_fk_indexes] created ix_fk_timesheets_approved_by
+[0008_fk_indexes] created ix_fk_webhook_deliver_08a29a32
+[0008_fk_indexes] 84 indexes created
+[0009_credential_role_constraint] users.role holds only known roles
+[0009_credential_role_constraint] users.role is already constrained; nothing to do
+[0010_payroll_jurisdiction] pay_runs.jurisdiction is already present; skipping
+[0010_payroll_jurisdiction] pay_runs.rule_pack_id is already present; skipping
+[0012_leave_ledger] created leave_ledger
+[0012_leave_ledger] created index ix_leave_ledger_balance_id
+[0012_leave_ledger] created index ix_leave_ledger_employee_id
+[0012_leave_ledger] created index ix_leave_ledger_leave_type_id
+[0012_leave_ledger] created index ix_leave_ledger_entitlement_year
+[0012_leave_ledger] created index ix_fk_leave_ledger_created_by
+[0012_leave_ledger] 0 balance(s) given a genesis
+[0011_public_intake] hr_cases(source) is already indexed; ix_hr_cases_source was not created
+[0014_payslip_contributions] pay_slips.employee_contributions is already present; skipping
+[0014_payslip_contributions] pay_slips.employer_contributions is already present; skipping
+[0006_forecast_run_location_role] added column forecast_runs.location_id
+[0006_forecast_run_location_role] added column forecast_runs.role_id
+[0006_forecast_run_location_role] created index ix_forecast_runs_location_id
+[0006_forecast_run_location_role] created index ix_forecast_runs_role_id
+[0016_attendance_roster_link] created table working_time_violations
+[0017_forecast_costs] created table forecast_costs
+[0017_forecast_costs] created table forecast_cost_rows
+[0018_scenario_versions] added column forecast_scenarios.version_no
+[0018_scenario_versions] added column forecast_scenarios.source
+[0018_scenario_versions] added column forecast_scenarios.forked_from_scenario_id
+[0018_scenario_versions] added column forecast_scenarios.root_id
+[0018_scenario_versions] created unique index uq_forecast_scenario_root_version
+[0019_forecast_accuracy] created table forecast_accuracy_records
+[0020_payslip_inputs] pay_slips.inputs_json is already present; skipping
+[0021_audit_source_address] audit_logs.source_ip_hash is already present; skipping
+[0022_audit_hash_chain] created audit_chain_head
+[0022_audit_hash_chain] chained 0 existing entries
+[0022_audit_hash_chain] seeded the head at 000000000000...
+[0022_audit_hash_chain] append-only triggers installed on audit_logs
+[0023_audit_hash_chain_contract] audit_logs.prev_hash is already NOT NULL; skipping
+[0023_audit_hash_chain_contract] audit_logs.entry_hash is already NOT NULL; skipping
+[0027_payroll_currency] pay_runs.currency is already present; skipping
+[0027_payroll_currency] pay_slips.currency is already present; skipping
+[0028_tenant_discriminator] employees.tenant_id is already present; ensuring its index and backfill
+[0028_tenant_discriminator] backfilled employees.tenant_id to default
+[0028_tenant_discriminator] departments.tenant_id is already present; ensuring its index and backfill
+[0028_tenant_discriminator] backfilled departments.tenant_id to default
+[0028_tenant_discriminator] jobs.tenant_id is already present; ensuring its index and backfill
+[0028_tenant_discriminator] backfilled jobs.tenant_id to default
+[0028_tenant_discriminator] locations.tenant_id is already present; ensuring its index and backfill
+[0028_tenant_discriminator] backfilled locations.tenant_id to default
+[0028_tenant_discriminator] cost_centers.tenant_id is already present; ensuring its index and backfill
+[0028_tenant_discriminator] backfilled cost_centers.tenant_id to default
+[0028_tenant_discriminator] positions.tenant_id is already present; ensuring its index and backfill
+[0028_tenant_discriminator] backfilled positions.tenant_id to default
+[0028_tenant_discriminator] leave_types.tenant_id is already present; ensuring its index and backfill
+[0028_tenant_discriminator] backfilled leave_types.tenant_id to default
+[0028_tenant_discriminator] leave_balances.tenant_id is already present; ensuring its index and backfill
+[0028_tenant_discriminator] backfilled leave_balances.tenant_id to default
+[0028_tenant_discriminator] leave_requests.tenant_id is already present; ensuring its index and backfill
+[0028_tenant_discriminator] backfilled leave_requests.tenant_id to default
+[0028_tenant_discriminator] added leave_ledger.tenant_id
+[0028_tenant_discriminator] backfilled leave_ledger.tenant_id to default
+[0028_tenant_discriminator] payroll_periods.tenant_id is already present; ensuring its index and backfill
+[0028_tenant_discriminator] backfilled payroll_periods.tenant_id to default
+[0028_tenant_discriminator] pay_runs.tenant_id is already present; ensuring its index and backfill
+[0028_tenant_discriminator] backfilled pay_runs.tenant_id to default
+[0028_tenant_discriminator] pay_slips.tenant_id is already present; ensuring its index and backfill
+[0028_tenant_discriminator] backfilled pay_slips.tenant_id to default
+[0028_tenant_discriminator] employee_pay_profiles.tenant_id is already present; ensuring its index and backfill
+[0028_tenant_discriminator] backfilled employee_pay_profiles.tenant_id to default
+[0028_tenant_discriminator] shift_templates.tenant_id is already present; ensuring its index and backfill
+[0028_tenant_discriminator] backfilled shift_templates.tenant_id to default
+[0028_tenant_discriminator] roster_entries.tenant_id is already present; ensuring its index and backfill
+[0028_tenant_discriminator] backfilled roster_entries.tenant_id to default
+[0028_tenant_discriminator] roster_versions is not present; skipping
+[0028_tenant_discriminator] shift_swaps.tenant_id is already present; ensuring its index and backfill
+[0028_tenant_discriminator] backfilled shift_swaps.tenant_id to default
+[0028_tenant_discriminator] time_entries.tenant_id is already present; ensuring its index and backfill
+[0028_tenant_discriminator] backfilled time_entries.tenant_id to default
+[0028_tenant_discriminator] timesheets.tenant_id is already present; ensuring its index and backfill
+[0028_tenant_discriminator] backfilled timesheets.tenant_id to default
+[0028_tenant_discriminator] added working_time_violations.tenant_id
+[0028_tenant_discriminator] backfilled working_time_violations.tenant_id to default
+[0028_tenant_discriminator] added job_queue.tenant_id
+[0028_tenant_discriminator] backfilled job_queue.tenant_id to default
+[0028_tenant_discriminator] added employee_history.tenant_id
+[0028_tenant_discriminator] backfilled employee_history.tenant_id to default
+[0029_schema_drift_fix] audit_logs.tenant_id is already present; skipping
+[0029_schema_drift_fix] audit_logs.break_glass_grant_id is already present; skipping
+[0029_schema_drift_fix] clients.currency is already present; skipping
+[0029_schema_drift_fix] clients.date_format is already present; skipping
+[0029_schema_drift_fix] clients.working_week is already present; skipping
+[0029_schema_drift_fix] clients.deprovisioned_at is already present; skipping
+[0029_schema_drift_fix] clients.archived_at is already present; skipping
+[0029_schema_drift_fix] leave_requests.balance_applied is already present; skipping
+[0029_schema_drift_fix] created table break_glass_grants
+[0029_schema_drift_fix] created index ix_break_glass_grants_actor_id on break_glass_grants
+[0029_schema_drift_fix] created index ix_break_glass_grants_target_tenant_id on break_glass_grants
+[0029_schema_drift_fix] created table roster_versions
+[0029_schema_drift_fix] created index ix_roster_versions_tenant_id on roster_versions
+[0030_india_employee_fields] employees.pan_number is already present; skipping
+[0030_india_employee_fields] employees.tax_regime is already present; skipping
+[0030_india_employee_fields] employees.pf_uan is already present; skipping
+[0030_india_employee_fields] employees.esi_number is already present; skipping
+[0030_india_employee_fields] employees.ifsc_code is already present; skipping
+[0030_india_employee_fields] employee_pay_profiles.pt_state is already present; skipping
+[0030_india_employee_fields] clients.country_code is already present; skipping
+[0030_india_employee_fields] backfilled clients.country_code from country where country is a two-letter code
+[0031_india_fnf_basic_da] employee_pay_profiles.basic_pct is already present; skipping
+[0032_india_aadhaar_encryption] employees.aadhaar_encrypted already present; skipping
+[0032_india_aadhaar_encryption] employees.aadhaar_last4 already present; skipping
+[0032_india_aadhaar_encryption] employees.aadhaar_masked already present; skipping
+[0032_india_aadhaar_encryption] employees.pan_verified_status already present; skipping
+[0033_login_failure_window] users.failed_login_window_started_at already present; skipping
+[lp_files_url_rewrite] no stored /files/ URLs found; nothing to rewrite
+[0034_pg_foundations] dialect is 'sqlite', not postgresql; skipping
+[0035_time_corrections_locks] created time_correction_requests
+[0035_time_corrections_locks] created attendance_period_locks
+[0035_time_corrections_locks] created index ix_time_correction_requests_tenant_id
+[0035_time_corrections_locks] created index ix_time_correction_requests_employee_id
+[0035_time_corrections_locks] created index ix_time_correction_requests_work_date
+[0035_time_corrections_locks] created index ix_attendance_period_locks_tenant_id
+[0035_time_corrections_locks] created index ix_attendance_period_locks_period_start
+[0035_time_corrections_locks] created index ix_attendance_period_locks_period_end
+[0036_legal_entities] created legal_entities
+[0036_legal_entities] employees.legal_entity_id is already present; skipping
+[0036_legal_entities] created index ix_legal_entities_tenant_id_id
+[0036_legal_entities] index ix_employees_legal_entity_id already present; skipping
+[0037_expenses] created expense_categories
+[0037_expenses] created expense_claims
+[0037_expenses] created expense_receipts
+[0037_expenses] created index ix_expense_categories_tenant_id_id
+[0037_expenses] created index ix_expense_claims_tenant_id
+[0037_expenses] created index ix_expense_claims_employee_id
+[0037_expenses] created index ix_expense_claims_category_id
+[0037_expenses] created index ix_expense_claims_tenant_id_id
+[0037_expenses] created index ix_expense_receipts_tenant_id
+[0037_expenses] created index ix_expense_receipts_claim_id
+[0037_expenses] created index ix_expense_receipts_tenant_id_id
+[0038_legal_entity_tenant_code] dropped uq_legal_entities_code
+[0038_legal_entity_tenant_code] created uq_le_tenant_code
+[0039_custom_fields] created custom_field_defs
+[0039_custom_fields] created custom_field_values
+[0039_custom_fields] created index ix_cfdef_tenant_id_id
+[0039_custom_fields] created index ix_custom_field_defs_key
+[0039_custom_fields] created index ix_cfval_tenant_id_id
+[0039_custom_fields] created index ix_cfval_employee_id
+[0040_document_lifecycle] created document_versions
+[0040_document_lifecycle] created document_acks
+[0040_document_lifecycle] created document_access_logs
+[0040_document_lifecycle] created index ix_docver_doc_id
+[0040_document_lifecycle] created index ix_docack_doc_id
+[0040_document_lifecycle] created index ix_doclog_doc_id
+[0040_document_lifecycle] employee_documents.storage_key already present; skipping
+[0040_document_lifecycle] employee_documents.current_version already present; skipping
+[0040_document_lifecycle] employee_documents.retention_until already present; skipping
+[0041_case_comment_attachments] case_comments.attachment_filename already present; skipping
+[0041_case_comment_attachments] case_comments.attachment_key already present; skipping
+[0042_notification_delivery] notifications.delivery_status already present; skipping
+[0042_notification_delivery] notifications.delivery_attempts already present; skipping
+[0042_notification_delivery] notifications.delivery_error already present; skipping
+[0043_integrity_expand] created integrity_quarantine
+[0043_integrity_expand] ck_claim_status_fsm: quarantined+repaired 0 row(s)
+[0043_integrity_expand] ck_claim_paystat_fsm: quarantined+repaired 0 row(s)
+[0043_integrity_expand] ck_leave_req_status: quarantined+repaired 0 row(s)
+[0043_integrity_expand] ck_claim_amount_nonneg: quarantined+repaired 0 row(s)
+[0043_integrity_expand] ck_payslip_amounts_nonneg: quarantined+repaired 0 row(s)
+[0043_integrity_expand] ck_receipt_size_nonneg: quarantined+repaired 0 row(s)
+[0043_integrity_expand] ck_leave_req_dates: quarantined+repaired 0 row(s)
+[0043_integrity_expand] ck_emphist_dates: quarantined+repaired 0 row(s)
+[0043_integrity_expand] ck_ledger_signed_nonzero: quarantined+removed 0 row(s)
+[0043_integrity_expand] uq_payslip_run_employee: quarantined+removed 0 duplicate row(s)
+[0043_integrity_expand] backfill report: {"ck_claim_amount_nonneg": 0, "ck_claim_paystat_fsm": 0, "ck_claim_status_fsm": 0, "ck_emphist_dates": 0, "ck_leave_req_dates": 0, "ck_leave_req_status": 0, "ck_ledger_signed_nonzero": 0, "ck_payslip_amounts_nonneg": 0, "ck_receipt_size_nonneg": 0, "uq_payslip_run_employee": 0}; quarantine now holds 0 row(s)
+[0043_integrity_expand] pay_slips.uq_payslip_run_employee already present; skipping
+[0043_integrity_expand] added expense_claims.ck_claim_amount_nonneg
+[0043_integrity_expand] added expense_claims.ck_claim_status_fsm
+[0043_integrity_expand] added expense_claims.ck_claim_paystat_fsm
+[0043_integrity_expand] leave_requests.ck_leave_req_dates already present; skipping
+[0043_integrity_expand] leave_requests.ck_leave_req_status already present; skipping
+[0043_integrity_expand] added leave_ledger.ck_ledger_signed_nonzero
+[0043_integrity_expand] added employee_history.ck_emphist_dates
+[0043_integrity_expand] pay_slips.ck_payslip_amounts_nonneg already present; skipping
+[0043_integrity_expand] added expense_receipts.ck_receipt_size_nonneg
+[0043_integrity_expand] created index ix_fk_expense_claims__48ab52a8 on expense_claims(submitted_by)
+[0043_integrity_expand] created index ix_fk_expense_claims__259a56af on expense_claims(l1_approved_by)
+[0043_integrity_expand] created index ix_fk_expense_claims__9f8a0e48 on expense_claims(approved_by)
+[0043_integrity_expand] created index ix_fk_expense_claims__82a2ebf9 on expense_claims(rejected_by)
+[0043_integrity_expand] created index ix_fk_expense_claims_paid_by on expense_claims(paid_by)
+[0043_integrity_expand] created index ix_fk_expense_receipt_ac0046b8 on expense_receipts(uploaded_by)
+[0043_integrity_expand] created index ix_fk_custom_field_va_7bc124da on custom_field_values(def_id)
+[0043_integrity_expand] employee_documents.employee_id already indexed; skipping
+[0043_integrity_expand] upgrade complete
+[0044_forecasting_tenant_isolation] added forecast_runs.tenant_id
+[0044_forecasting_tenant_isolation] backfilled forecast_runs.tenant_id to default
+[0044_forecasting_tenant_isolation] added forecast_results.tenant_id
+[0044_forecasting_tenant_isolation] backfilled forecast_results.tenant_id to default
+[0044_forecasting_tenant_isolation] added forecast_model_versions.tenant_id
+[0044_forecasting_tenant_isolation] backfilled forecast_model_versions.tenant_id to default
+[0044_forecasting_tenant_isolation] added forecast_scenarios.tenant_id
+[0044_forecasting_tenant_isolation] backfilled forecast_scenarios.tenant_id to default
+[0044_forecasting_tenant_isolation] added forecast_scenario_results.tenant_id
+[0044_forecasting_tenant_isolation] backfilled forecast_scenario_results.tenant_id to default
+[0044_forecasting_tenant_isolation] added forecast_costs.tenant_id
+[0044_forecasting_tenant_isolation] backfilled forecast_costs.tenant_id to default
+[0044_forecasting_tenant_isolation] added forecast_cost_rows.tenant_id
+[0044_forecasting_tenant_isolation] backfilled forecast_cost_rows.tenant_id to default
+[0044_forecasting_tenant_isolation] added forecast_accuracy_records.tenant_id
+[0044_forecasting_tenant_isolation] backfilled forecast_accuracy_records.tenant_id to default
+[0045_payroll_pipeline_run_type] pay_runs.run_type already present; skipping
+[0045_payroll_pipeline_run_type] pay_runs.reversal_of_run_id already present; skipping
+[0046_assets] created assets
+[0046_assets] created asset_assignments
+[0046_assets] created index ix_assets_tenant_id
+[0046_assets] created index ix_assets_tag
+[0046_assets] created index ix_assets_tenant_id_id
+[0046_assets] created index ix_asset_assignments_tenant_id
+[0046_assets] created index ix_asset_assignments_asset_id
+[0046_assets] created index ix_asset_assignments_employee_id
+[0046_assets] created index ix_asset_asg_tenant_id_id
+[0047_expense_category_tenant_code] dropped uq_expense_categories_code
+[0047_expense_category_tenant_code] created uq_exp_cat_tenant_code

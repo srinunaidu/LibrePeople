@@ -1,0 +1,49 @@
+0046_assets -> 0047_expense_category_tenant_code (head), expense categories: tenant-scoped code uniqueness (Team D hardening)
+0045_payroll_pipeline_run_type -> 0046_assets, asset register and custody assignments
+0044_forecasting_tenant_isolation -> 0045_payroll_pipeline_run_type, payroll pipeline run_type + reversal link (expand-only)
+0043_integrity_expand -> 0044_forecasting_tenant_isolation, forecasting tenant isolation: shared-schema multi-tenancy tenant_id column
+0042_notification_delivery -> 0043_integrity_expand, integrity expand: enforce the safe NFR-014 constraints (LP-NFR-014)
+0041_case_comment_attachments -> 0042_notification_delivery, notification delivery tracking (LP-NOT-003)
+0040_document_lifecycle -> 0041_case_comment_attachments, case comment attachments (LP-SVC-001+003)
+0039_custom_fields -> 0040_document_lifecycle, versioned documents, acknowledgements and access logs (LP-DOC-002)
+0038_legal_entity_tenant_code -> 0039_custom_fields, configurable employee fields (LP-CORE-005)
+0037_expenses -> 0038_legal_entity_tenant_code, legal entities: tenant-scoped code uniqueness (LP-CORE-003+010 fix)
+0036_legal_entities -> 0037_expenses, expense categories, claims and receipts (LP-EXP-001+002)
+0035_time_corrections_locks -> 0036_legal_entities, legal entities master + employee legal-entity link (LP-CORE-003+010)
+0034_pg_foundations -> 0035_time_corrections_locks, time corrections and attendance period locks (LP-TIME-004+005)
+lp_files_url_rewrite -> 0034_pg_foundations, PostgreSQL foundations (LibrePeople Stage 3)
+0033_login_failure_window -> lp_files_url_rewrite, rewrite stored /files URLs to the authorised route (LibrePeople, item 9)
+0032_india_aadhaar_encryption -> 0033_login_failure_window, login failure window (LibrePeople Phase 2, item 5)
+0031_india_fnf_basic_da -> 0032_india_aadhaar_encryption, india aadhaar encryption + identity (india-payroll slice 6)
+0030_india_employee_fields -> 0031_india_fnf_basic_da, india F&F + Basic/DA split (india-payroll slice 5)
+0029_schema_drift_fix -> 0030_india_employee_fields, india_employee_fields: the India payroll data model (india-payroll slice 1)
+0028_tenant_discriminator -> 0029_schema_drift_fix, schema_drift_fix: the model columns and tables the earlier revisions missed
+0027_payroll_currency -> 0028_tenant_discriminator, tenant_discriminator: shared-schema multi-tenancy tenant_id column
+0026_employment_history -> 0027_payroll_currency, payroll_currency: ISO 4217 currency on pay runs and payslips
+0025_job_result_payload -> 0026_employment_history, employment_history: effective-dated employment changes and lifecycle fields
+0024_job_input_payload -> 0025_job_result_payload, job_result_payload: a job remembers what it produced
+0023_audit_hash_chain_contract -> 0024_job_input_payload, job_input_payload: a job remembers what it was asked to do
+0022_audit_hash_chain -> 0023_audit_hash_chain_contract, audit_hash_chain_contract: the chain columns become NOT NULL
+0021_audit_source_address -> 0022_audit_hash_chain, audit_hash_chain: chain columns, the head row and the append-only guards
+0020_payslip_inputs -> 0021_audit_source_address, audit_source_address: the hashed client address of an audited action
+0019_forecast_accuracy -> 0020_payslip_inputs, payslip_inputs: the approved time and leave a payslip was paid from
+0018_scenario_versions -> 0019_forecast_accuracy, forecast_accuracy_records: forecast-vs-actual accuracy history (AN-06)
+0017_forecast_costs -> 0018_scenario_versions, scenario_versions: versioning columns for forecast scenarios (AN-05)
+0016_attendance_roster_link -> 0017_forecast_costs, forecast_costs: stored, versioned labour cost forecasts (AN-04)
+0015_forecast_scenarios -> 0016_attendance_roster_link, attendance: link time entries to the published roster (SC-05)
+0006_forecast_run_location_role -> 0015_forecast_scenarios, forecast_scenarios: add scenario tables for what-if forecasting
+0014_payslip_contributions -> 0006_forecast_run_location_role, forecasting: add location_id and role_id to forecast_runs
+0013_public_intake -> 0014_payslip_contributions, payslip_contributions: the statutory contributions of a payslip
+0012_leave_ledger -> 0013_public_intake, public_intake: the fields a message from the public form needs
+0011_tenant_preset_state -> 0012_leave_ledger, leave_ledger: the leave ledger, and the genesis of the balances
+0010_payroll_jurisdiction -> 0011_tenant_preset_state, tenant_preset_state: the deployment's preset state
+0009_credential_role_constraint -> 0010_payroll_jurisdiction, payroll_jurisdiction: the jurisdiction and the rule pack of a pay run
+0008_fk_indexes -> 0009_credential_role_constraint, credential role constraint: the role column holds one of the five roles
+0007_import_dry_runs -> 0008_fk_indexes, fk_indexes: index every foreign key
+0006_schema_alignment -> 0007_import_dry_runs, import_dry_runs: the table that holds a validated import waiting to be committed
+0005_forecasting -> 0006_schema_alignment, schema_alignment: add the columns the models expect
+0004_job_queue -> 0005_forecasting, forecasting: add forecasting tables
+0003_mfa -> 0004_job_queue, job_queue: add background job queue table
+0002_credential_lifecycle -> 0003_mfa, mfa: add multi-factor authentication fields to users
+0001_baseline -> 0002_credential_lifecycle, credential lifecycle: refresh token table and user credential columns
+<base> -> 0001_baseline, baseline: adopt the schema that predates Alembic
