@@ -439,3 +439,72 @@ App-helper enum-`LIKE`: FIXED and regression-gated. No PG re-run: chain
 already green, migration unaffected, fix is SQLite-proven identical plus
 code review (portable CAST, no dialect-only syntax); PG smoke skipped as
 not cheap/required. Full PG proof: still PASSES (prior addendum).
+
+## Addendum 2026-11-25 — 0012 version-independent enum flag (2.0.29 no-op finding)
+
+Branch `agent/ops/enum-flag-fix`, base `d8e212c` (local main HEAD;
+`origin/main` is `51affcc`). Exclusive paths only: 0012, this suite,
+this report. No push. Synthetic only.
+
+### Part A — full-suite triage (HEAD vs base 51affcc, read-only worktree)
+
+`ci/run_backend_tests.sh` on HEAD: 50 passed, 8 failed. All 8 failing
+suites re-run on a clean `51affcc` worktree with identical commands and
+fail identically (same counts, same first-failure lines) — every one is
+PRE-EXISTING, zero regressions:
+
+| suite | base 51affcc | HEAD | verdict + first-failure line |
+|---|---|---|---|
+| security_headers | crash | crash | PRE-EXISTING — `RuntimeError: Production refuses to start with BACKEND_CORS_ORIGINS unset or wildcard` at import (fail-closed `config.validate`) |
+| import | 616/1 | 616/1 | PRE-EXISTING — `the generated schema document is up to date with the models` |
+| india_payroll | 113/1 | 113/1 | PRE-EXISTING — stale head assertion (`head=0048_mfa_secret_envelope`, expects 0032) |
+| payroll_framework_restart | 56/1 | 56/1 | PRE-EXISTING — `US 2026-10-01 still resolves verified (other lane untouched) status=absent` |
+| reset_admin_password | 35/9 | 35/9 | PRE-EXISTING — CORS `RuntimeError` inside production-subprocess runs + hostname-sensitive audit detail (`deployment=Srinivass-MacBook-Pro.local`) |
+| scheduling | crash | crash | PRE-EXISTING — `No module named 'ortools'` (env, not code) |
+| cost_forecast | 53/2 | 53/2 | PRE-EXISTING — `route registered : /api/v1/forecasting/runs/{run_id}/cost-forecast` |
+| accuracy | 82/2 | 82/2 | PRE-EXISTING — `route registered /api/v1/forecasting/accuracy:` |
+
+The CORS fail-closed, MFA Text change and backend-rebrand suspects all
+pre-date HEAD: the CORS crash reproduces byte-identically on `51affcc`.
+
+### Part B — 2.0.29 no-op finding + fix (version-independent)
+
+Evidence (pinned `/Users/srinivas/LLM/Workforce/librepeople-prod/.venv311`,
+SQLAlchemy **2.0.29**): `sa.Enum('A','B', name=..., create_type=False)`
+is accepted but the object carries **no** `create_type` attribute — the
+flag is silently swallowed, so `op.create_table` still emits an
+unconditional `CREATE TYPE` on PG. `postgresql.ENUM(..., create_type=False)`
+is accepted and honored (`create_type is False`) on **both** 2.0.29 and
+system 2.1.5, `length=11` included. Not blocked.
+
+Fix (`0012_leave_ledger.py` only): `entry_type` column is now
+`postgresql.ENUM(name=<same>, length=11, create_type=False)` (new
+`from sqlalchemy.dialects import postgresql` import); `_ensure_entry_type()`
+unchanged (idempotent `.create(checkfirst=True)` works on 2.0). No
+semantic change; SQLite/Oracle still see VARCHAR.
+
+Static gate extended (`pg_enum_checkfirst_test_suite.py`): new
+`0012 entry_type uses postgresql.ENUM(create_type=False)` test — fails on
+the pre-fix file (`line 102: named sa.Enum (2.0 ignores create_type)`),
+passes post-fix. Suite: 7 passed, 0 failed, 1 skipped (no PG URL).
+
+### Pinned proof (SA 2.0.29, scratch PG 16, fresh initdb)
+
+`psycopg[binary]` (3.3.9) installed into the pinned venv (env-only, no
+repo change). `python -m scripts.migrate upgrade head` on an empty
+`lp_0012_proof` DB with the **2.0.29** interpreter: exit **0** through
+0048 — 0012 creates `leave_ledger` + 5 indexes with no `already exists`,
+no ERROR; `alembic_version = 0048_mfa_secret_envelope`,
+`leaveledgerentrytype` present exactly once. No 2.1.5 fallback used, so
+no version-gap residual risk on this finding.
+
+### Regression (SQLite)
+
+`leave_test_suite`: 100 passed, 0 failed. `security_test_suite`: 2162
+passed, 0 failed. `migration_test_suite`: 67 passed, 0 failed.
+
+### Verdict
+
+0012 enum collision: FIXED version-independently and proven on the pinned
+2.0.29 interpreter end-to-end (fresh PG 16, exit 0 to head). Full PG proof:
+PASSES. Cleanup: `pg_ctl stop`, worktree + `/tmp/lp-pg*` removed.

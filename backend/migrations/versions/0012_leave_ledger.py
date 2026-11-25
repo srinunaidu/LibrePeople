@@ -53,6 +53,7 @@ from decimal import Decimal
 
 import sqlalchemy as sa
 from alembic import op
+from sqlalchemy.dialects import postgresql
 
 from app.core.migrations import (
     catalog_names,
@@ -99,7 +100,7 @@ COLUMNS = (
     sa.Column("entitlement_year", sa.Integer(), nullable=False),
     sa.Column(
         "entry_type",
-        sa.Enum(
+        postgresql.ENUM(
             "ACCRUAL",
             "ENTITLEMENT",
             "CARRY_OVER",
@@ -109,16 +110,17 @@ COLUMNS = (
             "ENCASHMENT",
             name="leaveledgerentrytype",
             length=11,
-            # PG prospectus: create_type=False so that op.create_table /
-            # op.add_column never emit an unconditional CREATE TYPE. The
-            # 0001 baseline (metadata.create_all over the frozen tables)
-            # already creates this native enum on PostgreSQL even though the
-            # owning leave_ledger table is not in the frozen set, so an
-            # unconditional CREATE TYPE here collides with
+            # Version-independent no-op: the generic sa.Enum create_type flag
+            # is honored only on SQLAlchemy 2.1+. On 2.0.x the kwarg is
+            # silently swallowed (the object carries no create_type
+            # attribute), so op.create_table still emits an unconditional
+            # CREATE TYPE and the chain dies on PostgreSQL with
             # 'type "leaveledgerentrytype" already exists' (gate A FAIL,
-            # 2026-11-25). The type is created idempotently by
-            # _ensure_entry_type() below instead. No-op on SQLite/Oracle,
-            # where the enum compiles to VARCHAR and no CREATE TYPE exists.
+            # 2026-11-25). The PG-dialect ENUM honors create_type=False on
+            # 2.0 and 2.1 alike (verified on pinned 2.0.29 + system 2.1.5),
+            # so the type is created idempotently by _ensure_entry_type()
+            # below instead. No-op on SQLite/Oracle, where the enum compiles
+            # to VARCHAR and no CREATE TYPE exists.
             create_type=False,
         ),
         nullable=False,

@@ -139,6 +139,65 @@ def test_no_unconditional_enum_create_type() -> None:
     )
 
 
+def test_0012_entry_type_uses_postgresql_enum() -> None:
+    """0012 entry_type is postgresql.ENUM(create_type=False), not sa.Enum.
+
+    The generic sa.Enum create_type flag is honored only on SQLAlchemy 2.1+;
+    on 2.0.x the kwarg is silently swallowed (no create_type attribute), so
+    op.create_table still emits an unconditional CREATE TYPE on PostgreSQL.
+    The PG-dialect ENUM honors the flag on both lines (verified on pinned
+    2.0.29 + system 2.1.5). Fails if 0012 ever regresses to bare sa.Enum.
+    Runs everywhere, no PG needed.
+    """
+    path = BACKEND_DIR / "migrations" / "versions" / "0012_leave_ledger.py"
+    try:
+        source = path.read_text()
+    except OSError as exc:
+        check("0012 entry_type uses postgresql.ENUM(create_type=False)", False, str(exc))
+        return
+    tree = ast.parse(source, filename=str(path))
+    calls: list[str] = []
+    bare_enum: list[str] = []
+    ok = False
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        if not isinstance(func, ast.Attribute):
+            continue
+        keywords = {
+            kw.arg: ast.unparse(kw.value) if hasattr(ast, "unparse") else ""
+            for kw in node.keywords
+        }
+        if func.attr == "ENUM":
+            receiver = func.value
+            dialect = ""
+            if isinstance(receiver, ast.Name):
+                dialect = receiver.id
+            elif isinstance(receiver, ast.Attribute):
+                dialect = receiver.attr
+            calls.append(f"line {node.lineno}: {dialect}.ENUM name={keywords.get('name', '?')}")
+            if (
+                dialect == "postgresql"
+                and "name" in keywords
+                and keywords.get("create_type", "True") == "False"
+            ):
+                ok = True
+        elif func.attr == "Enum" and "name" in keywords:
+            bare_enum.append(f"line {node.lineno}: named sa.Enum (2.0 ignores create_type)")
+    detail = ""
+    if not ok:
+        detail = (
+            f"ENUM calls: {'; '.join(calls) or 'none'}; "
+            f"{'; '.join(bare_enum) or 'no named sa.Enum'}"
+        )
+    check(
+        "0012 entry_type uses postgresql.ENUM(create_type=False)",
+        ok,
+        detail,
+    )
+
+
 def _bool_cols_with_int_default(path: Path) -> list[str]:
     """Boolean columns whose server_default is an int-like literal.
 
@@ -448,6 +507,7 @@ def test_pg_upgrade_head_when_available() -> None:
 def main() -> int:
     print("pg enum checkfirst suite")
     test_no_unconditional_enum_create_type()
+    test_0012_entry_type_uses_postgresql_enum()
     test_no_boolean_int_server_default()
     test_no_bare_like_without_cast()
     test_append_only_trigger_branches_on_dialect()
