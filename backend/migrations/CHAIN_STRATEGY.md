@@ -43,9 +43,16 @@ a future branch must add an explicit merge revision — Alembic will refuse
 1. `alembic upgrade head` → exit 0, stamped
    `0047_expense_category_tenant_code`, 110 tables.
 2. `alembic downgrade base` → exit 0, version rows empty.
-3. `alembic upgrade head` → exit 0, back at head.
-   Full log: `backend/migrations/proof/reupgrade-head.log`;
+   Full log: `backend/migrations/proof/downgrade-base.log`
+   (`EXIT_CODE=0` trailer).
+3. `alembic upgrade head` → exit 0, back at head
+   (`0047_expense_category_tenant_code`, 110 tables).
+   Full log: `backend/migrations/proof/reupgrade-second.log`
+   (`EXIT_CODE=0` trailer); the first-cycle log is
+   `backend/migrations/proof/reupgrade-head.log`;
    `proof/history.txt` records the chain. No failures.
+   The feared `0047` constraint-swap downgrade failure did NOT
+   materialise on sqlite.
 
 ## 4. Oracle-compatibility notes (static review only — no PG/Oracle here)
 
@@ -78,3 +85,18 @@ a future branch must add an explicit merge revision — Alembic will refuse
 - `0047` downgrade drops/recreates a uniqueness constraint — data
   violating the old global uniqueness will fail re-upgrade; snapshot
   before downgrading production.
+
+## 7. Env notes for reproducing the proof
+
+- `alembic upgrade`/`downgrade` run `migrations/env.py`, which copies
+  `ALEMBIC_DATABASE_URL` into `DATABASE_URL` before the app modules
+  load — so a scratch sqlite run needs only `SECRET_KEY` (any ≥32-char
+  value) plus `ALEMBIC_DATABASE_URL=sqlite:////tmp/<name>.db`.
+  Used here exactly so.
+- `alembic heads` (and `history`) do NOT execute `env.py`: they load the
+  revision files directly, and several revisions import `app.*` at module
+  level, which triggers `app/core/database.py:87` — "No database
+  configured" unless real app env is present. The
+  `ALEMBIC_DATABASE_URL` workaround does NOT apply; set `DATABASE_URL`
+  (plus `SECRET_KEY`) directly, e.g.
+  `DATABASE_URL=sqlite:////tmp/x.db alembic heads`.

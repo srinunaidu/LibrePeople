@@ -1,0 +1,380 @@
+/Users/srinivas/LLM/Workforce/wt-database/backend/app/core/idempotency.py:49: StarletteDeprecationWarning: 'HTTP_422_UNPROCESSABLE_ENTITY' is deprecated. Use 'HTTP_422_UNPROCESSABLE_CONTENT' instead.
+  from app.core.errors import ApiError, ErrorCategory, conflict, concurrency_conflict
+INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade 0047_expense_category_tenant_code -> 0046_assets, expense categories: tenant-scoped code uniqueness (Team D hardening)
+INFO  [alembic.runtime.migration] Running downgrade 0046_assets -> 0045_payroll_pipeline_run_type, asset register and custody assignments
+INFO  [alembic.runtime.migration] Running downgrade 0045_payroll_pipeline_run_type -> 0044_forecasting_tenant_isolation, payroll pipeline run_type + reversal link (expand-only)
+INFO  [alembic.runtime.migration] Running downgrade 0044_forecasting_tenant_isolation -> 0043_integrity_expand, forecasting tenant isolation: shared-schema multi-tenancy tenant_id column
+INFO  [alembic.runtime.migration] Running downgrade 0043_integrity_expand -> 0042_notification_delivery, integrity expand: enforce the safe NFR-014 constraints (LP-NFR-014)
+INFO  [alembic.runtime.migration] Running downgrade 0042_notification_delivery -> 0041_case_comment_attachments, notification delivery tracking (LP-NOT-003)
+INFO  [alembic.runtime.migration] Running downgrade 0041_case_comment_attachments -> 0040_document_lifecycle, case comment attachments (LP-SVC-001+003)
+INFO  [alembic.runtime.migration] Running downgrade 0040_document_lifecycle -> 0039_custom_fields, versioned documents, acknowledgements and access logs (LP-DOC-002)
+INFO  [alembic.runtime.migration] Running downgrade 0039_custom_fields -> 0038_legal_entity_tenant_code, configurable employee fields (LP-CORE-005)
+INFO  [alembic.runtime.migration] Running downgrade 0038_legal_entity_tenant_code -> 0037_expenses, legal entities: tenant-scoped code uniqueness (LP-CORE-003+010 fix)
+INFO  [alembic.runtime.migration] Running downgrade 0037_expenses -> 0036_legal_entities, expense categories, claims and receipts (LP-EXP-001+002)
+INFO  [alembic.runtime.migration] Running downgrade 0036_legal_entities -> 0035_time_corrections_locks, legal entities master + employee legal-entity link (LP-CORE-003+010)
+INFO  [alembic.runtime.migration] Running downgrade 0035_time_corrections_locks -> 0034_pg_foundations, time corrections and attendance period locks (LP-TIME-004+005)
+INFO  [alembic.runtime.migration] Running downgrade 0034_pg_foundations -> lp_files_url_rewrite, PostgreSQL foundations (LibrePeople Stage 3)
+INFO  [alembic.runtime.migration] Running downgrade lp_files_url_rewrite -> 0033_login_failure_window, rewrite stored /files URLs to the authorised route (LibrePeople, item 9)
+INFO  [alembic.runtime.migration] Running downgrade 0033_login_failure_window -> 0032_india_aadhaar_encryption, login failure window (LibrePeople Phase 2, item 5)
+INFO  [alembic.runtime.migration] Running downgrade 0032_india_aadhaar_encryption -> 0031_india_fnf_basic_da, india aadhaar encryption + identity (india-payroll slice 6)
+INFO  [alembic.runtime.migration] Running downgrade 0031_india_fnf_basic_da -> 0030_india_employee_fields, india F&F + Basic/DA split (india-payroll slice 5)
+INFO  [alembic.runtime.migration] Running downgrade 0030_india_employee_fields -> 0029_schema_drift_fix, india_employee_fields: the India payroll data model (india-payroll slice 1)
+INFO  [alembic.runtime.migration] Running downgrade 0029_schema_drift_fix -> 0028_tenant_discriminator, schema_drift_fix: the model columns and tables the earlier revisions missed
+INFO  [alembic.runtime.migration] Running downgrade 0028_tenant_discriminator -> 0027_payroll_currency, tenant_discriminator: shared-schema multi-tenancy tenant_id column
+INFO  [alembic.runtime.migration] Running downgrade 0027_payroll_currency -> 0026_employment_history, payroll_currency: ISO 4217 currency on pay runs and payslips
+INFO  [alembic.runtime.migration] Running downgrade 0026_employment_history -> 0025_job_result_payload, employment_history: effective-dated employment changes and lifecycle fields
+INFO  [alembic.runtime.migration] Running downgrade 0025_job_result_payload -> 0024_job_input_payload, job_result_payload: a job remembers what it produced
+INFO  [alembic.runtime.migration] Running downgrade 0024_job_input_payload -> 0023_audit_hash_chain_contract, job_input_payload: a job remembers what it was asked to do
+INFO  [alembic.runtime.migration] Running downgrade 0023_audit_hash_chain_contract -> 0022_audit_hash_chain, audit_hash_chain_contract: the chain columns become NOT NULL
+INFO  [alembic.runtime.migration] Running downgrade 0022_audit_hash_chain -> 0021_audit_source_address, audit_hash_chain: chain columns, the head row and the append-only guards
+INFO  [alembic.runtime.migration] Running downgrade 0021_audit_source_address -> 0020_payslip_inputs, audit_source_address: the hashed client address of an audited action
+INFO  [alembic.runtime.migration] Running downgrade 0020_payslip_inputs -> 0019_forecast_accuracy, payslip_inputs: the approved time and leave a payslip was paid from
+INFO  [alembic.runtime.migration] Running downgrade 0019_forecast_accuracy -> 0018_scenario_versions, forecast_accuracy_records: forecast-vs-actual accuracy history (AN-06)
+INFO  [alembic.runtime.migration] Running downgrade 0018_scenario_versions -> 0017_forecast_costs, scenario_versions: versioning columns for forecast scenarios (AN-05)
+INFO  [alembic.runtime.migration] Running downgrade 0017_forecast_costs -> 0016_attendance_roster_link, forecast_costs: stored, versioned labour cost forecasts (AN-04)
+INFO  [alembic.runtime.migration] Running downgrade 0016_attendance_roster_link -> 0015_forecast_scenarios, attendance: link time entries to the published roster (SC-05)
+INFO  [alembic.runtime.migration] Running downgrade 0015_forecast_scenarios -> 0006_forecast_run_location_role, forecast_scenarios: add scenario tables for what-if forecasting
+INFO  [alembic.runtime.migration] Running downgrade 0006_forecast_run_location_role -> 0014_payslip_contributions, forecasting: add location_id and role_id to forecast_runs
+INFO  [alembic.runtime.migration] Running downgrade 0014_payslip_contributions -> 0013_public_intake, payslip_contributions: the statutory contributions of a payslip
+INFO  [alembic.runtime.migration] Running downgrade 0013_public_intake -> 0012_leave_ledger, public_intake: the fields a message from the public form needs
+INFO  [alembic.runtime.migration] Running downgrade 0012_leave_ledger -> 0011_tenant_preset_state, leave_ledger: the leave ledger, and the genesis of the balances
+INFO  [alembic.runtime.migration] Running downgrade 0011_tenant_preset_state -> 0010_payroll_jurisdiction, tenant_preset_state: the deployment's preset state
+INFO  [alembic.runtime.migration] Running downgrade 0010_payroll_jurisdiction -> 0009_credential_role_constraint, payroll_jurisdiction: the jurisdiction and the rule pack of a pay run
+INFO  [alembic.runtime.migration] Running downgrade 0009_credential_role_constraint -> 0008_fk_indexes, credential role constraint: the role column holds one of the five roles
+INFO  [alembic.runtime.migration] Running downgrade 0008_fk_indexes -> 0007_import_dry_runs, fk_indexes: index every foreign key
+INFO  [alembic.runtime.migration] Running downgrade 0007_import_dry_runs -> 0006_schema_alignment, import_dry_runs: the table that holds a validated import waiting to be committed
+INFO  [alembic.runtime.migration] Running downgrade 0006_schema_alignment -> 0005_forecasting, schema_alignment: add the columns the models expect
+INFO  [alembic.runtime.migration] Running downgrade 0005_forecasting -> 0004_job_queue, forecasting: add forecasting tables
+INFO  [alembic.runtime.migration] Running downgrade 0004_job_queue -> 0003_mfa, job_queue: add background job queue table
+INFO  [alembic.runtime.migration] Running downgrade 0003_mfa -> 0002_credential_lifecycle, mfa: add multi-factor authentication fields to users
+INFO  [alembic.runtime.migration] Running downgrade 0002_credential_lifecycle -> 0001_baseline, credential lifecycle: refresh token table and user credential columns
+INFO  [alembic.runtime.migration] Running downgrade 0001_baseline -> , baseline: adopt the schema that predates Alembic
+[0047_expense_category_tenant_code] dropped uq_exp_cat_tenant_code
+[0047_expense_category_tenant_code] created uq_expense_categories_code
+[0046_assets] dropped index ix_asset_asg_tenant_id_id
+[0046_assets] dropped index ix_asset_assignments_employee_id
+[0046_assets] dropped index ix_asset_assignments_asset_id
+[0046_assets] dropped index ix_asset_assignments_tenant_id
+[0046_assets] dropped index ix_assets_tenant_id_id
+[0046_assets] dropped index ix_assets_tag
+[0046_assets] dropped index ix_assets_tenant_id
+[0046_assets] dropped asset_assignments
+[0046_assets] dropped assets
+[0045_payroll_pipeline_run_type] dropped pay_runs.reversal_of_run_id
+[0045_payroll_pipeline_run_type] dropped pay_runs.run_type
+[0044_forecasting_tenant_isolation] dropped index ix_forecast_runs_tenant_id_id on forecast_runs
+[0044_forecasting_tenant_isolation] dropped forecast_runs.tenant_id
+[0044_forecasting_tenant_isolation] dropped index ix_forecast_results_tenant_id_id on forecast_results
+[0044_forecasting_tenant_isolation] dropped forecast_results.tenant_id
+[0044_forecasting_tenant_isolation] dropped index ix_forecast_model_versions_tenant_id_id on forecast_model_versions
+[0044_forecasting_tenant_isolation] dropped forecast_model_versions.tenant_id
+[0044_forecasting_tenant_isolation] dropped index ix_forecast_scenarios_tenant_id_id on forecast_scenarios
+[0044_forecasting_tenant_isolation] dropped forecast_scenarios.tenant_id
+[0044_forecasting_tenant_isolation] dropped index ix_forecast_scenario_results_tenant_id_id on forecast_scenario_results
+[0044_forecasting_tenant_isolation] dropped forecast_scenario_results.tenant_id
+[0044_forecasting_tenant_isolation] dropped index ix_forecast_costs_tenant_id_id on forecast_costs
+[0044_forecasting_tenant_isolation] dropped forecast_costs.tenant_id
+[0044_forecasting_tenant_isolation] dropped index ix_forecast_cost_rows_tenant_id_id on forecast_cost_rows
+[0044_forecasting_tenant_isolation] dropped forecast_cost_rows.tenant_id
+[0044_forecasting_tenant_isolation] dropped index ix_forecast_accuracy_records_tenant_id_id on forecast_accuracy_records
+[0044_forecasting_tenant_isolation] dropped forecast_accuracy_records.tenant_id
+[0043_integrity_expand] dropped pay_slips.uq_payslip_run_employee
+[0043_integrity_expand] dropped expense_receipts.ck_receipt_size_nonneg
+[0043_integrity_expand] dropped pay_slips.ck_payslip_amounts_nonneg
+[0043_integrity_expand] dropped employee_history.ck_emphist_dates
+[0043_integrity_expand] dropped leave_ledger.ck_ledger_signed_nonzero
+[0043_integrity_expand] dropped leave_requests.ck_leave_req_status
+[0043_integrity_expand] dropped leave_requests.ck_leave_req_dates
+[0043_integrity_expand] dropped expense_claims.ck_claim_paystat_fsm
+[0043_integrity_expand] dropped expense_claims.ck_claim_status_fsm
+[0043_integrity_expand] dropped expense_claims.ck_claim_amount_nonneg
+[0043_integrity_expand] dropped index ix_fk_expense_claims__48ab52a8
+[0043_integrity_expand] dropped index ix_fk_expense_claims__259a56af
+[0043_integrity_expand] dropped index ix_fk_expense_claims__9f8a0e48
+[0043_integrity_expand] dropped index ix_fk_expense_claims__82a2ebf9
+[0043_integrity_expand] dropped index ix_fk_expense_claims_paid_by
+[0043_integrity_expand] dropped index ix_fk_expense_receipt_ac0046b8
+[0043_integrity_expand] dropped index ix_fk_custom_field_va_7bc124da
+[0043_integrity_expand] dropped index ix_fk_employee_docume_5946f6e8
+[0043_integrity_expand] dropped empty integrity_quarantine
+[0042_notification_delivery] dropped notifications.delivery_error
+[0042_notification_delivery] dropped notifications.delivery_attempts
+[0042_notification_delivery] dropped notifications.delivery_status
+[0041_case_comment_attachments] dropped case_comments.attachment_key
+[0041_case_comment_attachments] dropped case_comments.attachment_filename
+[0040_document_lifecycle] dropped index ix_doclog_doc_id
+[0040_document_lifecycle] dropped index ix_docack_doc_id
+[0040_document_lifecycle] dropped index ix_docver_doc_id
+[0040_document_lifecycle] dropped document_access_logs
+[0040_document_lifecycle] dropped document_acks
+[0040_document_lifecycle] dropped document_versions
+[0040_document_lifecycle] dropped employee_documents.retention_until
+[0040_document_lifecycle] dropped employee_documents.current_version
+[0040_document_lifecycle] dropped employee_documents.storage_key
+[0039_custom_fields] dropped index ix_custom_field_defs_key
+[0039_custom_fields] dropped index ix_cfdef_tenant_id_id
+[0039_custom_fields] dropped index ix_cfval_employee_id
+[0039_custom_fields] dropped index ix_cfval_tenant_id_id
+[0039_custom_fields] dropped custom_field_values
+[0039_custom_fields] dropped custom_field_defs
+[0038_legal_entity_tenant_code] dropped uq_le_tenant_code
+[0038_legal_entity_tenant_code] created uq_legal_entities_code
+[0037_expenses] dropped index ix_expense_categories_tenant_id_id
+[0037_expenses] dropped index ix_expense_claims_tenant_id_id
+[0037_expenses] dropped index ix_expense_claims_category_id
+[0037_expenses] dropped index ix_expense_claims_employee_id
+[0037_expenses] dropped index ix_expense_claims_tenant_id
+[0037_expenses] dropped index ix_expense_receipts_tenant_id_id
+[0037_expenses] dropped index ix_expense_receipts_claim_id
+[0037_expenses] dropped index ix_expense_receipts_tenant_id
+[0037_expenses] dropped expense_receipts
+[0037_expenses] dropped expense_claims
+[0037_expenses] dropped expense_categories
+[0036_legal_entities] dropped index ix_employees_legal_entity_id
+[0036_legal_entities] dropped index ix_legal_entities_tenant_id_id
+[0036_legal_entities] constraint fk_employees_legal_entity already absent; skipping
+[0036_legal_entities] dropped employees.legal_entity_id
+[0036_legal_entities] dropped legal_entities
+[0035_time_corrections_locks] dropped index ix_attendance_period_locks_tenant_id
+[0035_time_corrections_locks] dropped index ix_attendance_period_locks_period_start
+[0035_time_corrections_locks] dropped index ix_attendance_period_locks_period_end
+[0035_time_corrections_locks] dropped index ix_time_correction_requests_tenant_id
+[0035_time_corrections_locks] dropped index ix_time_correction_requests_employee_id
+[0035_time_corrections_locks] dropped index ix_time_correction_requests_work_date
+[0035_time_corrections_locks] dropped attendance_period_locks
+[0035_time_corrections_locks] dropped time_correction_requests
+[0034_pg_foundations] downgrade is a no-op (extension retained)
+[lp_files_url_rewrite] downgrade: no /api/v1/files/ URLs found
+[0033_login_failure_window] dropped users.failed_login_window_started_at
+[0032_india_aadhaar_encryption] dropped employees.aadhaar_encrypted
+[0032_india_aadhaar_encryption] dropped employees.aadhaar_last4
+[0032_india_aadhaar_encryption] dropped employees.aadhaar_masked
+[0032_india_aadhaar_encryption] dropped employees.pan_verified_status
+[0032_india_aadhaar_encryption] dropped employees.uan_verified_status
+[0032_india_aadhaar_encryption] dropped employees.esi_verified_status
+[0032_india_aadhaar_encryption] dropped employees.form11_json
+[0032_india_aadhaar_encryption] dropped employees.nominee_json
+[0031_india_fnf_basic_da] dropped employee_pay_profiles.basic_pct
+[0030_india_employee_fields] dropped employees.pan_number
+[0030_india_employee_fields] dropped employees.tax_regime
+[0030_india_employee_fields] dropped employees.pf_uan
+[0030_india_employee_fields] dropped employees.esi_number
+[0030_india_employee_fields] dropped employees.ifsc_code
+[0030_india_employee_fields] dropped employee_pay_profiles.pt_state
+[0030_india_employee_fields] dropped clients.country_code
+[0029_schema_drift_fix] dropped table break_glass_grants
+[0029_schema_drift_fix] dropped table roster_versions
+[0029_schema_drift_fix] dropped audit_logs.tenant_id
+[0029_schema_drift_fix] dropped audit_logs.break_glass_grant_id
+[0029_schema_drift_fix] dropped clients.currency
+[0029_schema_drift_fix] dropped clients.date_format
+[0029_schema_drift_fix] dropped clients.working_week
+[0029_schema_drift_fix] dropped clients.deprovisioned_at
+[0029_schema_drift_fix] dropped clients.archived_at
+[0029_schema_drift_fix] dropped leave_requests.balance_applied
+[0028_tenant_discriminator] dropped index ix_employees_tenant_id_id on employees
+[0028_tenant_discriminator] dropped employees.tenant_id
+[0028_tenant_discriminator] dropped index ix_departments_tenant_id_id on departments
+[0028_tenant_discriminator] dropped departments.tenant_id
+[0028_tenant_discriminator] dropped index ix_jobs_tenant_id_id on jobs
+[0028_tenant_discriminator] dropped jobs.tenant_id
+[0028_tenant_discriminator] dropped index ix_locations_tenant_id_id on locations
+[0028_tenant_discriminator] dropped locations.tenant_id
+[0028_tenant_discriminator] dropped index ix_cost_centers_tenant_id_id on cost_centers
+[0028_tenant_discriminator] dropped cost_centers.tenant_id
+[0028_tenant_discriminator] dropped index ix_positions_tenant_id_id on positions
+[0028_tenant_discriminator] dropped positions.tenant_id
+[0028_tenant_discriminator] dropped index ix_leave_types_tenant_id on leave_types
+[0028_tenant_discriminator] dropped index ix_leave_types_tenant_id_id on leave_types
+[0028_tenant_discriminator] dropped leave_types.tenant_id
+[0028_tenant_discriminator] dropped index ix_leave_balances_tenant_id on leave_balances
+[0028_tenant_discriminator] dropped index ix_leave_balances_tenant_id_id on leave_balances
+[0028_tenant_discriminator] dropped leave_balances.tenant_id
+[0028_tenant_discriminator] dropped index ix_leave_requests_tenant_id on leave_requests
+[0028_tenant_discriminator] dropped index ix_leave_requests_tenant_id_id on leave_requests
+[0028_tenant_discriminator] dropped leave_requests.tenant_id
+[0028_tenant_discriminator] dropped index ix_leave_ledger_tenant_id_id on leave_ledger
+[0028_tenant_discriminator] dropped leave_ledger.tenant_id
+[0028_tenant_discriminator] dropped index ix_payroll_periods_tenant_id on payroll_periods
+[0028_tenant_discriminator] dropped index ix_payroll_periods_tenant_id_id on payroll_periods
+[0028_tenant_discriminator] dropped payroll_periods.tenant_id
+[0028_tenant_discriminator] dropped index ix_pay_runs_tenant_id on pay_runs
+[0028_tenant_discriminator] dropped index ix_pay_runs_tenant_id_id on pay_runs
+[0028_tenant_discriminator] dropped pay_runs.tenant_id
+[0028_tenant_discriminator] dropped index ix_pay_slips_tenant_id on pay_slips
+[0028_tenant_discriminator] dropped index ix_pay_slips_tenant_id_id on pay_slips
+[0028_tenant_discriminator] dropped pay_slips.tenant_id
+[0028_tenant_discriminator] dropped index ix_employee_pay_profiles_tenant_id on employee_pay_profiles
+[0028_tenant_discriminator] dropped index ix_employee_pay_profiles_tenant_id_id on employee_pay_profiles
+[0028_tenant_discriminator] dropped employee_pay_profiles.tenant_id
+[0028_tenant_discriminator] dropped index ix_shift_templates_tenant_id on shift_templates
+[0028_tenant_discriminator] dropped index ix_shift_templates_tenant_id_id on shift_templates
+[0028_tenant_discriminator] dropped shift_templates.tenant_id
+[0028_tenant_discriminator] dropped index ix_roster_entries_tenant_id on roster_entries
+[0028_tenant_discriminator] dropped index ix_roster_entries_tenant_id_id on roster_entries
+[0028_tenant_discriminator] dropped roster_entries.tenant_id
+[0028_tenant_discriminator] roster_versions is not present; skipping
+[0028_tenant_discriminator] dropped index ix_shift_swaps_tenant_id on shift_swaps
+[0028_tenant_discriminator] dropped index ix_shift_swaps_tenant_id_id on shift_swaps
+[0028_tenant_discriminator] dropped shift_swaps.tenant_id
+[0028_tenant_discriminator] dropped index ix_time_entries_tenant_id on time_entries
+[0028_tenant_discriminator] dropped index ix_time_entries_tenant_id_id on time_entries
+[0028_tenant_discriminator] dropped time_entries.tenant_id
+[0028_tenant_discriminator] dropped index ix_timesheets_tenant_id on timesheets
+[0028_tenant_discriminator] dropped index ix_timesheets_tenant_id_id on timesheets
+[0028_tenant_discriminator] dropped timesheets.tenant_id
+[0028_tenant_discriminator] dropped index ix_working_time_violations_tenant_id_id on working_time_violations
+[0028_tenant_discriminator] dropped working_time_violations.tenant_id
+[0028_tenant_discriminator] dropped index ix_job_queue_tenant_id_id on job_queue
+[0028_tenant_discriminator] dropped job_queue.tenant_id
+[0028_tenant_discriminator] dropped index ix_employee_history_tenant_id_id on employee_history
+[0028_tenant_discriminator] dropped employee_history.tenant_id
+[0027_payroll_currency] dropped pay_runs.currency
+[0027_payroll_currency] dropped pay_slips.currency
+[0023_audit_hash_chain_contract] audit_logs.prev_hash is nullable again
+[0023_audit_hash_chain_contract] audit_logs.entry_hash is nullable again
+[0022_audit_hash_chain] dropped audit_logs.prev_hash
+[0022_audit_hash_chain] dropped audit_logs.entry_hash
+[0022_audit_hash_chain] dropped audit_chain_head
+[0021_audit_source_address] dropped audit_logs.source_ip_hash
+[0020_payslip_inputs] dropped pay_slips.inputs_json
+[0019_forecast_accuracy] dropped table forecast_accuracy_records
+[0018_scenario_versions] dropped index uq_forecast_scenario_root_version
+[0018_scenario_versions] dropped column forecast_scenarios.root_id
+[0018_scenario_versions] dropped column forecast_scenarios.forked_from_scenario_id
+[0018_scenario_versions] dropped column forecast_scenarios.source
+[0018_scenario_versions] dropped column forecast_scenarios.version_no
+[0017_forecast_costs] dropped table forecast_cost_rows
+[0017_forecast_costs] dropped table forecast_costs
+[0016_attendance_roster_link] dropped table working_time_violations
+[0016_attendance_roster_link] dropped index ix_time_entries_roster_entry_id
+[0016_attendance_roster_link] dropped column time_entries.roster_entry_id
+[0006_forecast_run_location_role] dropped index ix_forecast_runs_location_id
+[0006_forecast_run_location_role] dropped index ix_forecast_runs_role_id
+[0006_forecast_run_location_role] dropped column forecast_runs.location_id
+[0006_forecast_run_location_role] dropped column forecast_runs.role_id
+[0014_payslip_contributions] dropped pay_slips.employee_contributions
+[0014_payslip_contributions] dropped pay_slips.employer_contributions
+[0011_public_intake] dropped index ix_hr_cases_source
+[0011_public_intake] dropped hr_cases.message
+[0011_public_intake] dropped hr_cases.sender_email
+[0011_public_intake] dropped hr_cases.source
+[0012_leave_ledger] dropped index ix_fk_leave_ledger_created_by
+[0012_leave_ledger] dropped index ix_leave_ledger_entitlement_year
+[0012_leave_ledger] dropped index ix_leave_ledger_leave_type_id
+[0012_leave_ledger] dropped index ix_leave_ledger_employee_id
+[0012_leave_ledger] dropped index ix_leave_ledger_balance_id
+[0012_leave_ledger] dropped leave_ledger
+[0010_payroll_jurisdiction] dropped pay_runs.jurisdiction
+[0010_payroll_jurisdiction] dropped pay_runs.rule_pack_id
+[0009_credential_role_constraint] users.role rebuilt without the role constraint
+[0008_fk_indexes] dropped ix_fk_webhook_deliver_08a29a32
+[0008_fk_indexes] dropped ix_fk_timesheets_approved_by
+[0008_fk_indexes] dropped ix_fk_timesheets_employee_id
+[0008_fk_indexes] dropped ix_fk_time_entries_employee_id
+[0008_fk_indexes] dropped ix_fk_terminations_decided_by
+[0008_fk_indexes] dropped ix_fk_terminations_in_da5db9e7
+[0008_fk_indexes] dropped ix_fk_terminations_employee_id
+[0008_fk_indexes] dropped ix_fk_talent_pool_mem_9451d793
+[0008_fk_indexes] dropped ix_fk_talent_pool_mem_91333374
+[0008_fk_indexes] dropped ix_fk_succession_plan_60f191a2
+[0008_fk_indexes] dropped ix_fk_succession_plan_adf3702a
+[0008_fk_indexes] dropped ix_fk_succession_plan_542ab267
+[0008_fk_indexes] dropped ix_fk_shift_swaps_decided_by
+[0008_fk_indexes] dropped ix_fk_shift_swaps_target_id
+[0008_fk_indexes] dropped ix_fk_shift_swaps_requester_id
+[0008_fk_indexes] dropped ix_fk_shift_swaps_ros_2dc28cd0
+[0008_fk_indexes] dropped ix_fk_scenarios_base_plan_id
+[0008_fk_indexes] dropped ix_fk_saved_reports_d_d8353528
+[0008_fk_indexes] dropped ix_fk_roster_entries__d8fa880d
+[0008_fk_indexes] dropped ix_fk_roster_entries__2396884e
+[0008_fk_indexes] dropped ix_fk_review_feedback_4bad06a3
+[0008_fk_indexes] dropped ix_fk_review_feedback_479f439e
+[0008_fk_indexes] dropped ix_fk_report_definiti_0ecc98f0
+[0008_fk_indexes] dropped ix_fk_positions_repor_4201f33b
+[0008_fk_indexes] dropped ix_fk_positions_location_id
+[0008_fk_indexes] dropped ix_fk_positions_department_id
+[0008_fk_indexes] dropped ix_fk_positions_job_id
+[0008_fk_indexes] dropped ix_fk_performance_rev_e18dbc1c
+[0008_fk_indexes] dropped ix_fk_performance_rev_47020c0c
+[0008_fk_indexes] dropped ix_fk_pay_slips_employee_id
+[0008_fk_indexes] dropped ix_fk_pay_runs_finalized_by
+[0008_fk_indexes] dropped ix_fk_pay_runs_approved_by
+[0008_fk_indexes] dropped ix_fk_pay_runs_processed_by
+[0008_fk_indexes] dropped ix_fk_pay_runs_period_id
+[0008_fk_indexes] dropped ix_fk_org_chart_nodes_76ac7486
+[0008_fk_indexes] dropped ix_fk_onboarding_task_1f341db9
+[0008_fk_indexes] dropped ix_fk_onboarding_docu_d39857f1
+[0008_fk_indexes] dropped ix_fk_offers_job_id
+[0008_fk_indexes] dropped ix_fk_offers_application_id
+[0008_fk_indexes] dropped ix_fk_offboarding_ite_13920997
+[0008_fk_indexes] dropped ix_fk_offboarding_ite_07f095d1
+[0008_fk_indexes] dropped ix_fk_notifications_r_e68b830a
+[0008_fk_indexes] dropped ix_fk_migration_jobs__c309583a
+[0008_fk_indexes] dropped ix_fk_migration_jobs_client_id
+[0008_fk_indexes] dropped ix_fk_merit_allocatio_7d0e1d74
+[0008_fk_indexes] dropped ix_fk_merit_allocatio_b7f469cf
+[0008_fk_indexes] dropped ix_fk_life_events_employee_id
+[0008_fk_indexes] dropped ix_fk_leaves_of_absen_2ee4b337
+[0008_fk_indexes] dropped ix_fk_leaves_of_absen_16b717ca
+[0008_fk_indexes] dropped ix_fk_leave_requests__b289a10b
+[0008_fk_indexes] dropped ix_fk_leave_requests__b47558f6
+[0008_fk_indexes] dropped ix_fk_leave_requests__e5751373
+[0008_fk_indexes] dropped ix_fk_leave_balances__76b38917
+[0008_fk_indexes] dropped ix_fk_jobs_department_id
+[0008_fk_indexes] dropped ix_fk_job_requisitions_job_id
+[0008_fk_indexes] dropped ix_fk_job_requisition_8406ab77
+[0008_fk_indexes] dropped ix_fk_integrations_client_id
+[0008_fk_indexes] dropped ix_fk_hr_cases_employee_id
+[0008_fk_indexes] dropped ix_fk_headcount_plans_5f20279a
+[0008_fk_indexes] dropped ix_fk_goals_employee_id
+[0008_fk_indexes] dropped ix_fk_goal_alignments_e3114534
+[0008_fk_indexes] dropped ix_fk_goal_alignments_goal_id
+[0008_fk_indexes] dropped ix_fk_employees_manager_id
+[0008_fk_indexes] dropped ix_fk_employees_department_id
+[0008_fk_indexes] dropped ix_fk_employees_job_id
+[0008_fk_indexes] dropped ix_fk_employee_files__2459443a
+[0008_fk_indexes] dropped ix_fk_course_enrollme_6008e7af
+[0008_fk_indexes] dropped ix_fk_course_enrollme_50756d77
+[0008_fk_indexes] dropped ix_fk_cost_centers_de_2836d071
+[0008_fk_indexes] dropped ix_fk_continuous_feed_efaeef35
+[0008_fk_indexes] dropped ix_fk_continuous_feed_23e6c83c
+[0008_fk_indexes] dropped ix_fk_compliance_viol_21e190f1
+[0008_fk_indexes] dropped ix_fk_compliance_viol_3e53754b
+[0008_fk_indexes] dropped ix_fk_compliance_chec_c7ee8d49
+[0008_fk_indexes] dropped ix_fk_compensation_ba_02a7d13a
+[0008_fk_indexes] dropped ix_fk_certifications__db27a77d
+[0008_fk_indexes] dropped ix_fk_case_comments_case_id
+[0008_fk_indexes] dropped ix_fk_benefit_enrollm_2720225f
+[0008_fk_indexes] dropped ix_fk_benefit_enrollm_f3148579
+[0008_fk_indexes] dropped ix_fk_background_chec_83e90ff8
+[0008_fk_indexes] dropped ix_fk_applications_ca_4849db07
+[0008_fk_indexes] dropped ix_fk_applications_re_69c5396f
+[0008_fk_indexes] dropped ix_fk_announcements_created_by
+[0008_fk_indexes] 83 indexes dropped
+[0007_import_dry_runs] dropped index ix_dryrun_upload_expires_at
+[0007_import_dry_runs] dropped index ix_dryrun_expires_at
+[0007_import_dry_runs] dropped index ix_dryrun_status
+[0007_import_dry_runs] dropped index ix_dryrun_tenant_id
+[0007_import_dry_runs] dropped index ix_dryrun_user_id
+[0007_import_dry_runs] dropped index ix_dryrun_result_hash
+[0007_import_dry_runs] dropped index ix_dryrun_file_hash
+[0007_import_dry_runs] dropped index ix_dryrun_entity
+[0007_import_dry_runs] dropped index ix_dryrun_token
+[0007_import_dry_runs] dropped import_dry_runs
+[0006_schema_alignment] dropped case_comments.comment
+[0006_schema_alignment] dropped compensation_bands.level
+[0006_schema_alignment] dropped pay_runs.processed_by
+[0006_schema_alignment] dropped pay_runs.processed_at
+[0006_schema_alignment] dropped pay_runs.finalized_by
+[0006_schema_alignment] dropped pay_runs.finalized_at
+[0006_schema_alignment] dropped pay_runs.warning
+[0004_job_queue] ix_job_queue_lease_expires is not present; skipping
+[0004_job_queue] dropped index ix_job_queue_state_type
+[0004_job_queue] dropped job_queue
+[0002_credential_lifecycle] dropped index ix_refresh_tokens_family_id
+[0002_credential_lifecycle] dropped index ix_refresh_tokens_user_id
+
+EXIT_CODE=0
