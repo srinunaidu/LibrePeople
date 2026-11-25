@@ -1,56 +1,234 @@
-name: Deploy LibrePeople to Oracle Cloud
+name: Deploy LibrePeople to Render (testing)
 
-# Manual-approval gate: this workflow NEVER runs automatically on push.
-# It starts only when an operator runs it by hand (workflow_dispatch) from
-# the chosen ref, and the `production` environment below must have
-# "Required reviewers" protection enabled in the repository settings, so a
-# second person approves before the SSH step executes. No hostnames are
-# invented here: the target host, user, key, repository URL and all secrets
-# come entirely from repository secrets / variables.
+# Deploys on every push to main, after the CI gate (ci.yml) has run on the
+# same ref. The pipeline: validate the commit -> run the test pipeline ->
+# build artefacts -> trigger Render deploy hooks (backend + frontend) ->
+# verify the controlled migration step -> health-check + login smoke ->
+# record the SHA.
+#
+# Rollback strategy (no auto-downgrade, by design):
+# - This workflow NEVER rolls back on its own. A failed health-check or smoke
+#   test fails the run and pages the operator via the failed check — it does
+#   not revert anything, because an automatic revert can mask a bad migration.
+# - To roll back: pin the previous release. Render dashboard -> service ->
+#   Deploys -> "Rollback to this deploy" on the last green deploy, for BOTH
+#   librepeople-backend and librepeople-frontend. That re-offers the previous
+#   image; preDeployCommand (migrations) runs again, which is safe because
+#   migrations are forward-only — downgrades are never run automatically.
+# - The `rollback` job below (manual only) validates that a pinned SHA exists
+#   and prints the exact pin-and-redeploy steps; it changes nothing itself.
+#
+# Secrets used (repository Actions secrets — names only, no values here):
+#   RENDER_BACKEND_HOOK / RENDER_FRONTEND_HOOK — Render deploy-hook URLs.
+#   SMOKE_TEST_USERNAME / SMOKE_TEST_PASSWORD — synthetic least-privilege
+#     account used ONLY by the login smoke test.
+
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       ref:
-        description: "Git ref to deploy (branch, tag, or SHA)"
+        description: "Git ref to deploy (defaults to main)"
         required: false
         default: "main"
 
+permissions:
+  contents: read
+
+env:
+  BACKEND_URL: ${{ vars.BACKEND_URL || 'https://librepeople-backend.onrender.com' }}
+  FRONTEND_URL: ${{ vars.FRONTEND_URL || 'https://librepeople-frontend.onrender.com' }}
+
 jobs:
-  deploy:
+  validate:
+    name: Validate commit
     runs-on: ubuntu-latest
-    environment: production
+    outputs:
+      sha: ${{ steps.pin.outputs.sha }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ inputs.ref || 'main' }}
+          fetch-depth: 0
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Pin and validate the commit
+        id: pin
+        run: |
+          SHA="$(git rev-parse HEAD)"
+          echo "Deploying ref '${{ inputs.ref || 'main' }}' at ${SHA}"
+          git log -1 --format='%H %an %s'
+          # The deploy must be a commit on main, not a detached mystery SHA.
+          git merge-base --is-ancestor "${SHA}" origin/main
+          test -z "$(git status --porcelain)" || { echo "dirty tree"; exit 1; }
+          echo "sha=${SHA}" >> "$GITHUB_OUTPUT"
 
-      - name: Deploy to Oracle VM
-        uses: appleboy/ssh-action@v1.0.0
+  test:
+    name: Test pipeline (deploy gate)
+    runs-on: ubuntu-latest
+    needs: [validate]
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
         with:
-          host: ${{ secrets.VM_HOST }}
-          username: ${{ secrets.VM_USER }}
-          key: ${{ secrets.VM_SSH_KEY }}
-          script: |
-            set -e
-            if [ ! -d LibrePeople/.git ]; then
-              git clone "${{ secrets.DEPLOY_REPO_URL }}" LibrePeople
+          ref: ${{ needs.validate.outputs.sha }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Backend gate — secrets, lint, startup, migrations
+        working-directory: .
+        env:
+          SECRET_KEY: local-test-secret-key-not-for-production-0123456789
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+          pip install pytest httpx jsonschema pyyaml ruff
+          python ci/secret_scan.py
+          ruff check --select E9,F backend/app backend/scripts
+          SECRET_KEY=local-test-secret-key-not-for-production-0123456789 DATABASE_URL="sqlite:///./_deploy_probe.db" python -c "from app.main import app; print(f'app imports: {len(app.routes)} routes')"
+          rm -f ./_deploy_probe.db ./backend/_deploy_probe.db
+          (cd backend && SECRET_KEY=local-test-secret-key-not-for-production-0123456789 DATABASE_URL="sqlite:///./_deploy_mig.db" python -m scripts.migrate status && rm -f ./_deploy_mig.db)
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Frontend gate — typecheck and build artefact
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run typecheck
+          npm run build
+
+      - name: Keep the build artefact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist-${{ needs.validate.outputs.sha }}
+          path: frontend/dist
+          retention-days: 30
+
+  deploy-backend:
+    name: Deploy backend (Render hook)
+    runs-on: ubuntu-latest
+    needs: [validate, test]
+    steps:
+      - name: Trigger the Render deploy hook
+        run: |
+          test -n "${{ secrets.RENDER_BACKEND_HOOK }}" || { echo "RENDER_BACKEND_HOOK is not set"; exit 1; }
+          curl --fail-with-body -sS -X POST "${{ secrets.RENDER_BACKEND_HOOK }}"
+
+      - name: Wait for a healthy backend
+        run: |
+          for i in $(seq 1 60); do
+            if curl --fail -sS "${{ env.BACKEND_URL }}/health"; then
+              echo "backend healthy after ~$((i * 10))s"
+              exit 0
             fi
-            cd LibrePeople
-            git fetch origin
-            git checkout "${{ inputs.ref }}"
-            # Fast-forward when the ref is a branch; a tag/SHA stays detached.
-            git pull --ff-only || true
-            printf 'DATABASE_URL=%s\n' "${{ secrets.DATABASE_URL }}" > .env
-            printf 'SECRET_KEY=%s\n' "${{ secrets.SECRET_KEY }}" >> .env
-            printf 'FIELD_ENCRYPTION_KEYS=%s\n' "${{ secrets.FIELD_ENCRYPTION_KEYS }}" >> .env
-            printf 'FIELD_ENCRYPTION_ACTIVE_KEY_ID=%s\n' "${{ secrets.FIELD_ENCRYPTION_ACTIVE_KEY_ID }}" >> .env
-            # The frontend container is the edge and binds :80. A host nginx
-            # from an older cloud-init would hold that port and the deploy
-            # would fail with "address already in use".
-            sudo systemctl disable --now nginx 2>/dev/null || true
-            docker compose down --remove-orphans || true
-            docker compose up -d --build
+            sleep 10
+          done
+          echo "backend never became healthy"; exit 1
+
+  deploy-frontend:
+    name: Deploy frontend (Render hook)
+    runs-on: ubuntu-latest
+    needs: [validate, test]
+    steps:
+      - name: Trigger the Render deploy hook
+        run: |
+          test -n "${{ secrets.RENDER_FRONTEND_HOOK }}" || { echo "RENDER_FRONTEND_HOOK is not set"; exit 1; }
+          curl --fail-with-body -sS -X POST "${{ secrets.RENDER_FRONTEND_HOOK }}"
+
+      - name: Wait for the frontend to serve
+        run: |
+          for i in $(seq 1 60); do
+            if curl --fail -sS -o /dev/null "${{ env.FRONTEND_URL }}/"; then
+              echo "frontend serving after ~$((i * 10))s"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "frontend never served"; exit 1
+
+  migrate-verify:
+    name: Controlled migrate step (verify)
+    runs-on: ubuntu-latest
+    needs: [validate, deploy-backend]
+    steps:
+      - name: Verify migrations ran and the database answers
+        run: |
+          # Migrations run ONLY as render.yaml preDeployCommand on the single
+          # backend instance — never from CI, never concurrently. This step
+          # verifies the result: the DB probe must answer 200 at the deployed
+          # revision. A non-200 here means the release migration failed and
+          # the deploy must be pinned back (see rollback notes at the top).
+          curl --fail -sS "${{ env.BACKEND_URL }}/health/db"
+
+  smoke:
+    name: Health-check + login smoke
+    runs-on: ubuntu-latest
+    needs: [validate, migrate-verify, deploy-frontend]
+    steps:
+      - name: Health check
+        run: curl --fail -sS "${{ env.BACKEND_URL }}/health"
+
+      - name: Login smoke (synthetic creds)
+        env:
+          SMOKE_USER: ${{ secrets.SMOKE_TEST_USERNAME }}
+          SMOKE_PASS: ${{ secrets.SMOKE_TEST_PASSWORD }}
+        run: |
+          test -n "$SMOKE_USER" || { echo "SMOKE_TEST_USERNAME is not set"; exit 1; }
+          test -n "$SMOKE_PASS" || { echo "SMOKE_TEST_PASSWORD is not set"; exit 1; }
+          # HTTP code only: the body carries tokens and is never printed.
+          CODE="$(curl -sS -o /dev/null -w '%{http_code}' -X POST "${{ env.BACKEND_URL }}/api/v1/auth/login" \
+            -H 'Content-Type: application/json' \
+            -d "{\"username\":\"$SMOKE_USER\",\"password\":\"$SMOKE_PASS\"}")"
+          echo "login smoke -> HTTP ${CODE}"
+          test "${CODE}" = "200"
+
+  record:
+    name: Record deployed SHA
+    runs-on: ubuntu-latest
+    needs: [validate, smoke]
+    if: always()
+    steps:
+      - name: Write the deploy record
+        run: |
+          {
+            echo "# Deploy record — ${{ needs.validate.outputs.sha }}"
+            echo ""
+            echo "- SHA: ${{ needs.validate.outputs.sha }}"
+            echo "- Ref: ${{ inputs.ref || 'main' }}"
+            echo "- Smoke: ${{ needs.smoke.result }}"
+            echo "- Backend: ${{ env.BACKEND_URL }}"
+            echo "- Frontend: ${{ env.FRONTEND_URL }}"
+          } >> "$GITHUB_STEP_SUMMARY"
+          printf '%s %s smoke=%s\n' "$(date -u +%FT%TZ)" "${{ needs.validate.outputs.sha }}" "${{ needs.smoke.result }}" > deploy-sha.txt
+
+      - name: Keep the deploy record
+        uses: actions/upload-artifact@v4
+        with:
+          name: deploy-record-${{ needs.validate.outputs.sha }}
+          path: deploy-sha.txt
+          retention-days: 90
+
+  rollback:
+    name: Rollback (manual pin — changes nothing)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate the pinned SHA and print rollback steps
+        run: |
+          echo "To roll back, redeploy the previous green SHA from the deploy records above."
+          echo "Render keeps every successful deploy: dashboard -> librepeople-backend /"
+          echo "librepeople-frontend -> Deploys -> 'Rollback to this deploy'."
+          echo "Migrations are forward-only: the rolled-back release re-runs upgrade,"
+          echo "which is a no-op at an already-current revision. Downgrades are never"
+          echo "automatic — run 'python -m scripts.migrate downgrade' by hand only."

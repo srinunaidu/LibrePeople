@@ -6,6 +6,13 @@ name: CI
 # The previous workflow deployed on a push to main and ran no tests, no
 # type-check and no security scan, so a regression could reach production
 # without anything noticing. This one is the gate.
+#
+# FAIL-CLOSED: every check below blocks the pipeline when it fails, except
+# the two dependency audits which are advisory (they warn but never block,
+# so a new upstream advisory cannot freeze merging — triage it instead).
+# The blocking gates are: secret scan, lint, type/startup validation,
+# migration validation, all backend suites, contracts/drift, frontend
+# typecheck + route/api-path/class/design/token checks + unit tests + build.
 
 on:
   push:
@@ -44,13 +51,44 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest httpx jsonschema pyyaml pip-audit
+          pip install pytest httpx jsonschema pyyaml pip-audit ruff
 
       - name: Secret scan
         working-directory: .
         run: |
           python ci/secret_scan.py --self-test
           python ci/secret_scan.py
+
+      # Fail-closed style gate: E9 = runtime syntax errors, F = pyflakes
+      # (undefined names, unused imports). Scoped to what is clean by
+      # construction so the gate stays green on a healthy tree.
+      - name: Backend lint (ruff E9,F)
+        run: |
+          ruff --version
+          ruff check --select E9,F app scripts
+
+      # Fail-closed type/startup gate: importing the app builds the settings,
+      # validates them (SECRET_KEY length, HS256 pin, production guards) and
+      # wires every router. A broken import or an invalid default fails here,
+      # not in production.
+      - name: Backend type/startup validation
+        run: |
+          SECRET_KEY=local-test-secret-key-not-for-production-0123456789 DATABASE_URL="sqlite:///./_ci_import_probe.db" python -c "from app.main import app; from app.core.config import settings; settings.validate(); print(f'startup validation ok: {len(app.routes)} routes')"
+          rm -f ./_ci_import_probe.db
+
+      # Fail-closed migration gate: exactly one Alembic head (a second head
+      # means two branches that can never upgrade linearly), and the
+      # release-step entrypoint reports cleanly against a scratch database.
+      - name: Migration validate (single head + status)
+        env:
+          SECRET_KEY: local-test-secret-key-not-for-production-0123456789
+          DATABASE_URL: "sqlite:///./_ci_migrate_validate.db"
+        run: |
+          HEADS="$(alembic heads | grep -c . || true)"
+          echo "alembic heads: ${HEADS}"
+          test "${HEADS}" = "1"
+          python -m scripts.migrate status
+          rm -f ./_ci_migrate_validate.db
 
       - name: Every third-party import is declared
         working-directory: .
@@ -152,6 +190,12 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      # Fail-closed: ESLint errors block the PR. (Note: the tree reports
+      # pre-existing errors on first enablement — fix or scope before relying
+      # on a green gate; see Agent B handover.)
+      - name: Lint
+        run: npm run lint
 
       - name: Type check
         run: npm run typecheck
