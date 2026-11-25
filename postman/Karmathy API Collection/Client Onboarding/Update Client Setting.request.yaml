@@ -1,0 +1,15 @@
+$kind: http-request
+description: Update a client setting
+url: http://localhost:8000/onboarding-portal/clients/{client_id}/settings/{key}
+method: PUT
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Update Client Setting.resources/examples
+order: 16000

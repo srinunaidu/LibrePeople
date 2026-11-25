@@ -1,0 +1,9 @@
+$kind: http-request
+description: Get an employee pay profile
+url: http://localhost:8000/payroll/pay-profiles/{employee_id}
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/Get Pay Profile.resources/examples
+order: 4000

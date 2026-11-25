@@ -1,0 +1,15 @@
+$kind: http-request
+description: Create an onboarding task
+url: http://localhost:8000/onboarding/tasks
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Create Onboarding Task.resources/examples
+order: 5000

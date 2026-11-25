@@ -1,0 +1,52 @@
+tags:
+- name: data-quality
+  description: data-quality domain endpoints.
+paths:
+  /data-quality/checks:
+    get:
+      operationId: dataQualityListDataqualitychecks
+      tags:
+      - data-quality
+      security:
+      - bearerAuth: []
+      summary: GET /data-quality/checks
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /data-quality/issues:
+    get:
+      operationId: dataQualityListDataqualityissues
+      tags:
+      - data-quality
+      security:
+      - bearerAuth: []
+      summary: GET /data-quality/issues
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /data-quality/scan:
+    post:
+      operationId: dataQualityCreateDataqualityscan
+      tags:
+      - data-quality
+      security:
+      - bearerAuth: []
+      summary: POST /data-quality/scan
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'

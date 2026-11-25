@@ -1,0 +1,13 @@
+{
+  "entity": "jobs",
+  "total_rows": 3,
+  "create": 0,
+  "update": 0,
+  "unchanged": 0,
+  "reject": 3,
+  "rows": [
+    {"row": 2, "status": "reject", "errors": [{"column": "department_id", "code": "missing_required"}]},
+    {"row": 3, "status": "reject", "errors": [{"column": "department_code", "code": "reference_not_found"}]},
+    {"row": 4, "status": "reject", "errors": [{"column": "min_salary", "code": "inconsistent_values"}]}
+  ]
+}

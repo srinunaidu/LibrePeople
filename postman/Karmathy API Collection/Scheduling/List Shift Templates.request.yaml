@@ -1,0 +1,9 @@
+$kind: http-request
+description: List shift templates
+url: http://localhost:8000/scheduling/shift-templates
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/List Shift Templates.resources/examples
+order: 7000

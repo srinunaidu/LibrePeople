@@ -1,0 +1,15 @@
+$kind: http-request
+description: Create a forecast scenario
+url: http://localhost:8000/forecasting/scenarios
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Create Forecast Scenario.resources/examples
+order: 5000

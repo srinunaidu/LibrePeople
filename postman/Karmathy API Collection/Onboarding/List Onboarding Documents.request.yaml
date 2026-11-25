@@ -1,0 +1,9 @@
+$kind: http-request
+description: List onboarding documents for an employee
+url: http://localhost:8000/onboarding/{employee_id}/documents
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/List Onboarding Documents.resources/examples
+order: 4000

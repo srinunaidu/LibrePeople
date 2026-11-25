@@ -1,0 +1,9 @@
+$kind: http-request
+description: Get the reports dashboard
+url: http://localhost:8000/reports/dashboard
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/Dashboard.resources/examples
+order: 1000

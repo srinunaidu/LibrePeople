@@ -1,0 +1,5 @@
+$kind: collection
+description: Complete Postman collection for all Karmathy backend APIs
+variables:
+  base_url: http://localhost:8000
+  token: "{{access_token}}"

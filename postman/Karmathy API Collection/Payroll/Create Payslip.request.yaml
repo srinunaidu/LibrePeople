@@ -1,0 +1,15 @@
+$kind: http-request
+description: Create a payslip
+url: http://localhost:8000/payroll/payslips
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Create Payslip.resources/examples
+order: 8000

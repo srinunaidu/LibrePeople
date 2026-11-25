@@ -1,0 +1,9 @@
+$kind: http-request
+description: Get a single employee by ID
+url: http://localhost:8000/employees/{employee_id}
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/Get Employee.resources/examples
+order: 2000

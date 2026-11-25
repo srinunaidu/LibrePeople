@@ -1,0 +1,15 @@
+$kind: http-request
+description: Resolve a compliance violation
+url: http://localhost:8000/compliance/compliance-violations/{violation_id}/resolve
+method: PUT
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Resolve Compliance Violation.resources/examples
+order: 5000

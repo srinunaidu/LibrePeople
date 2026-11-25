@@ -1,0 +1,489 @@
+tags:
+- name: employees
+  description: 'The employee master data of this deployment: the record itself, the effective dated employment
+    history, the documents attached to an employee and the reporting structure. Reads are limited to the
+    visibility scope of the caller; a record outside that scope is reported as 404, never as 403.'
+paths:
+  /employees:
+    get:
+      operationId: employeesList
+      tags:
+      - employees
+      security:
+      - bearerAuth: []
+      summary: List employees
+      description: >-
+        Lists the employees of this deployment, newest hire first. The list is
+        paged with `page` and `page_size`, and the answer carries the total
+        number of matching employees in `meta.total`, so a client can say how
+        many exist without reading every page. The filters are applied by the
+        database, not by the client: `department_id`, `status`, `manager_id`
+        and `search` (case-insensitive on the employee number, the first name,
+        the last name, the full name and the email address). Omitting `sort`
+        gives newest hire first; naming a `sort` key uses `order`, which
+        defaults to ascending. Only employees inside the visibility scope of
+        the caller are counted and returned.
+
+        There is no location filter: the deployment's employee record has no
+        location. A position carries a location, and an employee is not linked
+        to a position yet; that arrives with the employment record work, and
+        the filter will be declared then rather than accepted now and silently
+        ignored.
+      parameters:
+      - $ref: '#/components/parameters/pageParam'
+      - $ref: '#/components/parameters/pageSizeParam'
+      - name: department_id
+        in: query
+        required: false
+        description: Only employees of this department.
+        schema:
+          type: integer
+      - name: status
+        in: query
+        required: false
+        description: >-
+          Only employees in this employment status. The vocabulary is the one
+          the record stores; the lowercase lifecycle vocabulary is the target
+          once transitions are enforced.
+        schema:
+          type: string
+          enum:
+          - Active
+          - On Leave
+          - Terminated
+          - Rehired
+      - name: manager_id
+        in: query
+        required: false
+        description: Only employees reporting to this manager.
+        schema:
+          type: integer
+      - name: search
+        in: query
+        required: false
+        description: >-
+          Case-insensitive match on the employee number, the first name, the
+          last name, the full name and the email address. It does not match a
+          department or job name; those are in other tables.
+        schema:
+          type: string
+          maxLength: 100
+      - name: sort
+        in: query
+        required: false
+        description: >-
+          Field to sort on. When omitted the order is newest hire first. The
+          employee number is the record's `employee_id` business key.
+        schema:
+          type: string
+          enum:
+          - employee_number
+          - last_name
+          - hire_date
+      - name: order
+        in: query
+        required: false
+        description: Sort direction, used with `sort`.
+        schema:
+          type: string
+          default: asc
+          enum:
+          - asc
+          - desc
+      responses:
+        '200':
+          description: A page of employees.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedEmployees'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+    post:
+      operationId: employeesCreate
+      tags:
+      - employees
+      security:
+      - bearerAuth: []
+      summary: Create an employee
+      description: Creates an employee record. The employee number is optional; when it is omitted the
+        deployment allocates the next one. A number that is already taken returns 409 `duplicate_natural_key`.
+        A manager that does not exist, or a reporting line that would close a cycle, returns 422 `validation_error`.
+        Creating an employee never creates a user account; use `POST /auth/users` for that.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmployeeCreate'
+      responses:
+        '201':
+          description: The employee was created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /employees/{employee_id}:
+    get:
+      operationId: employeesGet
+      tags:
+      - employees
+      security:
+      - bearerAuth: []
+      summary: Read one employee
+      description: Returns the employee record. An employee that does not exist, or one that is outside
+        the visibility scope of the caller, returns 404 `employee_not_found`; the endpoint never confirms
+        that a record it refuses to show exists.
+      parameters:
+      - name: employee_id
+        in: path
+        required: true
+        description: Identifier of the employee.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: The employee record.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+    patch:
+      operationId: employeesUpdate
+      tags:
+      - employees
+      security:
+      - bearerAuth: []
+      summary: Change an employee record
+      description: >-
+        Applies a partial change to the employee record. The fields that
+        describe employment — `status`, `employment_type`, `job_id`,
+        `department_id`, `manager_id` and `salary` — are effective-dated: the
+        change applies now and appends a history row for each field that
+        actually changed. Name, email, phone and hire date are corrections and
+        are audited without a history row.
+
+        The lifecycle is enforced: `Active` may move to `On Leave` or
+        `Terminated`; `On Leave` to `Active` or `Terminated`; `Terminated` to
+        `Rehired`; `Rehired` to `Active`, `On Leave` or `Terminated`. Any other
+        move returns 409 `invalid_state_transition` naming the allowed next
+        states. Moving to `Terminated` records the termination date (the one
+        supplied by `effective_from` when none is set); moving to `Rehired`
+        clears it.
+
+        `effective_from` defaults to today. A **future** date is refused with
+        422: the deployment has no scheduler, and recording a change that has
+        not happened would make the record claim a state it is not in. A past
+        date is a correction and applies now.
+
+        A manager that would close a reporting cycle, a job or department that
+        does not exist, and an email address another employee already owns are
+        refused before anything is written. A record that was changed by
+        somebody else in the meantime returns 409 `concurrent_update`.
+      parameters:
+      - name: employee_id
+        in: path
+        required: true
+        description: Identifier of the employee.
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmployeeUpdate'
+      responses:
+        '200':
+          description: The updated employee record.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+    put:
+      operationId: employeesUpdateEmployees
+      tags:
+      - employees
+      security:
+      - bearerAuth: []
+      summary: PUT /employees/{employee_id}
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /employees/{employee_id}/history:
+    get:
+      operationId: employeesGetHistory
+      tags:
+      - employees
+      security:
+      - bearerAuth: []
+      summary: Read the employment history of an employee
+      description: >-
+        Returns the effective dated changes of the employment record, oldest
+        first. Every row names the field, the previous and the new value, the
+        first day the new value was in force (`effective_from`), the day it
+        stopped (`effective_to`, exclusive; null means still in force), the
+        reason, the actor and when the row was written. The history is append
+        only: a newer change closes the previous row for that field and appends
+        a new one; rows are never edited or deleted.
+
+        The history begins with the feature. Changes made before it existed
+        were never recorded, and this operation does not invent rows for them.
+      parameters:
+      - name: employee_id
+        in: path
+        required: true
+        description: Identifier of the employee.
+        schema:
+          type: string
+      - name: from
+        in: query
+        required: false
+        description: Only changes effective on or after this date.
+        schema:
+          type: string
+          format: date
+      - name: to
+        in: query
+        required: false
+        description: Only changes effective on or before this date.
+        schema:
+          type: string
+          format: date
+      - name: field
+        in: query
+        required: false
+        description: Only changes of this field.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: The history rows of the employee.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EmployeeHistoryEntry'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /employees/{employee_id}/documents:
+    get:
+      operationId: employeesListDocuments
+      tags:
+      - employees
+      security:
+      - bearerAuth: []
+      summary: List the documents of an employee
+      description: Lists the metadata of the documents attached to an employee. The file contents are
+        not returned here; only the metadata needed to identify the document.
+      x-lifecycle: planned
+      parameters:
+      - name: employee_id
+        in: path
+        required: true
+        description: Identifier of the employee.
+        schema:
+          type: string
+      - $ref: '#/components/parameters/pageParam'
+      - $ref: '#/components/parameters/pageSizeParam'
+      - name: category
+        in: query
+        required: false
+        description: Only documents of this category.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: A page of document metadata.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedEmployeeDocuments'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+    post:
+      operationId: employeesUploadDocument
+      tags:
+      - employees
+      security:
+      - bearerAuth: []
+      summary: Attach a document to an employee
+      description: 'Uploads one file and attaches it to the employee. The request is `multipart/form-data`:
+        the `file` part carries the bytes, the other parts carry the metadata. The file is scanned before
+        it is stored; when no scanner is configured for that file type the upload is refused with 503
+        `malware_scanner_unavailable`. A file that is too large returns 422 `validation_error`. The size
+        limit and the accepted file types are deployment settings and are reported by the configuration
+        assistant.'
+      x-lifecycle: planned
+      parameters:
+      - name: employee_id
+        in: path
+        required: true
+        description: Identifier of the employee.
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EmployeeDocumentUpload'
+      responses:
+        '201':
+          description: The document was stored and attached.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmployeeDocument'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /employees/{employee_id}/org-chart:
+    get:
+      operationId: employeesGetOrgChart
+      tags:
+      - employees
+      security:
+      - bearerAuth: []
+      summary: Read the reporting tree around an employee
+      description: 'Returns the reporting tree that starts at the given employee: the employee, the managers
+        above and the direct reports below. The tree is built from the effective dated manager of each
+        employee, so it reflects the reporting line at today. A cycle in the reporting lines is reported
+        by the configuration assistant and stops the tree from being built.'
+      x-lifecycle: planned
+      parameters:
+      - name: employee_id
+        in: path
+        required: true
+        description: Identifier of the employee the tree starts at.
+        schema:
+          type: string
+      - name: depth
+        in: query
+        required: false
+        description: How many levels to walk up and down.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 10
+          default: 3
+      responses:
+        '200':
+          description: The reporting tree.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrgChartNode'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /employees/me:
+    get:
+      operationId: employeesGetMe
+      tags:
+      - employees
+      security:
+      - bearerAuth: []
+      summary: Read the employee record of the caller
+      description: Returns the employee record that belongs to the authenticated user. A user account
+        without an employee record returns 404 `employee_not_found`; the account itself still works.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: The employee record of the caller.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'

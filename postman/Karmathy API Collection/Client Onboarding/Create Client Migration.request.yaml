@@ -1,0 +1,15 @@
+$kind: http-request
+description: Create a client migration
+url: http://localhost:8000/onboarding-portal/clients/{client_id}/migrations
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Create Client Migration.resources/examples
+order: 9000

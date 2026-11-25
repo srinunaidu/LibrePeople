@@ -1,0 +1,9 @@
+$kind: http-request
+description: Begin MFA enrollment
+url: http://localhost:8000/auth/mfa/enroll
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/MFA Enroll.resources/examples
+order: 6000

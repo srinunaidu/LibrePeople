@@ -1,0 +1,15 @@
+$kind: http-request
+description: Create a certification
+url: http://localhost:8000/learning/certifications
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Create Certification.resources/examples
+order: 4000

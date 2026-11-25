@@ -1,0 +1,939 @@
+tags:
+- name: forecasting
+  description: 'Forecasting of this deployment: the runs, the method that was used, the window it was
+    fitted on, the measured error on a holdout and the scenarios that are compared against each other.
+    A run that had less history than its method needs is still recorded, but it is flagged `insufficient_history`
+    and carries no forecast values. The assumptions of a scenario are always shown, never applied silently.'
+paths:
+  /forecasting/runs:
+    post:
+      operationId: forecastingCreateRun
+      tags:
+      - forecasting
+      security:
+      - bearerAuth: []
+      summary: Start a forecast run
+      description: 'Starts a forecast of one series of this deployment. The method may be left to the
+        server (`auto`) or overridden explicitly; the method that was actually used is recorded in the
+        result. A series with less history than the method needs is not an error: the run is created,
+        `insufficient_history` is true and the forecast values are omitted. A caller that asks for a minimum
+        history the series cannot satisfy gets 422 `forecast_insufficient_history` with the series, the
+        weeks that are available and the weeks that are required. A series that the deployment does not
+        know returns 422 `validation_error`. A request for a horizon the deployment does not allow returns
+        422 `validation_error`.'
+      x-lifecycle: released
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ForecastRunCreate'
+      responses:
+        '201':
+          description: The run was created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForecastRun'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+    get:
+      operationId: forecastingListRuns
+      tags:
+      - forecasting
+      security:
+      - bearerAuth: []
+      summary: List the forecast runs
+      description: Lists the forecast runs of this deployment, newest first. The list is paged; `page`
+        and `page_size` control the window. `metric` and `method` narrow it down. Only runs the caller
+        may see are returned.
+      x-lifecycle: released
+      parameters:
+      - $ref: '#/components/parameters/pageParam'
+      - $ref: '#/components/parameters/pageSizeParam'
+      - name: metric
+        in: query
+        required: false
+        description: Only the runs of this metric.
+        schema:
+          type: string
+      - name: method
+        in: query
+        required: false
+        description: Only the runs that used this method.
+        schema:
+          type: string
+      - name: insufficient_history
+        in: query
+        required: false
+        description: Only the runs that were or were not short of history.
+        schema:
+          type: boolean
+      responses:
+        '200':
+          description: A page of forecast runs.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedForecastRuns'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /forecasting/runs/{run_id}:
+    get:
+      operationId: forecastingGetRun
+      tags:
+      - forecasting
+      security:
+      - bearerAuth: []
+      summary: Read a forecast run
+      description: "Returns one forecast run with everything needed to judge it:\n* `method` and `method_version`:
+        \ the method that was used, after\n  the server resolved `auto`;\n* `data_window`: the period
+        \ the model was fitted on and how many\n  observations it saw;\n* `backtest`: the measured error
+        \ on a holdout, with `mape`, `mase`\n  and the length of the holdout;\n* `confidence_band`: the
+        \ level and the method of the interval the\n  forecast is stated with;\n* `input_hash`: the hash
+        \ of the exact input, so the same input\n  gives the same run;\n* `version`: the version of the
+        \ run, incremented when the same\n  input is computed again;\n* `insufficient_history`: true when
+        \ the series had less history\n  than the method needs. The run is recorded, but it carries no
+        \ forecast values.\n\nA run that does not exist returns 404."
+      x-lifecycle: released
+      parameters:
+      - name: run_id
+        in: path
+        required: true
+        description: Identifier of the forecast run.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: The forecast run.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForecastRun'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /forecasting/runs/{run_id}/results:
+    get:
+      operationId: forecastingListForecastingrunsresults
+      tags:
+      - forecasting
+      security:
+      - bearerAuth: []
+      summary: Get forecast results for a run
+      description: Returns all forecast results for a specific run, ordered by horizon step.
+      x-lifecycle: released
+      parameters:
+      - name: run_id
+        in: path
+        required: true
+        description: Identifier of the forecast run.
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: A list of forecast results.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ForecastResult'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /forecasting/runs/{run_id}/demand-series:
+    get:
+      operationId: forecastingGetDemandSeries
+      tags:
+      - forecasting
+      security:
+      - bearerAuth: []
+      summary: Get demand series from a forecast run
+      description: Returns the forecast results formatted as a demand series for the scheduler,
+        including confidence bands as metadata. Query parameters allow filtering by location, role,
+        and date range.
+      x-lifecycle: released
+      parameters:
+      - name: run_id
+        in: path
+        required: true
+        description: Identifier of the forecast run.
+        schema:
+          type: integer
+      - name: location_id
+        in: query
+        required: false
+        description: Override location filter.
+        schema:
+          type: integer
+      - name: role
+        in: query
+        required: false
+        description: Override role filter (title or code).
+        schema:
+          type: string
+      - name: start_date
+        in: query
+        required: false
+        description: Start date filter (inclusive).
+        schema:
+          type: string
+          format: date
+      - name: end_date
+        in: query
+        required: false
+        description: End date filter (inclusive).
+        schema:
+          type: string
+          format: date
+      responses:
+        '200':
+          description: The demand series with metadata.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForecastDemandSeries'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /forecasting/scenarios:
+    post:
+      operationId: forecastingCreateScenario
+      tags:
+      - forecasting
+      security:
+      - bearerAuth: []
+      summary: Create a forecast scenario
+      description: 'Creates a what-if scenario on top of an existing forecast run. The scenario applies
+        explicit, named assumptions (demand_multiplier, demand_delta, headcount_cap, seasonality_override,
+        method_override, attrition_rate, hire_rate, leave_rate, wage_growth_pct) to the base forecast. An
+        unknown assumption key, or a percent out of 0..100, is a 422 naming the key. Assumptions are always
+        returned with the scenario so a reader can see what was assumed. The base run must exist and have
+        results.'
+      x-lifecycle: released
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScenarioCreate'
+      responses:
+        '201':
+          description: The scenario was created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Scenario'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+    get:
+      operationId: forecastingListScenarios
+      tags:
+      - forecasting
+      security:
+      - bearerAuth: []
+      summary: List the forecast scenarios
+      description: Lists the scenarios of this deployment. A scenario is a named set of assumptions on
+        top of a base run. The assumptions are part of the scenario and are always returned with it, so
+        a reader can see what was assumed. The list is paged; `page` and `page_size` control the window.
+      x-lifecycle: released
+      parameters:
+      - $ref: '#/components/parameters/pageParam'
+      - $ref: '#/components/parameters/pageSizeParam'
+      - name: base_run_id
+        in: query
+        required: false
+        description: Only the scenarios on top of this run.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: A page of scenarios.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedScenarios'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /forecasting/scenarios/{scenario_id}:
+    get:
+      operationId: forecastingGetScenario
+      tags:
+      - forecasting
+      security:
+      - bearerAuth: []
+      summary: Read a forecast scenario
+      description: Returns one scenario with its assumptions and all forecast results. The assumptions
+        are shown explicitly so the reader knows exactly what was applied. A scenario that does not
+        exist returns 404.
+      x-lifecycle: released
+      parameters:
+      - name: scenario_id
+        in: path
+        required: true
+        description: Identifier of the scenario.
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: The scenario with results.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Scenario'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /forecasting/scenarios/compare:
+    post:
+      operationId: forecastingCompareScenarios
+      tags:
+      - forecasting
+      security:
+      - bearerAuth: []
+      summary: Compare scenarios
+      description: 'Compares two or more scenarios — the ids may be ANY version of any scenario — period
+        by period. The response carries every participant''s assumptions and version metadata next to the
+        numbers, and the assumptions of every participant are repeated per period: a comparison that does
+        not show its assumptions is not a comparison. The deltas are taken against the first participant
+        of the request. Optional hourly rates (`hourly_costs`) add an explicit cost projection per
+        participant, with `wage_growth_pct` compounding the rate month by month; every cost row is labelled
+        `excludes statutory on-costs`, and costs appear ONLY when the rates were supplied. A scenario that
+        does not exist returns 404.'
+      x-lifecycle: released
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScenarioComparisonRequest'
+      responses:
+        '200':
+          description: The comparison, with the assumptions that produced it.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScenarioComparison'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /forecasting/scenarios/{scenario_id}/versions:
+    get:
+      operationId: forecastingListScenarioVersions
+      tags:
+      - forecasting
+      security:
+      - bearerAuth: []
+      summary: List the versions of a scenario
+      description: 'Returns every version of one scenario''s lineage, oldest first. Editing a scenario
+        never overwrites: each edit stores a new version under the same lineage root, and every earlier
+        version stays retrievable and comparable. A scenario that does not exist returns 404.'
+      x-lifecycle: released
+      parameters:
+      - name: scenario_id
+        in: path
+        required: true
+        description: Identifier of any version of the scenario.
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: The lineage's versions, oldest first.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScenarioVersionSummaryList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+    post:
+      operationId: forecastingEditScenarioVersion
+      tags:
+      - forecasting
+      security:
+      - bearerAuth: []
+      summary: Edit a scenario by creating its next version
+      description: 'Applies an edited assumption set to the scenario''s linked base projection and stores
+        the result as the NEXT version of the same lineage, named with its version number. The previous
+        versions stay intact and comparable. Every assumption key is explicit: an unknown key, or a percent
+        outside 0..100 (attrition, hiring, leave and wage growth are percents), is a 422 naming the key.
+        A scenario that does not exist returns 404.'
+      x-lifecycle: released
+      parameters:
+      - name: scenario_id
+        in: path
+        required: true
+        description: Identifier of any version of the scenario.
+        schema:
+          type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScenarioEditCreate'
+      responses:
+        '201':
+          description: The new version of the scenario.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Scenario'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /forecasting/scenarios/{scenario_id}/fork:
+    post:
+      operationId: forecastingForkScenario
+      tags:
+      - forecasting
+      security:
+      - bearerAuth: []
+      summary: Fork a scenario version into a new lineage
+      description: 'Copies one scenario version''s assumptions into a NEW scenario that starts its own
+        version line at 1 and records exactly which version it forked from. Nothing about the source
+        changes. A scenario that does not exist returns 404.'
+      x-lifecycle: released
+      parameters:
+      - name: scenario_id
+        in: path
+        required: true
+        description: Identifier of the scenario version to fork.
+        schema:
+          type: integer
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScenarioForkCreate'
+      responses:
+        '201':
+          description: The fork, with the source version's assumptions.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Scenario'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /forecasting/drivers:
+    post:
+      operationId: forecastingImportDriverCSV
+      tags:
+      - forecasting
+      security:
+      - bearerAuth: []
+      summary: Validate a driver CSV
+      description: Parses and validates a driver CSV file, returning the resulting demand series.
+      x-lifecycle: released
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: The parsed demand series.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriverCSVResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /forecasting/drivers/import:
+    post:
+      operationId: forecastingImportDriverCSVAlias
+      tags:
+      - forecasting
+      security:
+      - bearerAuth: []
+      summary: Import a driver CSV (alias)
+      description: Alias for /forecasting/drivers.
+      x-lifecycle: released
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: The parsed demand series.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriverCSVResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /forecasting/demand/series:
+    post:
+      operationId: forecastingBuildDemandSeries
+      tags:
+      - forecasting
+      security:
+      - bearerAuth: []
+      summary: Build a demand series from records
+      description: Builds a demand series from the product's own records (time entries, leave, roster).
+      x-lifecycle: released
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DemandSeriesRequest'
+      responses:
+        '200':
+          description: The demand series.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DemandSeriesResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /forecasting/runs/{run_id}/cost-forecast:
+    post:
+      operationId: forecastingCreateCostForecast
+      tags:
+      - forecasting
+      security:
+      - bearerAuth: []
+      summary: Cost a forecast run
+      description: >-
+        Converts the forecast run's demand series into a labour cost
+        forecast: forecast hours multiplied by the hourly rates supplied in
+        the request, grouped by month, location, and role. The rates are
+        explicit assumptions and are returned with the result; no rate is
+        ever guessed, and a demand group with no matching rate (no
+        `default` either) is answered 422 rather than costed at zero. The
+        result is stored and versioned: each call creates the next version
+        of the run's cost forecast; earlier versions stay intact and are
+        listed by the GET operation. The forecast **excludes statutory
+        on-costs** — employer contributions and statutory on-costs are not
+        included, and every response carries that label. A run that does
+        not exist or has no forecast results is answered 422.
+      x-lifecycle: released
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CostForecastCreate'
+      responses:
+        '201':
+          description: The cost forecast was computed and stored as a new version.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CostForecast'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+    get:
+      operationId: forecastingListCostForecastVersions
+      tags:
+      - forecasting
+      security:
+      - bearerAuth: []
+      summary: List the stored cost forecast versions of a run
+      description: >-
+        Lists every stored version of the run's labour cost forecast,
+        newest first. Every version carries the rates used, the input hash
+        and the label "excludes statutory on-costs"; totals are per
+        version. A run that does not exist is answered 404.
+      x-lifecycle: released
+      parameters:
+      - name: run_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: The stored cost forecast versions, newest first.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CostForecastVersionList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /forecasting/runs/{run_id}/cost-forecast/csv:
+    get:
+      operationId: forecastingExportCostForecastCSV
+      tags:
+      - forecasting
+      security:
+      - bearerAuth: []
+      summary: Download a cost forecast version as CSV
+      description: >-
+        Downloads a stored labour cost forecast version as CSV; the newest
+        version is exported when no version is given. Every row carries a
+        `cost_basis` column whose value is "excludes statutory on-costs",
+        so the export can never be mistaken for a fully-loaded cost.
+      x-lifecycle: released
+      parameters:
+      - name: run_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: version
+        in: query
+        required: false
+        description: The version to export. Defaults to the newest stored version.
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: The CSV export.
+          content:
+            text/csv:
+              schema:
+                type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /forecasting/runs/{run_id}/cost-forecast/{version}:
+    get:
+      operationId: forecastingGetCostForecast
+      tags:
+      - forecasting
+      security:
+      - bearerAuth: []
+      summary: Get one stored cost forecast version
+      description: >-
+        Returns one stored version of the run's labour cost forecast with
+        its full per-period rows (month x location x role), the rates used
+        and the input hash. The version, and every row, carry the label
+        "excludes statutory on-costs". A run or version that does not
+        exist is answered 404.
+      x-lifecycle: released
+      parameters:
+      - name: run_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: version
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: The stored cost forecast version with its rows.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CostForecast'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /forecasting/accuracy:
+    get:
+      operationId: forecastingListAccuracy
+      tags:
+      - forecasting
+      security:
+      - bearerAuth: []
+      summary: Accuracy history over time
+      description: >-
+        Returns the forecast-vs-actual accuracy rows, newest first,
+        paged: one per forecast run, month period, location and role,
+        each with the model version that produced the forecast, the
+        error metrics (MAPE, MAE, bias, sample size) and a confidence
+        status. The window parameters filter by the period bucket of
+        the rows. Every row's confidence status is recomputed for this
+        request from its stored MAPE against the thresholds given here
+        (`review_threshold`, default 0.10; `degraded_threshold`, default
+        0.25), so the same history can be read under different
+        thresholds without re-syncing. A row whose MAPE could not be
+        computed is never `ok`; it is flagged `review`.
+      x-lifecycle: released
+      parameters:
+      - $ref: '#/components/parameters/pageParam'
+      - $ref: '#/components/parameters/pageSizeParam'
+      - name: start_date
+        in: query
+        required: false
+        description: Only the rows of this period bucket or later (inclusive).
+        schema:
+          type: string
+          format: date
+      - name: end_date
+        in: query
+        required: false
+        description: Only the rows of this period bucket or earlier (inclusive).
+        schema:
+          type: string
+          format: date
+      - name: location_id
+        in: query
+        required: false
+        description: Only the rows of this location.
+        schema:
+          type: integer
+      - name: role_id
+        in: query
+        required: false
+        description: Only the rows of this role (job).
+        schema:
+          type: integer
+      - name: model_version
+        in: query
+        required: false
+        description: Only the rows judged against this model version.
+        schema:
+          type: string
+      - name: run_id
+        in: query
+        required: false
+        description: Only the rows of this forecast run.
+        schema:
+          type: integer
+      - name: status
+        in: query
+        required: false
+        description: Only the rows whose computed status is this one.
+        schema:
+          type: string
+          enum: [ok, review, degraded]
+      - name: review_threshold
+        in: query
+        required: false
+        description: The MAPE at or under which a row is `ok`. Default 0.10.
+        schema:
+          type: number
+      - name: degraded_threshold
+        in: query
+        required: false
+        description: The MAPE at or under which a row is `review`. Default 0.25.
+        schema:
+          type: number
+      responses:
+        '200':
+          description: A page of accuracy rows, newest first.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedForecastAccuracy'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /forecasting/accuracy/sync:
+    post:
+      operationId: forecastingSyncAccuracy
+      tags:
+      - forecasting
+      security:
+      - bearerAuth: []
+      summary: Compare a window's forecasts with its actuals
+      description: >-
+        Runs the accuracy comparison for a window between two dates:
+        every completed forecast run with results in the window is
+        compared, per month period, location and role, with the actual
+        hours the same window measured (approved time entries — leave
+        hours are supply-side, not demand), and one accuracy row is
+        written per (run, period, location, role) with MAPE, MAE, bias,
+        the sample size and a confidence status computed from the MAPE
+        against the explicit thresholds of the request. The rows the
+        sync computes REPLACE the stored rows for their key, so a
+        re-measured window never stacks duplicates. This is the
+        callable an after-payroll scheduled job invokes; it is exposed
+        as an endpoint so a window can also be run on demand. An
+        inverted window or an out-of-order threshold pair is answered
+        422.
+      x-lifecycle: released
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ForecastAccuracySyncRequest'
+      responses:
+        '200':
+          description: The comparison was recorded; the replaced count and the rows as written.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForecastAccuracySyncResult'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'

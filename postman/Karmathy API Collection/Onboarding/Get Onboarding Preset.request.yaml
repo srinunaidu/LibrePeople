@@ -1,0 +1,9 @@
+$kind: http-request
+description: Get an onboarding preset
+url: http://localhost:8000/onboarding/presets/{preset_id}
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/Get Onboarding Preset.resources/examples
+order: 2000

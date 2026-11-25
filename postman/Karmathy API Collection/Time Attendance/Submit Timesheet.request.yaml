@@ -1,0 +1,9 @@
+$kind: http-request
+description: Submit a timesheet
+url: http://localhost:8000/time/timesheets/{timesheet_id}/submit
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/Submit Timesheet.resources/examples
+order: 10000

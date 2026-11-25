@@ -1,0 +1,15 @@
+$kind: http-request
+description: Create an application
+url: http://localhost:8000/applications
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Create Application.resources/examples
+order: 3000

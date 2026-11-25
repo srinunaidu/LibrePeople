@@ -1,0 +1,15 @@
+$kind: http-request
+description: Create a payroll period
+url: http://localhost:8000/payroll/periods
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Create Payroll Period.resources/examples
+order: 10000

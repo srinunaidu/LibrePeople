@@ -1,0 +1,9 @@
+$kind: http-request
+description: List performance goals
+url: http://localhost:8000/performance/goals
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/List Performance Goals.resources/examples
+order: 7000

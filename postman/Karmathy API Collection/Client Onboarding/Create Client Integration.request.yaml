@@ -1,0 +1,15 @@
+$kind: http-request
+description: Create a client integration
+url: http://localhost:8000/onboarding-portal/clients/{client_id}/integrations
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Create Client Integration.resources/examples
+order: 6000

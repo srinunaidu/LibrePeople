@@ -1,0 +1,16 @@
+{
+  "entity": "departments",
+  "total_rows": 1,
+  "create": 1,
+  "update": 0,
+  "unchanged": 0,
+  "reject": 0,
+  "aliases_used": {
+    "department_name": "name",
+    "department_code": "code",
+    "desc": "description"
+  },
+  "rows": [
+    {"row": 2, "status": "create"}
+  ]
+}

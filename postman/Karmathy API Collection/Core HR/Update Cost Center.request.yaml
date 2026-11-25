@@ -1,0 +1,15 @@
+$kind: http-request
+description: Update a cost center
+url: http://localhost:8000/core-hr/cost-centers/{cost_center_id}
+method: PATCH
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Update Cost Center.resources/examples
+order: 4000

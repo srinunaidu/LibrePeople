@@ -1,0 +1,262 @@
+# Scheduling domain events.
+# Roster publication, unmet demand and shift-swap decisions, emitted by the scheduling module.
+#
+# Subscribers used in this file: `notifications` (employee and supervisor messages),
+# `audit` (the audit trail), `webhooks` (outbound webhook delivery) and `reporting`
+# (read models and extracts). A subscriber name is a logical consumer, not a process.
+
+envelope:
+  type: object
+  additionalProperties: false
+  required: [event_id, event_type, event_version, occurred_at, producer, tenant, data, request_id]
+  properties:
+    event_id:
+      type: string
+      format: uuid
+      description: "Unique identifier of this single emission, as a UUID. It is unique per emission and is carried unchanged on any redelivery of the same event, so a consumer can make consumption idempotent: an event_id it has already processed is a duplicate, not a new fact."
+    event_type:
+      type: string
+      pattern: '^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$'
+      description: "Dotted lowercase event name such as `shift.published`. It mirrors the `type` field of the event definition in the same file. Consumers route on this value and never on the human-readable description."
+    event_version:
+      type: integer
+      minimum: 1
+      description: "Version of this event type's payload schema. It starts at 1 for every event type and is incremented only when a payload change is breaking. A consumer that does not recognise a version MUST reject the event into its own dead-letter path rather than guess at the payload."
+    occurred_at:
+      type: string
+      format: date-time
+      description: "RFC 3339 / ISO 8601 timestamp with an explicit timezone offset, always expressed in UTC, for example 2026-01-31T09:15:00Z. It is the instant the domain fact happened, which is not necessarily the instant the event was written to the queue."
+    producer:
+      type: string
+      description: "Name of the service or module that emitted the event, taken from the `publisher` field of the event definition in the file that declares it, so a consumer can tell which domain owns the contract. It is fixed by configuration and never taken from request input."
+    tenant:
+      type: object
+      description: "Tenant coordinates of the event. This product is deployed one customer per deployment with a separate Oracle HCM schema per customer, so a tenant is identified by the customer-specific Oracle schema plus the deployment it runs on. There is no shared multi-tenant store to route between."
+      additionalProperties: false
+      required: [schema, deployment]
+      properties:
+        schema:
+          type: string
+          description: "Name of the customer-specific Oracle schema that owns the data the event is about, and therefore the customer the event belongs to. Never null."
+        deployment:
+          type: string
+          description: "Identifier of the deployment instance that produced the event, for example a production or UAT deployment id. It separates events from one environment of a customer from events of the same customer in another environment."
+    data:
+      type: object
+      description: "Event-specific payload. Its schema is the `payload` block of the event definition named by `event_type` in the same file. The payload carries only the fields that schema declares, and it never carries a personal name, a salary figure, a bank detail, a national identifier or a health datum."
+    request_id:
+      type: ["string", "null"]
+      description: "Correlates the event with the HTTP request or background job that caused it, using the same request id that appears in the shared error envelope and the `X-Request-ID` response header. It is null for scheduled or otherwise system-initiated events."
+    causation_id:
+      type: ["string", "null"]
+      description: "Identifier of the cause of this event: the `event_id` of the event that triggered it, or the `request_id` of the request that did. It is null when the event has no traceable cause, for example the first event of a chain."
+
+events:
+  shift.published:
+    description: "A new roster version was published. Publication is the point at which the version becomes visible to employees and to downstream consumers. A published version is immutable, so a correction is published as a new roster_version rather than as an edit of the old one."
+    type: shift.published
+    publisher: scheduling
+    subscribers: [notifications, audit, webhooks, reporting]
+    payload:
+      type: object
+      additionalProperties: false
+      required: [roster_version, location_code, role_code, date, required_staff, assigned_staff, unmet_slots, published_by, published_at]
+      properties:
+        roster_version:
+          type: string
+          description: "Identifier of the published roster version. An opaque token that is unique per location and period; consumers must treat it as opaque and use it only to correlate a publication with later roster events."
+        location_code:
+          type: string
+          description: "Business code of the location the roster covers, taken from the location master. A code rather than a row id, so a consumer can join on it without knowing the storage key."
+        role_code:
+          type: string
+          description: "Business code of the role (job) the roster covers, taken from the job master. A code rather than a row id, for the same reason as location_code."
+        date:
+          type: string
+          format: date
+          description: "Calendar date the published roster applies to, as an ISO 8601 date. One event covers one location, one role and one date."
+        required_staff:
+          type: integer
+          minimum: 0
+          description: "Number of staff required to cover the demand for this location, role and date. It is the demand the solver worked against."
+        assigned_staff:
+          type: integer
+          minimum: 0
+          description: "Number of staff actually assigned to the roster. It may be lower than required_staff; the shortfall is itemised in unmet_slots."
+        unmet_slots:
+          type: array
+          description: "Demand still uncovered at the moment of publication, one entry per unfilled slot. It is empty when the roster is fully staffed. The slot shape is the same as the one used by shift.unfilled."
+          items:
+            type: object
+            additionalProperties: false
+            required: [date, location_code, role_code, cause, headcount]
+            properties:
+              date:
+                type: string
+                format: date
+                description: "Calendar date of the uncovered slot, as an ISO 8601 date."
+              location_code:
+                type: string
+                description: "Business code of the location the slot is in."
+              role_code:
+                type: string
+                description: "Business code of the role the slot is for."
+              cause:
+                type: string
+                enum: [no_available_staff, skills_mismatch, rest_constraint, max_weekly_hours, leave_approved, location_ineligible, solver_timeout]
+                description: "Why the slot could not be staffed. `no_available_staff` no eligible employee was free, `skills_mismatch` no free employee held the required skills, `rest_constraint` the minimum rest between shifts would be broken, `max_weekly_hours` the weekly hours ceiling would be exceeded, `leave_approved` approved leave occupies the slot, `location_ineligible` no employee is certified or entitled for the location, `solver_timeout` the solver hit its time limit before placing a candidate."
+              headcount:
+                type: integer
+                minimum: 1
+                description: "Number of staff still needed to cover this slot. Always at least one; a zero-headcount slot is not an unmet slot and is not emitted."
+        published_by:
+          type: string
+          description: "Identifier of the account that published the roster. A reference id, never a personal name."
+        published_at:
+          type: string
+          format: date-time
+          description: "RFC 3339 timestamp with timezone, in UTC, at which the version was published."
+
+  shift.unfilled:
+    description: "A published roster still has demand that no assignment covers. This event is emitted whenever demand is unmet, and unmet demand is never silently dropped: a slot the solver could not staff is reported here with the cause, and it stays visible to the scheduler until it is staffed or the roster version is superseded. A consumer that sees this event must not treat the roster as fully covered."
+    type: shift.unfilled
+    publisher: scheduling
+    subscribers: [notifications, audit, webhooks]
+    payload:
+      type: object
+      additionalProperties: false
+      required: [roster_version, location_code, role_code, date, unfilled_slots, cause]
+      properties:
+        roster_version:
+          type: string
+          description: "Identifier of the roster version that still has unmet demand. It matches the roster_version of the shift.published event for the same version."
+        location_code:
+          type: string
+          description: "Business code of the location the unmet demand is in."
+        role_code:
+          type: string
+          description: "Business code of the role the unmet demand is for."
+        date:
+          type: string
+          format: date
+          description: "Calendar date the unmet demand falls on, as an ISO 8601 date."
+        unfilled_slots:
+          type: array
+          description: "One entry per uncovered slot. The array is never empty: an event with no slots carries no information and is not emitted."
+          items:
+            type: object
+            additionalProperties: false
+            required: [date, location_code, role_code, cause, headcount]
+            properties:
+              date:
+                type: string
+                format: date
+                description: "Calendar date of the uncovered slot, as an ISO 8601 date."
+              location_code:
+                type: string
+                description: "Business code of the location the slot is in."
+              role_code:
+                type: string
+                description: "Business code of the role the slot is for."
+              cause:
+                type: string
+                enum: [no_available_staff, skills_mismatch, rest_constraint, max_weekly_hours, leave_approved, location_ineligible, solver_timeout]
+                description: "Why this slot could not be staffed. `no_available_staff` no eligible employee was free, `skills_mismatch` no free employee held the required skills, `rest_constraint` the minimum rest between shifts would be broken, `max_weekly_hours` the weekly hours ceiling would be exceeded, `leave_approved` approved leave occupies the slot, `location_ineligible` no employee is certified or entitled for the location, `solver_timeout` the solver hit its time limit before placing a candidate."
+              headcount:
+                type: integer
+                minimum: 1
+                description: "Number of staff still needed to cover this slot."
+        cause:
+          type: string
+          enum: [no_available_staff, skills_mismatch, rest_constraint, max_weekly_hours, leave_approved, location_ineligible, solver_timeout]
+          description: "Dominant cause of the unfilled slots in this event, used to group and escalate. It is always one of the per-slot causes: when the slots have different causes the dominant one is reported here, and the per-slot causes stay authoritative."
+
+  shift.swap.requested:
+    description: "An employee asked to swap a shift with a colleague. The request is a request only: nothing about the roster changes until a shift.swap.approved event is emitted."
+    type: shift.swap.requested
+    publisher: scheduling
+    subscribers: [notifications, audit]
+    payload:
+      type: object
+      additionalProperties: false
+      required: [swap_id, shift_id, from_employee_id, to_employee_id, requested_at, reason]
+      properties:
+        swap_id:
+          type: string
+          description: "Identifier of the swap request. It is the correlation id between the request and the later approval or rejection of the same swap."
+        shift_id:
+          type: string
+          description: "Identifier of the shift being offered. The shift itself stays owned by its current assignee until the swap is approved."
+        from_employee_id:
+          type: string
+          description: "Identifier of the employee who currently holds the shift and is offering it. A reference id, never a name or any other personal datum."
+        to_employee_id:
+          type: string
+          description: "Identifier of the employee the shift is offered to."
+        requested_at:
+          type: string
+          format: date-time
+          description: "RFC 3339 timestamp with timezone, in UTC, at which the request was made."
+        reason:
+          type: ["string", "null"]
+          description: "Free-text reason supplied by the requester, or null when none was given. It may contain personal data (a health or family reason, for example), so it must not be logged raw, must not be copied into notification bodies, and must be handled under the same access controls as other personal data. It is null for a request made without a reason."
+
+  shift.swap.approved:
+    description: "A shift swap was approved and the roster has been updated. The approval is a decision on hard constraints only; the approver is recorded as an account id."
+    type: shift.swap.approved
+    publisher: scheduling
+    subscribers: [notifications, audit, webhooks, reporting]
+    payload:
+      type: object
+      additionalProperties: false
+      required: [swap_id, shift_id, decided_by, decided_at, constraints_checked]
+      properties:
+        swap_id:
+          type: string
+          description: "Identifier of the swap request that was decided. It matches the swap_id of the shift.swap.requested event."
+        shift_id:
+          type: string
+          description: "Identifier of the shift that changed hands."
+        decided_by:
+          type: string
+          description: "Identifier of the account that made the decision. A reference id, never a personal name."
+        decided_at:
+          type: string
+          format: date-time
+          description: "RFC 3339 timestamp with timezone, in UTC, at which the decision was taken."
+        constraints_checked:
+          type: array
+          description: "Identifiers of the hard constraints that were evaluated for this decision, in evaluation order. On approval every listed constraint passed."
+          items:
+            type: string
+            description: "Name of one constraint that was evaluated, for example `max_weekly_hours` or `rest_constraint`."
+
+  shift.swap.rejected:
+    description: "A shift swap was refused and the roster is unchanged. The rejection is always attributed to a constraint, so the requester can be told which rule blocked it without exposing any other employee's data."
+    type: shift.swap.rejected
+    publisher: scheduling
+    subscribers: [notifications, audit]
+    payload:
+      type: object
+      additionalProperties: false
+      required: [swap_id, shift_id, decided_by, decided_at, constraints_checked]
+      properties:
+        swap_id:
+          type: string
+          description: "Identifier of the swap request that was decided. It matches the swap_id of the shift.swap.requested event."
+        shift_id:
+          type: string
+          description: "Identifier of the shift that was to change hands."
+        decided_by:
+          type: string
+          description: "Identifier of the account that made the decision. A reference id, never a personal name."
+        decided_at:
+          type: string
+          format: date-time
+          description: "RFC 3339 timestamp with timezone, in UTC, at which the decision was taken."
+        constraints_checked:
+          type: array
+          description: "Identifiers of the hard constraints that were evaluated. On rejection the list includes the constraint that failed, and the failure is the reason the swap was refused."
+          items:
+            type: string
+            description: "Name of one constraint that was evaluated, for example `max_weekly_hours` or `rest_constraint`."

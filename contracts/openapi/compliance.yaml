@@ -1,0 +1,206 @@
+tags:
+- name: compliance
+  description: compliance domain endpoints.
+paths:
+  /compliance/compliance-rules:
+    get:
+      operationId: complianceListCompliancecompliancerules
+      tags:
+      - compliance
+      security:
+      - bearerAuth: []
+      summary: GET /compliance/compliance-rules
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: complianceCreateCompliancecompliancerules
+      tags:
+      - compliance
+      security:
+      - bearerAuth: []
+      summary: POST /compliance/compliance-rules
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /compliance/compliance-violations:
+    get:
+      operationId: complianceListCompliancecomplianceviolations
+      tags:
+      - compliance
+      security:
+      - bearerAuth: []
+      summary: GET /compliance/compliance-violations
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: complianceCreateCompliancecomplianceviolations
+      tags:
+      - compliance
+      security:
+      - bearerAuth: []
+      summary: POST /compliance/compliance-violations
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /compliance/compliance-violations/{violation_id}/resolve:
+    put:
+      operationId: complianceUpdateCompliancecomplianceviolationsresolve
+      tags:
+      - compliance
+      security:
+      - bearerAuth: []
+      summary: PUT /compliance/compliance-violations/{violation_id}/resolve
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /compliance/headcount-plans:
+    get:
+      operationId: complianceListComplianceheadcountplans
+      tags:
+      - compliance
+      security:
+      - bearerAuth: []
+      summary: GET /compliance/headcount-plans
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: complianceCreateComplianceheadcountplans
+      tags:
+      - compliance
+      security:
+      - bearerAuth: []
+      summary: POST /compliance/headcount-plans
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /compliance/report-definitions:
+    get:
+      operationId: complianceListCompliancereportdefinitions
+      tags:
+      - compliance
+      security:
+      - bearerAuth: []
+      summary: GET /compliance/report-definitions
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: complianceCreateCompliancereportdefinitions
+      tags:
+      - compliance
+      security:
+      - bearerAuth: []
+      summary: POST /compliance/report-definitions
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /compliance/saved-reports:
+    get:
+      operationId: complianceListCompliancesavedreports
+      tags:
+      - compliance
+      security:
+      - bearerAuth: []
+      summary: GET /compliance/saved-reports
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: complianceCreateCompliancesavedreports
+      tags:
+      - compliance
+      security:
+      - bearerAuth: []
+      summary: POST /compliance/saved-reports
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /compliance/scenarios:
+    get:
+      operationId: complianceListCompliancescenarios
+      tags:
+      - compliance
+      security:
+      - bearerAuth: []
+      summary: GET /compliance/scenarios
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: complianceCreateCompliancescenarios
+      tags:
+      - compliance
+      security:
+      - bearerAuth: []
+      summary: POST /compliance/scenarios
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'

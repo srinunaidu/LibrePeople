@@ -1,0 +1,884 @@
+{
+  "pack_id": "in-standard",
+  "name": "India Standard (FY 2025-26)",
+  "jurisdiction": {
+    "country": "IN",
+    "display_name": "India"
+  },
+  "version": "1.0.0",
+  "status": "verified",
+  "verification": {
+    "verified_by_name": "Srinivas Naidu",
+    "verified_by_role": "Payroll Compliance Analyst",
+    "verified_on": "2026-05-13",
+    "source_document_reference": "IT Act §115BAC/§16(ia)/§87A Finance Act 2025; EPF §6 para26A; ESI Act 1948; PT KA/MH/TN/TG/WB — human review+golden cases gc-in-standard-001; checklist MH Feb300, TN half-yearly, WB 10 rows, PF EPS split v1 accepted",
+    "golden_case_set_id": "gc-in-standard-001"
+  },
+  "effective_from": "2025-04-01",
+  "effective_to": "2026-03-31",
+  "tz": "Asia/Kolkata",
+  "source": {
+    "document_title": "India Standard FY 2025-26 — Income Tax Act §115BAC & Finance Act 2025; EPF Act 1952 §6 + EPF Scheme para 26A; ESI Act 1948; State Professional Tax Acts (KA, MH, TN, TG, WB)",
+    "publisher": "Government of India — Ministry of Finance / Ministry of Labour & Employment; State Governments of Karnataka, Maharashtra, Tamil Nadu, Telangana, West Bengal",
+    "document_reference": "IT Act §115BAC/§16(ia)/§87A Finance Act 2025; EPF Act §6 Scheme para 26A; ESI Act 1948; PT Acts KA-1976, MH-1975, TN-1992, TG-AP adapted, WB-1979",
+    "url": "https://www.indiacode.nic.in/handle/123456789/1362",
+    "retrieved_on": "2026-03-31",
+    "notes": "Rates transcribed for monthly payroll (annual slab/12). §115BAC new-regime slabs (annual): 0-4L 0%, 4-8L 5%, 8-12L 10%, 12-16L 15%, 16-20L 20%, 20-24L 25%, >24L 30%. Monthly bounds: 33333.33 / 66666.67 / 100000 / 133333.33 / 166666.67 / 200000 / open. Standard deduction §16(ia) ₹75,000/yr → ₹6,250/mo subtracted before banding. §87A rebate ₹60,000/yr → ₹5,000/mo, income limit ₹12,00,000/yr → ₹1,00,000/mo taxable; marginal relief above ₹12L is NOT encoded — verifier must decide whether v1.1 needs it (checklist). Cess 4% is applied on net tax after rebate as per Finance Act 2025; the pack's tax_bands rates are the slab rates before cess, cess is a separate 4% on the computed tax (engine applies as surcharge). EPF: 12% employee + 12% employer on wage ceiling ₹15,000 (15000) (EPF Scheme para 26A caps contribution base); employer 12% is EPS/EPF-split in law (8.33% EPS up to ₹15,000 (15000) + remainder EPF) — v1 records 12% flat (checklist for verifier). ESI: 0.75% employee / 3.25% employer, coverage limit ₹21,000 (21000) (ESI Act — contributions skipped above limit, not capped). PT tables reuse schedule entry's `rate` field as flat monthly amount (qs per contract § slice 2). Thresholds/overtime null where India sets no value; Factories Act limits not encoded. Gratuity explicitly excluded — Payment of Gratuity Act 1972 deferred to a later slice (no accrual in v1). Single salary field means PF/ESI base = full gross (Basic+DA simplification) — checklist. MH Feb ₹300/cap ₹2500 (2500) not encoded — checklist. TN statutory schedule is half-yearly with intermediate slabs — v1 uses single ₹208.50 above ₹25,000 (checklist). WB rows transcribed; verifier must confirm all 10 rows (checklist)."
+  },
+  "rate_tables": {
+    "tax_bands": {
+      "description": "India new regime (§115BAC) progressive tax bands (monthly = annual/12). Band's value is lower bound, max_value upper bound (exclusive, open for top), rate is percent inside band. Taxable = gross - standard_deduction_monthly.",
+      "effective_from": "2025-04-01",
+      "kind": "banded",
+      "entries": [
+        {
+          "code": "IN_BAND_0",
+          "label": "Taxable up to 33333.33",
+          "value": 0,
+          "max_value": 33333.33,
+          "rate": 0,
+          "unit": "currency_amount",
+          "notes": "Annual 0-4L at 0% → 0-33333.33/mo"
+        },
+        {
+          "code": "IN_BAND_1",
+          "label": "33333.33 to 66666.67",
+          "value": 33333.33,
+          "max_value": 66666.67,
+          "rate": 5,
+          "unit": "currency_amount",
+          "notes": "Annual 4-8L at 5%"
+        },
+        {
+          "code": "IN_BAND_2",
+          "label": "66666.67 to 100000",
+          "value": 66666.67,
+          "max_value": 100000,
+          "rate": 10,
+          "unit": "currency_amount",
+          "notes": "Annual 8-12L at 10%"
+        },
+        {
+          "code": "IN_BAND_3",
+          "label": "100000 to 133333.33",
+          "value": 100000,
+          "max_value": 133333.33,
+          "rate": 15,
+          "unit": "currency_amount",
+          "notes": "Annual 12-16L at 15%"
+        },
+        {
+          "code": "IN_BAND_4",
+          "label": "133333.33 to 166666.67",
+          "value": 133333.33,
+          "max_value": 166666.67,
+          "rate": 20,
+          "unit": "currency_amount",
+          "notes": "Annual 16-20L at 20%"
+        },
+        {
+          "code": "IN_BAND_5",
+          "label": "166666.67 to 200000",
+          "value": 166666.67,
+          "max_value": 200000,
+          "rate": 25,
+          "unit": "currency_amount",
+          "notes": "Annual 20-24L at 25%"
+        },
+        {
+          "code": "IN_BAND_6",
+          "label": "Above 200000",
+          "value": 200000,
+          "rate": 30,
+          "unit": "currency_amount",
+          "notes": "Annual >24L at 30% — open ended"
+        }
+      ]
+    },
+    "tax_adjustments": {
+      "description": "India standard deductions applied before banding.",
+      "effective_from": "2025-04-01",
+      "values": {
+        "standard_deduction_monthly": {
+          "value": 6250,
+          "unit": "currency_amount",
+          "label": "Standard deduction (monthly)",
+          "notes": "§16(ia) ₹75,000/yr → ₹6,250/mo subtracted before banding"
+        }
+      }
+    },
+    "tax_rebates": {
+      "description": "India rebate u/s 87A (monthly). Applied after band tax: if taxable ≤ limit, rebate = min(band_tax, max).",
+      "effective_from": "2025-04-01",
+      "values": {
+        "rebate_87a_max_monthly": {
+          "value": 5000,
+          "unit": "currency_amount",
+          "label": "Rebate 87A max (monthly)",
+          "notes": "§87A ₹60,000/yr → ₹5,000/mo; min(band_tax, 5000)"
+        },
+        "rebate_87a_income_limit_monthly": {
+          "value": 100000,
+          "unit": "currency_amount",
+          "label": "Rebate 87A income limit (monthly)",
+          "notes": "§87A ₹12,00,000 taxable/yr → ₹1,00,000/mo; marginal relief NOT encoded"
+        }
+      }
+    },
+    "social_insurance_employee": {
+      "description": "India employee social insurance contributions (flat percent of contribution base).",
+      "effective_from": "2025-04-01",
+      "values": {
+        "pf": {
+          "value": 12,
+          "unit": "percent",
+          "label": "Provident Fund (Employee)",
+          "notes": "EPF Act §6 — 12% of base, capped via pf_wage_ceiling"
+        },
+        "esi": {
+          "value": 0.75,
+          "unit": "percent",
+          "label": "ESI (Employee)",
+          "notes": "ESI Act — 0.75% of base, skipped above esi_wage_limit"
+        }
+      }
+    },
+    "social_insurance_employer": {
+      "description": "India employer social insurance contributions (flat percent of contribution base).",
+      "effective_from": "2025-04-01",
+      "values": {
+        "pf": {
+          "value": 12,
+          "unit": "percent",
+          "label": "Provident Fund (Employer)",
+          "notes": "EPF Act §6 — 12% flat (EPS/EPF split 8.33% EPS not separated in v1; checklist)"
+        },
+        "esi": {
+          "value": 3.25,
+          "unit": "percent",
+          "label": "ESI (Employer)",
+          "notes": "ESI Act — 3.25% of base, skipped above limit"
+        }
+      }
+    },
+    "social_insurance_ceilings": {
+      "description": "India wage ceilings/limits for social insurance.",
+      "effective_from": "2025-04-01",
+      "values": {
+        "pf_wage_ceiling": {
+          "value": 15000,
+          "unit": "currency_amount",
+          "label": "PF wage ceiling",
+          "notes": "EPF Scheme para 26A — caps contribution base at ₹15,000"
+        },
+        "esi_wage_limit": {
+          "value": 21000,
+          "unit": "currency_amount",
+          "label": "ESI wage coverage limit",
+          "notes": "ESI Act — contributions skipped when base > ₹21,000, not capped"
+        }
+      }
+    },
+    "pt_ka": {
+      "description": "Karnataka Professional Tax (monthly). Schedule: entry.value is lower bound (inclusive), max_value upper bound (exclusive, absent=open), rate is flat monthly PT amount.",
+      "effective_from": "2025-04-01",
+      "kind": "schedule",
+      "entries": [
+        {
+          "code": "PT_KA_0",
+          "label": "Up to 25000",
+          "value": 0,
+          "max_value": 25000,
+          "rate": 0,
+          "unit": "currency_amount",
+          "notes": "0-25000 → ₹0"
+        },
+        {
+          "code": "PT_KA_1",
+          "label": "25000 and above",
+          "value": 25000,
+          "rate": 200,
+          "unit": "currency_amount",
+          "notes": "25000+ → ₹200"
+        }
+      ]
+    },
+    "pt_mh": {
+      "description": "Maharashtra Professional Tax (monthly). Schedule: entry.value is lower bound (inclusive), max_value upper bound (exclusive, absent=open), rate is flat monthly PT amount. Feb ₹300/cap ₹2500 is a checklist item — not encoded in v1 monthly table.",
+      "effective_from": "2025-04-01",
+      "kind": "schedule",
+      "entries": [
+        {
+          "code": "PT_MH_0",
+          "label": "Up to 10000",
+          "value": 0,
+          "max_value": 10000,
+          "rate": 0,
+          "unit": "currency_amount",
+          "notes": "0-10000 → ₹0; Feb ₹300 cap ₹2500 checklist"
+        },
+        {
+          "code": "PT_MH_1",
+          "label": "10000 and above",
+          "value": 10000,
+          "rate": 200,
+          "unit": "currency_amount",
+          "notes": "10000+ → ₹200 (monthly; annual cap ₹2500 Feb ₹300 excluded)"
+        }
+      ]
+    },
+    "pt_tn": {
+      "description": "Tamil Nadu Professional Tax (monthly). Schedule: entry.value is lower bound (inclusive), max_value upper bound (exclusive, absent=open), rate is flat monthly PT amount. Statutory schedule is half-yearly with intermediate slabs — v1 uses single ₹208.50 above ₹25000 (checklist).",
+      "effective_from": "2025-04-01",
+      "kind": "schedule",
+      "entries": [
+        {
+          "code": "PT_TN_0",
+          "label": "Up to 25000",
+          "value": 0,
+          "max_value": 25000,
+          "rate": 0,
+          "unit": "currency_amount",
+          "notes": "0-25000 → ₹0; half-yearly slabs collapsed — checklist"
+        },
+        {
+          "code": "PT_TN_1",
+          "label": "25000 and above",
+          "value": 25000,
+          "rate": 208.5,
+          "unit": "currency_amount",
+          "notes": "25000+ → ₹208.50 (monthly equivalent; verify half-yearly schedule)"
+        }
+      ]
+    },
+    "pt_tg": {
+      "description": "Telangana Professional Tax (monthly). Schedule: entry.value is lower bound (inclusive), max_value upper bound (exclusive, absent=open), rate is flat monthly PT amount.",
+      "effective_from": "2025-04-01",
+      "kind": "schedule",
+      "entries": [
+        {
+          "code": "PT_TG_0",
+          "label": "Up to 15000",
+          "value": 0,
+          "max_value": 15000,
+          "rate": 150,
+          "unit": "currency_amount",
+          "notes": "0-15000 → ₹150"
+        },
+        {
+          "code": "PT_TG_1",
+          "label": "Above 15000",
+          "value": 15000,
+          "rate": 200,
+          "unit": "currency_amount",
+          "notes": "15000+ → ₹200"
+        }
+      ]
+    },
+    "pt_wb": {
+      "description": "West Bengal Professional Tax (monthly). Schedule: entry.value is lower bound (inclusive), max_value upper bound (exclusive, absent=open), rate is flat monthly PT amount. 10 rows; verifier must confirm (checklist).",
+      "effective_from": "2025-04-01",
+      "kind": "schedule",
+      "entries": [
+        {
+          "code": "PT_WB_0",
+          "label": "Up to 5000",
+          "value": 0,
+          "max_value": 5000,
+          "rate": 0,
+          "unit": "currency_amount",
+          "notes": "0-5000 → ₹0"
+        },
+        {
+          "code": "PT_WB_1",
+          "label": "5000 to 6000",
+          "value": 5000,
+          "max_value": 6000,
+          "rate": 18,
+          "unit": "currency_amount",
+          "notes": "5000-6000 → ₹18"
+        },
+        {
+          "code": "PT_WB_2",
+          "label": "6000 to 7000",
+          "value": 6000,
+          "max_value": 7000,
+          "rate": 25,
+          "unit": "currency_amount",
+          "notes": "6000-7000 → ₹25"
+        },
+        {
+          "code": "PT_WB_3",
+          "label": "7000 to 8000",
+          "value": 7000,
+          "max_value": 8000,
+          "rate": 30,
+          "unit": "currency_amount",
+          "notes": "7000-8000 → ₹30"
+        },
+        {
+          "code": "PT_WB_4",
+          "label": "8000 to 9000",
+          "value": 8000,
+          "max_value": 9000,
+          "rate": 40,
+          "unit": "currency_amount",
+          "notes": "8000-9000 → ₹40"
+        },
+        {
+          "code": "PT_WB_5",
+          "label": "9000 to 10000",
+          "value": 9000,
+          "max_value": 10000,
+          "rate": 45,
+          "unit": "currency_amount",
+          "notes": "9000-10000 → ₹45"
+        },
+        {
+          "code": "PT_WB_6",
+          "label": "10000 to 15000",
+          "value": 10000,
+          "max_value": 15000,
+          "rate": 60,
+          "unit": "currency_amount",
+          "notes": "10000-15000 → ₹60"
+        },
+        {
+          "code": "PT_WB_7",
+          "label": "15000 to 25000",
+          "value": 15000,
+          "max_value": 25000,
+          "rate": 80,
+          "unit": "currency_amount",
+          "notes": "15000-25000 → ₹80"
+        },
+        {
+          "code": "PT_WB_8",
+          "label": "25000 to 40000",
+          "value": 25000,
+          "max_value": 40000,
+          "rate": 90,
+          "unit": "currency_amount",
+          "notes": "25000-40000 → ₹90"
+        },
+        {
+          "code": "PT_WB_9",
+          "label": "40000 and above",
+          "value": 40000,
+          "rate": 200,
+          "unit": "currency_amount",
+          "notes": "40000+ → ₹200; confirm rows — checklist"
+        }
+      ]
+    },
+    "gratuity_accrual": {
+      "description": "Gratuity accrual per Payment of Gratuity Act 1972 §4 — monthly employer provision at 15/26/12 = 4.81% of Basic+DA (or gross when no Basic/DA split), eligible only after 5 years of continuous service (eligibility); v1 records a flat accrual, not the last-drawn nuance — checklist for verifier.",
+      "effective_from": "2025-04-01",
+      "in_scope": false,
+      "values": {
+        "gratuity_rate_pct": {
+          "value": 4.81,
+          "unit": "percent",
+          "label": "Gratuity accrual (monthly)",
+          "notes": "15/26/12 = 4.81% per month of Basic+DA; Payment of Gratuity Act 1972 §4; 5yr eligibility gate, v1 ignores Basic+DA vs last-drawn nuance — verifier checklist"
+        },
+        "eligibility_years": {
+          "value": 5,
+          "unit": "years",
+          "label": "Gratuity eligibility (years)",
+          "notes": "Payment of Gratuity Act 1972 §4: 5 years continuous service"
+        },
+        "formula_numerators": {
+          "value": 15,
+          "unit": "days",
+          "label": "Gratuity formula 15 days",
+          "notes": "15 days wages per completed year: 15/26 × last Basic+DA"
+        },
+        "formula_denominator": {
+          "value": 26,
+          "unit": "days",
+          "label": "Gratuity denominator 26",
+          "notes": "26 working days per month"
+        }
+      }
+    },
+    "bonus_act": {
+      "description": "Bonus Act (Payment of Bonus Act 1965 as amended) stub — minimal 8.33% / max 20% of Basic+DA, eligibility ₹21,000/month; v1 stub records rates only, does NOT emit a deduction until verifier enables it — verifier checklist.",
+      "effective_from": "2025-04-01",
+      "values": {
+        "bonus_min_pct": {
+          "value": 8.33,
+          "unit": "percent",
+          "label": "Bonus min (Act) 8.33%",
+          "notes": "Payment of Bonus Act 1965 §10: minimum 8.33%"
+        },
+        "bonus_max_pct": {
+          "value": 20,
+          "unit": "percent",
+          "label": "Bonus max (Act) 20%",
+          "notes": "Payment of Bonus Act 1965 §11: maximum 20%"
+        },
+        "bonus_eligibility_salary_limit": {
+          "value": 21000,
+          "unit": "currency_amount",
+          "label": "Bonus eligibility salary limit",
+          "notes": "₹21,000/month per Bonus Act eligibility; verifier checklist"
+        }
+      }
+    },
+    "lwf_state": {
+      "description": "Labour Welfare Fund per-state stubs — minimal flat monthly provision (employer-side info only; v1 does not deduct) per MH/KA/TN/TG/WB; amounts are stubs to be verified — verifier checklist.",
+      "effective_from": "2025-04-01",
+      "values": {
+        "lwf_mh": {
+          "value": 12,
+          "unit": "currency_amount",
+          "label": "LWF Maharashtra (monthly stub)",
+          "notes": "Maharashtra LWF — stub flat, verifier checklist"
+        },
+        "lwf_ka": {
+          "value": 20,
+          "unit": "currency_amount",
+          "label": "LWF Karnataka (monthly stub)",
+          "notes": "Karnataka LWF — stub flat, verifier checklist"
+        },
+        "lwf_tn": {
+          "value": 10,
+          "unit": "currency_amount",
+          "label": "LWF Tamil Nadu (monthly stub)",
+          "notes": "Tamil Nadu LWF — stub flat, verifier checklist"
+        },
+        "lwf_tg": {
+          "value": 8,
+          "unit": "currency_amount",
+          "label": "LWF Telangana (monthly stub)",
+          "notes": "Telangana LWF — stub flat, verifier checklist"
+        },
+        "lwf_wb": {
+          "value": 6,
+          "unit": "currency_amount",
+          "label": "LWF West Bengal (monthly stub)",
+          "notes": "West Bengal LWF — stub flat, verifier checklist"
+        }
+      }
+    }
+  },
+  "thresholds": {
+    "weekly_max_hours": 48,
+    "daily_min_rest_hours": null,
+    "max_consecutive_work_days": null,
+    "daily_overtime_threshold_hours": 9,
+    "weekly_overtime_threshold_hours": 48,
+    "overtime_premium_multiplier": 2,
+    "overtime_daily_cap_hours": 2,
+    "minimum_wage_amount": null,
+    "minimum_wage_unit": null
+  },
+  "overtime": {
+    "daily_threshold_hours": 9,
+    "weekly_threshold_hours": 48,
+    "premium_multiplier": 2,
+    "daily_cap_hours": 2,
+    "rules": [
+      {
+        "rule_id": "IN_OT_DAILY_9H",
+        "description": "Shops and Establishments Act: overtime payable after 9 hours in a day at 2x ordinary rate",
+        "severity": "flag",
+        "applies_when": "jurisdiction == IN and daily hours > 9"
+      },
+      {
+        "rule_id": "IN_OT_WEEKLY_48H",
+        "description": "Shops and Establishments Act: overtime payable after 48 hours in a week at 2x ordinary rate",
+        "severity": "flag",
+        "applies_when": "jurisdiction == IN and weekly hours > 48"
+      }
+    ]
+  },
+  "leave_types": [
+    {
+      "code": "casual",
+      "name": "Casual Leave",
+      "entitlement_days": 12,
+      "accrual": {
+        "frequency": "per_year",
+        "tenure_tiers": []
+      },
+      "carry_over_limit_days": 0,
+      "expiry_month": 12,
+      "encashable": false,
+      "entitlement_source": "State Shops and Establishments Acts (varies by state)",
+      "rule_ids": []
+    },
+    {
+      "code": "earned",
+      "name": "Earned Leave",
+      "entitlement_days": 18,
+      "accrual": {
+        "frequency": "per_year",
+        "tenure_tiers": []
+      },
+      "carry_over_limit_days": 30,
+      "expiry_month": 12,
+      "encashable": true,
+      "entitlement_source": "Factories Act 1948 §79 and State S&E Acts — encashable per §10(10AA) minimal stub; taxable, verifier checklist",
+      "rule_ids": []
+    }
+  ],
+  "working_time_limits": {
+    "max_weekly_hours": null,
+    "min_daily_rest_hours": null,
+    "max_consecutive_days": null,
+    "max_night_work_hours": null,
+    "min_rest_between_shifts_hours": null,
+    "rules": []
+  },
+  "break_rules": [],
+  "mandatory_payslip_fields": [
+    "gross_pay",
+    "net_pay",
+    "total_deductions",
+    "tax_withheld",
+    "employee_contributions",
+    "employer_contributions",
+    "hours_worked",
+    "pay_period_start",
+    "pay_period_end",
+    "pay_date",
+    "professional_tax"
+  ],
+  "mandatory_payslip_notes": [
+    "India FY 2025-26: TDS as per §115BAC new regime; PF/ESI as per EPF/ESI Acts; PT as per state Acts; Gratuity not included."
+  ],
+  "pay_frequency_rules": {
+    "allowed_frequencies": ["monthly"],
+    "pay_day_rule": "Monthly pay — pay date is the last working day of the month; if a public holiday, preceding working day (IST).",
+    "cut_off_days_before_pay_day": 3,
+    "pay_date_rule_id": "PAY_LAST_WORKING_DAY_MONTHLY_IN"
+  },
+  "reporting_obligations": [
+    {
+      "report_id": "IN_TDS_RETURN",
+      "name": "TDS Return (Form 24Q)",
+      "frequency": "quarterly",
+      "due_within_days": 31,
+      "template_ref": "IN-24Q",
+      "authority": "Income Tax Department",
+      "description": "Quarterly TDS return for salary."
+    },
+    {
+      "report_id": "IN_PF_RETURN",
+      "name": "PF Electronic Challan-cum-Return (ECR)",
+      "frequency": "monthly",
+      "due_within_days": 15,
+      "template_ref": "IN-EPF-ECR",
+      "authority": "EPFO",
+      "description": "Monthly PF contributions via ECR."
+    },
+    {
+      "report_id": "IN_ESI_RETURN",
+      "name": "ESI Contribution Return",
+      "frequency": "monthly",
+      "due_within_days": 15,
+      "template_ref": "IN-ESI-MONTHLY",
+      "authority": "ESIC",
+      "description": "Monthly ESI contributions."
+    },
+    {
+      "report_id": "IN_PT_RETURN",
+      "name": "Professional Tax Return",
+      "frequency": "monthly",
+      "due_within_days": 20,
+      "template_ref": "IN-PT-STATE",
+      "authority": "State Professional Tax Authority",
+      "description": "Monthly PT remittance per state."
+    }
+  ],
+  "public_holiday_rules": {
+    "source": "India public holidays — Central + State gazettes (region dependent by state).",
+    "region_dependent": true,
+    "holiday_count_by_year": {
+      "2025": 21,
+      "2026": 21
+    }
+  },
+  "signing": {
+    "algorithm": "ed25519",
+    "key_id": "in-standard-key",
+    "signature": "U1lOVEhFVElDX1NJR05BVFVSRV9QTEFDRVVMREVSX05PVF9BX1JFQUxfU0lHTkFUVVJF",
+    "signed_at": "2026-03-31T00:00:00Z",
+    "signed_by": "Karmathy Compliance"
+  },
+  "golden_cases": [
+    {
+      "case_id": "gc-in-standard-001-pt-ka",
+      "description": "KA PT: gross 25000 → PT 200; PF capped 15000 → 1800/1800; ESI skipped (>21000); TDS 0 (rebate) — Tamil? Actually KA case",
+      "input": {
+        "base_salary": "25000.00",
+        "pay_frequency": "monthly",
+        "hours_worked": 173,
+        "overtime_hours": 0,
+        "overtime_hourly_rate": "0",
+        "leave_days": 0,
+        "tax_withholding_override": null,
+        "benefit_deductions": "0.00",
+        "other_earnings": "0.00",
+        "other_deductions": "0.00",
+        "pt_state": "KA"
+      },
+      "expected": {
+        "gross": "25000.00",
+        "total_deductions": "2000.00",
+        "net": "23000.00",
+        "employee_contributions": "1800.00",
+        "employer_contributions": "1800.00",
+        "pay_floor_check": "pass"
+      }
+    },
+    {
+      "case_id": "gc-in-standard-001-pt-mh",
+      "description": "MH PT: 22000 → PT 200; PF 1800/1800; ESI none",
+      "input": {
+        "base_salary": "22000.00",
+        "pay_frequency": "monthly",
+        "hours_worked": 173,
+        "overtime_hours": 0,
+        "overtime_hourly_rate": "0",
+        "leave_days": 0,
+        "tax_withholding_override": null,
+        "benefit_deductions": "0.00",
+        "other_earnings": "0.00",
+        "other_deductions": "0.00",
+        "pt_state": "MH"
+      },
+      "expected": {
+        "gross": "22000.00",
+        "total_deductions": "2000.00",
+        "net": "20000.00",
+        "employee_contributions": "1800.00",
+        "employer_contributions": "1800.00",
+        "pay_floor_check": "pass"
+      }
+    },
+    {
+      "case_id": "gc-in-standard-001-pt-tn",
+      "description": "TN PT: 30000 → PT 208.50; PF capped; ESI none",
+      "input": {
+        "base_salary": "30000.00",
+        "pay_frequency": "monthly",
+        "hours_worked": 173,
+        "overtime_hours": 0,
+        "overtime_hourly_rate": "0",
+        "leave_days": 0,
+        "tax_withholding_override": null,
+        "benefit_deductions": "0.00",
+        "other_earnings": "0.00",
+        "other_deductions": "0.00",
+        "pt_state": "TN"
+      },
+      "expected": {
+        "gross": "30000.00",
+        "total_deductions": "2008.50",
+        "net": "27991.50",
+        "employee_contributions": "1800.00",
+        "employer_contributions": "1800.00",
+        "pay_floor_check": "pass"
+      }
+    },
+    {
+      "case_id": "gc-in-standard-001-pt-tg",
+      "description": "TG PT: 22000 → PT 200; PF capped; ESI none",
+      "input": {
+        "base_salary": "22000.00",
+        "pay_frequency": "monthly",
+        "hours_worked": 173,
+        "overtime_hours": 0,
+        "overtime_hourly_rate": "0",
+        "leave_days": 0,
+        "tax_withholding_override": null,
+        "benefit_deductions": "0.00",
+        "other_earnings": "0.00",
+        "other_deductions": "0.00",
+        "pt_state": "TG"
+      },
+      "expected": {
+        "gross": "22000.00",
+        "total_deductions": "2000.00",
+        "net": "20000.00",
+        "employee_contributions": "1800.00",
+        "employer_contributions": "1800.00",
+        "pay_floor_check": "pass"
+      }
+    },
+    {
+      "case_id": "gc-in-standard-001-pt-wb",
+      "description": "WB PT: 45000 → PT 200; PF capped 15000 → 1800/1800; ESI none (>21000); taxable 38750 → band tax 270.83 rebated to 0; formula: (38750-33333.33)*5% = 270.83, rebate 270.83, PT 200 on gross 45000 in band 40000+",
+      "input": {
+        "base_salary": "45000.00",
+        "pay_frequency": "monthly",
+        "hours_worked": 173,
+        "overtime_hours": 0,
+        "overtime_hourly_rate": "0",
+        "leave_days": 0,
+        "tax_withholding_override": null,
+        "benefit_deductions": "0.00",
+        "other_earnings": "0.00",
+        "other_deductions": "0.00",
+        "pt_state": "WB"
+      },
+      "expected": {
+        "gross": "45000.00",
+        "total_deductions": "2000.00",
+        "net": "43000.00",
+        "employee_contributions": "1800.00",
+        "employer_contributions": "1800.00",
+        "pay_floor_check": "pass"
+      }
+    },
+    {
+      "case_id": "gc-in-standard-001-general-young-age-25",
+      "description": "Young (25) 80000 → taxable 73750 → tax 2375.00 rebated to 0; PF capped; ESI none; PT_WB? Actually no PT stated; use KA? For general case PT_KA 200 not included — this case has no PT",
+      "input": {
+        "base_salary": "80000.00",
+        "pay_frequency": "monthly",
+        "hours_worked": 173,
+        "overtime_hours": 0,
+        "overtime_hourly_rate": "0",
+        "leave_days": 0,
+        "tax_withholding_override": null,
+        "benefit_deductions": "0.00",
+        "other_earnings": "0.00",
+        "other_deductions": "0.00"
+      },
+      "expected": {
+        "gross": "80000.00",
+        "total_deductions": "1800.00",
+        "net": "78200.00",
+        "employee_contributions": "1800.00",
+        "employer_contributions": "1800.00",
+        "pay_floor_check": "pass"
+      }
+    },
+    {
+      "case_id": "gc-in-standard-001-senior-age-62",
+      "description": "Senior (62) 80000 — byte-identical to young; new regime has no age distinction",
+      "input": {
+        "base_salary": "80000.00",
+        "pay_frequency": "monthly",
+        "hours_worked": 173,
+        "overtime_hours": 0,
+        "overtime_hourly_rate": "0",
+        "leave_days": 0,
+        "tax_withholding_override": null,
+        "benefit_deductions": "0.00",
+        "other_earnings": "0.00",
+        "other_deductions": "0.00"
+      },
+      "expected": {
+        "gross": "80000.00",
+        "total_deductions": "1800.00",
+        "net": "78200.00",
+        "employee_contributions": "1800.00",
+        "employer_contributions": "1800.00",
+        "pay_floor_check": "pass"
+      }
+    },
+    {
+      "case_id": "gc-in-standard-001-pf-ceiling-cross",
+      "description": "PF ceiling cross 60000 → PF 1800/1800 on 15000 not 7200; TDS 0 (rebate 1020.83); PT_KA 200",
+      "input": {
+        "base_salary": "60000.00",
+        "pay_frequency": "monthly",
+        "hours_worked": 173,
+        "overtime_hours": 0,
+        "overtime_hourly_rate": "0",
+        "leave_days": 0,
+        "tax_withholding_override": null,
+        "benefit_deductions": "0.00",
+        "other_earnings": "0.00",
+        "other_deductions": "0.00",
+        "pt_state": "KA"
+      },
+      "expected": {
+        "gross": "60000.00",
+        "total_deductions": "2000.00",
+        "net": "58000.00",
+        "employee_contributions": "1800.00",
+        "employer_contributions": "1800.00",
+        "pay_floor_check": "pass"
+      }
+    },
+    {
+      "case_id": "gc-in-standard-001-esi-edge-at-limit",
+      "description": "ESI at limit 21000 → ESI 157.50 EE / 682.50 ER; PF capped 15000",
+      "input": {
+        "base_salary": "21000.00",
+        "pay_frequency": "monthly",
+        "hours_worked": 173,
+        "overtime_hours": 0,
+        "overtime_hourly_rate": "0",
+        "leave_days": 0,
+        "tax_withholding_override": null,
+        "benefit_deductions": "0.00",
+        "other_earnings": "0.00",
+        "other_deductions": "0.00"
+      },
+      "expected": {
+        "gross": "21000.00",
+        "total_deductions": "1957.50",
+        "net": "19042.50",
+        "employee_contributions": "1957.50",
+        "employer_contributions": "2482.50",
+        "pay_floor_check": "pass"
+      }
+    },
+    {
+      "case_id": "gc-in-standard-001-esi-edge-above-limit",
+      "description": "ESI above limit 21000.01 → ESI skipped; PF unchanged",
+      "input": {
+        "base_salary": "21000.01",
+        "pay_frequency": "monthly",
+        "hours_worked": 173,
+        "overtime_hours": 0,
+        "overtime_hourly_rate": "0",
+        "leave_days": 0,
+        "tax_withholding_override": null,
+        "benefit_deductions": "0.00",
+        "other_earnings": "0.00",
+        "other_deductions": "0.00"
+      },
+      "expected": {
+        "gross": "21000.01",
+        "total_deductions": "1800.00",
+        "net": "19200.01",
+        "employee_contributions": "1800.00",
+        "employer_contributions": "1800.00",
+        "pay_floor_check": "pass"
+      }
+    },
+    {
+      "case_id": "gc-in-standard-001-high-earner-tds",
+      "description": "High earner 200000 → taxable 193750 → TDS 23437.50 (no rebate); PT_KA 200; net 174562.50; PF capped",
+      "input": {
+        "base_salary": "200000.00",
+        "pay_frequency": "monthly",
+        "hours_worked": 173,
+        "overtime_hours": 0,
+        "overtime_hourly_rate": "0",
+        "leave_days": 0,
+        "tax_withholding_override": null,
+        "benefit_deductions": "0.00",
+        "other_earnings": "0.00",
+        "other_deductions": "0.00",
+        "pt_state": "KA"
+      },
+      "expected": {
+        "gross": "200000.00",
+        "total_deductions": "25437.50",
+        "net": "174562.50",
+        "employee_contributions": "1800.00",
+        "employer_contributions": "1800.00",
+        "pay_floor_check": "pass"
+      }
+    }
+  ]
+}

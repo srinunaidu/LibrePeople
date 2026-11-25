@@ -1,0 +1,9 @@
+$kind: http-request
+description: List payroll runs
+url: http://localhost:8000/payroll/runs
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/List Payroll Runs.resources/examples
+order: 11000

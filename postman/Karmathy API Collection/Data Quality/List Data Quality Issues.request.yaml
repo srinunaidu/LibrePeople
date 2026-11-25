@@ -1,0 +1,9 @@
+$kind: http-request
+description: List data quality issues
+url: http://localhost:8000/data-quality/issues
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/List Data Quality Issues.resources/examples
+order: 2000

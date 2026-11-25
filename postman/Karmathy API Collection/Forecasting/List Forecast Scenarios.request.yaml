@@ -1,0 +1,9 @@
+$kind: http-request
+description: List forecast scenarios
+url: http://localhost:8000/forecasting/scenarios
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/List Forecast Scenarios.resources/examples
+order: 4000

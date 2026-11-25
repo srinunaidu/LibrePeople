@@ -1,0 +1,358 @@
+{
+  "pack_id": "demo-synthetic",
+  "name": "Synthetic Demonstration Pack (DRAFT — NOT FOR PRODUCTION)",
+  "jurisdiction": {
+    "country": "ZZ",
+    "region": "DEMO",
+    "display_name": "Synthetic Demonstration Jurisdiction"
+  },
+  "version": "0.1.0-draft",
+  "status": "draft",
+  "effective_from": "2026-01-01",
+  "effective_to": null,
+  "tz": "UTC",
+  "source": {
+    "document_title": "Synthetic Demonstration Document — NOT A REAL STATUTE",
+    "publisher": "Karmathy Demo Data Generator",
+    "document_reference": "DEMO-2026-001",
+    "url": "https://example.invalid/demo-synthetic-pack",
+    "retrieved_on": "2026-10-21",
+    "notes": "This pack contains ENTIRELY SYNTHETIC VALUES. No statutory rates, thresholds, or legal wording from any real jurisdiction are present. It exists only to validate the rule-pack schema, loader, and engine integration. It MUST NOT be verified or used in production. HOW A BAND IS READ: a band states its lower bound (`value`), its upper bound (`max_value`, left out for the open ended top band) and the rate that applies inside it (`rate`, a percentage whatever the unit of the bounds is). The engine divides the taxable amount between the bands by their bounds and taxes each part at the rate of the band it falls in. A table that declares `\"kind\": \"banded\"` has to state that rate on every one of its bands, and a pack that leaves one out is refused when it is loaded, naming the band that needs it. WHAT THE GOLDEN CASES PIN: `gross`, `total_deductions`, `net` and `pay_floor_check` are the totals of the payslip, `employee_contributions` and `employer_contributions` are the two contribution totals, and `earnings`, `deductions` and `employer_contribution_lines` are the lines themselves."
+  },
+  "verification": null,
+  "rate_tables": {
+    "tax_bands": {
+      "description": "SYNTHETIC progressive tax bands for demonstration only. NOT REAL TAX RATES. A band states the amount at which it starts (`value`), the amount at which it ends (`max_value`, left out for the open ended top band) and the rate that applies inside it (`rate`). The engine divides the taxable amount between the bands by their bounds and taxes each part at the rate of the band it falls in.",
+      "effective_from": "2026-01-01",
+      "kind": "banded",
+      "entries": [
+        {
+          "code": "BAND_0",
+          "label": "First bracket",
+          "value": 0,
+          "max_value": 10000,
+          "rate": 0,
+          "unit": "currency_amount",
+          "notes": "SYNTHETIC: 0% on first 10,000"
+        },
+        {
+          "code": "BAND_1",
+          "label": "Second bracket",
+          "value": 10000,
+          "max_value": 30000,
+          "rate": 10,
+          "unit": "currency_amount",
+          "notes": "SYNTHETIC: 10% on 10,000–30,000"
+        },
+        {
+          "code": "BAND_2",
+          "label": "Third bracket",
+          "value": 30000,
+          "max_value": 60000,
+          "rate": 20,
+          "unit": "currency_amount",
+          "notes": "SYNTHETIC: 20% on 30,000–60,000"
+        },
+        {
+          "code": "BAND_3",
+          "label": "Top bracket",
+          "value": 60000,
+          "rate": 30,
+          "unit": "currency_amount",
+          "notes": "SYNTHETIC: 30% above 60,000"
+        }
+      ]
+    },
+    "social_insurance_employee": {
+      "description": "SYNTHETIC employee social insurance contribution rates. NOT REAL RATES.",
+      "effective_from": "2026-01-01",
+      "values": {
+        "pension": { "value": 5.5, "unit": "percent", "label": "Pension", "notes": "SYNTHETIC" },
+        "health": { "value": 3.0, "unit": "percent", "label": "Health", "notes": "SYNTHETIC" },
+        "unemployment": { "value": 1.2, "unit": "percent", "label": "Unemployment", "notes": "SYNTHETIC" }
+      }
+    },
+    "social_insurance_employer": {
+      "description": "SYNTHETIC employer social insurance contribution rates. NOT REAL RATES.",
+      "effective_from": "2026-01-01",
+      "values": {
+        "pension": { "value": 7.5, "unit": "percent", "label": "Pension", "notes": "SYNTHETIC" },
+        "health": { "value": 4.0, "unit": "percent", "label": "Health", "notes": "SYNTHETIC" },
+        "unemployment": { "value": 1.8, "unit": "percent", "label": "Unemployment", "notes": "SYNTHETIC" },
+        "accident": { "value": 0.8, "unit": "percent", "label": "Accident insurance", "notes": "SYNTHETIC" }
+      }
+    }
+  },
+  "thresholds": {
+    "weekly_max_hours": 45,
+    "daily_min_rest_hours": 11,
+    "max_consecutive_work_days": 6,
+    "daily_overtime_threshold_hours": 8.5,
+    "weekly_overtime_threshold_hours": 40,
+    "overtime_premium_multiplier": 1.5,
+    "overtime_daily_cap_hours": 3,
+    "minimum_wage_amount": 12.50,
+    "minimum_wage_unit": "per_hour"
+  },
+  "overtime": {
+    "daily_threshold_hours": 8.5,
+    "weekly_threshold_hours": 40,
+    "premium_multiplier": 1.5,
+    "daily_cap_hours": 3,
+    "rules": [
+      {
+        "rule_id": "OT_DAILY",
+        "description": "SYNTHETIC: Overtime payable after 8.5 hours in a day at 1.5x, capped at 3 hours/day.",
+        "severity": "block",
+        "applies_when": "Daily hours worked exceed 8.5"
+      },
+      {
+        "rule_id": "OT_WEEKLY",
+        "description": "SYNTHETIC: Overtime payable after 40 hours in a week at 1.5x.",
+        "severity": "block",
+        "applies_when": "Weekly hours worked exceed 40"
+      }
+    ]
+  },
+  "leave_types": [
+    {
+      "code": "annual",
+      "name": "Annual Leave (Synthetic)",
+      "entitlement_days": 22,
+      "accrual": {
+        "frequency": "per_month",
+        "tenure_tiers": [
+          { "after_years": 0, "days": 20 },
+          { "after_years": 5, "days": 25 }
+        ]
+      },
+      "carry_over_limit_days": 5,
+      "expiry_month": 3,
+      "encashable": false,
+      "entitlement_source": "SYNTHETIC: Demo Act Section 12 — NOT A REAL STATUTE",
+      "rule_ids": []
+    },
+    {
+      "code": "sick",
+      "name": "Sick Leave (Synthetic)",
+      "entitlement_days": 10,
+      "accrual": {
+        "frequency": "front_loaded",
+        "tenure_tiers": []
+      },
+      "carry_over_limit_days": 0,
+      "expiry_month": 12,
+      "encashable": false,
+      "entitlement_source": "SYNTHETIC: Demo Act Section 15 — NOT A REAL STATUTE",
+      "rule_ids": []
+    }
+  ],
+  "working_time_limits": {
+    "max_weekly_hours": 45,
+    "min_daily_rest_hours": 11,
+    "max_consecutive_days": 6,
+    "max_night_work_hours": 8,
+    "min_rest_between_shifts_hours": 11,
+    "rules": [
+      {
+        "rule_id": "WT_WEEKLY_MAX",
+        "description": "SYNTHETIC: Weekly hours must not exceed 45.",
+        "severity": "block",
+        "applies_when": "Weekly scheduled hours exceed 45"
+      },
+      {
+        "rule_id": "WT_DAILY_REST",
+        "description": "SYNTHETIC: Minimum 11 hours rest between calendar days.",
+        "severity": "block",
+        "applies_when": "Rest period between shifts is less than 11 hours"
+      }
+    ]
+  },
+  "break_rules": [
+    {
+      "after_hours": 6,
+      "duration_minutes": 30,
+      "paid": true,
+      "rule_id": "BRK_6H",
+      "description": "SYNTHETIC: 30-minute paid break after 6 hours of continuous work."
+    }
+  ],
+  "mandatory_payslip_fields": [
+    "gross_pay",
+    "net_pay",
+    "tax_withheld",
+    "employee_contributions",
+    "employer_contributions",
+    "hours_worked",
+    "pay_period_start",
+    "pay_period_end",
+    "pay_date"
+  ],
+  "mandatory_payslip_notes": [
+    "SYNTHETIC DEMO NOTE: This payslip is a configurable calculation, not a statutory document."
+  ],
+  "pay_frequency_rules": {
+    "allowed_frequencies": ["monthly", "semimonthly", "biweekly", "weekly"],
+    "pay_day_rule": "SYNTHETIC: Last business day of the pay period.",
+    "cut_off_days_before_pay_day": 3,
+    "pay_date_rule_id": "PAY_LAST_BUSINESS_DAY"
+  },
+  "reporting_obligations": [
+    {
+      "report_id": "MONTHLY_TAX_RETURN",
+      "name": "Monthly Tax Return (Synthetic)",
+      "frequency": "monthly",
+      "due_within_days": 15,
+      "template_ref": "SYNTHETIC_TEMPLATE_MONTHLY_TAX",
+      "authority": "Synthetic Tax Authority",
+      "description": "SYNTHETIC: Monthly employer tax filing."
+    },
+    {
+      "report_id": "ANNUAL_WAGE_REPORT",
+      "name": "Annual Wage Report (Synthetic)",
+      "frequency": "annual",
+      "due_within_days": 31,
+      "template_ref": "SYNTHETIC_TEMPLATE_ANNUAL_WAGE",
+      "authority": "Synthetic Labor Bureau",
+      "description": "SYNTHETIC: Annual wage and tax summary."
+    }
+  ],
+  "public_holiday_rules": {
+    "source": "SYNTHETIC: Demo Holiday Calendar — NOT A REAL CALENDAR",
+    "region_dependent": false,
+    "holiday_count_by_year": {
+      "2026": 10,
+      "2027": 10
+    }
+  },
+  "signing": {
+    "algorithm": "ed25519",
+    "key_id": "demo-key-001",
+    "signature": "U1lOVEhFVElDX1NJR05BVFVSRV9QTEFDRVVMREVSX05PVF9BX1JFQUxfU0lHTkFUVVJF",
+    "signed_at": "2026-10-21T00:00:00Z",
+    "signed_by": "Demo Data Generator"
+  },
+  "golden_cases": [
+    {
+      "case_id": "gc-demo-basic-monthly",
+      "description": "SYNTHETIC: A basic monthly payslip. The whole taxable amount falls inside the first band, which is taxed at nothing, so the tax is 0.00.",
+      "input": {
+        "base_salary": "5000.00",
+        "pay_frequency": "monthly",
+        "hours_worked": 173,
+        "overtime_hours": 0,
+        "leave_days": 0,
+        "tax_withholding_override": null,
+        "benefit_deductions": "100.00",
+        "other_earnings": "0.00",
+        "other_deductions": "0.00"
+      },
+      "expected": {
+        "earnings": [
+          { "code": "BASIC", "name": "Base Salary", "amount": "5000.00", "type": "earning" }
+        ],
+        "deductions": [
+          { "code": "TAX_BAND_0", "name": "Tax - First bracket", "amount": "0.00", "type": "deduction" },
+          { "code": "PENSION_EE", "name": "Pension (Employee)", "amount": "275.00", "type": "deduction" },
+          { "code": "HEALTH_EE", "name": "Health (Employee)", "amount": "150.00", "type": "deduction" },
+          { "code": "UNEMPLOYMENT_EE", "name": "Unemployment (Employee)", "amount": "60.00", "type": "deduction" },
+          { "code": "BENEFITS", "name": "Benefit Deductions", "amount": "100.00", "type": "deduction" }
+        ],
+        "employer_contribution_lines": [
+          { "code": "PENSION_ER", "name": "Pension (Employer)", "amount": "375.00", "type": "employer_contribution" },
+          { "code": "HEALTH_ER", "name": "Health (Employer)", "amount": "200.00", "type": "employer_contribution" },
+          { "code": "UNEMPLOYMENT_ER", "name": "Unemployment (Employer)", "amount": "90.00", "type": "employer_contribution" },
+          { "code": "ACCIDENT_ER", "name": "Accident insurance (Employer)", "amount": "40.00", "type": "employer_contribution" }
+        ],
+        "gross": "5000.00",
+        "total_deductions": "585.00",
+        "net": "4415.00",
+        "employee_contributions": "485.00",
+        "employer_contributions": "705.00",
+        "pay_floor_check": "pass"
+      }
+    },
+    {
+      "case_id": "gc-demo-overtime-weekly",
+      "description": "SYNTHETIC: A monthly payslip with overtime. The overtime hours are capped at the daily overtime cap the pack states, and the whole taxable amount still falls inside the first band, so the tax is 0.00.",
+      "input": {
+        "base_salary": "3000.00",
+        "pay_frequency": "monthly",
+        "hours_worked": 173,
+        "overtime_hours": 5,
+        "overtime_hourly_rate": "17.34",
+        "leave_days": 0,
+        "tax_withholding_override": null,
+        "benefit_deductions": "50.00",
+        "other_earnings": "0.00",
+        "other_deductions": "0.00"
+      },
+      "expected": {
+        "earnings": [
+          { "code": "BASIC", "name": "Base Salary", "amount": "3000.00", "type": "earning" },
+          { "code": "OT", "name": "Overtime", "amount": "78.03", "type": "earning" }
+        ],
+        "deductions": [
+          { "code": "TAX_BAND_0", "name": "Tax - First bracket", "amount": "0.00", "type": "deduction" },
+          { "code": "PENSION_EE", "name": "Pension (Employee)", "amount": "169.77", "type": "deduction" },
+          { "code": "HEALTH_EE", "name": "Health (Employee)", "amount": "92.60", "type": "deduction" },
+          { "code": "UNEMPLOYMENT_EE", "name": "Unemployment (Employee)", "amount": "37.04", "type": "deduction" },
+          { "code": "BENEFITS", "name": "Benefit Deductions", "amount": "50.00", "type": "deduction" }
+        ],
+        "employer_contribution_lines": [
+          { "code": "PENSION_ER", "name": "Pension (Employer)", "amount": "231.50", "type": "employer_contribution" },
+          { "code": "HEALTH_ER", "name": "Health (Employer)", "amount": "123.47", "type": "employer_contribution" },
+          { "code": "UNEMPLOYMENT_ER", "name": "Unemployment (Employer)", "amount": "55.56", "type": "employer_contribution" },
+          { "code": "ACCIDENT_ER", "name": "Accident insurance (Employer)", "amount": "24.69", "type": "employer_contribution" }
+        ],
+        "gross": "3078.03",
+        "total_deductions": "349.41",
+        "net": "2728.62",
+        "employee_contributions": "299.41",
+        "employer_contributions": "435.22",
+        "pay_floor_check": "pass"
+      }
+    },
+    {
+      "case_id": "gc-demo-top-band",
+      "description": "SYNTHETIC: A monthly payslip that crosses every band, so the open ended top band is exercised as well: the part of the taxable amount above the top band's lower bound is taxed at the top band's own rate.",
+      "input": {
+        "base_salary": "80000.00",
+        "pay_frequency": "monthly",
+        "hours_worked": 173,
+        "overtime_hours": 0,
+        "leave_days": 0,
+        "tax_withholding_override": null,
+        "benefit_deductions": "0.00",
+        "other_earnings": "0.00",
+        "other_deductions": "0.00"
+      },
+      "expected": {
+        "earnings": [
+          { "code": "BASIC", "name": "Base Salary", "amount": "80000.00", "type": "earning" }
+        ],
+        "deductions": [
+          { "code": "TAX_BAND_0", "name": "Tax - First bracket", "amount": "0.00", "type": "deduction" },
+          { "code": "TAX_BAND_1", "name": "Tax - Second bracket", "amount": "2000.00", "type": "deduction" },
+          { "code": "TAX_BAND_2", "name": "Tax - Third bracket", "amount": "6000.00", "type": "deduction" },
+          { "code": "TAX_BAND_3", "name": "Tax - Top bracket", "amount": "6000.00", "type": "deduction" },
+          { "code": "PENSION_EE", "name": "Pension (Employee)", "amount": "4400.00", "type": "deduction" },
+          { "code": "HEALTH_EE", "name": "Health (Employee)", "amount": "2400.00", "type": "deduction" },
+          { "code": "UNEMPLOYMENT_EE", "name": "Unemployment (Employee)", "amount": "960.00", "type": "deduction" }
+        ],
+        "employer_contribution_lines": [
+          { "code": "PENSION_ER", "name": "Pension (Employer)", "amount": "6000.00", "type": "employer_contribution" },
+          { "code": "HEALTH_ER", "name": "Health (Employer)", "amount": "3200.00", "type": "employer_contribution" },
+          { "code": "UNEMPLOYMENT_ER", "name": "Unemployment (Employer)", "amount": "1440.00", "type": "employer_contribution" },
+          { "code": "ACCIDENT_ER", "name": "Accident insurance (Employer)", "amount": "640.00", "type": "employer_contribution" }
+        ],
+        "gross": "80000.00",
+        "total_deductions": "21760.00",
+        "net": "58240.00",
+        "employee_contributions": "7760.00",
+        "employer_contributions": "11280.00",
+        "pay_floor_check": "pass"
+      }
+    }
+  ]
+}

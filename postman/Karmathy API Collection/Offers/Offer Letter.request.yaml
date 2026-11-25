@@ -1,0 +1,9 @@
+$kind: http-request
+description: Generate the offer letter
+url: http://localhost:8000/offers/{offer_id}/letter
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/Offer Letter.resources/examples
+order: 6000

@@ -1,0 +1,9 @@
+$kind: http-request
+description: Run a client migration
+url: http://localhost:8000/onboarding-portal/clients/{client_id}/migrations/{job_id}/run
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/Run Client Migration.resources/examples
+order: 10000

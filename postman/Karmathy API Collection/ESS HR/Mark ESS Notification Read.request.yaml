@@ -1,0 +1,15 @@
+$kind: http-request
+description: Mark an ESS notification read
+url: http://localhost:8000/ess/notifications/{notification_id}/read
+method: PUT
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Mark ESS Notification Read.resources/examples
+order: 8000

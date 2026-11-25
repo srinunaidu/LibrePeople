@@ -1,0 +1,9 @@
+$kind: http-request
+description: Publish a roster draft
+url: http://localhost:8000/scheduling/rosters/publish
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/Publish Roster Draft.resources/examples
+order: 6000

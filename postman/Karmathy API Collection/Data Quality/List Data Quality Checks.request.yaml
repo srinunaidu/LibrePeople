@@ -1,0 +1,9 @@
+$kind: http-request
+description: List data quality checks
+url: http://localhost:8000/data-quality/checks
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/List Data Quality Checks.resources/examples
+order: 1000

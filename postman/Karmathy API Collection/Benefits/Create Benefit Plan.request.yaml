@@ -1,0 +1,15 @@
+$kind: http-request
+description: Create a benefit plan
+url: http://localhost:8000/benefits/benefit-plans
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Create Benefit Plan.resources/examples
+order: 2000

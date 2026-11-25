@@ -1,0 +1,9 @@
+$kind: http-request
+description: Get a time entry by ID
+url: http://localhost:8000/time/entries/{entry_id}
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/Get Time Entry.resources/examples
+order: 2000

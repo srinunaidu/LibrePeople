@@ -1,0 +1,502 @@
+tags:
+- name: auth
+  description: Authentication, session management, second factor and user accounts of this deployment.
+    The only public operation in the whole contract is `POST /auth/login`; `POST /auth/refresh` is public
+    as well because it authenticates with a refresh token instead of an access token.
+paths:
+  /auth/login:
+    post:
+      operationId: authLogin
+      tags:
+      - auth
+      summary: Exchange credentials for an access token
+      description: 'Exchanges a username and a password for an access token. The response is identical
+        for an unknown username and a wrong password, so the endpoint never confirms whether an account
+        exists. Repeated failures from one address are throttled: 429 `login_attempts_exceeded` carries
+        the `Retry-After` header. An account that is disabled returns 401 `account_disabled`; an account
+        locked by the lockout policy returns 401 `account_locked` with `retry_after_seconds` in `details`.'
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthLoginRequest'
+      responses:
+        '200':
+          description: The credentials were accepted. When `must_change_password` is true the token is
+            valid but every call other than the password change returns 401 `password_change_required`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthLoginResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /auth/logout:
+    post:
+      operationId: authLogout
+      tags:
+      - auth
+      security:
+      - bearerAuth: []
+      summary: Revoke the current session
+      description: 'Revokes the presented access token and, when a refresh token is supplied, the refresh
+        token family behind it. The call is idempotent: revoking an already revoked token still returns
+        200.'
+      x-lifecycle: planned
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthLogoutRequest'
+      responses:
+        '200':
+          description: The session was revoked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthLogoutResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /auth/refresh:
+    post:
+      operationId: authRefresh
+      tags:
+      - auth
+      summary: Rotate a refresh token and issue a new access token
+      description: 'Exchanges a refresh token for a new access token and a new refresh token. The presented
+        refresh token is invalidated by the rotation. Presenting a token that was already rotated is treated
+        as a stolen token: the whole token family is revoked and the response is 401 `refresh_token_reused`.
+        An unknown, expired or revoked token returns 401 `refresh_token_invalid`. A client may attempt
+        this exactly once after a 401 before it signs the user out.'
+      x-lifecycle: planned
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRefreshRequest'
+      responses:
+        '200':
+          description: A new access token and a rotated refresh token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthRefreshResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /auth/me:
+    get:
+      operationId: authGetMe
+      tags:
+      - auth
+      security:
+      - bearerAuth: []
+      summary: Describe the authenticated caller
+      description: Returns the account, the role and the effective permissions of the caller. A caller
+        whose account still has to change its password gets 401 `password_change_required` instead of
+        the account.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: The account of the caller.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthUser'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /auth/password:
+    post:
+      operationId: authChangePassword
+      tags:
+      - auth
+      security:
+      - bearerAuth: []
+      summary: Change the password of the caller
+      description: Changes the password of the authenticated caller. The current password must be supplied.
+        A new password that breaks the policy returns 422 `password_policy_violation` with the list of
+        violations in `details`; a password that repeats one of the last N returns 422 `password_reuse`;
+        a password on the local breached password list returns 422 `password_breached`. Changing the password
+        revokes the other sessions of the account.
+      x-lifecycle: planned
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthPasswordChangeRequest'
+      responses:
+        '200':
+          description: The password was changed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthPasswordChangeResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /auth/mfa/enroll:
+    post:
+      operationId: authEnrollMfa
+      tags:
+      - auth
+      security:
+      - bearerAuth: []
+      summary: Start TOTP enrolment
+      description: 'Starts the enrolment of a time based one time password. The response carries the shared
+        secret and the `otpauth://` URI. The secret is returned exactly once, here: it is never shown
+        again and never included in any later response. The second factor is not active until `POST /auth/mfa/confirm`
+        succeeds.'
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: The enrolment material. Shown once.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthMfaEnrollResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /auth/mfa/confirm:
+    post:
+      operationId: authConfirmMfa
+      tags:
+      - auth
+      security:
+      - bearerAuth: []
+      summary: Confirm TOTP enrolment
+      description: Confirms the enrolment by presenting a code from the authenticator app. A wrong or
+        expired code returns 422 `mfa_invalid_code` and the second factor stays inactive. The call also
+        issues recovery codes, returned once.
+      x-lifecycle: planned
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthMfaConfirmRequest'
+      responses:
+        '200':
+          description: The second factor is active. The recovery codes in the response are shown once.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthRecoveryCodesResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /auth/mfa/disable:
+    post:
+      operationId: authDisableMfa
+      tags:
+      - auth
+      security:
+      - bearerAuth: []
+      summary: Turn the second factor off
+      description: Turns the second factor off for the caller. A recovery code must be presented. A wrong
+        code returns 422 `mfa_recovery_code_invalid` and the second factor stays on. Every other session
+        of the account is revoked.
+      x-lifecycle: planned
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthMfaDisableRequest'
+      responses:
+        '200':
+          description: The second factor is off.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthLogoutResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /auth/recovery-codes:
+    post:
+      operationId: authRegenerateRecoveryCodes
+      tags:
+      - auth
+      security:
+      - bearerAuth: []
+      summary: Regenerate the recovery codes of the caller
+      description: Replaces the recovery codes of the caller with a fresh set. The plaintext codes are
+        returned exactly once, in this response, and are not recoverable afterwards. The codes that were
+        replaced stop working immediately.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: The new recovery codes. Shown once.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthRecoveryCodesResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /auth/users:
+    get:
+      operationId: authListUsers
+      tags:
+      - auth
+      security:
+      - bearerAuth: []
+      summary: List the user accounts of this deployment
+      description: Lists the user accounts of this deployment. Administrators only. The list is paged;
+        `page` and `page_size` control the window. The route already exists in the application; the paged
+        envelope is the shape the contract promises.
+      parameters:
+      - $ref: '#/components/parameters/pageParam'
+      - $ref: '#/components/parameters/pageSizeParam'
+      - name: role
+        in: query
+        required: false
+        description: Only accounts with this role.
+        schema:
+          type: string
+      - name: is_active
+        in: query
+        required: false
+        description: Only active or only deactivated accounts.
+        schema:
+          type: boolean
+      - name: search
+        in: query
+        required: false
+        description: Case insensitive match on the username and the email address.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: A page of user accounts.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUsers'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+    post:
+      operationId: authCreateUser
+      tags:
+      - auth
+      security:
+      - bearerAuth: []
+      summary: Create a user account
+      description: Creates a user account with a role. Administrators only. The password must satisfy
+        the deployment policy; a rejected password returns 422 `password_policy_violation` and a breached
+        password returns 422 `password_breached`. With `send_invite` the account is created with `must_change_password`
+        set and no password is handed out. The route already exists in the application; the payload of
+        this contract is the shape it promises.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthUserCreateRequest'
+      responses:
+        '201':
+          description: The account was created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthUser'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /auth/users/{user_id}:
+    patch:
+      operationId: authUpdateUser
+      tags:
+      - auth
+      security:
+      - bearerAuth: []
+      summary: Change a user account
+      description: Updates the role, the email address or the active state of an account. Administrators
+        only. Deactivating an account revokes every live session of that account. The change is written
+        to the audit log.
+      x-lifecycle: released
+      parameters:
+      - name: user_id
+        in: path
+        required: true
+        description: Identifier of the account.
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthUserUpdateRequest'
+      responses:
+        '200':
+          description: The updated account.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthUser'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /auth/users/{user_id}/password:
+    post:
+      operationId: authSetUserPassword
+      tags:
+      - auth
+      security:
+      - bearerAuth: []
+      summary: Set the password of a user account
+      description: Sets the password of an account from the administration side. The account is marked
+        `must_change_password` and cannot act until the user has changed it. Administrators only. The
+        password must satisfy the deployment policy.
+      x-lifecycle: planned
+      parameters:
+      - name: user_id
+        in: path
+        required: true
+        description: Identifier of the account.
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthUserPasswordRequest'
+      responses:
+        '200':
+          description: The password was set.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthUser'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /auth/mfa/status:
+    get:
+      operationId: authListAuthmfastatus
+      tags:
+      - auth
+      security:
+      - bearerAuth: []
+      summary: GET /auth/mfa/status
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /auth/register:
+    post:
+      operationId: authCreateAuthregister
+      tags:
+      - auth
+      security:
+      - bearerAuth: []
+      summary: POST /auth/register
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'

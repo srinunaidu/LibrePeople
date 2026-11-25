@@ -1,0 +1,37 @@
+name: Deploy Karmathy to Oracle Cloud
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    branches: [main]
+    types:
+      - completed
+
+jobs:
+  deploy:
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Deploy to Oracle VM
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          script: |
+            cd Karmathy || git clone https://github.com/srinunaidu/Karmathy.git && cd Karmathy
+            git pull origin main
+            echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" > .env
+            echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
+            # The frontend container is the edge and binds :80. A host nginx
+            # from an older cloud-init would hold that port and the deploy
+            # would fail with "address already in use".
+            sudo systemctl disable --now nginx 2>/dev/null || true
+            docker compose down --remove-orphans || true
+            docker compose up -d --build

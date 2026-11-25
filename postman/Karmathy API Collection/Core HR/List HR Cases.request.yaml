@@ -1,0 +1,9 @@
+$kind: http-request
+description: List HR cases
+url: http://localhost:8000/core-hr/cases
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/List HR Cases.resources/examples
+order: 14000

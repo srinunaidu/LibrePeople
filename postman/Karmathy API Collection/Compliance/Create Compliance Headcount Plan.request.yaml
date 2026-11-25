@@ -1,0 +1,15 @@
+$kind: http-request
+description: Create a headcount plan
+url: http://localhost:8000/compliance/headcount-plans
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Create Compliance Headcount Plan.resources/examples
+order: 7000

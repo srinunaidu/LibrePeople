@@ -1,0 +1,15 @@
+$kind: http-request
+description: Complete a background check
+url: http://localhost:8000/platform/background-checks/{check_id}/complete
+method: PUT
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Complete Background Check.resources/examples
+order: 3000

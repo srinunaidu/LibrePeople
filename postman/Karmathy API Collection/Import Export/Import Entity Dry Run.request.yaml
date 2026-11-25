@@ -1,0 +1,15 @@
+$kind: http-request
+description: Dry run an import
+url: http://localhost:8000/import-export/import/{entity}/dry-run
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Import Entity Dry Run.resources/examples
+order: 3000

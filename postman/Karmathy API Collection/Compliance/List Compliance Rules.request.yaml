@@ -1,0 +1,9 @@
+$kind: http-request
+description: List compliance rules
+url: http://localhost:8000/compliance/compliance-rules
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/List Compliance Rules.resources/examples
+order: 1000

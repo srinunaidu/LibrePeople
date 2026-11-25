@@ -1,0 +1,15 @@
+$kind: http-request
+description: Create a cost center
+url: http://localhost:8000/core-hr/cost-centers
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Create Cost Center.resources/examples
+order: 3000

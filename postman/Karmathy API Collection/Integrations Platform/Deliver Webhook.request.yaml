@@ -1,0 +1,9 @@
+$kind: http-request
+description: Deliver a webhook
+url: http://localhost:8000/platform/webhooks/{webhook_id}/deliver
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/Deliver Webhook.resources/examples
+order: 11000

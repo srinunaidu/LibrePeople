@@ -1,0 +1,9 @@
+$kind: http-request
+description: Get leave report
+url: http://localhost:8000/reports/leave
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/Leave Report.resources/examples
+order: 5000

@@ -1,0 +1,4 @@
+employee_number,leave_type_code,entitlement_year,entitled_days,carried_over_days,used_days
+EMP-0001,NOSUCH,2026,25,0,5
+EMP-0001,ANN,not-a-year,25,0,5
+EMP-0001,ANN,2026,-5,0,0

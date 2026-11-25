@@ -1,0 +1,15 @@
+$kind: http-request
+description: Update a department (including restoring an archived one)
+url: http://localhost:8000/departments/{department_id}
+method: PATCH
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Update Department.resources/examples
+order: 4000

@@ -1,0 +1,9 @@
+$kind: http-request
+description: Get labor cost report
+url: http://localhost:8000/reports/labor-cost
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/Labor Cost.resources/examples
+order: 3000

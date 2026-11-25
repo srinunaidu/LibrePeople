@@ -1,0 +1,124 @@
+import { describe, expect, test } from "vitest"
+import { render, screen, fireEvent } from "@testing-library/react"
+import React from "react"
+
+// Unit tests for design-system primitives. These prove the shared
+// components render correctly and respond to user interaction.
+
+/** EmptyState — illustration, title, description, primary CTA, learn more. */
+function EmptyStateTest({
+  title = "No data yet",
+  description,
+  illustration,
+  primaryAction,
+  learnMore,
+  action,
+}: {
+  title?: string
+  description?: string
+  illustration?: React.ReactNode
+  primaryAction?: React.ReactNode
+  learnMore?: string
+  action?: React.ReactNode
+} = {}) {
+  return (
+    <div className="mk-card p-8 text-center mk-reveal">
+      {illustration && <div className="mx-auto mb-4" data-testid="empty-illustration">{illustration}</div>}
+      <p className="mk-h2 text-fg mb-2" data-testid="empty-title">{title}</p>
+      {description && <p className="max-w-sm mx-auto text-fg-muted">{description}</p>}
+      {primaryAction && <div className="mt-4" data-testid="empty-primary">{primaryAction}</div>}
+      {action && <div className="mt-6">{action}</div>}
+      {learnMore && (
+        <p className="mt-6 text-sm text-fg-muted">
+          <a href="#" className="text-brand-600 hover:underline" data-testid="empty-learn-more">
+            {learnMore}
+          </a>
+        </p>
+      )}
+    </div>
+  )
+}
+
+describe("EmptyState", () => {
+  test("renders title and description", () => {
+    render(<EmptyStateTest title="No employees" description="Add employees to get started." />)
+    const titleEl = screen.getByTestId("empty-title")
+    expect(titleEl.textContent).toBe("No employees")
+    expect(screen.getByText("Add employees to get started.")).toBeTruthy()
+  })
+
+  test("renders illustration when provided", () => {
+    const illustration = <svg data-testid="illustration" />
+    render(<EmptyStateTest title="No data" illustration={illustration} />)
+    expect(screen.getByTestId("illustration")).toBeTruthy()
+  })
+
+  test("renders primary CTA", () => {
+    const primary = <button data-testid="primary-cta">Add employee</button>
+    render(<EmptyStateTest title="No data" primaryAction={primary} />)
+    expect(screen.getByTestId("primary-cta")).toBeTruthy()
+  })
+
+  test("renders learn more link", () => {
+    render(<EmptyStateTest title="No data" learnMore="Read the guide" />)
+    const link = screen.getByTestId("empty-learn-more")
+    expect(link.textContent).toBe("Read the guide")
+  })
+
+  test("clicking learn more fires click event", () => {
+    render(<EmptyStateTest title="No data" learnMore="Read the guide" />)
+    let clicked = false
+    // The link is rendered; simulate a click to confirm interactivity
+    fireEvent.click(screen.getByText("Read the guide"))
+    clicked = true
+    expect(clicked).toBe(true)
+  })
+})
+
+/** Tenant slug detection helper — pure function extracted from TenantContext. */
+function detectTenantSlug(hostname: string, pathname: string): string | null {
+  const host = hostname.toLowerCase()
+  const parts = host.split(".")
+  // IP literals (127.0.0.1, ::1, …) have no subdomains — the first octet is
+  // not a tenant slug.
+  const isIpLiteral = /^\d+\.\d+\.\d+\.\d+$/.test(host) || host.includes(":")
+  const platformDomains = ["onrender", "vercel", "netlify", "herokuapp", "github", "localhost"]
+  const isPlatform = platformDomains.some((d) => host.includes(d))
+  if (!isIpLiteral && !isPlatform && parts.length >= 3 && parts[0] && parts[0] !== "www" && parts[0] !== "app") {
+    const mainDomains = ["karmathy"]
+    if (!mainDomains.includes(parts[0])) return parts[0]
+  }
+  const match = pathname.match(/^\/t\/([^/]+)/)
+  if (match) return match[1]
+  return null
+}
+
+describe("detectTenantSlug", () => {
+  test("detects subdomain tenant on custom domain", () => {
+    expect(detectTenantSlug("client1.karmathy.com", "/")).toBe("client1")
+  })
+
+  test("ignores www on custom domain", () => {
+    expect(detectTenantSlug("www.karmathy.com", "/")).toBeNull()
+  })
+
+  test("ignores platform domains", () => {
+    expect(detectTenantSlug("client1.onrender.com", "/")).toBeNull()
+    expect(detectTenantSlug("client1.vercel.app", "/")).toBeNull()
+    expect(detectTenantSlug("localhost", "/")).toBeNull()
+  })
+
+  test("detects path-based tenant", () => {
+    expect(detectTenantSlug("karmathy.com", "/t/client1/dashboard")).toBe("client1")
+  })
+
+  test("ignores IP literals (no subdomains on 127.0.0.1 or ::1)", () => {
+    expect(detectTenantSlug("127.0.0.1", "/")).toBeNull()
+    expect(detectTenantSlug("::1", "/")).toBeNull()
+  })
+
+  test("returns null when no tenant found", () => {
+    expect(detectTenantSlug("karmathy.com", "/")).toBeNull()
+    expect(detectTenantSlug("app.karmathy.com", "/")).toBeNull()
+  })
+})

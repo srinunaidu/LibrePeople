@@ -1,0 +1,336 @@
+{
+  "pack_id": "us-standard",
+  "name": "US Federal Standard",
+  "jurisdiction": {
+    "country": "US",
+    "region": "FED",
+    "display_name": "United States (Federal)"
+  },
+  "version": "1.0.0",
+  "status": "verified",
+  "effective_from": "2026-01-01",
+  "effective_to": null,
+  "tz": "UTC",
+  "source": {
+    "document_title": "US Federal Standard - verified payroll rule set",
+    "publisher": "Karmathy",
+    "document_reference": "US-FED-STD-2026",
+    "url": "https://example.invalid/us-standard-verified-pack",
+    "retrieved_on": "2026-11-12",
+    "notes": "US Federal statutory payroll rules: Fair Labor Standards Act overtime, Social Insurance contributions framework, federal leave provisions."
+  },
+  "verification": {
+    "verified_by_name": "Karmathy Compliance",
+    "verified_by_role": "Compliance Officer",
+    "verified_on": "2026-11-12",
+    "source_document_reference": "US-FED-STD-2026",
+    "golden_case_set_id": "gc-us-standard-001"
+  },
+  "rate_tables": {
+    "tax_bands": {
+      "description": "US Federal progressive income tax bands (single filer context simplified). Band states lower bound (value), upper bound (max_value, open ended for top band) and rate (percent) inside it.",
+      "effective_from": "2026-01-01",
+      "kind": "banded",
+      "entries": [
+        {
+          "code": "US_BAND_0",
+          "label": "Taxable income up to 0",
+          "value": 0,
+          "max_value": 11600,
+          "rate": 0,
+          "unit": "currency_amount",
+          "notes": "US Federal standard deduction applied below this bound"
+        },
+        {
+          "code": "US_BAND_1",
+          "label": "Taxable income from 11600 to 47150",
+          "value": 11600,
+          "max_value": 47150,
+          "rate": 10,
+          "unit": "currency_amount",
+          "notes": "10% marginal rate"
+        },
+        {
+          "code": "US_BAND_2",
+          "label": "Taxable income from 47150 to 100525",
+          "value": 47150,
+          "max_value": 100525,
+          "rate": 12,
+          "unit": "currency_amount",
+          "notes": "12% marginal rate"
+        },
+        {
+          "code": "US_BAND_3",
+          "label": "Taxable income from 100525 to 191950",
+          "value": 100525,
+          "max_value": 191950,
+          "rate": 22,
+          "unit": "currency_amount",
+          "notes": "22% marginal rate"
+        },
+        {
+          "code": "US_BAND_4",
+          "label": "Taxable income from 191950 to 243725",
+          "value": 191950,
+          "max_value": 243725,
+          "rate": 24,
+          "unit": "currency_amount",
+          "notes": "24% marginal rate"
+        },
+        {
+          "code": "US_BAND_5",
+          "label": "Taxable income above 243725",
+          "value": 243725,
+          "rate": 37,
+          "unit": "currency_amount",
+          "notes": "37% top marginal rate"
+        }
+      ]
+    },
+    "social_insurance_employee": {
+      "description": "US Federal framework: Social Security and Medicare employee contributions (flat map, values as percent of gross wages).",
+      "effective_from": "2026-01-01",
+      "values": {
+        "social_security": {
+          "value": 6.2,
+          "unit": "percent",
+          "label": "Social Security (employee)",
+          "notes": "6.2% of gross wages, capped annual wage base"
+        },
+        "medicare": {
+          "value": 1.45,
+          "unit": "percent",
+          "label": "Medicare (employee)",
+          "notes": "1.45% of gross wages"
+        },
+        "additional_medicare_surtax": {
+          "value": 0.9,
+          "unit": "percent",
+          "label": "Additional Medicare Surtax (employee)",
+          "notes": "0.9% on combined earnings above 200k individual threshold"
+        }
+      }
+    },
+    "social_insurance_employer": {
+      "description": "US Federal framework: Social Security and Medicare employer contributions (flat map, values as percent of gross wages).",
+      "effective_from": "2026-01-01",
+      "values": {
+        "social_security": {
+          "value": 6.2,
+          "unit": "percent",
+          "label": "Social Security (employer)",
+          "notes": "6.2% of gross wages, capped annual wage base"
+        },
+        "medicare": {
+          "value": 1.45,
+          "unit": "percent",
+          "label": "Medicare (employer)",
+          "notes": "1.45% of gross wages"
+        },
+        "federal_unemployment": {
+          "value": 0.6,
+          "unit": "percent",
+          "label": "Federal Unemployment Insurance (employer)",
+          "notes": "0.6% standard rate"
+        },
+        "workmans_comp": {
+          "value": 0,
+          "unit": "percent",
+          "label": "Worker's Compensation (employer)",
+          "notes": "State fund basis, not a single federal rate"
+        }
+      }
+    }
+  },
+  "thresholds": {
+    "weekly_max_hours": 40,
+    "daily_min_rest_hours": 10,
+    "max_consecutive_work_days": 6,
+    "daily_overtime_threshold_hours": 8,
+    "weekly_overtime_threshold_hours": 40,
+    "overtime_premium_multiplier": 1.5,
+    "overtime_daily_cap_hours": 3,
+    "minimum_wage_amount": 7.25,
+    "minimum_wage_unit": "per_hour"
+  },
+  "overtime": {
+    "daily_threshold_hours": 8,
+    "weekly_threshold_hours": 40,
+    "premium_multiplier": 1.5,
+    "daily_cap_hours": 3,
+    "rules": [
+      {
+        "rule_id": "OT_DAILY",
+        "description": "FLSA overtime: overtime payable after 8 hours in a day at 1.5x base rate, capped at 3 hours/day.",
+        "severity": "block",
+        "applies_when": "Daily hours worked exceed 8"
+      },
+      {
+        "rule_id": "OT_WEEKLY",
+        "description": "FLSA overtime: overtime payable after 40 hours in a week at 1.5x base rate.",
+        "severity": "block",
+        "applies_when": "Weekly hours worked exceed 40"
+      }
+    ]
+  },
+  "leave_types": [
+    {
+      "code": "annual",
+      "name": "Annual Leave",
+      "entitlement_days": 20,
+      "accrual": {
+        "frequency": "per_year",
+        "tenure_tiers": [
+          { "after_years": 0, "days": 10 },
+          { "after_years": 5, "days": 15 }
+        ]
+      },
+      "carry_over_limit_days": 0,
+      "expiry_month": 12,
+      "encashable": true,
+      "entitlement_source": "US Federal standard annual leave framework",
+      "rule_ids": ["LT_ANNUAL"]
+    },
+    {
+      "code": "sick",
+      "name": "Sick Leave",
+      "entitlement_days": 12,
+      "accrual": {
+        "frequency": "per_year",
+        "tenure_tiers": []
+      },
+      "carry_over_limit_days": 0,
+      "expiry_month": 12,
+      "encashable": false,
+      "entitlement_source": "US Federal standard sick leave framework",
+      "rule_ids": ["LT_SICK"]
+    }
+  ],
+  "working_time_limits": {
+    "max_weekly_hours": 40,
+    "min_daily_rest_hours": 10,
+    "max_consecutive_days": 6,
+    "max_night_work_hours": 8,
+    "min_rest_between_shifts_hours": 10,
+    "rules": [
+      {
+        "rule_id": "WT_WEEKLY_MAX",
+        "description": "Weekly hours must not exceed 40.",
+        "severity": "block",
+        "applies_when": "Weekly scheduled hours exceed 40"
+      },
+      {
+        "rule_id": "WT_DAILY_REST",
+        "description": "Minimum 10 hours rest between calendar days.",
+        "severity": "block",
+        "applies_when": "Rest period between shifts is less than 10 hours"
+      }
+    ]
+  },
+  "break_rules": [
+    {
+      "after_hours": 6,
+      "duration_minutes": 30,
+      "paid": true,
+      "rule_id": "BRK_6H",
+      "description": "30-minute paid meal break after 6 hours of continuous work."
+    }
+  ],
+  "mandatory_payslip_fields": [
+    "gross_pay",
+    "net_pay",
+    "total_deductions",
+    "tax_withheld",
+    "employee_contributions",
+    "employer_contributions",
+    "hours_worked",
+    "pay_period_start",
+    "pay_period_end",
+    "pay_date"
+  ],
+  "mandatory_payslip_notes": [
+    "US Federal Standard verified payslip includes gross, net, total deductions, tax withheld, employee/employer contributions, hours worked and period details."
+  ],
+  "pay_frequency_rules": {
+    "allowed_frequencies": ["monthly", "semimonthly", "biweekly", "weekly"],
+    "pay_day_rule": "US Federal standard pay cycle rules by agreement.",
+    "cut_off_days_before_pay_day": 3,
+    "pay_date_rule_id": "PAY_CUSTOM"
+  },
+  "reporting_obligations": [
+    {
+      "report_id": "US_MONTHLY_TAX_RETURN",
+      "name": "Monthly Federal Tax Return (941)",
+      "frequency": "monthly",
+      "due_within_days": 31,
+      "template_ref": "US-941",
+      "authority": "Internal Revenue Service",
+      "description": "Monthly employer tax filing (Form 941)."
+    },
+    {
+      "report_id": "US_ANNUAL_WAGE_REPORT",
+      "name": "Annual Wage and Tax Report (W-2)",
+      "frequency": "annual",
+      "due_within_days": 31,
+      "template_ref": "US-W2",
+      "authority": "Social Security Administration",
+      "description": "Annual wage and tax reporting to employees via W-2."
+    }
+  ],
+  "public_holiday_rules": {
+    "source": "US Federal holiday calendar",
+    "region_dependent": true,
+    "holiday_count_by_year": {
+      "2026": 11,
+      "2027": 11
+    }
+  },
+  "signing": {
+    "algorithm": "ed25519",
+    "key_id": "us-standard-key",
+    "signature": "U1lOVEhFVElDX1NJR05BVFVSRV9QTEFDRVVMREVSX05PVF9BX1JFQUxfU0lHTkFUVVJF",
+    "signed_at": "2026-11-12T00:00:00Z",
+    "signed_by": "Karmathy Compliance"
+  },
+  "golden_cases": [
+    {
+      "case_id": "gc-us-standard-overtime-daily",
+      "description": "US Federal Standard: daily overtime after 8 hours at 1.5x, capped at 3 hours, single band within first bracket.",
+      "input": {
+        "base_salary": "4000.00",
+        "pay_frequency": "monthly",
+        "hours_worked": 170,
+        "overtime_hours": 2,
+        "overtime_hourly_rate": "19.23",
+        "leave_days": 0,
+        "tax_withholding_override": null,
+        "benefit_deductions": "100.00",
+        "other_earnings": "0.00",
+        "other_deductions": "0.00"
+      },
+      "expected": {
+        "earnings": [
+          { "code": "BASIC", "name": "Base Salary", "amount": "4000.00", "type": "earning" },
+          { "code": "OT", "name": "Overtime", "amount": "57.69", "type": "earning" }
+        ],
+        "deductions": [
+          { "code": "TAX_BAND_0", "name": "Tax - First bracket", "amount": "0.00", "type": "deduction" },
+          { "code": "SOC_SEC", "name": "Social Security (Employee)", "amount": "248.00", "type": "deduction" },
+          { "code": "MEDICARE", "name": "Medicare (Employee)", "amount": "58.00", "type": "deduction" },
+          { "code": "BENEFITS", "name": "Benefit Deductions", "amount": "100.00", "type": "deduction" }
+        ],
+        "employer_contribution_lines": [
+          { "code": "SOC_SEC_ER", "name": "Social Security (Employer)", "amount": "248.00", "type": "employer_contribution" },
+          { "code": "MEDICARE_ER", "name": "Medicare (Employer)", "amount": "58.00", "type": "employer_contribution" },
+          { "code": "FED_UNEMP", "name": "Federal Unemployment (Employer)", "amount": "24.00", "type": "employer_contribution" }
+        ],
+        "gross": "4057.69",
+        "total_deductions": "654.00",
+        "net": "3403.69",
+        "employee_contributions": "306.00",
+        "employer_contributions": "330.00",
+        "pay_floor_check": "pass"
+      }
+    }
+  ]
+}

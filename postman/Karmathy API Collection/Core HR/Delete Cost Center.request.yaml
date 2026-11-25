@@ -1,0 +1,9 @@
+$kind: http-request
+description: Delete a cost center
+url: http://localhost:8000/core-hr/cost-centers/{cost_center_id}
+method: DELETE
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/Delete Cost Center.resources/examples
+order: 5000

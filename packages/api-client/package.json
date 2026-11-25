@@ -1,0 +1,29 @@
+{
+  "name": "@karmathy/api-client",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.esm.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "generate": "npx openapi-typescript-codegen --input ../../contracts/openapi/openapi.yaml --output ./src --client axios --useOptions --exportServices true --exportSchemas true --exportCore true --exportModels true",
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "axios": "^1.7.7",
+    "form-data": "^4.0.0"
+  },
+  "devDependencies": {
+    "openapi-typescript-codegen": "^0.31.0",
+    "typescript": "^5.6.3"
+  }
+}

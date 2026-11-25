@@ -1,0 +1,238 @@
+tags:
+- name: performance
+  description: performance domain endpoints.
+paths:
+  /performance/compensation-bands:
+    get:
+      operationId: performanceListPerformancecompensationbands
+      tags:
+      - performance
+      security:
+      - bearerAuth: []
+      summary: GET /performance/compensation-bands
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: performanceCreatePerformancecompensationbands
+      tags:
+      - performance
+      security:
+      - bearerAuth: []
+      summary: POST /performance/compensation-bands
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /performance/feedback:
+    get:
+      operationId: performanceGetPerformancefeedback
+      tags:
+      - performance
+      security:
+      - bearerAuth: []
+      summary: GET /performance/feedback
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: performanceCreatePerformancefeedback
+      tags:
+      - performance
+      security:
+      - bearerAuth: []
+      summary: POST /performance/feedback
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /performance/goals:
+    get:
+      operationId: performanceListPerformancegoals
+      tags:
+      - performance
+      security:
+      - bearerAuth: []
+      summary: GET /performance/goals
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: performanceCreatePerformancegoals
+      tags:
+      - performance
+      security:
+      - bearerAuth: []
+      summary: POST /performance/goals
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /performance/goals/{goal_id}:
+    put:
+      operationId: performanceUpdatePerformancegoals
+      tags:
+      - performance
+      security:
+      - bearerAuth: []
+      summary: PUT /performance/goals/{goal_id}
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /performance/merit-allocations:
+    get:
+      operationId: performanceListPerformancemeritallocations
+      tags:
+      - performance
+      security:
+      - bearerAuth: []
+      summary: GET /performance/merit-allocations
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: performanceCreatePerformancemeritallocations
+      tags:
+      - performance
+      security:
+      - bearerAuth: []
+      summary: POST /performance/merit-allocations
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /performance/merit-cycles:
+    get:
+      operationId: performanceListPerformancemeritcycles
+      tags:
+      - performance
+      security:
+      - bearerAuth: []
+      summary: GET /performance/merit-cycles
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: performanceCreatePerformancemeritcycles
+      tags:
+      - performance
+      security:
+      - bearerAuth: []
+      summary: POST /performance/merit-cycles
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /performance/reviews:
+    get:
+      operationId: performanceListPerformancereviews
+      tags:
+      - performance
+      security:
+      - bearerAuth: []
+      summary: GET /performance/reviews
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: performanceCreatePerformancereviews
+      tags:
+      - performance
+      security:
+      - bearerAuth: []
+      summary: POST /performance/reviews
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /performance/reviews/{review_id}:
+    put:
+      operationId: performanceUpdatePerformancereviews
+      tags:
+      - performance
+      security:
+      - bearerAuth: []
+      summary: PUT /performance/reviews/{review_id}
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /performance/reviews/{review_id}/finalize:
+    post:
+      operationId: performanceCreatePerformancereviewsfinalize
+      tags:
+      - performance
+      security:
+      - bearerAuth: []
+      summary: POST /performance/reviews/{review_id}/finalize
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'

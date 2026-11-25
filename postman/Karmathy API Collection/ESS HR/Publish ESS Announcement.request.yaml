@@ -1,0 +1,15 @@
+$kind: http-request
+description: Publish an ESS announcement
+url: http://localhost:8000/ess/announcements/{announcement_id}/publish
+method: PUT
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Publish ESS Announcement.resources/examples
+order: 3000

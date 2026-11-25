@@ -1,0 +1,1844 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.karmathy.io/rules/preset.schema.json",
+  "title": "Karmathy Preset",
+  "description": "A preset is a versioned, reusable starting configuration that a customer selects during onboarding. Presets are jurisdiction-agnostic BY DESIGN: this schema deliberately has no jurisdiction, country, region, tax-rate, minimum-wage, statutory-leave-entitlement or notice-period field, and none may be added to a preset. The only place statutory values are allowed to live is the rule pack contract (contracts/rules/rule-pack.schema.json). Every slot that can only be filled from a rule pack must carry the literal sentinel value \"REQUIRES_RULE_PACK\". A preset that still contains a sentinel is incomplete: the server must refuse to enable payroll for that tenant until a verified rule pack is attached, and the onboarding UI must show the unresolved slot as blocking rather than as a default. A preset must never carry a statutory number. Where a numeric value is accepted it is a company policy that the tenant chose, it must be at least as favourable to the employee as the law requires, and the attached rule pack stays authoritative. The server owns the module dependency graph and the sentinel-resolution check; this contract validates shape only.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "preset_id",
+    "name",
+    "business_type",
+    "version",
+    "status",
+    "description",
+    "modules",
+    "configuration",
+    "created_at",
+    "updated_at"
+  ],
+  "properties": {
+    "preset_id": {
+      "title": "Preset identifier",
+      "description": "Stable, human-readable slug that identifies the preset across the catalogue, the onboarding portal and the API. It never changes once published: a corrected preset ships as a new version of the same preset_id.",
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 64,
+      "pattern": "^[a-z0-9]+(?:[-_][a-z0-9]+)*$",
+      "examples": ["retail-basic", "healthcare_clinic"]
+    },
+    "name": {
+      "title": "Preset display name",
+      "description": "Short title shown in the preset catalogue. Must describe the preset well enough that a customer can pick between presets without opening it.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "business_type": {
+      "title": "Business type",
+      "description": "The industry the preset was written for. It drives catalogue filtering and the recommended default module set; it carries no statutory meaning and must not be used to infer a jurisdiction.",
+      "type": "string",
+      "enum": [
+        "retail",
+        "construction",
+        "hospitality",
+        "healthcare_clinic",
+        "light_manufacturing",
+        "generic_office"
+      ]
+    },
+    "version": {
+      "title": "Preset version",
+      "description": "Semantic version of the preset content. MAJOR is bumped when a field is removed or its meaning changes, MINOR when configuration is added, PATCH for wording and description changes. The server refuses to apply a preset whose version is not compatible with the current tenant schema.",
+      "type": "string",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$",
+      "examples": ["1.0.0", "2.3.1", "1.0.0-rc.1"]
+    },
+    "status": {
+      "title": "Preset status",
+      "description": "Lifecycle state of the preset. A preset may only be applied to a tenant when its status is `published`; `draft` presets are visible to editors only and `deprecated` presets are kept for tenants that already reference them but must not be selected for new tenants.",
+      "type": "string",
+      "enum": [
+        "draft",
+        "published",
+        "deprecated"
+      ]
+    },
+    "description": {
+      "title": "Preset description",
+      "description": "One paragraph in plain language describing who the preset is for, which modules it turns on and what the customer is expected to configure after applying it. It must not promise statutory compliance for any country, because a preset carries no jurisdiction.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+    },
+    "modules": {
+      "title": "Module list",
+      "description": "The modules the preset offers, with their default enablement and their dependency edges. The dependency graph is a directed acyclic graph: the server rejects a preset whose `requires` edges form a cycle and rejects enabling a module whose dependencies are not enabled, using the error code `module_dependency_unmet`. A module entry does not have to have a matching key in `configuration`, and a configuration block does not by itself enable a module.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/module_entry"
+      }
+    },
+    "configuration": {
+      "title": "Module configuration blocks",
+      "description": "Per-module configuration carried by the preset, keyed by module key. The modules modelled explicitly by this contract are `time`, `leave`, `scheduling`, `payroll`, `time_tracking` and `recruiting`. Any other key is an extension module and must use the extension block shape. All keys must be snake_case module keys.",
+      "type": "object",
+      "propertyNames": {
+        "$ref": "#/$defs/module_key"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/extension_module_config"
+      },
+      "properties": {
+        "time": {
+          "title": "Time module configuration",
+          "description": "Working-time, clocking and break configuration for the tenant. Statutory break entitlements, working-time limits and minimum rest periods are NOT set here: they come from the attached rule pack, and the preset must leave those slots as the sentinel.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "description",
+            "break_rules"
+          ],
+          "properties": {
+            "description": {
+              "title": "Time configuration description",
+              "description": "Explains the tenant's working-time model, for example shop hours or head-office hours, and states that statutory limits are supplied by the rule pack.",
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1000
+            },
+            "week_starts_on": {
+              "title": "First day of the working week",
+              "description": "Day the tenant's week starts on for rostering, weekly overtime thresholds and working-time reports. This is a company calendar choice; where the law fixes the reference week the rule pack overrides it.",
+              "type": "string",
+              "enum": [
+                "monday",
+                "tuesday",
+                "wednesday",
+                "thursday",
+                "friday",
+                "saturday",
+                "sunday"
+              ]
+            },
+            "grace_period_minutes": {
+              "title": "Clock-in grace period",
+              "description": "Minutes either side of a shift start within which a clock-in is accepted as on time. A company tolerance; it must not be used to shorten a statutory break or rest period.",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 120
+            },
+            "rounding_method": {
+              "title": "Time rounding method",
+              "description": "How recorded minutes are rounded before they are converted to hours. `none` keeps the exact recorded minutes.",
+              "type": "string",
+              "enum": [
+                "none",
+                "nearest_5_minutes",
+                "nearest_15_minutes",
+                "nearest_30_minutes",
+                "floor_15_minutes"
+              ]
+            },
+            "auto_deduct_breaks": {
+              "title": "Auto-deduct breaks",
+              "description": "Whether the system deducts the break shown in the roster when an employee does not clock out for it. Where the law makes the break a paid break of a fixed length the rule pack is authoritative and the server refuses a preset value that would shorten it.",
+              "type": "boolean"
+            },
+            "break_rules": {
+              "title": "Per-location break rules",
+              "description": "Break rules, each scoped to a location, because entitlement and rest rules are set per site. A rule without a `location_id` applies to every location that has no more specific rule; where two rules match a location the more specific one wins. The statutory break length itself comes from the rule pack, so `duration_minutes` is the sentinel unless the tenant has adopted a more generous company policy.",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/preset_break_rule"
+              }
+            }
+          }
+        },
+        "leave": {
+          "title": "Leave module configuration",
+          "description": "Leave types offered by the tenant and the non-statutory defaults that go with them. Every statutory slot in this block (entitlement, carry-over, expiry and encashment) must be the sentinel in a preset; the rule pack supplies the numbers.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "description",
+            "leave_types"
+          ],
+          "properties": {
+            "description": {
+              "title": "Leave configuration description",
+              "description": "Explains the tenant's leave policy intent and states that statutory entitlement, accrual, carry-over and encashment rules are supplied by the attached rule pack.",
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1000
+            },
+            "approval_required": {
+              "title": "Approval required",
+              "description": "Whether leave requests need a manager approval before they affect the balance. A company workflow, not a statutory value.",
+              "type": "boolean"
+            },
+            "allow_negative_balance": {
+              "title": "Allow negative balance",
+              "description": "Whether an employee may take leave beyond the accrued balance. The server refuses to enable this when the attached rule pack forbids it.",
+              "type": "boolean"
+            },
+            "leave_types": {
+              "title": "Leave types",
+              "description": "The leave types the tenant offers. Each type names the leave and states the tenant's non-statutory defaults; all statutory quantities are sentinels.",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/preset_leave_type"
+              }
+            }
+          }
+        },
+        "scheduling": {
+          "title": "Scheduling module configuration",
+          "description": "Shift templates used to build the roster. Shift times, skills and rostered break lengths are company choices; where the law caps working time, rest between shifts or consecutive days the rule pack is authoritative and the server rejects a template that breaches it.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "description",
+            "shift_templates"
+          ],
+          "properties": {
+            "description": {
+              "title": "Scheduling configuration description",
+              "description": "Explains the roster patterns the tenant runs, for example rotating early and late shifts, and states that working-time limits are supplied by the rule pack.",
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1000
+            },
+            "rostering_unit": {
+              "title": "Rostering unit",
+              "description": "Granularity the roster is planned in. `weekly` publishes a full week at once, `daily` publishes one day at a time, `flexible` lets the employee choose their hours within availability.",
+              "type": "string",
+              "enum": [
+                "weekly",
+                "daily",
+                "flexible"
+              ]
+            },
+            "swap_requires_approval": {
+              "title": "Shift swap approval",
+              "description": "Whether a shift swap needs manager approval. A company workflow.",
+              "type": "boolean"
+            },
+            "shift_templates": {
+              "title": "Shift templates",
+              "description": "Reusable shift definitions. A template may be marked as a night shift; the limit on night working hours comes from the rule pack.",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/shift_template"
+              }
+            }
+          }
+        },
+        "payroll": {
+          "title": "Payroll module configuration",
+          "description": "Pay frequency, currency and the placeholders for statutory payroll components. A preset may set the pay frequency and the currency as a starting point, but every statutory amount, rate, threshold and entitlement in this block must be the sentinel. The presence of any unresolved sentinel in this block is what blocks payroll enablement until a verified rule pack is attached to the tenant.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "description",
+            "pay_frequency",
+            "currency"
+          ],
+          "properties": {
+            "description": {
+              "title": "Payroll configuration description",
+              "description": "Explains the tenant's payroll cycle and the pay components it expects, and states that statutory components, rates and thresholds are supplied by the attached rule pack.",
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1000
+            },
+            "pay_frequency": {
+              "title": "Pay frequency",
+              "description": "How often the tenant runs a pay run. The rule pack constrains which frequencies are lawful in the tenant's jurisdiction (`pay_frequency_rules.allowed_frequencies`) and the server refuses to enable payroll when the preset frequency is not in that list.",
+              "type": "string",
+              "enum": [
+                "weekly",
+                "biweekly",
+                "semimonthly",
+                "monthly"
+              ]
+            },
+            "pay_cycle_anchor_day": {
+              "title": "Pay cycle anchor day",
+              "description": "Day of the month the pay cycle is anchored to, used to derive period start and end dates. A company calendar choice; where the law fixes the pay period the rule pack overrides it.",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 31
+            },
+            "currency": {
+              "title": "Payroll currency",
+              "description": "ISO 4217 alphabetic code of the currency the tenant pays in. This is the tenant's own default and is not a statutory value, but the rule pack may restrict the currency to the one the jurisdiction requires.",
+              "type": "string",
+              "pattern": "^[A-Z]{3}$",
+              "examples": ["USD", "EUR", "GBP", "INR"]
+            },
+            "statutory_components": {
+              "title": "Statutory payroll component placeholders",
+              "description": "Statutory deductions, allowances and employer contributions the tenant's jurisdiction may require. The preset names the components so the customer can see them, but every rate and amount is the sentinel and is filled from the attached rule pack.",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/statutory_component"
+              }
+            },
+            "statutory_leave_pay": {
+              "title": "Statutory leave pay placeholders",
+              "description": "Placeholders for the statutory pay treatment of leave, for example paid sick leave, paid parental leave and pay during a public holiday. All amounts are the sentinel.",
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "description",
+                "leave_pay_rate",
+                "protected_leave_types"
+              ],
+              "properties": {
+                "description": {
+                  "title": "Statutory leave pay description",
+                  "description": "Explains which leave types the tenant expects to be paid and which it expects to be unpaid, without stating any statutory amount.",
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1000
+                },
+                "leave_pay_rate": {
+                  "title": "Statutory leave pay rate",
+                  "description": "The fraction of normal pay that a statutory leave attracts. Must be the sentinel in a preset; the rule pack supplies the value.",
+                  "allOf": [
+                    {
+                      "$ref": "#/$defs/rule_pack_sentinel"
+                    }
+                  ]
+                },
+                "protected_leave_types": {
+                  "title": "Protected leave types",
+                  "description": "Leave type keys the tenant treats as protected, for example where dismissing an employee on that leave is restricted. The list names the types only; the restriction itself comes from the rule pack.",
+                  "type": "array",
+                  "items": {
+                    "title": "Protected leave type key",
+                    "description": "Key of a leave type the tenant treats as protected.",
+                    "type": "string",
+                    "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+                  },
+                  "uniqueItems": true
+                }
+              }
+            }
+          }
+        },
+        "time_tracking": {
+          "title": "Time tracking module configuration",
+          "description": "How employees record their working time and whether the tenant uses geofencing at its sites.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "description",
+            "clock_in_method"
+          ],
+          "properties": {
+            "description": {
+              "title": "Time tracking configuration description",
+              "description": "Explains how employees record their hours, for example mobile clock-in with a site geofence, and states that break and rest rules come from the rule pack.",
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1000
+            },
+            "clock_in_method": {
+              "title": "Clock-in method",
+              "description": "The method employees use to record time. `manual` means the tenant enters hours by hand and the server warns that it cannot evidence working time.",
+              "type": "string",
+              "enum": [
+                "web",
+                "mobile",
+                "kiosk",
+                "badge",
+                "import",
+                "manual"
+              ]
+            },
+            "geofence_enabled": {
+              "title": "Geofencing enabled",
+              "description": "Whether a clock-in is only accepted when the device is inside a configured site radius. Optional flag: a preset may leave it out, in which case the tenant decides during setup.",
+              "type": "boolean"
+            },
+            "geofence_radius_meters": {
+              "title": "Geofence radius",
+              "description": "Radius in metres around a site in which a clock-in is accepted. Only meaningful when `geofence_enabled` is true.",
+              "type": "integer",
+              "minimum": 10,
+              "maximum": 5000
+            },
+            "allow_employee_edits": {
+              "title": "Allow employee edits",
+              "description": "Whether an employee may correct their own time entries before the period is locked.",
+              "type": "boolean"
+            }
+          }
+        },
+        "recruiting": {
+          "title": "Recruiting module configuration",
+          "description": "Defaults used when the tenant runs a hiring campaign, including the offer letter template and the scope of background check consent. Consent scope is frequently set by data-protection law, so the preset leaves it as the sentinel unless the tenant has deliberately chosen a scope.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "description",
+            "default_offer_template_id",
+            "background_check_consent_scope"
+          ],
+          "properties": {
+            "description": {
+              "title": "Recruiting configuration description",
+              "description": "Explains the tenant's hiring process, for example agency-assisted volume hiring, and states that consent and disclosure requirements come from the rule pack.",
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1000
+            },
+            "default_offer_template_id": {
+              "title": "Default offer template identifier",
+              "description": "Identifier of the offer letter template used when a candidate accepts an offer. The identifier must resolve to a template owned by the tenant; the preset carries the reference, not the template body.",
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+            },
+            "background_check_consent_scope": {
+              "title": "Background check consent scope",
+              "description": "The scope of checks a candidate must consent to. Which checks may be offered, and what the candidate must be told about them, is set by data-protection and employment law in the tenant's jurisdiction, so a preset may not assert a scope: the value is always the sentinel and is resolved once a verified rule pack is attached. The server blocks the recruiting module while the sentinel is unresolved.",
+              "allOf": [
+                {
+                  "$ref": "#/$defs/rule_pack_sentinel"
+                }
+              ]
+            },
+            "require_referral_code": {
+              "title": "Require referral code",
+              "description": "Whether a candidate must supply a referral code when they apply. A company workflow.",
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "terminology": {
+      "title": "Terminology overrides",
+      "description": "Renames of domain nouns used across the whole product, keyed by the canonical term identifier and valued with the label the customer wants to see. For example the canonical term `employee` can be rendered as `staff`. The key set is the canonical vocabulary owned by the server; an unknown key is rejected so that a typo does not silently leave the product using the default word.",
+      "type": "object",
+      "propertyNames": {
+        "title": "Canonical term identifier",
+        "description": "Key of a term in the canonical vocabulary owned by the server.",
+        "pattern": "^[a-z][a-z0-9]*(?:[._][a-z0-9]+)*$"
+      },
+      "additionalProperties": {
+        "title": "Terminology label",
+        "description": "The label to show instead of the canonical term. Must not be empty and must not be the canonical term itself.",
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 120
+      }
+    },
+    "field_labels": {
+      "title": "Field label overrides",
+      "description": "Renames of individual screen and form fields, keyed by the canonical field identifier and valued with the label the customer wants to see. For example the canonical field `date_of_birth` can be rendered as `DOB`. Use `terminology` for whole nouns and `field_labels` for a single field, so the two maps never fight over the same word.",
+      "type": "object",
+      "propertyNames": {
+        "title": "Canonical field identifier",
+        "description": "Key of a field in the canonical field vocabulary owned by the server.",
+        "pattern": "^[a-z][a-z0-9]*(?:[._][a-z0-9]+)*$"
+      },
+      "additionalProperties": {
+        "title": "Field label",
+        "description": "The label to show instead of the canonical field label. Must not be empty.",
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 120
+      }
+    },
+    "organisation_templates": {
+      "title": "Organisation templates",
+      "description": "The workforce and organisation structures the preset suggests: the departments, the job families and the roles inside them. A customer may accept them, change them or refuse them; they are a starting point for a conversation, and they carry no statutory meaning. The server refuses a preset that names a department, a job family or a role that its own template does not define.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "description",
+        "departments",
+        "job_families",
+        "roles"
+      ],
+      "properties": {
+        "description": {
+          "title": "Organisation template description",
+          "description": "Explains the structure the preset suggests and states that the customer may change any of it.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "departments": {
+          "title": "Suggested departments",
+          "description": "The departments the preset suggests. Keys are slugs; a department may name the department it sits under.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/preset_department"
+          }
+        },
+        "job_families": {
+          "title": "Suggested job families",
+          "description": "The job families the preset suggests, each with the job titles that usually sit in it.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/preset_job_family"
+          }
+        },
+        "roles": {
+          "title": "Suggested roles",
+          "description": "The roles the preset suggests inside the organisation. A role names the job family and the department it belongs to; the two must be ones the same preset defines.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/preset_role"
+          }
+        }
+      }
+    },
+    "dashboards": {
+      "title": "Dashboards, KPIs and action queues",
+      "description": "The views a tenant starts with: the dashboards, the key performance indicators on them and the action queues they feed. A KPI names the module its numbers come from, so the readiness check can tell the customer that the module behind a number is not switched on yet. No threshold, target or quota may be stated here: a target is a company policy the customer sets, and a statutory target does not exist outside a rule pack.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "description",
+        "dashboards",
+        "kpis",
+        "action_queues"
+      ],
+      "properties": {
+        "description": {
+          "title": "Dashboards description",
+          "description": "Explains what the tenant sees when it opens the product and why those views were chosen.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "dashboards": {
+          "title": "Dashboards",
+          "description": "The dashboards the preset starts the tenant with. A dashboard names the KPIs it shows.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/preset_dashboard"
+          }
+        },
+        "kpis": {
+          "title": "Key performance indicators",
+          "description": "The indicators the dashboards show. An indicator names the module that produces its numbers and the unit it is measured in. It states no value and no target.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/preset_kpi"
+          }
+        },
+        "action_queues": {
+          "title": "Action queues",
+          "description": "The queues of things to do: the exceptions the tenant has to work through. A queue names the role that owns it and the module that fills it.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/preset_action_queue"
+          }
+        }
+      }
+    },
+    "forecast_drivers": {
+      "title": "Forecast drivers and the data the forecast needs",
+      "description": "What the tenant can forecast with: the drivers that move the numbers and the data each driver needs before a forecast may be run. A driver names the module that produces its input. No historical figure, growth rate or seasonal assumption may be stated here: those are the tenant's own data, not the preset's.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "description",
+        "drivers",
+        "required_data"
+      ],
+      "properties": {
+        "description": {
+          "title": "Forecast drivers description",
+          "description": "Explains what the tenant can forecast with this preset and what it has to collect first.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "drivers": {
+          "title": "Forecast drivers",
+          "description": "The drivers that move the tenant's numbers, each with the module that produces its input.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/preset_forecast_driver"
+          }
+        },
+        "required_data": {
+          "title": "Data the forecast needs",
+          "description": "The data the tenant has to have before a forecast is worth running, each with the module that holds it.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/preset_forecast_data_requirement"
+          }
+        }
+      }
+    },
+    "import_templates": {
+      "title": "Employee import templates",
+      "description": "The import templates that apply to this kind of business. A template names the entity it imports and the endpoint that serves its header row. A template names no customer datum and no sample row: the importer owns the columns, and this list only says which of its templates apply here.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/preset_import_template"
+      }
+    },
+    "validations": {
+      "title": "Setup validations",
+      "description": "The checks the preset wants run against a tenant before the setup is called ready. Each validation names a condition the server understands, how serious it is when it fails, what the customer must do about it and where the customer goes to do it. A condition the server does not understand is refused when the preset is loaded: a validation that cannot be evaluated is a validation that never fires.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/preset_validation"
+      }
+    },
+    "exclusions": {
+      "title": "Exclusions and jurisdiction-specific items for review",
+      "description": "What the preset deliberately does not decide, and why. Every exclusion says what is left out, the reason it is left out and whether the customer has to review it. An exclusion is how a preset keeps its promise: it says out loud that the customer, not the preset, decides the things that depend on where the customer is.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/preset_exclusion"
+      }
+    },
+    "created_at": {
+      "title": "Created at",
+      "description": "UTC timestamp, RFC 3339 with an explicit offset, at which the preset was first created. The server writes it; clients must not set it.",
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(Z|[+-]\\d{2}:\\d{2})$"
+    },
+    "updated_at": {
+      "title": "Updated at",
+      "description": "UTC timestamp, RFC 3339 with an explicit offset, of the last write to the preset. It must be greater than or equal to `created_at`; the server enforces that ordering.",
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(Z|[+-]\\d{2}:\\d{2})$"
+    }
+  },
+  "$defs": {
+    "module_key": {
+      "title": "Module key",
+      "description": "Snake_case identifier of a module, for example `time_tracking`. The built-in module keys are `time`, `leave`, `scheduling`, `payroll`, `time_tracking` and `recruiting`; extension modules use the same shape so the catalogue stays open for new modules without changing this contract.",
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 64,
+      "pattern": "^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$",
+      "examples": ["time_tracking", "leave", "payroll"]
+    },
+    "rule_pack_sentinel": {
+      "title": "Rule pack sentinel",
+      "description": "The literal marker used for a slot that can only be filled from a jurisdiction rule pack. A preset that contains a sentinel is not complete: the server blocks payroll enablement and any jurisdiction-dependent calculation until a verified rule pack is attached and the sentinel is resolved. The sentinel is a string, never a number and never a null.",
+      "const": "REQUIRES_RULE_PACK",
+      "examples": ["REQUIRES_RULE_PACK"]
+    },
+    "number_or_sentinel": {
+      "title": "Number or rule pack sentinel",
+      "description": "Either a number or the rule pack sentinel. A number here is a company policy chosen by the tenant; it must be at least as favourable to the employee as the statutory value in the attached rule pack, and the server rejects a preset that undercuts the pack.",
+      "oneOf": [
+        {
+          "title": "Company policy number",
+          "description": "A numeric value chosen by the tenant.",
+          "type": "number"
+        },
+        {
+          "$ref": "#/$defs/rule_pack_sentinel"
+        }
+      ]
+    },
+    "integer_or_sentinel": {
+      "title": "Integer or rule pack sentinel",
+      "description": "Either a whole number or the rule pack sentinel. A number here is a company policy chosen by the tenant; it must be at least as favourable to the employee as the statutory value in the attached rule pack, and the server rejects a preset that undercuts the pack.",
+      "oneOf": [
+        {
+          "title": "Company policy integer",
+          "description": "A whole number chosen by the tenant.",
+          "type": "integer"
+        },
+        {
+          "$ref": "#/$defs/rule_pack_sentinel"
+        }
+      ]
+    },
+    "accrual_frequency": {
+      "title": "Accrual frequency",
+      "description": "How often leave is accrued for an employee. `front_loaded` means the whole entitlement is credited at the start of the leave year. This vocabulary is shared with the rule pack contract.",
+      "type": "string",
+      "enum": [
+        "per_pay_period",
+        "per_month",
+        "per_year",
+        "front_loaded"
+      ]
+    },
+    "accrual_frequency_or_sentinel": {
+      "title": "Accrual frequency or rule pack sentinel",
+      "description": "Either one of the four accrual frequencies or the rule pack sentinel, for leave types whose accrual rhythm is fixed by law.",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/accrual_frequency"
+        },
+        {
+          "$ref": "#/$defs/rule_pack_sentinel"
+        }
+      ]
+    },
+    "json_value": {
+      "title": "Arbitrary JSON value",
+      "description": "Any JSON value. Used only where the contract genuinely cannot constrain the shape, for example inside an extension module's free-form settings map.",
+      "anyOf": [
+        {
+          "title": "Null value",
+          "description": "An explicit null, used where a value is present but unset.",
+          "type": "null"
+        },
+        {
+          "title": "Boolean value",
+          "description": "A true or false value.",
+          "type": "boolean"
+        },
+        {
+          "title": "Numeric value",
+          "description": "A number, integral or fractional.",
+          "type": "number"
+        },
+        {
+          "title": "String value",
+          "description": "A text value.",
+          "type": "string"
+        },
+        {
+          "title": "Array value",
+          "description": "An ordered list whose members are themselves arbitrary JSON values.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/json_value"
+          }
+        },
+        {
+          "title": "Object value",
+          "description": "A map whose members are themselves arbitrary JSON values.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/json_value"
+          }
+        }
+      ]
+    },
+    "module_dependency_graph": {
+      "title": "Module dependency graph note",
+      "description": "Server-enforced note, not a data constraint. The `requires` edges declared on module entries form a directed acyclic graph over the module keys. The server, not this schema, enforces three things: a module may only be enabled when every module it requires is also enabled; the graph may not contain a cycle; and enabling a module whose dependencies are missing is reported with the error code `module_dependency_unmet`. This definition carries no data of its own and is never referenced by a property; it exists so that the rule is documented in the contract itself.",
+      "type": "null"
+    },
+    "module_entry": {
+      "title": "Module entry",
+      "description": "One module the preset offers. The entry states whether the module is switched on when the preset is applied and which other modules it depends on. The dependency edges are validated by the server as described in `module_dependency_graph`.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "enabled_by_default",
+        "requires",
+        "description"
+      ],
+      "properties": {
+        "key": {
+          "title": "Module key",
+          "description": "Key of the module. When the module has a configuration block, the same key must be a key of `configuration`.",
+          "allOf": [
+            {
+              "$ref": "#/$defs/module_key"
+            }
+          ]
+        },
+        "enabled_by_default": {
+          "title": "Enabled by default",
+          "description": "Whether the module is switched on when the preset is applied during onboarding. The customer may turn a default-on module off as long as no enabled module depends on it.",
+          "type": "boolean"
+        },
+        "requires": {
+          "title": "Required modules",
+          "description": "Keys of the modules that must be enabled for this module to function. The list may be empty. The server rejects a preset whose edges form a cycle and rejects enabling this module while a listed dependency is off.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/module_key"
+          },
+          "uniqueItems": true
+        },
+        "description": {
+          "title": "Module description",
+          "description": "Why the preset includes this module and what turning it on gives the customer. Must not promise statutory compliance for any country.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        }
+      }
+    },
+    "extension_module_config": {
+      "title": "Extension module configuration block",
+      "description": "Configuration for a module that this contract does not model explicitly. The block must carry a `description`; every other key is module-specific and is validated by that module's own schema, not by this contract. The `settings` map is deliberately open: its keys and value types are not constrained here.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "description"
+      ],
+      "properties": {
+        "description": {
+          "title": "Extension block description",
+          "description": "What this extension module configures and who consumes it.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "settings": {
+          "title": "Extension settings",
+          "description": "Free-form settings for the extension module. Open map: keys are module-specific and values are arbitrary JSON. Nothing in here may be a statutory value, because a preset carries no jurisdiction.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/json_value"
+          }
+        }
+      }
+    },
+    "preset_break_rule": {
+      "title": "Preset break rule",
+      "description": "A break rule scoped to a location. The rostered break length is a company choice, but where the law fixes a minimum break, whether the break is paid, or how long a break must be, those values come from the rule pack: `duration_minutes` is the sentinel unless the tenant has adopted a more generous company policy, and `jurisdiction_specific` must always be the sentinel because only the rule pack can say whether the rule is statutory.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "description",
+        "duration_minutes",
+        "auto_deduct",
+        "jurisdiction_specific"
+      ],
+      "properties": {
+        "location_id": {
+          "title": "Location identifier",
+          "description": "Identifier of the location the rule applies to. Omit the field to make the rule apply to every location that has no more specific rule.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "description": {
+          "title": "Break rule description",
+          "description": "What the break covers, for example a meal break in the canteen or a rest break on the shop floor.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "duration_minutes": {
+          "title": "Break duration",
+          "description": "Length of the break in whole minutes. Use the sentinel to defer to the rule pack; a number is a company policy that must be at least as long as the statutory minimum.",
+          "allOf": [
+            {
+              "$ref": "#/$defs/integer_or_sentinel"
+            }
+          ]
+        },
+        "auto_deduct": {
+          "title": "Auto-deduct",
+          "description": "Whether the break is deducted automatically when the employee does not clock out for it.",
+          "type": "boolean"
+        },
+        "jurisdiction_specific": {
+          "title": "Jurisdiction-specific marker",
+          "description": "Whether this break rule is set by statute. A preset may not assert this: the value is always the sentinel and is resolved from the attached rule pack.",
+          "allOf": [
+            {
+              "$ref": "#/$defs/rule_pack_sentinel"
+            }
+          ]
+        }
+      }
+    },
+    "preset_tenure_tier": {
+      "title": "Preset tenure tier",
+      "description": "A length-of-service band used when calculating leave entitlement. The band edge in years is a company policy; the entitlement that attaches to it is statutory and is therefore the sentinel in a preset.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "after_years",
+        "days"
+      ],
+      "properties": {
+        "after_years": {
+          "title": "Years of service threshold",
+          "description": "Length of service, in whole years, at which the tier starts. Zero means the tier applies from day one.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 60
+        },
+        "days": {
+          "title": "Entitlement days for the tier",
+          "description": "Days of leave the tier grants. Must be the sentinel in a preset; the rule pack supplies the entitlement.",
+          "allOf": [
+            {
+              "$ref": "#/$defs/rule_pack_sentinel"
+            }
+          ]
+        }
+      }
+    },
+    "preset_leave_expiry_rule": {
+      "title": "Preset leave expiry rule",
+      "description": "When and how unused leave lapses. The month in which leave expires is a company policy; how many days may be carried past that month is statutory in many jurisdictions and is therefore the sentinel in a preset.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "expiry_month",
+        "carry_forward_days"
+      ],
+      "properties": {
+        "expiry_month": {
+          "title": "Expiry month",
+          "description": "Month, 1 to 12, in which unused leave expires. A company policy; the rule pack may fix it.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 12
+        },
+        "carry_forward_days": {
+          "title": "Carry forward days",
+          "description": "Days of unused leave that may be carried past the expiry month. Use the sentinel to defer to the rule pack; a number is a company policy that must be at least as generous as the statutory allowance.",
+          "allOf": [
+            {
+              "$ref": "#/$defs/number_or_sentinel"
+            }
+          ]
+        }
+      }
+    },
+    "preset_leave_type": {
+      "title": "Preset leave type",
+      "description": "A leave type the tenant offers. The preset names the type and states the tenant's non-statutory defaults only. Every statutory quantity, namely the entitlement, the tier entitlements, the carry-over limit and the encashment right, is the sentinel in a preset and is filled from the attached rule pack.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "name",
+        "description",
+        "entitlement_days",
+        "accrual",
+        "carry_over_limit_days",
+        "expiry_rule",
+        "encashment_allowed"
+      ],
+      "properties": {
+        "key": {
+          "title": "Leave type key",
+          "description": "Slug of the leave type, used by balances, requests and payroll components. It must match the key the rule pack uses for the same leave type so that the two can be joined.",
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "name": {
+          "title": "Leave type name",
+          "description": "Display name of the leave type as the tenant wants to see it, for example `Annual Leave` or `Urlaub`.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "description": {
+          "title": "Leave type description",
+          "description": "What the leave type covers and who may take it.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "entitlement_days": {
+          "title": "Entitlement days",
+          "description": "Days of leave the employee is entitled to per year. Must be the sentinel in a preset; the rule pack supplies the entitlement.",
+          "allOf": [
+            {
+              "$ref": "#/$defs/rule_pack_sentinel"
+            }
+          ]
+        },
+        "accrual": {
+          "title": "Accrual",
+          "description": "How entitlement is earned over the leave year.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "frequency",
+            "tenure_tiers"
+          ],
+          "properties": {
+            "frequency": {
+              "title": "Accrual frequency",
+              "description": "How often leave accrues. Use the sentinel when the accrual rhythm is fixed by law for this leave type.",
+              "allOf": [
+                {
+                  "$ref": "#/$defs/accrual_frequency_or_sentinel"
+                }
+              ]
+            },
+            "tenure_tiers": {
+              "title": "Tenure tiers",
+              "description": "Length-of-service bands that grant different entitlements. May be empty, in which case the rule pack's tiers apply unchanged.",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/preset_tenure_tier"
+              }
+            },
+            "max_balance_days": {
+              "title": "Maximum balance",
+              "description": "Maximum days that may accumulate. Use the sentinel to defer to the rule pack; a number is a company policy that must be at least as generous as the statutory cap.",
+              "allOf": [
+                {
+                  "$ref": "#/$defs/number_or_sentinel"
+                }
+              ]
+            }
+          }
+        },
+        "carry_over_limit_days": {
+          "title": "Carry-over limit",
+          "description": "Days of unused leave that may be carried into the next leave year. Use the sentinel to defer to the rule pack; a number is a company policy that must be at least as generous as the statutory allowance.",
+          "allOf": [
+            {
+              "$ref": "#/$defs/number_or_sentinel"
+            }
+          ]
+        },
+        "expiry_rule": {
+          "title": "Expiry rule",
+          "description": "When unused leave lapses. Use the sentinel to defer to the rule pack entirely.",
+          "oneOf": [
+            {
+              "$ref": "#/$defs/preset_leave_expiry_rule"
+            },
+            {
+              "$ref": "#/$defs/rule_pack_sentinel"
+            }
+          ]
+        },
+        "encashment_allowed": {
+          "title": "Encashment allowed",
+          "description": "Whether unused leave may be paid out. Must be the sentinel in a preset: whether an employee has a statutory right to encash leave is jurisdiction-specific and is decided by the rule pack.",
+          "allOf": [
+            {
+              "$ref": "#/$defs/rule_pack_sentinel"
+            }
+          ]
+        }
+      }
+    },
+    "shift_template": {
+      "title": "Shift template",
+      "description": "A reusable shift definition used to build the roster. Start and end times, the rostered break and the required skills are company choices. Where the law caps working time, rest between shifts or consecutive working days, the rule pack is authoritative and the server refuses to publish a roster that breaches it.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "name",
+        "description",
+        "start_time",
+        "end_time",
+        "break_length_minutes",
+        "required_skills",
+        "minimum_rest_hours",
+        "max_consecutive_days"
+      ],
+      "properties": {
+        "key": {
+          "title": "Shift template key",
+          "description": "Slug of the shift template, used by the roster builder and by the employee availability screen.",
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "name": {
+          "title": "Shift template name",
+          "description": "Display name of the shift, for example `Early` or `Night`.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "description": {
+          "title": "Shift template description",
+          "description": "What the shift covers and who it is for.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "start_time": {
+          "title": "Start time",
+          "description": "Local start time of the shift, 24-hour HH:MM.",
+          "type": "string",
+          "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$"
+        },
+        "end_time": {
+          "title": "End time",
+          "description": "Local end time of the shift, 24-hour HH:MM. When `overnight` is true the end time is on the following day.",
+          "type": "string",
+          "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$"
+        },
+        "overnight": {
+          "title": "Overnight shift",
+          "description": "Whether the shift ends on the following calendar day. Night working limits come from the rule pack.",
+          "type": "boolean"
+        },
+        "break_length_minutes": {
+          "title": "Rostered break length",
+          "description": "Length of the break rostered into the shift, in minutes. A company choice that must be at least as long as the statutory break in the attached rule pack. A preset carries the sentinel here, because a preset has no jurisdiction and a number it chose could undercut the statutory break.",
+          "allOf": [
+            {
+              "$ref": "#/$defs/integer_or_sentinel"
+            }
+          ]
+        },
+        "required_skills": {
+          "title": "Required skills",
+          "description": "Skills an employee must hold to be assigned to this shift. Empty means no skill requirement. Skills are matched against the employee's own skill records.",
+          "type": "array",
+          "items": {
+            "title": "Required skill key",
+            "description": "Key of a skill an employee must hold to be assigned to the shift.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "minimum_rest_hours": {
+          "title": "Minimum rest hours",
+          "description": "Hours of rest the tenant requires between the end of one shift and the start of the next. Use the sentinel to defer to the rule pack; a number is a company policy that must be at least as long as the statutory minimum rest.",
+          "allOf": [
+            {
+              "$ref": "#/$defs/number_or_sentinel"
+            }
+          ]
+        },
+        "max_consecutive_days": {
+          "title": "Maximum consecutive days",
+          "description": "Maximum number of days in a row the tenant rosters this shift. Use the sentinel to defer to the rule pack; a number is a company policy that must not exceed the statutory limit in the attached rule pack.",
+          "allOf": [
+            {
+              "$ref": "#/$defs/integer_or_sentinel"
+            }
+          ]
+        },
+        "headcount": {
+          "title": "Headcount",
+          "description": "Number of employees the template is written for. Used by the auto-fill roster generator.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        }
+      }
+    },
+    "statutory_component": {
+      "title": "Statutory payroll component placeholder",
+      "description": "A statutory deduction, allowance or employer contribution that the tenant's jurisdiction may require. A preset may name the component so the customer can see it, but it must not carry an amount or a rate: both are the sentinel and are filled from the attached rule pack.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "label",
+        "category",
+        "basis",
+        "rate",
+        "description"
+      ],
+      "properties": {
+        "code": {
+          "title": "Component code",
+          "description": "Stable SCREAMING_SNAKE code of the component, used to join the placeholder with the component in the rule pack.",
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 32,
+          "pattern": "^[A-Z][A-Z0-9_]{1,31}$"
+        },
+        "label": {
+          "title": "Component label",
+          "description": "Name of the component as the tenant expects to see it on a payslip.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "category": {
+          "title": "Component category",
+          "description": "How the component is applied to a pay run.",
+          "type": "string",
+          "enum": [
+            "deduction",
+            "allowance",
+            "employee_contribution",
+            "employer_contribution"
+          ]
+        },
+        "basis": {
+          "title": "Calculation basis",
+          "description": "What the statutory amount is applied to. The rule pack states the actual basis for the jurisdiction; the value here only pre-declares the shape.",
+          "type": "string",
+          "enum": [
+            "percentage_of_gross",
+            "percentage_of_basic",
+            "fixed_amount",
+            "per_hour",
+            "per_day",
+            "per_unit"
+          ]
+        },
+        "rate": {
+          "title": "Component rate or amount",
+          "description": "The statutory rate or amount. Must be the sentinel in a preset.",
+          "allOf": [
+            {
+              "$ref": "#/$defs/rule_pack_sentinel"
+            }
+          ]
+        },
+        "description": {
+          "title": "Component description",
+          "description": "What the component is for, in plain language the customer can read.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        }
+      }
+    },
+    "preset_department": {
+      "title": "Preset department",
+      "description": "A department the preset suggests. It carries no statutory meaning: a customer may rename it, move it or refuse it.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "name",
+        "description"
+      ],
+      "properties": {
+        "key": {
+          "title": "Department key",
+          "description": "Slug of the department, used to link the roles and the job families that sit in it.",
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "name": {
+          "title": "Department name",
+          "description": "Display name of the department as the customer would recognise it.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "description": {
+          "title": "Department description",
+          "description": "What the department does and who works in it.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "parent_key": {
+          "title": "Parent department key",
+          "description": "Key of the department this one sits under. Must be a department the same preset defines.",
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        }
+      }
+    },
+    "preset_job_family": {
+      "title": "Preset job family",
+      "description": "A group of related jobs the preset suggests, with the job titles that usually sit in it.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "name",
+        "description",
+        "typical_job_titles"
+      ],
+      "properties": {
+        "key": {
+          "title": "Job family key",
+          "description": "Slug of the job family, used to link the roles that sit in it.",
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "name": {
+          "title": "Job family name",
+          "description": "Display name of the job family.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "description": {
+          "title": "Job family description",
+          "description": "What the family covers and what the jobs in it have in common.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "typical_job_titles": {
+          "title": "Typical job titles",
+          "description": "Job titles that usually sit in this family. They are names, not job records: the customer creates the jobs it needs.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          }
+        }
+      }
+    },
+    "preset_role": {
+      "title": "Preset role",
+      "description": "A role the preset suggests inside the organisation, in a department and in a job family.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "name",
+        "description",
+        "job_family_key",
+        "department_key"
+      ],
+      "properties": {
+        "key": {
+          "title": "Role key",
+          "description": "Slug of the role.",
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "name": {
+          "title": "Role name",
+          "description": "Display name of the role.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "description": {
+          "title": "Role description",
+          "description": "What the role is responsible for.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "job_family_key": {
+          "title": "Job family key",
+          "description": "Key of the job family the role sits in. Must be a job family the same preset defines.",
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "department_key": {
+          "title": "Department key",
+          "description": "Key of the department the role sits in. Must be a department the same preset defines.",
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "grade": {
+          "title": "Grade",
+          "description": "The band the role sits in, when the preset suggests one. A band is a company structure, not a pay scale: no amount may be stated with it.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        }
+      }
+    },
+    "preset_dashboard": {
+      "title": "Preset dashboard",
+      "description": "A dashboard the preset starts the tenant with. It names the key performance indicators it shows.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "name",
+        "description",
+        "kpi_keys"
+      ],
+      "properties": {
+        "key": {
+          "title": "Dashboard key",
+          "description": "Slug of the dashboard.",
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "name": {
+          "title": "Dashboard name",
+          "description": "Display name of the dashboard.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "description": {
+          "title": "Dashboard description",
+          "description": "What the dashboard is for and who looks at it.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "kpi_keys": {
+          "title": "KPI keys",
+          "description": "Keys of the key performance indicators the dashboard shows. Each must be a KPI the same preset defines.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 64,
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          }
+        }
+      }
+    },
+    "preset_kpi": {
+      "title": "Preset key performance indicator",
+      "description": "An indicator the dashboards show. It names the module that produces its numbers and the unit it is measured in, and states no value and no target.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "name",
+        "description",
+        "unit",
+        "source_module"
+      ],
+      "properties": {
+        "key": {
+          "title": "KPI key",
+          "description": "Slug of the indicator.",
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "name": {
+          "title": "KPI name",
+          "description": "Display name of the indicator.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "description": {
+          "title": "KPI description",
+          "description": "What the indicator measures and what a reader should do with it.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "unit": {
+          "title": "KPI unit",
+          "description": "The unit the indicator is measured in.",
+          "type": "string",
+          "enum": [
+            "count",
+            "percentage",
+            "currency",
+            "hours",
+            "days",
+            "rate"
+          ]
+        },
+        "source_module": {
+          "title": "Source module",
+          "description": "The module whose data produces the indicator. Must be a module the same preset defines.",
+          "$ref": "#/$defs/module_key"
+        }
+      }
+    },
+    "preset_action_queue": {
+      "title": "Preset action queue",
+      "description": "A queue of things the tenant has to work through: the exceptions that need a person. It names the role that owns the queue and the module that fills it.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "name",
+        "description",
+        "owner_role",
+        "source_module"
+      ],
+      "properties": {
+        "key": {
+          "title": "Action queue key",
+          "description": "Slug of the queue.",
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "name": {
+          "title": "Action queue name",
+          "description": "Display name of the queue.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "description": {
+          "title": "Action queue description",
+          "description": "What lands in the queue and what the owner is expected to do about it.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "owner_role": {
+          "title": "Owning role",
+          "description": "The product role that owns the queue. The server refuses a preset that names a role the platform does not recognise.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "source_module": {
+          "title": "Source module",
+          "description": "The module that fills the queue. Must be a module the same preset defines.",
+          "$ref": "#/$defs/module_key"
+        }
+      }
+    },
+    "preset_forecast_driver": {
+      "title": "Preset forecast driver",
+      "description": "A driver that moves the tenant's numbers. It names the module that produces its input and the way it moves them.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "name",
+        "description",
+        "source_module",
+        "direction"
+      ],
+      "properties": {
+        "key": {
+          "title": "Forecast driver key",
+          "description": "Slug of the driver.",
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "name": {
+          "title": "Forecast driver name",
+          "description": "Display name of the driver.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "description": {
+          "title": "Forecast driver description",
+          "description": "What the driver is and how it moves the numbers.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "source_module": {
+          "title": "Source module",
+          "description": "The module whose data the driver is read from. Must be a module the same preset defines.",
+          "$ref": "#/$defs/module_key"
+        },
+        "direction": {
+          "title": "Direction",
+          "description": "The way the driver moves the numbers.",
+          "type": "string",
+          "enum": [
+            "increases",
+            "decreases",
+            "mixed"
+          ]
+        }
+      }
+    },
+    "preset_forecast_data_requirement": {
+      "title": "Preset forecast data requirement",
+      "description": "The data the tenant has to have before a forecast is worth running. It names the module that holds the data.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "name",
+        "description",
+        "source_module"
+      ],
+      "properties": {
+        "key": {
+          "title": "Data requirement key",
+          "description": "Slug of the data requirement.",
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "name": {
+          "title": "Data requirement name",
+          "description": "Display name of the data requirement.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "description": {
+          "title": "Data requirement description",
+          "description": "What the data is and what the forecast cannot do without it.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "source_module": {
+          "title": "Source module",
+          "description": "The module that holds the data. Must be a module the same preset defines.",
+          "$ref": "#/$defs/module_key"
+        }
+      }
+    },
+    "preset_import_template": {
+      "title": "Preset import template",
+      "description": "An import template that applies to this kind of business. It names the entity it imports and the endpoint that serves its header row, and carries no customer datum and no sample row.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "name",
+        "description",
+        "entity",
+        "endpoint"
+      ],
+      "properties": {
+        "key": {
+          "title": "Import template key",
+          "description": "Slug of the template.",
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "name": {
+          "title": "Import template name",
+          "description": "Display name of the template.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "description": {
+          "title": "Import template description",
+          "description": "What the template imports and when the tenant would use it.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "entity": {
+          "title": "Imported entity",
+          "description": "The entity the template imports.",
+          "type": "string",
+          "enum": [
+            "employees",
+            "departments",
+            "jobs",
+            "locations",
+            "leave_balances",
+            "shift_templates"
+          ]
+        },
+        "endpoint": {
+          "title": "Template endpoint",
+          "description": "The path that serves the header row of the template.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "pattern": "^/[A-Za-z0-9/_\\-{}.]+$"
+        }
+      }
+    },
+    "preset_validation": {
+      "title": "Preset validation",
+      "description": "One check the preset wants run against a tenant before its setup is called ready. The condition names a check the server understands; a condition it does not understand is refused when the preset is loaded, because a validation that cannot be evaluated never fires.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "name",
+        "description",
+        "severity",
+        "condition",
+        "message",
+        "fix_target"
+      ],
+      "properties": {
+        "key": {
+          "title": "Validation key",
+          "description": "Stable identifier of the validation, unique inside the preset.",
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "name": {
+          "title": "Validation name",
+          "description": "Short name of the check.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "description": {
+          "title": "Validation description",
+          "description": "What the check confirms and why the tenant needs it.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "severity": {
+          "title": "Severity",
+          "description": "How serious it is when the check fails. A blocking finding stops the setup from being called ready.",
+          "type": "string",
+          "enum": [
+            "blocking",
+            "warning",
+            "info"
+          ]
+        },
+        "condition": {
+          "title": "Condition",
+          "description": "The check the server runs against the tenant's configuration.",
+          "$ref": "#/$defs/preset_validation_condition"
+        },
+        "message": {
+          "title": "Failure message",
+          "description": "What the tenant is told when the check fails, in words a person can act on.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "fix_target": {
+          "title": "Fix target",
+          "description": "What has to change: a module, an entity or a field.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "module": {
+          "title": "Module",
+          "description": "The module the check belongs to. Must be a module the same preset defines.",
+          "$ref": "#/$defs/module_key"
+        }
+      }
+    },
+    "preset_validation_condition": {
+      "title": "Preset validation condition",
+      "description": "The check the server runs. `kind` names the check and the other keys are its arguments. The server knows these kinds: `module_enabled`, `module_dependency_met`, `setting_present`, `no_unresolved_sentinels` and `data_present`.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "title": "Condition kind",
+          "description": "The check to run.",
+          "type": "string",
+          "enum": [
+            "module_enabled",
+            "module_dependency_met",
+            "setting_present",
+            "no_unresolved_sentinels",
+            "data_present"
+          ]
+        },
+        "module": {
+          "title": "Module",
+          "description": "The module the check is about.",
+          "$ref": "#/$defs/module_key"
+        },
+        "path": {
+          "title": "Setting path",
+          "description": "The configuration path the check is about, for example `leave.approval_required`.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "entity": {
+          "title": "Entity",
+          "description": "The kind of record the check is about, for the `data_present` check.",
+          "type": "string",
+          "enum": [
+            "employees",
+            "departments",
+            "jobs",
+            "leave_types",
+            "shift_templates",
+            "locations"
+          ]
+        }
+      }
+    },
+    "preset_exclusion": {
+      "title": "Preset exclusion",
+      "description": "Something the preset deliberately does not decide, and why. An exclusion with `requires_review` set is a thing the customer has to look at before the setup is finished.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "name",
+        "description",
+        "reason",
+        "category",
+        "requires_review"
+      ],
+      "properties": {
+        "key": {
+          "title": "Exclusion key",
+          "description": "Slug of the exclusion, unique inside the preset.",
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "name": {
+          "title": "Exclusion name",
+          "description": "Short name of what is not decided.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "description": {
+          "title": "Exclusion description",
+          "description": "What the preset leaves out, in the words a customer would use.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "reason": {
+          "title": "Reason",
+          "description": "Why the preset does not decide it.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "category": {
+          "title": "Category",
+          "description": "What kind of thing was left out.",
+          "type": "string",
+          "enum": [
+            "jurisdiction",
+            "statutory",
+            "company_policy",
+            "product_scope"
+          ]
+        },
+        "requires_review": {
+          "title": "Requires review",
+          "description": "True when the customer has to look at this before the setup is finished.",
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

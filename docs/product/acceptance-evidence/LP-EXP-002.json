@@ -1,0 +1,9 @@
+{
+  "id": "LP-EXP-002",
+  "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+  "timestamp_utc": "2026-11-22T08:42:33+00:00",
+  "status_before": "BLOCKED",
+  "verdict": "HELD",
+  "reason": "BLOCKED/IN PROGRESS rows are never flipped by the harness",
+  "blocker_or_decision": "BLOCKED \u2014 surplus ID with no phase assignment (docs/product/release-readiness.json defects_surplus: 14 IDs incl. this one; decision: product-owner decisions required before start). Delivery evidence in row proves implementation only, not scope approval. Per PRD 28: exact dependency = product-owner scope decision; recorded 2026-11-22."
+}

@@ -1,0 +1,828 @@
+{
+  "preset_id": "hospitality",
+  "name": "Hospitality",
+  "business_type": "hospitality",
+  "version": "1.0.0",
+  "status": "published",
+  "description": "A business that works around the clock, where the roster is the business and the people on it change often. This preset suggests the modules a hospitality deployment usually needs, the departments a hotel or a venue is usually built from, the shift patterns that cover a trading week including the weekend, the leave types a hospitality employer usually offers, and the views a duty manager reads at the end of a shift. It decides none of the things that depend on where the business is: leave entitlement, tax, contributions, break length, the rules on split shifts and the pay period all come from a verified rule pack, and the currency is a placeholder the customer confirms.",
+  "modules": [
+    {
+      "key": "workforce",
+      "enabled_by_default": true,
+      "requires": [],
+      "description": "Employee records, the properties they work at, the departments and the jobs."
+    },
+    {
+      "key": "time_tracking",
+      "enabled_by_default": true,
+      "requires": [
+        "workforce"
+      ],
+      "description": "The hours worked in service, which is what the roster is judged against and the pay run is calculated from."
+    },
+    {
+      "key": "time",
+      "enabled_by_default": true,
+      "requires": [
+        "time_tracking"
+      ],
+      "description": "The working-time model: the trading week, the clock-in tolerance and the breaks."
+    },
+    {
+      "key": "scheduling",
+      "enabled_by_default": true,
+      "requires": [
+        "workforce"
+      ],
+      "description": "The shift templates and the roster that keeps a venue covered from opening to close."
+    },
+    {
+      "key": "leave",
+      "enabled_by_default": true,
+      "requires": [
+        "workforce"
+      ],
+      "description": "The leave a hospitality employer offers and the cover that has to be found for it."
+    },
+    {
+      "key": "payroll",
+      "enabled_by_default": false,
+      "requires": [
+        "workforce"
+      ],
+      "description": "The pay run. It stays switched off until a verified rule pack is attached."
+    },
+    {
+      "key": "recruiting",
+      "enabled_by_default": true,
+      "requires": [
+        "workforce"
+      ],
+      "description": "Hospitality hires constantly and the offer has to be produced the same way every time."
+    },
+    {
+      "key": "reporting",
+      "enabled_by_default": true,
+      "requires": [
+        "workforce"
+      ],
+      "description": "The service, labour and absence figures a duty manager and an operator read."
+    },
+    {
+      "key": "ess",
+      "enabled_by_default": true,
+      "requires": [
+        "workforce"
+      ],
+      "description": "The team sees its own shifts, swaps them and books its own hours."
+    },
+    {
+      "key": "imports",
+      "enabled_by_default": true,
+      "requires": [
+        "workforce"
+      ],
+      "description": "A venue's staff list arrives as a file, and it arrives again every season."
+    },
+    {
+      "key": "learning",
+      "enabled_by_default": true,
+      "requires": [
+        "workforce"
+      ],
+      "description": "Service training, the licence a role needs and the record that proves the team holds it."
+    },
+    {
+      "key": "forecasting",
+      "enabled_by_default": false,
+      "requires": [
+        "time_tracking"
+      ],
+      "description": "How many covers a busy week will need, once there is enough history to be worth forecasting."
+    }
+  ],
+  "configuration": {
+    "workforce": {
+      "description": "How the workforce records are kept: the optional fields the tenant holds on a person and the way the organisation is described. The fields a venue keeps on a person, including the property they are rostered to.",
+      "settings": {
+        "employment_types": [
+          "full_time",
+          "part_time",
+          "fixed_term",
+          "contractor",
+          "intern"
+        ],
+        "default_employment_type": "full_time",
+        "organisation_unit": "department",
+        "cost_centre_per_department": true,
+        "manager_relationship_required": true
+      }
+    },
+    "time_tracking": {
+      "description": "How the hours are recorded: A mobile clock-in on the floor, with the venue geofence switched on so that the service hours are recorded where the work was done. The break and rest rules the law sets are not here; they come from the attached rule pack.",
+      "clock_in_method": "mobile",
+      "geofence_enabled": true,
+      "allow_employee_edits": true,
+      "geofence_radius_meters": 200
+    },
+    "time": {
+      "description": "The working-time model: the week starts on sunday, a clock-in is accepted a short time either side of the shift, and the breaks are the ones the roster shows. The length of a statutory break, the daily working-time limit and the minimum rest between two shifts come from the rule pack.",
+      "week_starts_on": "sunday",
+      "grace_period_minutes": 5,
+      "rounding_method": "nearest_5_minutes",
+      "auto_deduct_breaks": true,
+      "break_rules": [
+        {
+          "description": "The break the roster shows, for every site that has no rule of its own.",
+          "duration_minutes": "REQUIRES_RULE_PACK",
+          "auto_deduct": true,
+          "jurisdiction_specific": "REQUIRES_RULE_PACK"
+        }
+      ]
+    },
+    "scheduling": {
+      "description": "The shift patterns a venue runs: an early shift that opens, a mid shift that covers the busy part of the day, a late shift that closes, and the housekeeping shift that turns the rooms around. The roster is published a week at a time. The working-time limit, the minimum rest between shifts and the number of days in a row that may be worked come from the rule pack.",
+      "rostering_unit": "weekly",
+      "swap_requires_approval": true,
+      "shift_templates": [
+        {
+          "key": "early-shift",
+          "name": "Early Shift",
+          "description": "Opens the venue and covers the morning trade.",
+          "start_time": "06:00",
+          "end_time": "14:00",
+          "overnight": false,
+          "break_length_minutes": "REQUIRES_RULE_PACK",
+          "required_skills": [
+            "service"
+          ],
+          "minimum_rest_hours": "REQUIRES_RULE_PACK",
+          "max_consecutive_days": "REQUIRES_RULE_PACK",
+          "headcount": 4
+        },
+        {
+          "key": "mid-shift",
+          "name": "Mid Shift",
+          "description": "The busiest part of the day, on the floor and behind the bar.",
+          "start_time": "12:00",
+          "end_time": "20:00",
+          "overnight": false,
+          "break_length_minutes": "REQUIRES_RULE_PACK",
+          "required_skills": [
+            "service"
+          ],
+          "minimum_rest_hours": "REQUIRES_RULE_PACK",
+          "max_consecutive_days": "REQUIRES_RULE_PACK",
+          "headcount": 6
+        },
+        {
+          "key": "late-shift",
+          "name": "Late Shift",
+          "description": "Covers the evening trade and closes the venue.",
+          "start_time": "18:00",
+          "end_time": "02:00",
+          "overnight": true,
+          "break_length_minutes": "REQUIRES_RULE_PACK",
+          "required_skills": [
+            "service",
+            "closing"
+          ],
+          "minimum_rest_hours": "REQUIRES_RULE_PACK",
+          "max_consecutive_days": "REQUIRES_RULE_PACK",
+          "headcount": 4
+        },
+        {
+          "key": "housekeeping-shift",
+          "name": "Housekeeping",
+          "description": "Turns the rooms around.",
+          "start_time": "09:00",
+          "end_time": "17:00",
+          "overnight": false,
+          "break_length_minutes": "REQUIRES_RULE_PACK",
+          "required_skills": [
+            "housekeeping"
+          ],
+          "minimum_rest_hours": "REQUIRES_RULE_PACK",
+          "max_consecutive_days": "REQUIRES_RULE_PACK",
+          "headcount": 3
+        }
+      ]
+    },
+    "leave": {
+      "description": "The leave a hospitality employer offers and the approval it needs. The entitlement, the accrual rhythm, the carry-over and the right to be paid for unused leave are decided by the rule pack, not here.",
+      "approval_required": true,
+      "allow_negative_balance": false,
+      "leave_types": [
+        {
+          "key": "annual-leave",
+          "name": "Annual Leave",
+          "description": "The holiday the team takes.",
+          "entitlement_days": "REQUIRES_RULE_PACK",
+          "accrual": {
+            "frequency": "REQUIRES_RULE_PACK",
+            "tenure_tiers": [
+              {
+                "after_years": 0,
+                "days": "REQUIRES_RULE_PACK"
+              }
+            ],
+            "max_balance_days": "REQUIRES_RULE_PACK"
+          },
+          "carry_over_limit_days": "REQUIRES_RULE_PACK",
+          "expiry_rule": "REQUIRES_RULE_PACK",
+          "encashment_allowed": "REQUIRES_RULE_PACK"
+        },
+        {
+          "key": "sick-leave",
+          "name": "Sick Leave",
+          "description": "The absence that illness causes.",
+          "entitlement_days": "REQUIRES_RULE_PACK",
+          "accrual": {
+            "frequency": "REQUIRES_RULE_PACK",
+            "tenure_tiers": [
+              {
+                "after_years": 0,
+                "days": "REQUIRES_RULE_PACK"
+              }
+            ],
+            "max_balance_days": "REQUIRES_RULE_PACK"
+          },
+          "carry_over_limit_days": "REQUIRES_RULE_PACK",
+          "expiry_rule": "REQUIRES_RULE_PACK",
+          "encashment_allowed": "REQUIRES_RULE_PACK"
+        },
+        {
+          "key": "family-leave",
+          "name": "Family Leave",
+          "description": "The absence that a family matter causes.",
+          "entitlement_days": "REQUIRES_RULE_PACK",
+          "accrual": {
+            "frequency": "REQUIRES_RULE_PACK",
+            "tenure_tiers": [
+              {
+                "after_years": 0,
+                "days": "REQUIRES_RULE_PACK"
+              }
+            ],
+            "max_balance_days": "REQUIRES_RULE_PACK"
+          },
+          "carry_over_limit_days": "REQUIRES_RULE_PACK",
+          "expiry_rule": "REQUIRES_RULE_PACK",
+          "encashment_allowed": "REQUIRES_RULE_PACK"
+        },
+        {
+          "key": "unpaid-leave",
+          "name": "Unpaid Leave",
+          "description": "The absence the team takes and is not paid for.",
+          "entitlement_days": "REQUIRES_RULE_PACK",
+          "accrual": {
+            "frequency": "REQUIRES_RULE_PACK",
+            "tenure_tiers": [
+              {
+                "after_years": 0,
+                "days": "REQUIRES_RULE_PACK"
+              }
+            ],
+            "max_balance_days": "REQUIRES_RULE_PACK"
+          },
+          "carry_over_limit_days": "REQUIRES_RULE_PACK",
+          "expiry_rule": "REQUIRES_RULE_PACK",
+          "encashment_allowed": "REQUIRES_RULE_PACK"
+        }
+      ]
+    },
+    "payroll": {
+      "description": "The pay run a venue expects: fortnightly, with the components the jurisdiction may require. Every rate and amount is left to the rule pack, so payroll stays disabled until a verified pack is attached to the tenant.",
+      "pay_frequency": "biweekly",
+      "pay_cycle_anchor_day": 1,
+      "currency": "USD",
+      "statutory_components": [
+        {
+          "code": "INCOME_TAX",
+          "label": "Income tax",
+          "category": "deduction",
+          "basis": "percentage_of_gross",
+          "rate": "REQUIRES_RULE_PACK",
+          "description": "The tax withheld from the employee's pay. The rate comes from the rule pack; the preset only names the component so the customer can see it."
+        },
+        {
+          "code": "SOCIAL_CONTRIBUTION",
+          "label": "Social contributions",
+          "category": "employer_contribution",
+          "basis": "percentage_of_gross",
+          "rate": "REQUIRES_RULE_PACK",
+          "description": "The employer contribution the jurisdiction requires. The rate comes from the rule pack; the preset only names the component."
+        }
+      ],
+      "statutory_leave_pay": {
+        "description": "Which of the leave types above the tenant expects to be paid and which it expects to be unpaid. The fraction of pay a statutory leave attracts is set by the rule pack, not here.",
+        "leave_pay_rate": "REQUIRES_RULE_PACK",
+        "protected_leave_types": [
+          "sick-leave",
+          "family-leave"
+        ]
+      }
+    },
+    "recruiting": {
+      "description": "How a venue hires: the standard offer letter, and the checks a candidate is asked to consent to. The consent scope and what a candidate must be told about the checks are set by the law of the tenant's jurisdiction, so the scope is left to the rule pack.",
+      "default_offer_template_id": "default-offer",
+      "background_check_consent_scope": "REQUIRES_RULE_PACK",
+      "require_referral_code": false
+    },
+    "reporting": {
+      "description": "The service, labour and absence figures a duty manager and an operator read, and the exports behind them.",
+      "settings": {
+        "default_period": "week",
+        "compare_with_previous_period": true,
+        "include_payroll_cost": false
+      }
+    },
+    "ess": {
+      "description": "The screens the team uses for itself: the shifts it works, the swaps it asks for and the hours it books.",
+      "settings": {
+        "self_service_roster": true,
+        "self_service_timesheet": true,
+        "self_service_leave_request": true,
+        "shift_swaps_enabled": true
+      }
+    },
+    "imports": {
+      "description": "How the venue brings its own records in: the templates, the dry run and the confirmation before anything is written.",
+      "settings": {
+        "dry_run_required": true,
+        "allowed_entities": [
+          "employees",
+          "departments",
+          "jobs",
+          "leave_balances",
+          "shift_templates"
+        ]
+      }
+    },
+    "learning": {
+      "description": "The service training the team has to have, and the record that proves it.",
+      "settings": {
+        "expiry_warnings": true,
+        "certification_required_before_roster": true
+      }
+    },
+    "forecasting": {
+      "description": "How the venue works out the covers a busy week will need, once there is enough history to be worth forecasting.",
+      "settings": {
+        "minimum_history_weeks": 12,
+        "default_horizon_days": 28
+      }
+    }
+  },
+  "organisation_templates": {
+    "description": "The structure a hotel, a restaurant or a venue is usually built from. The customer may rename, move or refuse any of it.",
+    "departments": [
+      {
+        "key": "front-of-house",
+        "name": "Front of House",
+        "description": "The team that is in front of the guest: reception, the bar, the floor and the restaurant."
+      },
+      {
+        "key": "back-of-house",
+        "name": "Back of House",
+        "description": "The team that is behind the guest: the kitchen, the stores and the laundry."
+      },
+      {
+        "key": "housekeeping",
+        "name": "Housekeeping",
+        "description": "The rooms, and the team that turns them around.",
+        "parent_key": "back-of-house"
+      },
+      {
+        "key": "venue-management",
+        "name": "Venue Management",
+        "description": "The duty manager, the duty chef and the support around them.",
+        "parent_key": "front-of-house"
+      }
+    ],
+    "job_families": [
+      {
+        "key": "service",
+        "name": "Service",
+        "description": "The work that is done in front of a guest.",
+        "typical_job_titles": [
+          "Server",
+          "Barista",
+          "Room Attendant"
+        ]
+      },
+      {
+        "key": "kitchen",
+        "name": "Kitchen",
+        "description": "The work that produces the food.",
+        "typical_job_titles": [
+          "Chef de Partie",
+          "Commis Chef"
+        ]
+      },
+      {
+        "key": "supervision",
+        "name": "Supervision",
+        "description": "The work of running a shift and a floor.",
+        "typical_job_titles": [
+          "Duty Manager",
+          "Head Chef"
+        ]
+      },
+      {
+        "key": "support",
+        "name": "Support",
+        "description": "The work that keeps the venue running.",
+        "typical_job_titles": [
+          "Porter",
+          "Maintenance Assistant"
+        ]
+      }
+    ],
+    "roles": [
+      {
+        "key": "duty-manager",
+        "name": "Duty Manager",
+        "description": "Runs the shift: the roster, the floor and anything that goes wrong in service.",
+        "job_family_key": "supervision",
+        "department_key": "venue-management",
+        "grade": "Senior"
+      },
+      {
+        "key": "head-chef",
+        "name": "Head Chef",
+        "description": "Runs the kitchen and its menu.",
+        "job_family_key": "kitchen",
+        "department_key": "back-of-house"
+      },
+      {
+        "key": "server",
+        "name": "Server",
+        "description": "Serves the guests and looks after their table.",
+        "job_family_key": "service",
+        "department_key": "front-of-house"
+      },
+      {
+        "key": "barista",
+        "name": "Barista",
+        "description": "Serves behind the bar.",
+        "job_family_key": "service",
+        "department_key": "front-of-house"
+      },
+      {
+        "key": "room-attendant",
+        "name": "Room Attendant",
+        "description": "Turns the rooms around and prepares them for the next guest.",
+        "job_family_key": "service",
+        "department_key": "housekeeping"
+      },
+      {
+        "key": "commis-chef",
+        "name": "Commis Chef",
+        "description": "Works in the kitchen under the chef.",
+        "job_family_key": "kitchen",
+        "department_key": "back-of-house"
+      }
+    ]
+  },
+  "dashboards": {
+    "description": "The views a duty manager reads: the shift that is running now, the labour of the week and the exceptions that need a person.",
+    "dashboards": [
+      {
+        "key": "shift-now",
+        "name": "This Shift",
+        "description": "Who is on, who is late and who is missing.",
+        "kpi_keys": [
+          "headcount-today",
+          "hours-worked-today",
+          "attendance-rate"
+        ]
+      },
+      {
+        "key": "labour-week",
+        "name": "Labour This Week",
+        "description": "The hours planned against the hours worked across the whole week.",
+        "kpi_keys": [
+          "scheduled-hours",
+          "worked-hours",
+          "absence-rate"
+        ]
+      },
+      {
+        "key": "cover",
+        "name": "Cover and Absence",
+        "description": "Who is away and whether the shift is still covered.",
+        "kpi_keys": [
+          "leave-taken",
+          "absence-rate"
+        ]
+      }
+    ],
+    "kpis": [
+      {
+        "key": "headcount-today",
+        "name": "Headcount today",
+        "description": "The people who are on the payroll and at work today.",
+        "unit": "count",
+        "source_module": "workforce"
+      },
+      {
+        "key": "hours-worked-today",
+        "name": "Hours worked today",
+        "description": "The hours recorded today.",
+        "unit": "hours",
+        "source_module": "time_tracking"
+      },
+      {
+        "key": "attendance-rate",
+        "name": "Attendance rate",
+        "description": "The share of scheduled hours that were worked.",
+        "unit": "percentage",
+        "source_module": "time_tracking"
+      },
+      {
+        "key": "scheduled-hours",
+        "name": "Scheduled hours",
+        "description": "The hours the published roster asks for.",
+        "unit": "hours",
+        "source_module": "scheduling"
+      },
+      {
+        "key": "worked-hours",
+        "name": "Hours worked",
+        "description": "The hours actually recorded.",
+        "unit": "hours",
+        "source_module": "time_tracking"
+      },
+      {
+        "key": "absence-rate",
+        "name": "Absence rate",
+        "description": "The share of the workforce away on a day.",
+        "unit": "percentage",
+        "source_module": "leave"
+      },
+      {
+        "key": "leave-taken",
+        "name": "Leave taken",
+        "description": "The days of leave taken in the period.",
+        "unit": "days",
+        "source_module": "leave"
+      }
+    ],
+    "action_queues": [
+      {
+        "key": "missing-clock-ins",
+        "name": "Missing clock-ins",
+        "description": "Shifts that ended with nobody clocking out, so the service hours are unknown.",
+        "owner_role": "Manager",
+        "source_module": "time_tracking"
+      },
+      {
+        "key": "leave-waiting",
+        "name": "Leave waiting for a decision",
+        "description": "Leave requests that no manager has answered.",
+        "owner_role": "Manager",
+        "source_module": "leave"
+      },
+      {
+        "key": "roles-to-fill",
+        "name": "Roles still to fill",
+        "description": "The roles the venue is still hiring for.",
+        "owner_role": "HR",
+        "source_module": "recruiting"
+      }
+    ]
+  },
+  "forecast_drivers": {
+    "description": "What a venue can forecast once it has a season of service: the covers it needs, the hours behind them and the labour they cost.",
+    "drivers": [
+      {
+        "key": "trading-hours",
+        "name": "Trading hours",
+        "description": "The hours the venue is open, which move the cover with them.",
+        "source_module": "scheduling",
+        "direction": "increases"
+      },
+      {
+        "key": "occupancy",
+        "name": "Occupancy",
+        "description": "How full the venue is, which moves the hours each service needs.",
+        "source_module": "forecasting",
+        "direction": "mixed"
+      },
+      {
+        "key": "staff-availability",
+        "name": "Staff availability",
+        "description": "Who is available to work, which moves the cover that can be found.",
+        "source_module": "leave",
+        "direction": "decreases"
+      }
+    ],
+    "required_data": [
+      {
+        "key": "recorded-service-hours",
+        "name": "Recorded service hours",
+        "description": "Enough recorded hours to see the shape of a service.",
+        "source_module": "time_tracking"
+      },
+      {
+        "key": "shift-patterns",
+        "name": "Shift patterns",
+        "description": "The shifts the venue actually rosters.",
+        "source_module": "scheduling"
+      },
+      {
+        "key": "absence-history",
+        "name": "Absence history",
+        "description": "A history of who was away, so the forecast does not promise cover that will not exist.",
+        "source_module": "leave"
+      }
+    ]
+  },
+  "import_templates": [
+    {
+      "key": "employees",
+      "name": "Employee import",
+      "description": "The venue's team list, when it arrives as a file rather than being typed in one person at a time.",
+      "entity": "employees",
+      "endpoint": "/import-export/template/employees"
+    },
+    {
+      "key": "departments",
+      "name": "Department import",
+      "description": "The venue structure, when the customer already has one.",
+      "entity": "departments",
+      "endpoint": "/import-export/template/departments"
+    },
+    {
+      "key": "jobs",
+      "name": "Job import",
+      "description": "The roles the venue hires for, when the customer already has a list.",
+      "entity": "jobs",
+      "endpoint": "/import-export/template/jobs"
+    },
+    {
+      "key": "leave-balances",
+      "name": "Leave balance import",
+      "description": "The balances carried over from the previous system.",
+      "entity": "leave_balances",
+      "endpoint": "/import-export/template/leave_balances"
+    },
+    {
+      "key": "shift-templates",
+      "name": "Shift template import",
+      "description": "The shift patterns the venue already runs.",
+      "entity": "shift_templates",
+      "endpoint": "/import-export/template/shift_templates"
+    }
+  ],
+  "validations": [
+    {
+      "key": "hospitality-departments-configured",
+      "name": "Departments are configured",
+      "description": "The venue structure exists, so a person can be given one.",
+      "severity": "warning",
+      "condition": {
+        "kind": "data_present",
+        "entity": "departments"
+      },
+      "message": "No department has been created yet, so nobody can be given one.",
+      "fix_target": "departments",
+      "module": "workforce"
+    },
+    {
+      "key": "hospitality-leave-types-configured",
+      "name": "Leave types are configured",
+      "description": "The team can request leave.",
+      "severity": "warning",
+      "condition": {
+        "kind": "data_present",
+        "entity": "leave_types"
+      },
+      "message": "No leave type has been created yet, so the team cannot request leave.",
+      "fix_target": "leave.leave_types",
+      "module": "leave"
+    },
+    {
+      "key": "hospitality-shift-templates-configured",
+      "name": "Shift templates are configured",
+      "description": "The roster has something to build from.",
+      "severity": "info",
+      "condition": {
+        "kind": "data_present",
+        "entity": "shift_templates"
+      },
+      "message": "No shift template has been created yet, so there is no roster to publish.",
+      "fix_target": "scheduling.shift_templates",
+      "module": "scheduling"
+    },
+    {
+      "key": "hospitality-modules-depend",
+      "name": "Every enabled module has what it needs",
+      "description": "The modules the venue switched on can all work.",
+      "severity": "blocking",
+      "condition": {
+        "kind": "module_dependency_met",
+        "module": "scheduling"
+      },
+      "message": "The scheduling module is switched on but the module it needs is not.",
+      "fix_target": "onboarding.modules",
+      "module": "scheduling"
+    },
+    {
+      "key": "hospitality-no-rule-pack-waiting",
+      "name": "No setting is waiting for a rule pack",
+      "description": "Nothing the venue has configured is half finished.",
+      "severity": "blocking",
+      "condition": {
+        "kind": "no_unresolved_sentinels"
+      },
+      "message": "A setting is still waiting for a verified rule pack, so it cannot be used yet.",
+      "fix_target": "onboarding.settings"
+    }
+  ],
+  "exclusions": [
+    {
+      "key": "statutory-leave-entitlement",
+      "name": "Statutory leave entitlement and accrual",
+      "description": "How many days of leave an employee is entitled to, how the entitlement accrues, how much may be carried into the next year and whether unused leave may be paid out.",
+      "reason": "These are set by the law of the tenant's jurisdiction and differ from one country to the next. A preset has no jurisdiction, so it names the slot and leaves the number to a verified rule pack.",
+      "category": "statutory",
+      "requires_review": true
+    },
+    {
+      "key": "tax-and-contributions",
+      "name": "Tax, contributions and the statutory pay components",
+      "description": "The deductions, allowances and employer contributions the jurisdiction requires, and the rates they are charged at.",
+      "reason": "A tax rate and a contribution percentage are the most tightly guarded numbers in the product. They live in a verified rule pack and nowhere else, and payroll stays disabled until one is attached to the tenant.",
+      "category": "statutory",
+      "requires_review": true
+    },
+    {
+      "key": "minimum-wage-and-pay-floor",
+      "name": "Minimum wage and pay floors",
+      "description": "The lowest pay the tenant may offer, and the floor that applies to a grade, a contract type or a working time.",
+      "reason": "The floor is set by the jurisdiction and changes with it. The tenant's own pay structure may sit above it, but the preset may not state it.",
+      "category": "statutory",
+      "requires_review": true
+    },
+    {
+      "key": "working-time-limits",
+      "name": "Working-time limits, break length and minimum rest",
+      "description": "The daily and weekly working-time limits, the length of a statutory break, whether the break is paid, the minimum rest between two shifts and the number of days in a row that may be worked.",
+      "reason": "Every one of these is a working-time rule of the jurisdiction. The preset leaves the slots open so that the rule pack fills them with the values that apply where the tenant actually is.",
+      "category": "jurisdiction",
+      "requires_review": true
+    },
+    {
+      "key": "notice-and-termination",
+      "name": "Notice periods and termination",
+      "description": "The notice an employee or an employer must give, and what happens to the contract when it ends.",
+      "reason": "Notice is a jurisdiction rule, and in some places it depends on the length of service and the reason for the ending. The tenant decides what it will do, and the rule pack tells it what it must do.",
+      "category": "jurisdiction",
+      "requires_review": true
+    },
+    {
+      "key": "background-check-consent",
+      "name": "Background check consent and disclosure",
+      "description": "Which checks a candidate may be offered, what the candidate must be told about them and what the candidate has to consent to.",
+      "reason": "Data-protection and employment law usually set both the scope and the wording. The preset leaves the scope to the rule pack so that the tenant never offers a check it is not allowed to offer.",
+      "category": "jurisdiction",
+      "requires_review": true
+    },
+    {
+      "key": "data-protection-and-retention",
+      "name": "Data protection and retention",
+      "description": "How long the tenant keeps each kind of record, which records it may keep at all, and what happens to them when a person asks for them to be erased.",
+      "reason": "The retention periods and the rights are a matter for the tenant's own policy and for the law that applies to it. The product supports the workflows; it does not decide the periods.",
+      "category": "jurisdiction",
+      "requires_review": true
+    },
+    {
+      "key": "pay-cycle-and-currency",
+      "name": "Pay frequency and currency",
+      "description": "The preset carries a monthly pay cycle and a placeholder currency. The tenant confirms both, and the jurisdiction may restrict either.",
+      "reason": "The pay period and the currency are the tenant's own commercial choices, but the law of the jurisdiction constrains them, so the tenant has to confirm them rather than inherit them.",
+      "category": "company_policy",
+      "requires_review": true
+    },
+    {
+      "key": "split-shifts-and-night-work",
+      "name": "Split shifts, night work and premium pay",
+      "description": "Whether a shift may be split, the limits on night working, and the premium that a night or a weekend shift attracts.",
+      "reason": "Night-work limits and the rules on split shifts are working-time rules of the jurisdiction, and the premium for working at night is a company policy that has to meet the statutory floor. The preset decides none of them.",
+      "category": "jurisdiction",
+      "requires_review": true
+    },
+    {
+      "key": "tips-and-service-charge",
+      "name": "Tips, service charge and gratuity",
+      "description": "How tips and service charges are recorded, paid and reported.",
+      "reason": "Whether a tip is part of the pay, how it is shared and what may be deducted is decided by the law of the jurisdiction and by the tenant's own scheme. The product records what the tenant tells it to record.",
+      "category": "jurisdiction",
+      "requires_review": true
+    }
+  ],
+  "created_at": "2026-10-22T00:00:00Z",
+  "updated_at": "2026-10-22T00:00:00Z"
+}

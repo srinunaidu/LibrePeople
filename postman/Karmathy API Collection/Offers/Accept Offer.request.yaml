@@ -1,0 +1,9 @@
+$kind: http-request
+description: Accept an offer
+url: http://localhost:8000/offers/{offer_id}/accept
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/Accept Offer.resources/examples
+order: 4000

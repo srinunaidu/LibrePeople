@@ -1,0 +1,15 @@
+$kind: http-request
+description: Sign an e-signature
+url: http://localhost:8000/platform/e-signatures/{sig_id}/sign
+method: PUT
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Sign E-Signature.resources/examples
+order: 6000

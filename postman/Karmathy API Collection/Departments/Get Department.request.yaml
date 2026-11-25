@@ -1,0 +1,9 @@
+$kind: http-request
+description: Get a department by ID
+url: http://localhost:8000/departments/{department_id}
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/Get Department.resources/examples
+order: 2000

@@ -1,0 +1,15 @@
+$kind: http-request
+description: Create a shift template
+url: http://localhost:8000/scheduling/shift-templates
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Create Shift Template.resources/examples
+order: 8000

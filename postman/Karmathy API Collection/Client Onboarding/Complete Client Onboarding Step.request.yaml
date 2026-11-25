@@ -1,0 +1,9 @@
+$kind: http-request
+description: Complete a client onboarding step
+url: http://localhost:8000/onboarding-portal/clients/{client_id}/onboarding/steps/{step_id}/complete
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/Complete Client Onboarding Step.resources/examples
+order: 14000

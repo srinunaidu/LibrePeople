@@ -1,0 +1,366 @@
+tags:
+- name: onboarding-portal
+  description: onboarding-portal domain endpoints.
+paths:
+  /onboarding-portal/clients:
+    get:
+      operationId: onboardingPortalListOnboardingportalclients
+      tags:
+      - onboarding-portal
+      security:
+      - bearerAuth: []
+      summary: GET /onboarding-portal/clients
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: onboardingPortalCreateOnboardingportalclients
+      tags:
+      - onboarding-portal
+      security:
+      - bearerAuth: []
+      summary: POST /onboarding-portal/clients
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /onboarding-portal/clients/by-slug/{slug}:
+    get:
+      operationId: onboardingPortalGetOnboardingportalclientsbyslug
+      tags:
+      - onboarding-portal
+      security:
+      - bearerAuth: []
+      summary: GET /onboarding-portal/clients/by-slug/{slug}
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /onboarding-portal/clients/{client_id}:
+    delete:
+      operationId: onboardingPortalDeleteOnboardingportalclients
+      tags:
+      - onboarding-portal
+      security:
+      - bearerAuth: []
+      summary: DELETE /onboarding-portal/clients/{client_id}
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    get:
+      operationId: onboardingPortalGetOnboardingportalclients
+      tags:
+      - onboarding-portal
+      security:
+      - bearerAuth: []
+      summary: GET /onboarding-portal/clients/{client_id}
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    put:
+      operationId: onboardingPortalUpdateOnboardingportalclients
+      tags:
+      - onboarding-portal
+      security:
+      - bearerAuth: []
+      summary: PUT /onboarding-portal/clients/{client_id}
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /onboarding-portal/clients/{client_id}/feature-flags:
+    get:
+      operationId: onboardingPortalListOnboardingportalclientsfeatureflags
+      tags:
+      - onboarding-portal
+      security:
+      - bearerAuth: []
+      summary: GET /onboarding-portal/clients/{client_id}/feature-flags
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /onboarding-portal/clients/{client_id}/feature-flags/{key}:
+    put:
+      operationId: onboardingPortalUpdateOnboardingportalclientsfeatureflags
+      tags:
+      - onboarding-portal
+      security:
+      - bearerAuth: []
+      summary: PUT /onboarding-portal/clients/{client_id}/feature-flags/{key}
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /onboarding-portal/clients/{client_id}/integrations:
+    get:
+      operationId: onboardingPortalListOnboardingportalclientsintegrations
+      tags:
+      - onboarding-portal
+      security:
+      - bearerAuth: []
+      summary: GET /onboarding-portal/clients/{client_id}/integrations
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: onboardingPortalCreateOnboardingportalclientsintegrations
+      tags:
+      - onboarding-portal
+      security:
+      - bearerAuth: []
+      summary: POST /onboarding-portal/clients/{client_id}/integrations
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /onboarding-portal/clients/{client_id}/integrations/{integration_id}:
+    delete:
+      operationId: onboardingPortalDeleteOnboardingportalclientsintegrations
+      tags:
+      - onboarding-portal
+      security:
+      - bearerAuth: []
+      summary: DELETE /onboarding-portal/clients/{client_id}/integrations/{integration_id}
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    put:
+      operationId: onboardingPortalUpdateOnboardingportalclientsintegrations
+      tags:
+      - onboarding-portal
+      security:
+      - bearerAuth: []
+      summary: PUT /onboarding-portal/clients/{client_id}/integrations/{integration_id}
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /onboarding-portal/clients/{client_id}/integrations/{integration_id}/test:
+    post:
+      operationId: onboardingPortalCreateOnboardingportalclientsintegrationstest
+      tags:
+      - onboarding-portal
+      security:
+      - bearerAuth: []
+      summary: POST /onboarding-portal/clients/{client_id}/integrations/{integration_id}/test
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /onboarding-portal/clients/{client_id}/migrations:
+    get:
+      operationId: onboardingPortalListOnboardingportalclientsmigrations
+      tags:
+      - onboarding-portal
+      security:
+      - bearerAuth: []
+      summary: GET /onboarding-portal/clients/{client_id}/migrations
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: onboardingPortalCreateOnboardingportalclientsmigrations
+      tags:
+      - onboarding-portal
+      security:
+      - bearerAuth: []
+      summary: POST /onboarding-portal/clients/{client_id}/migrations
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /onboarding-portal/clients/{client_id}/migrations/{job_id}/cancel:
+    post:
+      operationId: onboardingPortalCreateOnboardingportalclientsmigrationscancel
+      tags:
+      - onboarding-portal
+      security:
+      - bearerAuth: []
+      summary: POST /onboarding-portal/clients/{client_id}/migrations/{job_id}/cancel
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /onboarding-portal/clients/{client_id}/migrations/{job_id}/run:
+    post:
+      operationId: onboardingPortalCreateOnboardingportalclientsmigrationsrun
+      tags:
+      - onboarding-portal
+      security:
+      - bearerAuth: []
+      summary: POST /onboarding-portal/clients/{client_id}/migrations/{job_id}/run
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /onboarding-portal/clients/{client_id}/onboarding:
+    get:
+      operationId: onboardingPortalGetOnboardingportalclientsonboarding
+      tags:
+      - onboarding-portal
+      security:
+      - bearerAuth: []
+      summary: GET /onboarding-portal/clients/{client_id}/onboarding
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /onboarding-portal/clients/{client_id}/onboarding/steps:
+    post:
+      operationId: onboardingPortalCreateOnboardingportalclientsonboardingsteps
+      tags:
+      - onboarding-portal
+      security:
+      - bearerAuth: []
+      summary: POST /onboarding-portal/clients/{client_id}/onboarding/steps
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /onboarding-portal/clients/{client_id}/onboarding/steps/{step_id}/complete:
+    post:
+      operationId: onboardingPortalCreateOnboardingportalclientsonboardingstepscomplete
+      tags:
+      - onboarding-portal
+      security:
+      - bearerAuth: []
+      summary: POST /onboarding-portal/clients/{client_id}/onboarding/steps/{step_id}/complete
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /onboarding-portal/clients/{client_id}/settings:
+    get:
+      operationId: onboardingPortalListOnboardingportalclientssettings
+      tags:
+      - onboarding-portal
+      security:
+      - bearerAuth: []
+      summary: GET /onboarding-portal/clients/{client_id}/settings
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /onboarding-portal/clients/{client_id}/settings/{key}:
+    put:
+      operationId: onboardingPortalUpdateOnboardingportalclientssettings
+      tags:
+      - onboarding-portal
+      security:
+      - bearerAuth: []
+      summary: PUT /onboarding-portal/clients/{client_id}/settings/{key}
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /onboarding-portal/docs/migration-api:
+    get:
+      operationId: onboardingPortalGetOnboardingportaldocsmigrationapi
+      tags:
+      - onboarding-portal
+      security:
+      - bearerAuth: []
+      summary: GET /onboarding-portal/docs/migration-api
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'

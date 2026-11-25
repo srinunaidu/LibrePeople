@@ -1,0 +1,15 @@
+$kind: http-request
+description: Create a job requisition
+url: http://localhost:8000/requisitions
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Create Requisition.resources/examples
+order: 3000

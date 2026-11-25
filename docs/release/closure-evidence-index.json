@@ -1,0 +1,763 @@
+{
+ "head_sha": "ab9b39224dd8ae3a8c2fa4b580da8766e82647a6",
+ "branch": "feature/librepeople-production",
+ "status": "NOT READY (payroll pending + BLOCKED>0)",
+ "source": "docs/product/requirements-traceability.csv",
+ "counts": {
+  "VERIFIED": 122,
+  "IMPLEMENTED": 0,
+  "BLOCKED": 3,
+  "DEFERRED": 8,
+  "IN_PROGRESS": 3,
+  "total_data_rows": 136
+ },
+ "workstream_definition": "Closure control workstreams A-F = the six docs/release control artefacts (no A-F definition exists in-repo; mapping is explicit above so the validator can adjudicate).",
+ "verified": {
+  "LP-ADM-001": {
+   "evidence": "docs/product/acceptance-evidence/LP-ADM-001.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-ADM-002": {
+   "evidence": "docs/product/acceptance-evidence/LP-ADM-002.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-ADM-003": {
+   "evidence": "docs/product/acceptance-evidence/LP-ADM-003.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-ADM-004": {
+   "evidence": "docs/product/acceptance-evidence/LP-ADM-004.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-ADM-005": {
+   "evidence": "docs/product/acceptance-evidence/LP-ADM-005.json",
+   "head_sha": "3e0e060ae4b78bdc2ca00153f591f946e0dd96c9",
+   "verdict": "PASS"
+  },
+  "LP-AUD-001": {
+   "evidence": "docs/product/acceptance-evidence/LP-AUD-001.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-AUD-002": {
+   "evidence": "docs/product/acceptance-evidence/LP-AUD-002.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-AUD-003": {
+   "evidence": "docs/product/acceptance-evidence/LP-AUD-003.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-AUD-004": {
+   "evidence": "docs/product/acceptance-evidence/LP-AUD-004.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-AUD-005": {
+   "evidence": "docs/product/acceptance-evidence/LP-AUD-005.json",
+   "head_sha": "7cba30f5fcade952a34100ab77f58b56d88eb132",
+   "verdict": "PASS"
+  },
+  "LP-AUD-006": {
+   "evidence": "docs/product/acceptance-evidence/LP-AUD-006.json",
+   "head_sha": "7cba30f5fcade952a34100ab77f58b56d88eb132",
+   "verdict": "PASS"
+  },
+  "LP-COMP-001": {
+   "evidence": "docs/product/acceptance-evidence/LP-COMP-001.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-COMP-002": {
+   "evidence": "docs/product/acceptance-evidence/LP-COMP-002.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-COMP-003": {
+   "evidence": "docs/product/acceptance-evidence/LP-COMP-003.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-COMP-004": {
+   "evidence": "docs/product/acceptance-evidence/LP-COMP-004.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-COMP-005": {
+   "evidence": "docs/product/acceptance-evidence/LP-COMP-005.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-COMP-006": {
+   "evidence": "docs/product/acceptance-evidence/LP-COMP-006.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-COMP-007": {
+   "evidence": "docs/product/acceptance-evidence/LP-COMP-007.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-COMP-008": {
+   "evidence": "docs/product/acceptance-evidence/LP-COMP-008.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-COMP-009": {
+   "evidence": "docs/product/acceptance-evidence/LP-COMP-009.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-COMP-010": {
+   "evidence": "docs/product/acceptance-evidence/LP-COMP-010.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-COMP-011": {
+   "evidence": "docs/product/acceptance-evidence/LP-COMP-011.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-COMP-012": {
+   "evidence": "docs/product/acceptance-evidence/LP-COMP-012.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-CORE-001": {
+   "evidence": "docs/product/acceptance-evidence/LP-CORE-001.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-CORE-002": {
+   "evidence": "docs/product/acceptance-evidence/LP-CORE-002.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-CORE-003": {
+   "evidence": "docs/product/acceptance-evidence/LP-CORE-003.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-CORE-004": {
+   "evidence": "docs/product/acceptance-evidence/LP-CORE-004.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-CORE-005": {
+   "evidence": "docs/product/acceptance-evidence/LP-CORE-005.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-CORE-006": {
+   "evidence": "docs/product/acceptance-evidence/LP-CORE-006.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-CORE-007": {
+   "evidence": "docs/product/acceptance-evidence/LP-CORE-007.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-CORE-008": {
+   "evidence": "docs/product/acceptance-evidence/LP-CORE-008.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-CORE-009": {
+   "evidence": "docs/product/acceptance-evidence/LP-CORE-009.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-CORE-010": {
+   "evidence": "docs/product/acceptance-evidence/LP-CORE-010.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-DATA-001": {
+   "evidence": "docs/product/acceptance-evidence/LP-DATA-001.json",
+   "head_sha": "7cba30f5fcade952a34100ab77f58b56d88eb132",
+   "verdict": "PASS"
+  },
+  "LP-DATA-002": {
+   "evidence": "docs/product/acceptance-evidence/LP-DATA-002.json",
+   "head_sha": "9486e513082a27e5cd81819e9b7f9de3f2cede78",
+   "verdict": "PASS"
+  },
+  "LP-DATA-003": {
+   "evidence": "docs/product/acceptance-evidence/LP-DATA-003.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-DATA-004": {
+   "evidence": "docs/product/acceptance-evidence/LP-DATA-004.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-DATA-005": {
+   "evidence": "docs/product/acceptance-evidence/LP-DATA-005.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-DATA-006": {
+   "evidence": "docs/product/acceptance-evidence/LP-DATA-006.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-DATA-007": {
+   "evidence": "docs/product/acceptance-evidence/LP-DATA-007.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-DOC-001": {
+   "evidence": "docs/product/acceptance-evidence/LP-DOC-001.json",
+   "head_sha": "44789e0babe2a5d3639ae6bf1d2be71e141c0c49",
+   "verdict": "PASS"
+  },
+  "LP-DOC-002": {
+   "evidence": "docs/product/acceptance-evidence/LP-DOC-002.json",
+   "head_sha": "0264309898723f5bedd836d052f6bf1153089cb2",
+   "verdict": "PASS"
+  },
+  "LP-ESS-001": {
+   "evidence": "docs/product/acceptance-evidence/LP-ESS-001.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-ESS-002": {
+   "evidence": "docs/product/acceptance-evidence/LP-ESS-002.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-ESS-003": {
+   "evidence": "docs/product/acceptance-evidence/LP-ESS-003.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-ESS-004": {
+   "evidence": "docs/product/acceptance-evidence/LP-ESS-004.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-ESS-005": {
+   "evidence": "docs/product/acceptance-evidence/LP-ESS-005.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-ESS-006": {
+   "evidence": "docs/product/acceptance-evidence/LP-ESS-006.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-INT-001": {
+   "evidence": "docs/product/acceptance-evidence/LP-INT-001.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-INT-002": {
+   "evidence": "docs/product/acceptance-evidence/LP-INT-002.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-INT-003": {
+   "evidence": "docs/product/acceptance-evidence/LP-INT-003.json",
+   "head_sha": "7cba30f5fcade952a34100ab77f58b56d88eb132",
+   "verdict": "PASS"
+  },
+  "LP-INT-004": {
+   "evidence": "docs/product/acceptance-evidence/LP-INT-004.json",
+   "head_sha": "7cba30f5fcade952a34100ab77f58b56d88eb132",
+   "verdict": "PASS"
+  },
+  "LP-INT-005": {
+   "evidence": "docs/product/acceptance-evidence/LP-INT-005.json",
+   "head_sha": "7cba30f5fcade952a34100ab77f58b56d88eb132",
+   "verdict": "PASS"
+  },
+  "LP-LEAVE-001": {
+   "evidence": "docs/product/acceptance-evidence/LP-LEAVE-001.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-LEAVE-002": {
+   "evidence": "docs/product/acceptance-evidence/LP-LEAVE-002.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-LEAVE-003": {
+   "evidence": "docs/product/acceptance-evidence/LP-LEAVE-003.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-LEAVE-004": {
+   "evidence": "docs/product/acceptance-evidence/LP-LEAVE-004.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-LEAVE-005": {
+   "evidence": "docs/product/acceptance-evidence/LP-LEAVE-005.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-LEAVE-006": {
+   "evidence": "docs/product/acceptance-evidence/LP-LEAVE-006.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-LEAVE-007": {
+   "evidence": "docs/product/acceptance-evidence/LP-LEAVE-007.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-LEAVE-008": {
+   "evidence": "docs/product/acceptance-evidence/LP-LEAVE-008.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-LIFE-001": {
+   "evidence": "docs/product/acceptance-evidence/LP-LIFE-001.json",
+   "head_sha": "3f813680a5ed94dd330bb93f8f888aa56686fec7",
+   "verdict": "PASS"
+  },
+  "LP-LIFE-002": {
+   "evidence": "docs/product/acceptance-evidence/LP-LIFE-002.json",
+   "head_sha": "3f813680a5ed94dd330bb93f8f888aa56686fec7",
+   "verdict": "PASS"
+  },
+  "LP-LIFE-003": {
+   "evidence": "docs/product/acceptance-evidence/LP-LIFE-003.json",
+   "head_sha": "3f813680a5ed94dd330bb93f8f888aa56686fec7",
+   "verdict": "PASS"
+  },
+  "LP-LIFE-004": {
+   "evidence": "docs/product/acceptance-evidence/LP-LIFE-004.json",
+   "head_sha": "3f813680a5ed94dd330bb93f8f888aa56686fec7",
+   "verdict": "PASS"
+  },
+  "LP-LIFE-005": {
+   "evidence": "docs/product/acceptance-evidence/LP-LIFE-005.json",
+   "head_sha": "3f813680a5ed94dd330bb93f8f888aa56686fec7",
+   "verdict": "PASS"
+  },
+  "LP-LIFE-006": {
+   "evidence": "docs/product/acceptance-evidence/LP-LIFE-006.json",
+   "head_sha": "3f813680a5ed94dd330bb93f8f888aa56686fec7",
+   "verdict": "PASS"
+  },
+  "LP-LIFE-007": {
+   "evidence": "docs/product/acceptance-evidence/LP-LIFE-007.json",
+   "head_sha": "3f813680a5ed94dd330bb93f8f888aa56686fec7",
+   "verdict": "PASS"
+  },
+  "LP-LIFE-008": {
+   "evidence": "docs/product/acceptance-evidence/LP-LIFE-008.json",
+   "head_sha": "3f813680a5ed94dd330bb93f8f888aa56686fec7",
+   "verdict": "PASS"
+  },
+  "LP-LIFE-009": {
+   "evidence": "docs/product/acceptance-evidence/LP-LIFE-009.json",
+   "head_sha": "3f813680a5ed94dd330bb93f8f888aa56686fec7",
+   "verdict": "PASS"
+  },
+  "LP-NFR-001": {
+   "evidence": "docs/product/acceptance-evidence/LP-NFR-001.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-NFR-002": {
+   "evidence": "docs/product/acceptance-evidence/LP-NFR-002.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-NFR-003": {
+   "evidence": "docs/product/acceptance-evidence/LP-NFR-003.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-NFR-004": {
+   "evidence": "docs/product/acceptance-evidence/LP-NFR-004.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-NFR-005": {
+   "evidence": "docs/product/acceptance-evidence/LP-NFR-005.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-NFR-006": {
+   "evidence": "docs/product/acceptance-evidence/LP-NFR-006.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-NFR-007": {
+   "evidence": "docs/product/acceptance-evidence/LP-NFR-007.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-NFR-008": {
+   "evidence": "docs/product/acceptance-evidence/LP-NFR-008.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-NFR-014": {
+   "evidence": "docs/product/acceptance-evidence/LP-NFR-014.json",
+   "head_sha": "65a1af2f0f16008ed3262ba9b6ad08f909d71278",
+   "verdict": "PASS"
+  },
+  "LP-NOT-002": {
+   "evidence": "docs/product/acceptance-evidence/LP-NOT-002.json",
+   "head_sha": "3cf201776ccd69d17bbeca7a6068fcc980827756",
+   "verdict": "PASS"
+  },
+  "LP-PAY-001": {
+   "evidence": "docs/product/acceptance-evidence/LP-PAY-001.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-PAY-002": {
+   "evidence": "docs/product/acceptance-evidence/LP-PAY-002.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-PAY-003": {
+   "evidence": "docs/product/acceptance-evidence/LP-PAY-003.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-PAY-004": {
+   "evidence": "docs/product/acceptance-evidence/LP-PAY-004.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-PAY-005": {
+   "evidence": "docs/product/acceptance-evidence/LP-PAY-005.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-PAY-006": {
+   "evidence": "docs/product/acceptance-evidence/LP-PAY-006.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-PAY-007": {
+   "evidence": "docs/product/acceptance-evidence/LP-PAY-007.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-PAY-008": {
+   "evidence": "docs/product/acceptance-evidence/LP-PAY-008.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-PAY-009": {
+   "evidence": "docs/product/acceptance-evidence/LP-PAY-009.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-PAY-010": {
+   "evidence": "docs/product/acceptance-evidence/LP-PAY-010.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-PAY-011": {
+   "evidence": "docs/product/acceptance-evidence/LP-PAY-011.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-PAY-012": {
+   "evidence": "docs/product/acceptance-evidence/LP-PAY-012.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-PAY-013": {
+   "evidence": "docs/product/acceptance-evidence/LP-PAY-013.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-PAY-014": {
+   "evidence": "docs/product/acceptance-evidence/LP-PAY-014.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-PAY-015": {
+   "evidence": "docs/product/acceptance-evidence/LP-PAY-015.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-REC-001": {
+   "evidence": "docs/product/acceptance-evidence/LP-REC-001.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-REC-002": {
+   "evidence": "docs/product/acceptance-evidence/LP-REC-002.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-REC-003": {
+   "evidence": "docs/product/acceptance-evidence/LP-REC-003.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-REC-004": {
+   "evidence": "docs/product/acceptance-evidence/LP-REC-004.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-REC-005": {
+   "evidence": "docs/product/acceptance-evidence/LP-REC-005.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-REC-006": {
+   "evidence": "docs/product/acceptance-evidence/LP-REC-006.json",
+   "head_sha": "c5f5d89c31b20bdd93d9c2fe2d81334e285d3654",
+   "verdict": "PASS"
+  },
+  "LP-REC-007": {
+   "evidence": "docs/product/acceptance-evidence/LP-REC-007.json",
+   "head_sha": "c5f5d89c31b20bdd93d9c2fe2d81334e285d3654",
+   "verdict": "PASS"
+  },
+  "LP-REP-001": {
+   "evidence": "docs/product/acceptance-evidence/LP-REP-001.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-REP-002": {
+   "evidence": "docs/product/acceptance-evidence/LP-REP-002.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-REP-003": {
+   "evidence": "docs/product/acceptance-evidence/LP-REP-003.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-REP-004": {
+   "evidence": "docs/product/acceptance-evidence/LP-REP-004.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-TAL-001": {
+   "evidence": "docs/product/acceptance-evidence/LP-TAL-001.json",
+   "head_sha": "3f813680a5ed94dd330bb93f8f888aa56686fec7",
+   "verdict": "PASS"
+  },
+  "LP-TAL-002": {
+   "evidence": "docs/product/acceptance-evidence/LP-TAL-002.json",
+   "head_sha": "3f813680a5ed94dd330bb93f8f888aa56686fec7",
+   "verdict": "PASS"
+  },
+  "LP-TAL-003": {
+   "evidence": "docs/product/acceptance-evidence/LP-TAL-003.json",
+   "head_sha": "3f813680a5ed94dd330bb93f8f888aa56686fec7",
+   "verdict": "PASS"
+  },
+  "LP-TAL-004": {
+   "evidence": "docs/product/acceptance-evidence/LP-TAL-004.json",
+   "head_sha": "3f813680a5ed94dd330bb93f8f888aa56686fec7",
+   "verdict": "PASS"
+  },
+  "LP-TAL-005": {
+   "evidence": "docs/product/acceptance-evidence/LP-TAL-005.json",
+   "head_sha": "3f813680a5ed94dd330bb93f8f888aa56686fec7",
+   "verdict": "PASS"
+  },
+  "LP-TAL-006": {
+   "evidence": "docs/product/acceptance-evidence/LP-TAL-006.json",
+   "head_sha": "3f813680a5ed94dd330bb93f8f888aa56686fec7",
+   "verdict": "PASS"
+  },
+  "LP-TIME-001": {
+   "evidence": "docs/product/acceptance-evidence/LP-TIME-001.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-TIME-002": {
+   "evidence": "docs/product/acceptance-evidence/LP-TIME-002.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-TIME-003": {
+   "evidence": "docs/product/acceptance-evidence/LP-TIME-003.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-TIME-004": {
+   "evidence": "docs/product/acceptance-evidence/LP-TIME-004.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-TIME-005": {
+   "evidence": "docs/product/acceptance-evidence/LP-TIME-005.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-TIME-006": {
+   "evidence": "docs/product/acceptance-evidence/LP-TIME-006.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-TIME-007": {
+   "evidence": "docs/product/acceptance-evidence/LP-TIME-007.json",
+   "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+   "verdict": "PASS"
+  },
+  "LP-TIME-008": {
+   "evidence": "docs/product/acceptance-evidence/LP-TIME-008.json",
+   "head_sha": "2d27af4272457c8be02604399a74ecce460f37b4",
+   "verdict": "PASS"
+  },
+  "LP-TIME-009": {
+   "evidence": "docs/product/acceptance-evidence/LP-TIME-009.json",
+   "head_sha": "2d27af4272457c8be02604399a74ecce460f37b4",
+   "verdict": "PASS"
+  },
+  "LP-TIME-010": {
+   "evidence": "docs/product/acceptance-evidence/LP-TIME-010.json",
+   "head_sha": "2d27af4272457c8be02604399a74ecce460f37b4",
+   "verdict": "PASS"
+  }
+ },
+ "non_verified": {
+  "LP-DOC-003": {
+   "status": "BLOCKED",
+   "register": "docs/release/blocker-register.md",
+   "entry": "LP-DOC-003 \u2014 BLOCKED \u2014 Class A (product-owner storage/matrix approval, PRD \u00a729)",
+   "decision_register": "docs/release/decision-register.md#Pending/DOC-003",
+   "decision_paper": "docs/release/decision-papers-doc-nfr.md#DP-1 (recommendation only, approval pending)"
+  },
+  "LP-NFR-012": {
+   "status": "BLOCKED",
+   "register": "docs/release/blocker-register.md",
+   "entry": "LP-NFR-012 \u2014 BLOCKED \u2014 Class A (deployment/residency/Cloudflare approval, PRD \u00a728/\u00a729)",
+   "decision_register": "docs/release/decision-register.md#Pending/NFR-012",
+   "decision_paper": "docs/release/decision-papers-doc-nfr.md#DP-2 (recommendation only, approval pending)"
+  },
+  "LP-NFR-013": {
+   "status": "BLOCKED",
+   "register": "docs/release/blocker-register.md",
+   "entry": "LP-NFR-013 \u2014 BLOCKED \u2014 Class A (same \u00a728/\u00a729 approvals as NFR-012)",
+   "decision_register": "docs/release/decision-register.md#Pending/NFR-013",
+   "decision_paper": "docs/release/decision-papers-doc-nfr.md#DP-3 (recommendation only, approval pending)"
+  },
+  "LP-EXP-001": {
+   "status": "DEFERRED BY APPROVAL",
+   "register": "docs/release/decision-register.md",
+   "entry": "DEFER granted 2026-11-22 HEAD 5ce1f003 (surplus DEFER post-initial, backlog preserved)"
+  },
+  "LP-EXP-002": {
+   "status": "DEFERRED BY APPROVAL",
+   "register": "docs/release/decision-register.md",
+   "entry": "DEFER granted 2026-11-22 HEAD 5ce1f003 (surplus DEFER post-initial, backlog preserved)"
+  },
+  "LP-EXP-003": {
+   "status": "DEFERRED BY APPROVAL",
+   "register": "docs/release/decision-register.md",
+   "entry": "DEFER granted 2026-11-22 HEAD 5ce1f003 (surplus DEFER post-initial, backlog preserved)"
+  },
+  "LP-NOT-001": {
+   "status": "DEFERRED BY APPROVAL",
+   "register": "docs/release/decision-register.md",
+   "entry": "DEFER granted 2026-11-22 HEAD 5ce1f003 (surplus DEFER post-initial, backlog preserved)"
+  },
+  "LP-NOT-003": {
+   "status": "DEFERRED BY APPROVAL",
+   "register": "docs/release/decision-register.md",
+   "entry": "DEFER granted 2026-11-22 HEAD 5ce1f003 (surplus DEFER post-initial, backlog preserved)"
+  },
+  "LP-SVC-001": {
+   "status": "DEFERRED BY APPROVAL",
+   "register": "docs/release/decision-register.md",
+   "entry": "DEFER granted 2026-11-22 HEAD 5ce1f003 (surplus DEFER post-initial, backlog preserved)"
+  },
+  "LP-SVC-002": {
+   "status": "DEFERRED BY APPROVAL",
+   "register": "docs/release/decision-register.md",
+   "entry": "DEFER granted 2026-11-22 HEAD 5ce1f003 (surplus DEFER post-initial, backlog preserved)"
+  },
+  "LP-SVC-003": {
+   "status": "DEFERRED BY APPROVAL",
+   "register": "docs/release/decision-register.md",
+   "entry": "DEFER granted 2026-11-22 HEAD 5ce1f003 (surplus DEFER post-initial, backlog preserved)"
+  },
+  "LP-NFR-009": {
+   "status": "IN PROGRESS",
+   "register": "docs/release/blocker-register.md",
+   "entry": "LP-NFR-009 \u2014 IN PROGRESS \u2014 Class C (perf/load + backup/restore + E2E proof not collected; docker/pg_dump-gated)",
+   "external_register": "docs/release/external-dependency-register.md#PostgreSQL/Oracle tooling (Class C)"
+  },
+  "LP-NFR-010": {
+   "status": "IN PROGRESS",
+   "register": "docs/release/blocker-register.md",
+   "entry": "LP-NFR-010 \u2014 IN PROGRESS \u2014 Class C (same proof gap as NFR-009)",
+   "external_register": "docs/release/external-dependency-register.md#PostgreSQL/Oracle tooling (Class C)"
+  },
+  "LP-NFR-011": {
+   "status": "IN PROGRESS",
+   "register": "docs/release/blocker-register.md",
+   "entry": "LP-NFR-011 \u2014 IN PROGRESS \u2014 Class C (RPO/RTO targets PROPOSED, unapproved/untested)",
+   "external_register": "docs/release/external-dependency-register.md#PostgreSQL/Oracle tooling (Class C)"
+  }
+ },
+ "workstreams": {
+  "A": {
+   "name": "Readiness tracking",
+   "status": "CURRENT",
+   "evidence": [
+    "docs/release/production-readiness-tracker.md",
+    "docs/release/production-readiness-tracker.csv"
+   ],
+   "note": "Refreshed to HEAD ab9b392; 122/0/3/8/3; Status NOT READY preserved (payroll pending + BLOCKED>0)."
+  },
+  "B": {
+   "name": "Blocker control",
+   "status": "BLOCKED (3 open)",
+   "evidence": [
+    "docs/release/blocker-register.md"
+   ],
+   "note": "LP-DOC-003 + LP-NFR-012 + LP-NFR-013 all Class A owner approval; LP-NFR-009/010/011 IN PROGRESS Class C."
+  },
+  "C": {
+   "name": "Decision control",
+   "status": "OPEN (owner pending)",
+   "evidence": [
+    "docs/release/decision-register.md",
+    "docs/release/decision-papers-doc-nfr.md"
+   ],
+   "note": "INCLUDE NFR-014 CLOSED; DEFER x8 CLOSED; DOC-003/NFR-012/NFR-013 + payroll verifier + RPO/RTO approvals OPEN; decision papers recommendations only."
+  },
+  "D": {
+   "name": "External dependencies",
+   "status": "OPEN",
+   "evidence": [
+    "docs/release/external-dependency-register.md"
+   ],
+   "note": "PG/tooling (Class C), storage backends (Class C), payroll reviewer + licence reviewer (Class D) all OPEN."
+  },
+  "E": {
+   "name": "Execution state",
+   "status": "IN PROGRESS",
+   "evidence": [
+    "docs/release/autonomous-execution-state.md"
+   ],
+   "note": "Builder slice docs/release only; reviewer/verifier roles OPEN; Level-B battery NOT RUN (PLANNED)."
+  },
+  "F": {
+   "name": "Evidence harness",
+   "status": "CURRENT",
+   "evidence": [
+    "docs/product/acceptance-evidence/summary.md",
+    "docs/product/acceptance-evidence/ (136 JSON files)",
+    "docs/product/requirements-traceability.csv"
+   ],
+   "note": "Harness full pass HEAD 65a1af2 (NFR-014 VERIFIED in 2ac4050); 122 VERIFIED each mapped to evidence JSON + head_sha above."
+  }
+ },
+ "payroll_gate": "PAY rows read VERIFIED in CSV but contract forbids VERIFIED \u2014 FY25-26 pack verified, FY26-27 skeleton pending_verification, \u00a729 payroll/compliance verifier sign-off outstanding \u2192 Status stays NOT READY."
+}

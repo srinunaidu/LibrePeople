@@ -1,0 +1,818 @@
+{
+  "pack_id": "in-standard",
+  "name": "India Standard (FY 2026-27 skeleton \u2014 structure only)",
+  "jurisdiction": {
+    "country": "IN",
+    "display_name": "India"
+  },
+  "version": "0.1.0-fy2627-skeleton",
+  "status": "pending_verification",
+  "verification": null,
+  "effective_from": "2026-04-01",
+  "effective_to": null,
+  "tz": "Asia/Kolkata",
+  "source": {
+    "document_title": "India Standard FY 2026-27 \u2014 skeleton only (no instrument transcribed yet)",
+    "publisher": "TBD by FY26-27 verification (Finance Act 2026 and labour instruments)",
+    "document_reference": "TBD \u2014 skeleton carries no statutory values",
+    "url": "https://www.indiacode.nic.in/",
+    "retrieved_on": "2026-03-31",
+    "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+  },
+  "rate_tables": {
+    "tax_bands": {
+      "description": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it. Table: tax_bands.",
+      "effective_from": "2026-04-01",
+      "kind": "banded",
+      "entries": [
+        {
+          "code": "IN_BAND_0",
+          "label": "Taxable up to 33333.33",
+          "value": 0,
+          "max_value": 33333.33,
+          "rate": 0,
+          "unit": "currency_amount",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        },
+        {
+          "code": "IN_BAND_1",
+          "label": "33333.33 to 66666.67",
+          "value": 33333.33,
+          "max_value": 66666.67,
+          "rate": 0,
+          "unit": "currency_amount",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        },
+        {
+          "code": "IN_BAND_2",
+          "label": "66666.67 to 100000",
+          "value": 66666.67,
+          "max_value": 100000,
+          "rate": 0,
+          "unit": "currency_amount",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        },
+        {
+          "code": "IN_BAND_3",
+          "label": "100000 to 133333.33",
+          "value": 100000,
+          "max_value": 133333.33,
+          "rate": 0,
+          "unit": "currency_amount",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        },
+        {
+          "code": "IN_BAND_4",
+          "label": "133333.33 to 166666.67",
+          "value": 133333.33,
+          "max_value": 166666.67,
+          "rate": 0,
+          "unit": "currency_amount",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        },
+        {
+          "code": "IN_BAND_5",
+          "label": "166666.67 to 200000",
+          "value": 166666.67,
+          "max_value": 200000,
+          "rate": 0,
+          "unit": "currency_amount",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        },
+        {
+          "code": "IN_BAND_6",
+          "label": "Above 200000",
+          "value": 200000,
+          "rate": 0,
+          "unit": "currency_amount",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        }
+      ]
+    },
+    "tax_adjustments": {
+      "description": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it. Table: tax_adjustments.",
+      "effective_from": "2026-04-01",
+      "values": {
+        "standard_deduction_monthly": {
+          "value": 0,
+          "unit": "currency_amount",
+          "label": "Standard deduction (monthly)",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        }
+      }
+    },
+    "tax_rebates": {
+      "description": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it. Table: tax_rebates.",
+      "effective_from": "2026-04-01",
+      "values": {
+        "rebate_87a_max_monthly": {
+          "value": 0,
+          "unit": "currency_amount",
+          "label": "Rebate 87A max (monthly)",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        },
+        "rebate_87a_income_limit_monthly": {
+          "value": 0,
+          "unit": "currency_amount",
+          "label": "Rebate 87A income limit (monthly)",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        }
+      }
+    },
+    "social_insurance_employee": {
+      "description": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it. Table: social_insurance_employee.",
+      "effective_from": "2026-04-01",
+      "values": {
+        "pf": {
+          "value": 0,
+          "unit": "percent",
+          "label": "Provident Fund (Employee)",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        },
+        "esi": {
+          "value": 0,
+          "unit": "percent",
+          "label": "ESI (Employee)",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        }
+      }
+    },
+    "social_insurance_employer": {
+      "description": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it. Table: social_insurance_employer.",
+      "effective_from": "2026-04-01",
+      "values": {
+        "pf": {
+          "value": 0,
+          "unit": "percent",
+          "label": "Provident Fund (Employer)",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        },
+        "esi": {
+          "value": 0,
+          "unit": "percent",
+          "label": "ESI (Employer)",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        }
+      }
+    },
+    "social_insurance_ceilings": {
+      "description": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it. Table: social_insurance_ceilings.",
+      "effective_from": "2026-04-01",
+      "values": {
+        "pf_wage_ceiling": {
+          "value": 0,
+          "unit": "currency_amount",
+          "label": "PF wage ceiling",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        },
+        "esi_wage_limit": {
+          "value": 0,
+          "unit": "currency_amount",
+          "label": "ESI wage coverage limit",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        }
+      }
+    },
+    "pt_ka": {
+      "description": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it. Table: pt_ka.",
+      "effective_from": "2026-04-01",
+      "kind": "schedule",
+      "entries": [
+        {
+          "code": "PT_KA_0",
+          "label": "Up to 25000",
+          "value": 0,
+          "max_value": 25000,
+          "rate": 0,
+          "unit": "currency_amount",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        },
+        {
+          "code": "PT_KA_1",
+          "label": "25000 and above",
+          "value": 25000,
+          "rate": 0,
+          "unit": "currency_amount",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        }
+      ]
+    },
+    "pt_mh": {
+      "description": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it. Table: pt_mh.",
+      "effective_from": "2026-04-01",
+      "kind": "schedule",
+      "entries": [
+        {
+          "code": "PT_MH_0",
+          "label": "Up to 10000",
+          "value": 0,
+          "max_value": 10000,
+          "rate": 0,
+          "unit": "currency_amount",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        },
+        {
+          "code": "PT_MH_1",
+          "label": "10000 and above",
+          "value": 10000,
+          "rate": 0,
+          "unit": "currency_amount",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        }
+      ]
+    },
+    "pt_tn": {
+      "description": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it. Table: pt_tn.",
+      "effective_from": "2026-04-01",
+      "kind": "schedule",
+      "entries": [
+        {
+          "code": "PT_TN_0",
+          "label": "Up to 25000",
+          "value": 0,
+          "max_value": 25000,
+          "rate": 0,
+          "unit": "currency_amount",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        },
+        {
+          "code": "PT_TN_1",
+          "label": "25000 and above",
+          "value": 25000,
+          "rate": 0,
+          "unit": "currency_amount",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        }
+      ]
+    },
+    "pt_tg": {
+      "description": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it. Table: pt_tg.",
+      "effective_from": "2026-04-01",
+      "kind": "schedule",
+      "entries": [
+        {
+          "code": "PT_TG_0",
+          "label": "Up to 15000",
+          "value": 0,
+          "max_value": 15000,
+          "rate": 0,
+          "unit": "currency_amount",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        },
+        {
+          "code": "PT_TG_1",
+          "label": "Above 15000",
+          "value": 15000,
+          "rate": 0,
+          "unit": "currency_amount",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        }
+      ]
+    },
+    "pt_wb": {
+      "description": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it. Table: pt_wb.",
+      "effective_from": "2026-04-01",
+      "kind": "schedule",
+      "entries": [
+        {
+          "code": "PT_WB_0",
+          "label": "Up to 5000",
+          "value": 0,
+          "max_value": 5000,
+          "rate": 0,
+          "unit": "currency_amount",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        },
+        {
+          "code": "PT_WB_1",
+          "label": "5000 to 6000",
+          "value": 5000,
+          "max_value": 6000,
+          "rate": 0,
+          "unit": "currency_amount",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        },
+        {
+          "code": "PT_WB_2",
+          "label": "6000 to 7000",
+          "value": 6000,
+          "max_value": 7000,
+          "rate": 0,
+          "unit": "currency_amount",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        },
+        {
+          "code": "PT_WB_3",
+          "label": "7000 to 8000",
+          "value": 7000,
+          "max_value": 8000,
+          "rate": 0,
+          "unit": "currency_amount",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        },
+        {
+          "code": "PT_WB_4",
+          "label": "8000 to 9000",
+          "value": 8000,
+          "max_value": 9000,
+          "rate": 0,
+          "unit": "currency_amount",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        },
+        {
+          "code": "PT_WB_5",
+          "label": "9000 to 10000",
+          "value": 9000,
+          "max_value": 10000,
+          "rate": 0,
+          "unit": "currency_amount",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        },
+        {
+          "code": "PT_WB_6",
+          "label": "10000 to 15000",
+          "value": 10000,
+          "max_value": 15000,
+          "rate": 0,
+          "unit": "currency_amount",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        },
+        {
+          "code": "PT_WB_7",
+          "label": "15000 to 25000",
+          "value": 15000,
+          "max_value": 25000,
+          "rate": 0,
+          "unit": "currency_amount",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        },
+        {
+          "code": "PT_WB_8",
+          "label": "25000 to 40000",
+          "value": 25000,
+          "max_value": 40000,
+          "rate": 0,
+          "unit": "currency_amount",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        },
+        {
+          "code": "PT_WB_9",
+          "label": "40000 and above",
+          "value": 40000,
+          "rate": 0,
+          "unit": "currency_amount",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        }
+      ]
+    },
+    "gratuity_accrual": {
+      "description": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it. Table: gratuity_accrual.",
+      "effective_from": "2026-04-01",
+      "values": {
+        "gratuity_rate_pct": {
+          "value": 0,
+          "unit": "percent",
+          "label": "Gratuity accrual (monthly)",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        },
+        "eligibility_years": {
+          "value": 0,
+          "unit": "years",
+          "label": "Gratuity eligibility (years)",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        },
+        "formula_numerators": {
+          "value": 0,
+          "unit": "days",
+          "label": "Gratuity formula 15 days",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        },
+        "formula_denominator": {
+          "value": 0,
+          "unit": "days",
+          "label": "Gratuity denominator 26",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        }
+      },
+      "in_scope": false
+    },
+    "bonus_act": {
+      "description": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it. Table: bonus_act.",
+      "effective_from": "2026-04-01",
+      "values": {
+        "bonus_min_pct": {
+          "value": 0,
+          "unit": "percent",
+          "label": "Bonus min (Act) 8.33%",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        },
+        "bonus_max_pct": {
+          "value": 0,
+          "unit": "percent",
+          "label": "Bonus max (Act) 20%",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        },
+        "bonus_eligibility_salary_limit": {
+          "value": 0,
+          "unit": "currency_amount",
+          "label": "Bonus eligibility salary limit",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        }
+      }
+    },
+    "lwf_state": {
+      "description": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it. Table: lwf_state.",
+      "effective_from": "2026-04-01",
+      "values": {
+        "lwf_mh": {
+          "value": 0,
+          "unit": "currency_amount",
+          "label": "LWF Maharashtra (monthly stub)",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        },
+        "lwf_ka": {
+          "value": 0,
+          "unit": "currency_amount",
+          "label": "LWF Karnataka (monthly stub)",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        },
+        "lwf_tn": {
+          "value": 0,
+          "unit": "currency_amount",
+          "label": "LWF Tamil Nadu (monthly stub)",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        },
+        "lwf_tg": {
+          "value": 0,
+          "unit": "currency_amount",
+          "label": "LWF Telangana (monthly stub)",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        },
+        "lwf_wb": {
+          "value": 0,
+          "unit": "currency_amount",
+          "label": "LWF West Bengal (monthly stub)",
+          "notes": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+        }
+      }
+    }
+  },
+  "thresholds": {
+    "weekly_max_hours": null,
+    "daily_min_rest_hours": null,
+    "max_consecutive_work_days": null,
+    "daily_overtime_threshold_hours": null,
+    "weekly_overtime_threshold_hours": null,
+    "overtime_premium_multiplier": null,
+    "overtime_daily_cap_hours": null,
+    "minimum_wage_amount": null,
+    "minimum_wage_unit": null
+  },
+  "overtime": {
+    "daily_threshold_hours": null,
+    "weekly_threshold_hours": null,
+    "premium_multiplier": null,
+    "daily_cap_hours": null,
+    "rules": []
+  },
+  "leave_types": [
+    {
+      "code": "casual",
+      "name": "Casual Leave",
+      "entitlement_days": 0,
+      "accrual": {
+        "frequency": "per_year",
+        "tenure_tiers": []
+      },
+      "carry_over_limit_days": 0,
+      "expiry_month": 12,
+      "encashable": false,
+      "entitlement_source": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it.",
+      "rule_ids": []
+    },
+    {
+      "code": "earned",
+      "name": "Earned Leave",
+      "entitlement_days": 0,
+      "accrual": {
+        "frequency": "per_year",
+        "tenure_tiers": []
+      },
+      "carry_over_limit_days": 0,
+      "expiry_month": 12,
+      "encashable": false,
+      "entitlement_source": "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it.",
+      "rule_ids": []
+    }
+  ],
+  "working_time_limits": {
+    "max_weekly_hours": null,
+    "min_daily_rest_hours": null,
+    "max_consecutive_days": null,
+    "max_night_work_hours": null,
+    "min_rest_between_shifts_hours": null,
+    "rules": []
+  },
+  "break_rules": [],
+  "mandatory_payslip_fields": [
+    "gross_pay",
+    "net_pay",
+    "total_deductions",
+    "tax_withheld",
+    "employee_contributions",
+    "employer_contributions",
+    "hours_worked",
+    "pay_period_start",
+    "pay_period_end",
+    "pay_date",
+    "professional_tax"
+  ],
+  "mandatory_payslip_notes": [
+    "STRUCTURE ONLY FY26-27 skeleton: no statutory values encoded. All rates and amounts are 0 placeholders. Must not drive a calculation until a named verifier transcribes the FY26-27 instruments and verifies it."
+  ],
+  "pay_frequency_rules": {
+    "allowed_frequencies": [
+      "monthly"
+    ],
+    "pay_day_rule": "Monthly pay \u2014 pay date is the last working day of the month; if a public holiday, preceding working day (IST).",
+    "cut_off_days_before_pay_day": 3,
+    "pay_date_rule_id": "PAY_LAST_WORKING_DAY_MONTHLY_IN"
+  },
+  "reporting_obligations": [
+    {
+      "report_id": "IN_TDS_RETURN",
+      "name": "TDS Return (Form 24Q)",
+      "frequency": "quarterly",
+      "due_within_days": 31,
+      "template_ref": "IN-24Q",
+      "authority": "Income Tax Department",
+      "description": "Quarterly TDS return for salary."
+    },
+    {
+      "report_id": "IN_PF_RETURN",
+      "name": "PF Electronic Challan-cum-Return (ECR)",
+      "frequency": "monthly",
+      "due_within_days": 15,
+      "template_ref": "IN-EPF-ECR",
+      "authority": "EPFO",
+      "description": "Monthly PF contributions via ECR."
+    },
+    {
+      "report_id": "IN_ESI_RETURN",
+      "name": "ESI Contribution Return",
+      "frequency": "monthly",
+      "due_within_days": 15,
+      "template_ref": "IN-ESI-MONTHLY",
+      "authority": "ESIC",
+      "description": "Monthly ESI contributions."
+    },
+    {
+      "report_id": "IN_PT_RETURN",
+      "name": "Professional Tax Return",
+      "frequency": "monthly",
+      "due_within_days": 20,
+      "template_ref": "IN-PT-STATE",
+      "authority": "State Professional Tax Authority",
+      "description": "Monthly PT remittance per state."
+    }
+  ],
+  "public_holiday_rules": {
+    "source": "India public holidays \u2014 Central + State gazettes (region dependent by state).",
+    "region_dependent": true,
+    "holiday_count_by_year": {
+      "2025": 21,
+      "2026": 21
+    }
+  },
+  "signing": {
+    "algorithm": "ed25519",
+    "key_id": "in-standard-key",
+    "signature": "U1lOVEhFVElDX1NJR05BVFVSRV9QTEFDRVVMREVSX05PVF9BX1JFQUxfU0lHTkFUVVJF",
+    "signed_at": "2026-03-31T00:00:00Z",
+    "signed_by": "skeleton \u2014 no signer; pending transcription and verification"
+  },
+  "golden_cases": [
+      {
+          "case_id": "gc-fy2627-p5-01-tds-band",
+          "description": "TEST-ONLY placeholder — TDS band structure. Structure only, zero amounts; must not drive a calculation until a verifier transcribes the FY26-27 instruments and verifies the pack.",
+          "input": {
+              "base_salary": "0",
+              "pay_frequency": "monthly"
+          },
+          "expected": {
+              "gross": "0.00",
+              "net": "0.00",
+              "total_deductions": "0.00",
+              "pay_floor_check": "pass",
+              "placeholder": true
+          }
+      },
+      {
+          "case_id": "gc-fy2627-p5-02-rebate-87a",
+          "description": "TEST-ONLY placeholder — rebate u/s 87A structure. Structure only, zero amounts; must not drive a calculation until a verifier transcribes the FY26-27 instruments and verifies the pack.",
+          "input": {
+              "base_salary": "0",
+              "pay_frequency": "monthly"
+          },
+          "expected": {
+              "gross": "0.00",
+              "net": "0.00",
+              "total_deductions": "0.00",
+              "pay_floor_check": "pass",
+              "placeholder": true
+          }
+      },
+      {
+          "case_id": "gc-fy2627-p5-03-std-deduction",
+          "description": "TEST-ONLY placeholder — standard deduction structure. Structure only, zero amounts; must not drive a calculation until a verifier transcribes the FY26-27 instruments and verifies the pack.",
+          "input": {
+              "base_salary": "0",
+              "pay_frequency": "monthly"
+          },
+          "expected": {
+              "gross": "0.00",
+              "net": "0.00",
+              "total_deductions": "0.00",
+              "pay_floor_check": "pass",
+              "placeholder": true
+          }
+      },
+      {
+          "case_id": "gc-fy2627-p5-04-pf-scope",
+          "description": "TEST-ONLY placeholder — PF scope structure. Structure only, zero amounts; must not drive a calculation until a verifier transcribes the FY26-27 instruments and verifies the pack.",
+          "input": {
+              "base_salary": "0",
+              "pay_frequency": "monthly",
+              "basic_pct": "0"
+          },
+          "expected": {
+              "gross": "0.00",
+              "net": "0.00",
+              "total_deductions": "0.00",
+              "pay_floor_check": "pass",
+              "placeholder": true
+          }
+      },
+      {
+          "case_id": "gc-fy2627-p5-05-esi-limit",
+          "description": "TEST-ONLY placeholder — ESI limit structure. Structure only, zero amounts; must not drive a calculation until a verifier transcribes the FY26-27 instruments and verifies the pack.",
+          "input": {
+              "base_salary": "0",
+              "pay_frequency": "monthly"
+          },
+          "expected": {
+              "gross": "0.00",
+              "net": "0.00",
+              "total_deductions": "0.00",
+              "pay_floor_check": "pass",
+              "placeholder": true
+          }
+      },
+      {
+          "case_id": "gc-fy2627-p5-06-pt-ka",
+          "description": "TEST-ONLY placeholder — PT Karnataka structure. Structure only, zero amounts; must not drive a calculation until a verifier transcribes the FY26-27 instruments and verifies the pack.",
+          "input": {
+              "base_salary": "0",
+              "pay_frequency": "monthly",
+              "pt_state": "KA"
+          },
+          "expected": {
+              "gross": "0.00",
+              "net": "0.00",
+              "total_deductions": "0.00",
+              "pay_floor_check": "pass",
+              "placeholder": true
+          }
+      },
+      {
+          "case_id": "gc-fy2627-p5-07-pt-mh",
+          "description": "TEST-ONLY placeholder — PT Maharashtra structure. Structure only, zero amounts; must not drive a calculation until a verifier transcribes the FY26-27 instruments and verifies the pack.",
+          "input": {
+              "base_salary": "0",
+              "pay_frequency": "monthly",
+              "pt_state": "MH"
+          },
+          "expected": {
+              "gross": "0.00",
+              "net": "0.00",
+              "total_deductions": "0.00",
+              "pay_floor_check": "pass",
+              "placeholder": true
+          }
+      },
+      {
+          "case_id": "gc-fy2627-p5-08-pt-wb",
+          "description": "TEST-ONLY placeholder — PT West Bengal structure. Structure only, zero amounts; must not drive a calculation until a verifier transcribes the FY26-27 instruments and verifies the pack.",
+          "input": {
+              "base_salary": "0",
+              "pay_frequency": "monthly",
+              "pt_state": "WB"
+          },
+          "expected": {
+              "gross": "0.00",
+              "net": "0.00",
+              "total_deductions": "0.00",
+              "pay_floor_check": "pass",
+              "placeholder": true
+          }
+      },
+      {
+          "case_id": "gc-fy2627-p5-09-gratuity-boundary",
+          "description": "TEST-ONLY placeholder — gratuity boundary structure. Structure only, zero amounts; must not drive a calculation until a verifier transcribes the FY26-27 instruments and verifies the pack.",
+          "input": {
+              "base_salary": "0",
+              "pay_frequency": "monthly",
+              "basic_pct": "0",
+              "tenure_years": "0"
+          },
+          "expected": {
+              "gross": "0.00",
+              "net": "0.00",
+              "total_deductions": "0.00",
+              "pay_floor_check": "pass",
+              "placeholder": true
+          }
+      },
+      {
+          "case_id": "gc-fy2627-p5-10-bonus-stub",
+          "description": "TEST-ONLY placeholder — bonus stub structure. Structure only, zero amounts; must not drive a calculation until a verifier transcribes the FY26-27 instruments and verifies the pack.",
+          "input": {
+              "base_salary": "0",
+              "pay_frequency": "monthly"
+          },
+          "expected": {
+              "gross": "0.00",
+              "net": "0.00",
+              "total_deductions": "0.00",
+              "pay_floor_check": "pass",
+              "placeholder": true
+          }
+      },
+      {
+          "case_id": "gc-fy2627-p5-11-lwf-stub",
+          "description": "TEST-ONLY placeholder — LWF stub structure. Structure only, zero amounts; must not drive a calculation until a verifier transcribes the FY26-27 instruments and verifies the pack.",
+          "input": {
+              "base_salary": "0",
+              "pay_frequency": "monthly",
+              "pt_state": "MH"
+          },
+          "expected": {
+              "gross": "0.00",
+              "net": "0.00",
+              "total_deductions": "0.00",
+              "pay_floor_check": "pass",
+              "placeholder": true
+          }
+      },
+      {
+          "case_id": "gc-fy2627-p5-12-overtime-cap",
+          "description": "TEST-ONLY placeholder — overtime cap structure. Structure only, zero amounts; must not drive a calculation until a verifier transcribes the FY26-27 instruments and verifies the pack.",
+          "input": {
+              "base_salary": "0",
+              "pay_frequency": "monthly",
+              "overtime_hours": "0",
+              "overtime_hourly_rate": "0"
+          },
+          "expected": {
+              "gross": "0.00",
+              "net": "0.00",
+              "total_deductions": "0.00",
+              "pay_floor_check": "pass",
+              "placeholder": true
+          }
+      },
+      {
+          "case_id": "gc-fy2627-p5-13-encashment-taxable",
+          "description": "TEST-ONLY placeholder — leave encashment structure. Structure only, zero amounts; must not drive a calculation until a verifier transcribes the FY26-27 instruments and verifies the pack.",
+          "input": {
+              "base_salary": "0",
+              "pay_frequency": "monthly",
+              "leave_encashment_days": "0"
+          },
+          "expected": {
+              "gross": "0.00",
+              "net": "0.00",
+              "total_deductions": "0.00",
+              "pay_floor_check": "pass",
+              "placeholder": true
+          }
+      },
+      {
+          "case_id": "gc-fy2627-p5-14-arrears-lop",
+          "description": "TEST-ONLY placeholder — arrears and LOP structure. Structure only, zero amounts; must not drive a calculation until a verifier transcribes the FY26-27 instruments and verifies the pack.",
+          "input": {
+              "base_salary": "0",
+              "pay_frequency": "monthly",
+              "arrears_days": "0",
+              "leave_days": "0"
+          },
+          "expected": {
+              "gross": "0.00",
+              "net": "0.00",
+              "total_deductions": "0.00",
+              "pay_floor_check": "pass",
+              "placeholder": true
+          }
+      }
+  ]
+}

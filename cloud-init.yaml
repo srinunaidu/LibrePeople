@@ -1,0 +1,19 @@
+#cloud-config
+write_files:
+  - path: /etc/sysctl.d/99-swap.conf
+    content: |
+      vm.swappiness=10
+swap:
+  filename: /swapfile
+  size: 2G
+  maxsize: 2G
+package_update: false
+packages:
+  - git
+  - python3
+  - python3-pip
+# No host nginx. The frontend container serves the built bundle and proxies
+# /api/ to the backend on port 80; a host nginx would bind that port first and
+# `docker compose up` would fail with "address already in use".
+runcmd:
+  - echo "KARMATHY_CLOUD_INIT_DONE" > /var/log/karmathy-init.log

@@ -1,0 +1,9 @@
+$kind: http-request
+description: Get a location by ID
+url: http://localhost:8000/core-hr/locations/{location_id}
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/Get Location.resources/examples
+order: 7000

@@ -1,0 +1,719 @@
+# Contract fragment: admin
+#
+# Part of the Karmathy OpenAPI contract. This file is NOT a standalone
+# OpenAPI document: it contributes `paths` (and the domain tag) to the
+# merged document produced by `scripts/merge_openapi.py`.
+#
+# Paths are relative to the API base path `/api/v1`.
+# One deployment = one customer. There is no tenant parameter here.
+#
+# `x-lifecycle` says whether the contract already promises the endpoint:
+#   released - promised, the drift checker fails CI when the running
+#              application does not serve it.
+#   planned  - declared but not shipped yet; reported as "contract ahead of
+#              code" and not a failure.
+
+tags:
+  - name: admin
+    description: >-
+      The operation of this deployment, for administrators only: the
+      background jobs and the dead letter view, the audit log and the
+      verification of its hash chain, the retention schedules, the erasure
+      requests, the data subject access exports and the rule packs. Every
+      call in this domain is written to the audit log.
+
+paths:
+  /admin/jobs:
+    get:
+      operationId: adminListJobs
+      tags: [admin]
+      security: [{bearerAuth: []}]
+      summary: List the background jobs
+      description: >-
+        Lists the background jobs of this deployment, newest first. The
+        list is paged; `page` and `page_size` control the window. `state`
+        narrows it to one lifecycle state and `type` to one job type. A job
+        that exhausted its attempts is in the `dead` state and stays visible
+        here: a dead job is never silently discarded.
+      x-lifecycle: released
+      parameters:
+        - $ref: '#/components/parameters/pageParam'
+        - $ref: '#/components/parameters/pageSizeParam'
+        - name: state
+          in: query
+          required: false
+          description: Only the jobs in this state.
+          schema:
+            type: string
+            enum:
+              - pending
+              - running
+              - succeeded
+              - failed
+              - dead
+              - cancelled
+              - discarded
+        - name: type
+          in: query
+          required: false
+          description: Only the jobs of this type.
+          schema:
+            type: string
+        - name: include_payload
+          in: query
+          required: false
+          description: >-
+            Include the stored input of the job. Off by default, because the
+            input can carry a confirmation token — an authorisation. The
+            stored `result` is served by every read either way.
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: A page of background jobs.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedJobs'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+
+  /admin/jobs/{job_id}:
+    get:
+      operationId: adminGetJob
+      tags: [admin]
+      security: [{bearerAuth: []}]
+      summary: Read one background job
+      description: >-
+        Returns one background job with its state, its attempt count and,
+        when it failed, the error it failed with. The error of a job uses
+        the same code vocabulary as the HTTP API, so a client can branch
+        on it. `result` is the stored output of a finished job; it is
+        `null` when the job stored none, which is a different fact from an
+        empty result. The stored input is not returned here unless
+        `include_payload=true` is passed, because it can carry a
+        confirmation token. A job that does not exist returns 404
+        `job_not_found`.
+      x-lifecycle: released
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          description: Identifier of the job.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The job.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+
+  /admin/jobs/{job_id}/retry:
+    post:
+      operationId: adminRetryJob
+      tags: [admin]
+      security: [{bearerAuth: []}]
+      summary: Retry a background job
+      description: >-
+        Puts a failed or dead job back into the queue. The attempt counter
+        is not reset, so the configured maximum still applies. A job that
+        is still running returns 409 `invalid_state_transition`; a job that
+        another worker has already taken over returns 409 `lease_lost`.
+        Retrying a job that has already succeeded is a no op.
+      x-lifecycle: released
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          description: Identifier of the job.
+          schema:
+            type: string
+      responses:
+        '202':
+          description: The job was put back into the queue.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+
+  /admin/jobs/{job_id}/discard:
+    post:
+      operationId: adminDiscardJob
+      tags: [admin]
+      security: [{bearerAuth: []}]
+      summary: Discard a background job
+      description: >-
+        Marks a job as discarded so that it is not picked up again. The
+        record of the job is kept: discarding removes the work, never the
+        evidence. A job that is still running returns 409
+        `invalid_state_transition`. The discard is written to the audit
+        log with the reason.
+      x-lifecycle: released
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          description: Identifier of the job.
+          schema:
+            type: string
+        - name: reason
+          in: query
+          required: false
+          description: Why the job is discarded. Stored on the audit log.
+          schema:
+            type: string
+            maxLength: 500
+      responses:
+        '200':
+          description: The job was discarded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+
+  /admin/audit:
+    get:
+      operationId: adminListAudit
+      tags: [admin]
+      security: [{bearerAuth: []}]
+      summary: Read the audit log
+      description: >-
+        Reads the audit log of this deployment, newest first. The list is
+        paged; `page` and `page_size` control the window. `action`,
+        `entity_type`, `entity_id`, `actor` and `from`/`to` narrow it down.
+        Every entry carries the hash of the previous entry, so the log is a
+        chain: a removed or edited row breaks the chain at that point. The
+        chain can be checked with `GET /admin/audit/verify`.
+      x-lifecycle: planned
+      parameters:
+        - $ref: '#/components/parameters/pageParam'
+        - $ref: '#/components/parameters/pageSizeParam'
+        - name: action
+          in: query
+          required: false
+          description: Only the entries with this action, for example `leave.approve`.
+          schema:
+            type: string
+        - name: entity_type
+          in: query
+          required: false
+          description: Only the entries about this entity type.
+          schema:
+            type: string
+        - name: entity_id
+          in: query
+          required: false
+          description: Only the entries about this entity.
+          schema:
+            type: string
+        - name: actor
+          in: query
+          required: false
+          description: Only the entries written by this user.
+          schema:
+            type: string
+        - name: from
+          in: query
+          required: false
+          description: Only the entries from this moment on.
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          required: false
+          description: Only the entries up to this moment.
+          schema:
+            type: string
+            format: date-time
+        - name: verify
+          in: query
+          required: false
+          description: >-
+            Also report whether the chain still holds. The verification
+            result is reported in `meta` and does not change the entries
+            that are returned.
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: A page of audit entries.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAuditEntries'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+
+  /admin/audit/verify:
+    get:
+      operationId: adminVerifyAudit
+      tags: [admin]
+      security: [{bearerAuth: []}]
+      summary: Verify the audit chain
+      description: >-
+        Walks the audit chain of this deployment and checks that every
+        entry still hashes to the value it carries, including the hash of
+        the entry before it. The response says whether the chain holds and
+        how many entries were checked. When it does not hold, the first
+        broken link is reported with its position and the reason, for
+        `hash_mismatch` (an entry was edited), `missing_predecessor` (an
+        entry was inserted, removed or reordered in the middle) or
+        `head_mismatch` (entries were removed from the end, or the head was
+        rewritten). Record the pair `checked_entries` and `head` outside
+        the database: a chain rebuilt from the first entry is internally
+        consistent, and only an external anchor detects that. The
+        verification's own audit entry becomes the next head, as any
+        audited action does, so the pair is the anchor. The verification is read
+        only: it never repairs the chain. It walks every entry and is not
+        paged, because verifying part of a chain would let the caller
+        believe the whole holds. The call itself is audited.
+      x-lifecycle: released
+      responses:
+        '200':
+          description: The result of the verification.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditVerification'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+
+  /admin/retention:
+    get:
+      operationId: adminGetRetention
+      tags: [admin]
+      security: [{bearerAuth: []}]
+      summary: Read the retention schedules
+      description: >-
+        Returns the retention schedule of every entity of this deployment:
+        how long the records are kept, what happens to them afterwards and
+        whether a legal hold is in place. The schedule is the customer
+        policy: the platform does not impose statutory retention values of
+        its own. While a hold is in place the schedule does not run.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: The retention schedules.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RetentionSchedule'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+    patch:
+      operationId: adminUpdateRetention
+      tags: [admin]
+      security: [{bearerAuth: []}]
+      summary: Change a retention schedule
+      description: >-
+        Changes the schedule of one entity. The change is written to the
+        audit log with the old and the new value. A schedule for an entity
+        the deployment does not have returns 404 `record_not_found`; a
+        retention period that is not a positive number of days returns 422
+        `validation_error`. A legal hold can only be lifted by an
+        administrator with the compliance role.
+      x-lifecycle: planned
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RetentionScheduleUpdate'
+      responses:
+        '200':
+          description: The updated schedule.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RetentionSchedule'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+
+  /admin/erasure-requests:
+    get:
+      operationId: adminListErasureRequests
+      tags: [admin]
+      security: [{bearerAuth: []}]
+      summary: List the erasure requests
+      description: >-
+        Lists the erasure requests of this deployment, newest first. The
+        list is paged; `page` and `page_size` control the window.
+        `status` and `subject_type` narrow it down. A request that is
+        being processed is held by a background job.
+      x-lifecycle: planned
+      parameters:
+        - $ref: '#/components/parameters/pageParam'
+        - $ref: '#/components/parameters/pageSizeParam'
+        - name: status
+          in: query
+          required: false
+          description: Only the requests in this state.
+          schema:
+            type: string
+            enum:
+              - open
+              - processing
+              - completed
+              - rejected
+        - name: subject_type
+          in: query
+          required: false
+          description: Only the requests about this kind of subject.
+          schema:
+            type: string
+            enum:
+              - employee
+              - applicant
+              - contractor
+      responses:
+        '200':
+          description: A page of erasure requests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedErasureRequests'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+    post:
+      operationId: adminCreateErasureRequest
+      tags: [admin]
+      security: [{bearerAuth: []}]
+      summary: File an erasure request
+      description: >-
+        Files a request to erase the personal data of one subject. The work
+        is done by a background job. Records that are under a legal hold
+        are not erased: they are reported in the job result and the
+        request stays open. A subject that does not exist returns 404
+        `employee_not_found`; a request without the legal basis it needs
+        returns 422 `validation_error`.
+      x-lifecycle: planned
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ErasureRequestCreate'
+      responses:
+        '201':
+          description: The erasure request was filed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErasureRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+
+  /admin/dsar-exports:
+    get:
+      operationId: adminListDsarExports
+      tags: [admin]
+      security: [{bearerAuth: []}]
+      summary: List the data subject access exports
+      description: >-
+        Lists the data subject access exports of this deployment, newest
+        first. The list is paged; `page` and `page_size` control the
+        window. `status` and `subject_type` narrow it down. The download
+        URL of a ready export is short lived; it is not part of the list
+        entry.
+      x-lifecycle: planned
+      parameters:
+        - $ref: '#/components/parameters/pageParam'
+        - $ref: '#/components/parameters/pageSizeParam'
+        - name: status
+          in: query
+          required: false
+          description: Only the exports in this state.
+          schema:
+            type: string
+            enum:
+              - queued
+              - building
+              - ready
+              - expired
+              - failed
+        - name: subject_type
+          in: query
+          required: false
+          description: Only the exports about this kind of subject.
+          schema:
+            type: string
+            enum:
+              - employee
+              - applicant
+              - contractor
+      responses:
+        '200':
+          description: A page of exports.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDsarExports'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+    post:
+      operationId: adminCreateDsarExport
+      tags: [admin]
+      security: [{bearerAuth: []}]
+      summary: Start a data subject access export
+      description: >-
+        Starts building the export of everything the platform holds about
+        one subject. The work is done by a background job; the export is
+        ready for download when the job has finished. A subject that does
+        not exist returns 404 `employee_not_found`. The export is written
+        to the object storage with a short lived URL and it expires.
+      x-lifecycle: planned
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DsarExportCreate'
+      responses:
+        '201':
+          description: The export was started.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DsarExport'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+
+  /admin/rule-packs:
+    get:
+      operationId: adminListRulePacks
+      tags: [admin]
+      security: [{bearerAuth: []}]
+      summary: List the rule packs
+      description: >-
+        Lists the rule packs of this deployment: the versioned rule sets of
+        the jurisdictions, with their status, where they came from, how
+        they were verified and how they were signed. A pack is only usable
+        for a payroll run when its status is `verified`. The list is paged;
+        `page` and `page_size` control the window.
+      x-lifecycle: planned
+      parameters:
+        - $ref: '#/components/parameters/pageParam'
+        - $ref: '#/components/parameters/pageSizeParam'
+        - name: jurisdiction
+          in: query
+          required: false
+          description: Only the packs of this jurisdiction.
+          schema:
+            type: string
+        - name: status
+          in: query
+          required: false
+          description: Only the packs in this state.
+          schema:
+            type: string
+            enum:
+              - draft
+              - verified
+              - deprecated
+              - rejected
+      responses:
+        '200':
+          description: A page of rule packs.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedRulePacks'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+
+  /admin/rule-packs/{pack_id}:
+    get:
+      operationId: adminGetRulePack
+      tags: [admin]
+      security: [{bearerAuth: []}]
+      summary: Read one rule pack
+      description: >-
+        Returns one rule pack with its status, its source, the checks of
+        its verification and the signature it carries. A pack that does
+        not exist returns 404 `rule_pack_not_found`. A pack that fails its
+        own load returns 503 `rule_pack_loader_failure` with the reason.
+      x-lifecycle: planned
+      parameters:
+        - name: pack_id
+          in: path
+          required: true
+          description: Identifier of the rule pack.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The rule pack.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RulePack'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+
+  /admin/status:
+    get:
+      operationId: adminGetStatus
+      tags: [admin]
+      security: [{bearerAuth: []}]
+      summary: Read the operational status
+      description: >-
+        Returns the operational status of this deployment for
+        administrators: the upgrade status (the database schema revision
+        against the codebase head), the backup status (what the operator
+        arranged, read from the BACKUP_* environment defaults) and the
+        actionable operational warnings. SuperAdmin only. The call is
+        read only: it changes nothing, stages no audit row, and never
+        triggers an upgrade, a migration or a backup.
+      x-lifecycle: released
+      responses:
+        '200':
+          description: The operational status of the deployment.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminStatus'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'

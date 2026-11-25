@@ -1,0 +1,9 @@
+$kind: http-request
+description: List report metrics
+url: http://localhost:8000/reports/metrics
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/Metrics.resources/examples
+order: 7000

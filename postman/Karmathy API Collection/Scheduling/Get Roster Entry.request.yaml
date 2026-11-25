@@ -1,0 +1,9 @@
+$kind: http-request
+description: Get a roster entry by ID
+url: http://localhost:8000/scheduling/roster/{entry_id}
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/Get Roster Entry.resources/examples
+order: 3000

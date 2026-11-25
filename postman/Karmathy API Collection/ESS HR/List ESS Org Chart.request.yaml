@@ -1,0 +1,9 @@
+$kind: http-request
+description: List ESS org chart nodes
+url: http://localhost:8000/ess/org-chart
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/List ESS Org Chart.resources/examples
+order: 11000

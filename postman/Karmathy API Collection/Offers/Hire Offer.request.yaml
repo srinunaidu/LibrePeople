@@ -1,0 +1,9 @@
+$kind: http-request
+description: Hire an accepted offer (creates the employee)
+url: http://localhost:8000/offers/{offer_id}/hire
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/Hire Offer.resources/examples
+order: 5000

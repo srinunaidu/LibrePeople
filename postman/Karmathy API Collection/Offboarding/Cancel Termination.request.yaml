@@ -1,0 +1,9 @@
+$kind: http-request
+description: Cancel a termination
+url: http://localhost:8000/offboarding/terminations/{termination_id}/cancel
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/Cancel Termination.resources/examples
+order: 7000

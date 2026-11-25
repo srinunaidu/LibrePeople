@@ -1,0 +1,13 @@
+{
+  "entity": "locations",
+  "total_rows": 3,
+  "create": 1,
+  "update": 0,
+  "unchanged": 0,
+  "reject": 2,
+  "rows": [
+    {"row": 2, "status": "reject", "errors": [{"column": "name", "code": "missing_required"}]},
+    {"row": 3, "status": "reject", "errors": [{"column": "timezone", "code": "too_long"}]},
+    {"row": 4, "status": "create"}
+  ]
+}

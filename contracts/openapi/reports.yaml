@@ -1,0 +1,148 @@
+tags:
+- name: reports
+  description: reports domain endpoints.
+paths:
+  /reports/attendance:
+    get:
+      operationId: reportsGetReportsattendance
+      tags:
+      - reports
+      security:
+      - bearerAuth: []
+      summary: GET /reports/attendance
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /reports/audit:
+    get:
+      operationId: reportsGetReportsaudit
+      tags:
+      - reports
+      security:
+      - bearerAuth: []
+      summary: GET /reports/audit
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /reports/dashboard:
+    get:
+      operationId: reportsGetReportsdashboard
+      tags:
+      - reports
+      security:
+      - bearerAuth: []
+      summary: GET /reports/dashboard
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /reports/headcount:
+    get:
+      operationId: reportsGetReportsheadcount
+      tags:
+      - reports
+      security:
+      - bearerAuth: []
+      summary: GET /reports/headcount
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /reports/labor-cost:
+    get:
+      operationId: reportsGetReportslaborcost
+      tags:
+      - reports
+      security:
+      - bearerAuth: []
+      summary: GET /reports/labor-cost
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /reports/leave:
+    get:
+      operationId: reportsGetReportsleave
+      tags:
+      - reports
+      security:
+      - bearerAuth: []
+      summary: GET /reports/leave
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /reports/metrics:
+    get:
+      operationId: reportsListReportsmetrics
+      tags:
+      - reports
+      security:
+      - bearerAuth: []
+      summary: GET /reports/metrics
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /reports/metrics/catalogue:
+    get:
+      operationId: reportsGetReportsmetricscatalogue
+      tags:
+      - reports
+      security:
+      - bearerAuth: []
+      summary: GET /reports/metrics/catalogue
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /reports/metrics/{key}:
+    get:
+      operationId: reportsGetReportsmetrics
+      tags:
+      - reports
+      security:
+      - bearerAuth: []
+      summary: GET /reports/metrics/{key}
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'

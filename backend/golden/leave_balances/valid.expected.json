@@ -1,0 +1,17 @@
+{
+  "entity": "leave_balances",
+  "total_rows": 1,
+  "create": 1,
+  "update": 0,
+  "unchanged": 0,
+  "reject": 0,
+  "rows": [
+    {"row": 2, "status": "create"}
+  ],
+  "ledger_entitled": 25,
+  "ledger_used": 5,
+  "ledger_rows": [
+    ["entitlement", 25.0],
+    ["usage", -5.0]
+  ]
+}

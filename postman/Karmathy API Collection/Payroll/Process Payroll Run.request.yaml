@@ -1,0 +1,9 @@
+$kind: http-request
+description: Process a payroll run
+url: http://localhost:8000/payroll/runs/{run_id}/process
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/Process Payroll Run.resources/examples
+order: 15000

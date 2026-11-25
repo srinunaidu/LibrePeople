@@ -1,0 +1,559 @@
+/**
+ * ─────────────────────────────────────────────────────────────────────────
+ *  MARKETING 360 DESIGN SYSTEM — scoped to `.mkt-root`
+ * ─────────────────────────────────────────────────────────────────────────
+ *  Dark-first, premium (Dribbble-grade B2B SaaS idiom): deep navy canvas,
+ *  Space Grotesk display type, glass nav, gradient-border cards, glow
+ *  buttons, marquee + float motion.
+ *
+ *  Scoping notes:
+ *   • `.mkt-root` re-declares the token variables ONLY inside the marketing
+ *     subtree — the application shell (outside) is untouched. Legacy
+ *     marketing pages that pre-date this system keep their token-driven
+ *     classes and render dark automatically.
+ *   • Fixed tailwind utilities that carry light values in their name
+ *     (`bg-white`, `text-gray-*`, `from-brand-50 …`) are remapped here,
+ *     unlayered, so they win over the generated utilities — same idiom the
+ *     app uses for `.dark .text-gray-*`.
+ *   • No new dependencies; fonts come from the preconnected Google Fonts
+ *     link (Space Grotesk 500/600/700 + Inter + JetBrains Mono).
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+
+/* ════════════════════════════════════════════════════════════════════════
+   1 · TOKENS — the marketing subtree runs on a premium dark set
+   ════════════════════════════════════════════════════════════════════════ */
+.mkt-root {
+  /* brand ramps: fills stay saturated; low steps become deep tints,
+     high steps become text-safe light tones */
+  --brand-50:  #0d1a38;
+  --brand-100: #142a58;
+  --brand-200: #1b3a7e;
+
+  --teal-50:  #062230;
+  --teal-100: #073042;
+  --teal-200: #0a4a5c;
+
+  --green-50:  #052e22;
+  --green-100: #073527;
+  --green-200: #0a4a36;
+
+  --violet-50: #221047;
+  --violet-100: #2a1656;
+  --violet-200: #3d1f7a;
+
+  /* text-safe aliases: light tones that read on navy */
+  --teal-text:   var(--teal-300);
+  --green-text:  var(--green-300);
+  --violet-text: var(--violet-300);
+  --warning-text: #fcd34d;
+  --success-text: #34d399;
+
+  /* neutrals: a tinted navy scale, not slate */
+  --gray-50:  #0a1122;
+  --gray-100: #101a30;
+  --gray-200: #1a2540;
+  --gray-300: #2b3a5c;
+  --gray-400: #55658a;
+  --gray-500: #7e8db0;
+  --gray-600: #a3b0cc;
+  --gray-700: #c2cde4;
+  --gray-800: #dbe2f2;
+  --gray-900: #0b1224;
+  --gray-950: #060b16;
+
+  --text-gray-400: var(--gray-400);
+  --text-gray-500: var(--gray-500);
+  --text-gray-600: var(--gray-600);
+  --text-gray-700: var(--gray-700);
+  --text-gray-800: var(--gray-800);
+  --text-gray-900: var(--gray-800);
+  --text-slate-400: var(--gray-400);
+  --text-slate-500: var(--gray-500);
+  --text-slate-600: var(--gray-600);
+  --text-slate-700: var(--gray-700);
+
+  /* status tints go dark the same way */
+  --error-light:  #2a1216;
+  --error-border: #5c1d24;
+  --error-text:   #fca5a5;
+  --success-light: #052e22;
+  --success-border: #0a5c3f;
+  --warning-light: #2b1c04;
+  --warning-border: #6b4a0a;
+  --info-light:   #0d1a38;
+  --info-border:  #1b3a7e;
+
+  /* semantic surfaces */
+  --surface:          #0d1526;
+  --surface-raised:   #111b31;
+  --surface-sunken:   #070c18;
+  --surface-inset:    #0a1224;
+  --surface-hover:    #131e36;
+
+  --brand-soft:        #142a58;
+  --brand-soft-fg:     #bfdbfe;
+  --brand-text:        var(--brand-300);
+
+  /* foregrounds */
+  --fg:            #e9eefb;
+  --fg-muted:      #9fadc9;
+  --fg-subtle:     #7d8bab;
+  --fg-inverse:    #0d1526;
+  --fg-link:       #6ea5ff;
+
+  /* borders, radius, shadows — glass-and-ring idiom */
+  --border-subtle:   rgba(148, 163, 184, 0.12);
+  --border-default:  rgba(148, 163, 184, 0.18);
+  --border-strong:   rgba(148, 163, 184, 0.30);
+  --ring-subtle: 0 0 0 1px rgba(148, 163, 184, 0.07);
+  --shadow-sm: 0 1px 2px rgba(2, 6, 16, 0.5), 0 4px 16px rgba(2, 6, 16, 0.35), var(--ring-subtle);
+  --shadow-md: 0 4px 14px rgba(2, 6, 16, 0.55), 0 12px 36px -10px rgba(2, 6, 16, 0.55), var(--ring-subtle);
+  --shadow-lg: 0 8px 24px rgba(2, 6, 16, 0.6), 0 24px 64px -16px rgba(2, 6, 16, 0.6), var(--ring-subtle);
+  --shadow-xl: 0 16px 44px rgba(2, 6, 16, 0.65), 0 40px 90px -20px rgba(2, 6, 16, 0.65), var(--ring-subtle);
+
+  /* brand display face */
+  --font-display: "Space Grotesk", var(--font-sans);
+
+  color-scheme: dark;
+  color: var(--fg);
+}
+
+/* display face for every marketing heading */
+.mkt-root h1,
+.mkt-root h2,
+.mkt-root h3,
+.mk-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.015em;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   2 · FIXED-UTILITY REMAPS — light-named utilites resolve dark
+   ════════════════════════════════════════════════════════════════════════ */
+.mkt-root .bg-white        { background-color: var(--surface-raised); }
+.mkt-root .hover\:bg-blue-50:hover { background-color: var(--surface-hover); }
+.mkt-root .text-navy       { color: var(--fg); }
+
+/* the pale page-hero gradient used across marketing pages → aurora band */
+.mkt-root .bg-gradient-to-b.from-brand-50 {
+  background-image:
+    radial-gradient(900px 380px at 18% -20%, rgba(37, 99, 235, 0.22), transparent 62%),
+    radial-gradient(700px 320px at 85% -35%, rgba(34, 211, 238, 0.10), transparent 60%),
+    linear-gradient(180deg, #0c1428 0%, var(--surface-sunken) 100%);
+}
+/* any other light gradient inside the shell resolves dark */
+.mkt-root .bg-gradient-to-b  { background-image: linear-gradient(180deg, var(--surface-raised), var(--surface-sunken)); }
+.mkt-root .bg-gradient-to-br { background-image: linear-gradient(135deg, var(--surface-hover) 0%, var(--surface) 100%); }
+.mkt-root .bg-gradient-to-r,
+.mkt-root .bg-gradient-to-l  { background-image: linear-gradient(90deg, var(--surface-raised), var(--surface-sunken)); }
+.mkt-root .from-brand-50 { --tw-gradient-from: #0d1a38; }
+.mkt-root .via-white     { --tw-gradient-via-color: #111b31; }
+.mkt-root .to-white      { --tw-gradient-to: #0d1526; }
+.mkt-root .to-transparent { --tw-gradient-to: rgba(7, 12, 24, 0); }
+
+/* tables read dark */
+.mkt-root .table-base thead tr { background-color: var(--surface-inset); }
+.mkt-root .table-base tbody tr { border-bottom-color: var(--border-subtle); }
+.mkt-root .table-base tbody tr:hover { background-color: var(--surface-hover); }
+
+/* buttons: glow idiom */
+.mkt-root .btn-primary {
+  background-color: var(--brand-600);
+  box-shadow: 0 1px 2px rgba(2, 6, 16, 0.4), 0 8px 28px -6px rgba(37, 99, 235, 0.55);
+}
+.mkt-root .btn-primary:hover:not(:disabled) { background-color: var(--brand-500); }
+.mkt-root .btn {
+  border-color: transparent;
+}
+.mkt-root .btn:disabled { opacity: 0.4; }
+
+/* icon tiles / badges: dark glass tints */
+.mkt-root .icon-tile { background-color: var(--surface-inset); color: var(--fg-muted); border: 1px solid var(--border-subtle); }
+.mkt-root .icon-tile-brand  { background-color: rgba(37, 99, 235, 0.16);  color: var(--brand-300); border-color: rgba(37, 99, 235, 0.35); }
+.mkt-root .icon-tile-teal   { background-color: rgba(34, 211, 238, 0.12); color: var(--teal-text); border-color: rgba(34, 211, 238, 0.30); }
+.mkt-root .icon-tile-green  { background-color: rgba(16, 185, 129, 0.14); color: var(--green-text); border-color: rgba(16, 185, 129, 0.32); }
+.mkt-root .icon-tile-violet { background-color: rgba(139, 92, 246, 0.16); color: var(--violet-text); border-color: rgba(139, 92, 246, 0.35); }
+.mkt-root .icon-tile-amber  { background-color: rgba(217, 119, 6, 0.16);  color: var(--warning-text); border-color: rgba(217, 119, 6, 0.35); }
+.mkt-root .icon-tile-rose   { background-color: rgba(239, 68, 68, 0.14);  color: var(--error-text); border-color: rgba(239, 68, 68, 0.30); }
+.mkt-root .icon-tile-slate  { background-color: rgba(148, 163, 184, 0.10); color: var(--gray-700); border-color: rgba(148, 163, 184, 0.25); }
+
+.mkt-root .badge { background-color: var(--surface-inset); color: var(--fg-muted); border-color: var(--border-subtle); }
+.mkt-root .badge-brand  { background-color: rgba(37, 99, 235, 0.16);  color: var(--brand-soft-fg); border-color: rgba(37, 99, 235, 0.4); }
+.mkt-root .badge-teal   { background-color: rgba(34, 211, 238, 0.12); color: var(--teal-text); border-color: rgba(34, 211, 238, 0.35); }
+.mkt-root .badge-green  { background-color: rgba(16, 185, 129, 0.14); color: var(--green-text); border-color: rgba(16, 185, 129, 0.35); }
+.mkt-root .badge-violet { background-color: rgba(139, 92, 246, 0.16); color: var(--violet-text); border-color: rgba(139, 92, 246, 0.4); }
+.mkt-root .badge-amber  { background-color: rgba(217, 119, 6, 0.16);  color: var(--warning-text); border-color: rgba(217, 119, 6, 0.4); }
+.mkt-root .badge-slate  { background-color: rgba(148, 163, 184, 0.10); color: var(--gray-800); border-color: var(--border-subtle); }
+
+/* inline text tone remaps (same idiom as .dark) */
+.mkt-root .text-brand-600 { color: var(--brand-text); }
+.mkt-root .text-green-600, .mkt-root .text-green-700 { color: var(--success-text); }
+.mkt-root .text-teal-700 { color: var(--teal-text); }
+.mkt-root .text-violet-600, .mkt-root .text-violet-700 { color: var(--violet-text); }
+.mkt-root .text-amber-600, .mkt-root .text-amber-700, .mkt-root .text-amber-800 { color: var(--warning-text); }
+.mkt-root .border-amber-200 { border-color: var(--warning-border); }
+.mkt-root .bg-green-500  { background-color: var(--green-500); }
+
+/* stat rails + thread nodes stay token-driven via the vars above */
+
+/* skip link keeps working on the dark canvas */
+.mkt-root .skip-link:focus {
+  position: fixed;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--brand-600);
+  color: #fff;
+  padding: 0.5rem 1rem;
+  border-radius: 10px;
+  z-index: 100;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   3 · PREMIUM PRIMITIVES
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* —— backdrop art: grid + grain helpers ————————————— */
+.mk-grid {
+  background-image:
+    linear-gradient(rgba(147, 197, 253, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(147, 197, 253, 0.07) 1px, transparent 1px);
+  background-size: 54px 54px;
+  mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, black, transparent 78%);
+  -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, black, transparent 78%);
+}
+.mk-grid-r {
+  background-image:
+    linear-gradient(rgba(147, 197, 253, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(147, 197, 253, 0.06) 1px, transparent 1px);
+  background-size: 54px 54px;
+  mask-image: radial-gradient(ellipse 70% 80% at 50% 60%, black, transparent 85%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 80% at 50% 60%, black, transparent 85%);
+}
+.mk-noise {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+}
+
+/* —— typography —————————————
+ * The kicker carries no color of its own: the app pairs it with
+ * `text-fg-muted` (StatCard/KPI labels) and marketing pairs it with
+ * `.mkt-root` below. A fixed #7aa5ff here beat the layered utility in the
+ * cascade (unlayered marketing.css vs layered utilities) and painted every
+ * app card label light-blue-on-near-white (2.3:1) — the contrast journey
+ * caught it page by page. */
+.mk-kicker {
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+/* Marketing surfaces are dark: the kicker glows there, scoped so the app
+ * shell never inherits it. */
+.mkt-root .mk-kicker {
+  color: #7aa5ff;
+}
+.mk-h1 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(2.5rem, 6.2vw, 4.75rem);
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+}
+.mk-h2 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.7rem, 3.4vw, 2.6rem);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+.mk-gradient-text {
+  background: linear-gradient(92deg, #ffffff 0%, #dbeafe 34%, #7aa5ff 72%, var(--teal-text) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: var(--fg);
+  -webkit-text-fill-color: transparent;
+}
+.mk-gradient-blue {
+  background: linear-gradient(92deg, var(--brand-400) 0%, var(--teal-400) 55%, var(--violet-400) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: var(--fg);
+  -webkit-text-fill-color: transparent;
+}
+.mk-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  border-radius: 999px;
+  border: 1px solid rgba(147, 197, 253, 0.22);
+  background: rgba(37, 99, 235, 0.12);
+  backdrop-filter: blur(10px);
+  padding: 0.4rem 0.9rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: #bfd7ff;
+}
+
+/* —— glass nav ————————————— */
+.mkt-nav {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  background: rgba(7, 12, 24, 0.72);
+  backdrop-filter: blur(14px) saturate(150%);
+  -webkit-backdrop-filter: blur(14px) saturate(150%);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.10);
+}
+@supports not (backdrop-filter: blur(1px)) {
+  .mkt-nav { background: rgba(7, 12, 24, 0.97); }
+}
+.mkt-nav-link {
+  position: relative;
+  font-size: 0.9rem;
+  font-weight: 550;
+  color: var(--fg-muted);
+  transition: color 160ms ease;
+  padding: 0.35rem 0.1rem;
+}
+.mkt-nav-link:hover { color: var(--fg); }
+.mkt-nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 100%;
+  bottom: -2px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--brand-400), var(--teal-400));
+  transition: right 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.mkt-nav-link:hover::after { right: 0; }
+
+/* —— gradient-border card ————————————— */
+.mk-card {
+  position: relative;
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  background:
+    linear-gradient(180deg, rgba(23, 34, 60, 0.72), rgba(13, 21, 38, 0.88));
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  transition: transform 260ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 260ms, border-color 260ms;
+}
+.mk-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.45), rgba(139, 92, 246, 0.22) 38%, transparent 62%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+.mk-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(96, 165, 250, 0.35);
+  box-shadow: 0 12px 34px rgba(2, 6, 16, 0.6), 0 22px 60px -18px rgba(37, 99, 235, 0.45);
+}
+.mk-card-flat { box-shadow: none; }
+.mk-card-flat:hover { transform: none; }
+
+/* —— hero mockup frame ————————————— */
+.mk-window {
+  border-radius: 20px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: linear-gradient(180deg, rgba(17, 27, 49, 0.92), rgba(9, 15, 29, 0.96));
+  box-shadow:
+    0 0 0 1px rgba(37, 99, 235, 0.10),
+    0 24px 80px -20px rgba(37, 99, 235, 0.45),
+    0 40px 120px -30px rgba(2, 6, 16, 0.8);
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+}
+.mk-float { animation: mk-float 7s ease-in-out infinite; }
+.mk-float-b { animation: mk-float 8.5s ease-in-out -2.5s infinite; }
+
+@keyframes mk-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* —— glow CTA —————————————
+ * The resting gradient runs brand-600 → brand-700 so white text stays above
+ * AA on every stop (5.2–6.7:1). The opaque background-color under the
+ * gradient is load-bearing for measurement: computed backgroundColor stays
+ * brand-600 even where the paint comes from background-image. */
+.mk-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 12px;
+  background: linear-gradient(180deg, var(--brand-600), var(--brand-700));
+  background-color: var(--brand-600);
+  color: #fff;
+  font-weight: 600;
+  padding: 0.8rem 1.6rem;
+  box-shadow:
+    0 1px 2px rgba(2, 6, 16, 0.5),
+    0 10px 36px -8px rgba(37, 99, 235, 0.75),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 200ms, background-color 160ms;
+}
+.mk-cta:hover { background: linear-gradient(180deg, var(--brand-600), var(--brand-700)); box-shadow: 0 12px 46px -6px rgba(37, 99, 235, 0.85); transform: translateY(-1px); }
+.mk-cta:active { transform: translateY(0); }
+
+/* Dark theme: the brand ramp remaps to violet, and white on #7C5CFF is
+ * 4.3:1 — below AA. The dark CTA face steps down to accent-hover shades
+ * (5.4–6.3:1) so the same white label passes in both themes. */
+.dark .mk-cta {
+  background: linear-gradient(180deg, #6a48f5, #5a3df0);
+  background-color: #6a48f5;
+}
+.dark .mk-cta:hover { background: linear-gradient(180deg, #5a3df0, #4f2fd8); }
+
+/* —— destructive CTA —————————————
+ * The old `danger` variant stacked `mk-cta` with the layered `bg-error`
+ * utility — unlayered marketing.css always wins over layered utilities, so
+ * every danger button rendered the BLUE glow instead of red. This rule
+ * carries its own face: solid error-red, white text (7:1 both themes). */
+.mk-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 12px;
+  background: #b91c1c;
+  background-color: #b91c1c;
+  color: #fff;
+  font-weight: 600;
+  padding: 0.8rem 1.6rem;
+  box-shadow:
+    0 1px 2px rgba(2, 6, 16, 0.5),
+    0 10px 36px -8px rgba(185, 28, 28, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 200ms, background-color 160ms;
+}
+.mk-danger:hover { background: #7f1d1d; background-color: #7f1d1d; transform: translateY(-1px); }
+.mk-danger:active { transform: translateY(0); }
+
+.mk-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(148, 163, 184, 0.06);
+  backdrop-filter: blur(8px);
+  color: var(--fg);
+  font-weight: 600;
+  padding: 0.8rem 1.6rem;
+  transition: border-color 160ms, background-color 160ms, transform 160ms;
+}
+.mk-ghost:hover { border-color: rgba(147, 197, 253, 0.5); background: rgba(96, 165, 250, 0.10); transform: translateY(-1px); }
+
+.mk-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 600;
+  color: var(--brand-text);
+  transition: opacity 150ms;
+}
+.mk-link:hover { opacity: 0.85; }
+
+/* —— marquee ————————————— */
+.mk-marquee {
+  overflow: hidden;
+  position: relative;
+  -webkit-mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent);
+  mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent);
+}
+.mk-marquee-track {
+  display: flex;
+  gap: 1rem;
+  width: max-content;
+  animation: mk-marquee 34s linear infinite;
+}
+.mk-marquee:hover .mk-marquee-track { animation-play-state: paused; }
+@keyframes mk-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.mk-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(17, 27, 49, 1);
+  backdrop-filter: blur(6px);
+  padding: 0.45rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 550;
+  white-space: nowrap;
+  color: #ffffff;
+}
+.mk-chip-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--brand-400);
+  box-shadow: 0 0 8px rgba(96, 165, 250, 0.9);
+}
+
+/* —— reveal-on-scroll ————————————— */
+.mk-reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 700ms cubic-bezier(0.16, 1, 0.3, 1), transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.mk-reveal.mk-in { opacity: 1; transform: none; }
+.mk-reveal-d1.mk-in { transition-delay: 90ms; }
+.mk-reveal-d2.mk-in { transition-delay: 180ms; }
+
+/* —— pulse glow dot ————————————— */
+.mk-pulse {
+  position: relative;
+}
+.mk-pulse::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(34, 211, 238, 0.6);
+  animation: mk-ping 2.4s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+@keyframes mk-ping {
+  0% { transform: scale(0.7); opacity: 0.9; }
+  75%, 100% { transform: scale(2.1); opacity: 0; }
+}
+
+/* —— giant footer wordmark ————————————— */
+.mk-wordmark {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 0.9;
+  font-size: clamp(4rem, 15vw, 12rem);
+  background: linear-gradient(180deg, rgba(233, 238, 251, 0.9), rgba(148, 163, 184, 0.12) 108%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: var(--fg);
+  -webkit-text-fill-color: transparent;
+  user-select: none;
+}
+
+/* —— motion safety ————————————— */
+@media (prefers-reduced-motion: reduce) {
+  .mk-float, .mk-float-b, .mk-marquee-track, .mk-pulse::after { animation: none !important; }
+  .mk-reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+}
+/* Re-deploy to trigger auto-seed on production database */

@@ -1,0 +1,9 @@
+$kind: http-request
+description: Delete a job nothing points at; refuse one that something still does
+url: http://localhost:8000/jobs/{job_id}
+method: DELETE
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/Delete Job.resources/examples
+order: 5000

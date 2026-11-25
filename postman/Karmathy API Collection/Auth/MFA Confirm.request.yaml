@@ -1,0 +1,15 @@
+$kind: http-request
+description: Confirm MFA enrollment with a TOTP code
+url: http://localhost:8000/auth/mfa/confirm
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/MFA Confirm.resources/examples
+order: 7000

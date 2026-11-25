@@ -1,0 +1,15 @@
+$kind: http-request
+description: Create an HR case
+url: http://localhost:8000/core-hr/cases
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Create HR Case.resources/examples
+order: 15000

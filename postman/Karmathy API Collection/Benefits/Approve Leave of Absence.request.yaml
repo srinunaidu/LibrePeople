@@ -1,0 +1,15 @@
+$kind: http-request
+description: Approve a leave of absence
+url: http://localhost:8000/benefits/leaves-of-absence/{loa_id}/approve
+method: PUT
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Approve Leave of Absence.resources/examples
+order: 7000

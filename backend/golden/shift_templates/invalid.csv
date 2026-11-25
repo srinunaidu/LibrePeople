@@ -1,0 +1,3 @@
+name,code,start_time,end_time,break_minutes,is_night,is_active
+Bad Time,SH-BAD,25:00,17:00,30,false,true
+No Code,,09:00,17:00,30,false,true

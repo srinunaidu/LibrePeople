@@ -1,0 +1,443 @@
+tags:
+- name: recruiting
+  description: recruiting domain endpoints.
+paths:
+  /applications:
+    get:
+      operationId: recruitingListApplications
+      tags:
+      - recruiting
+      security:
+      - bearerAuth: []
+      summary: GET /applications
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: recruitingCreateApplications
+      tags:
+      - recruiting
+      security:
+      - bearerAuth: []
+      summary: POST /applications
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /applications/{application_id}:
+    get:
+      operationId: recruitingGetApplications
+      tags:
+      - recruiting
+      security:
+      - bearerAuth: []
+      summary: GET /applications/{application_id}
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    put:
+      operationId: recruitingUpdateApplications
+      tags:
+      - recruiting
+      security:
+      - bearerAuth: []
+      summary: PUT /applications/{application_id}
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /candidates:
+    get:
+      operationId: recruitingListCandidates
+      tags:
+      - recruiting
+      security:
+      - bearerAuth: []
+      summary: GET /candidates
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: recruitingCreateCandidates
+      tags:
+      - recruiting
+      security:
+      - bearerAuth: []
+      summary: POST /candidates
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /candidates/{candidate_id}:
+    get:
+      operationId: recruitingGetCandidates
+      tags:
+      - recruiting
+      security:
+      - bearerAuth: []
+      summary: GET /candidates/{candidate_id}
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    put:
+      operationId: recruitingUpdateCandidates
+      tags:
+      - recruiting
+      security:
+      - bearerAuth: []
+      summary: PUT /candidates/{candidate_id}
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /jobs:
+    get:
+      operationId: recruitingListJobs
+      tags:
+      - recruiting
+      security:
+      - bearerAuth: []
+      summary: GET /jobs
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      parameters:
+      - name: include_inactive
+        in: query
+        required: false
+        description: Include archived rows, so a maintenance list can see and restore one.
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: recruitingCreateJobs
+      tags:
+      - recruiting
+      security:
+      - bearerAuth: []
+      summary: POST /jobs
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /jobs/{job_id}:
+    get:
+      operationId: recruitingGetJobs
+      tags:
+      - recruiting
+      security:
+      - bearerAuth: []
+      summary: GET /jobs/{job_id}
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    patch:
+      operationId: recruitingUpdateJob
+      tags:
+      - recruiting
+      security:
+      - bearerAuth: []
+      summary: Edit a job
+      description: 'Changes the fields the client sends and nothing else: a job can be renamed,
+        re-coded, moved to another department, given a corrected salary band, archived and
+        restored. A code another job already owns is refused with 409 `duplicate_natural_key`, a
+        department that does not exist with 422 `reference_not_found`, and a band whose minimum
+        exceeds its maximum as a 422 payload error.'
+      x-lifecycle: released
+      parameters:
+      - name: job_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                code:
+                  type: string
+                department_id:
+                  type: integer
+                min_salary:
+                  type: number
+                  nullable: true
+                max_salary:
+                  type: number
+                  nullable: true
+                is_active:
+                  type: boolean
+      responses:
+        '200':
+          description: The job after the edit.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      operationId: recruitingDeleteJob
+      tags:
+      - recruiting
+      security:
+      - bearerAuth: []
+      summary: Delete a job nothing points at
+      description: >-
+        Deletes the job. It is refused with 409 `reference_in_use` while an employee, a position, a
+        compensation band, a requisition or an offer still refers to it, and the refusal names what
+        and how many. Archiving the job — `PATCH` with `is_active: false` — is then the allowed
+        operation, and nothing is written when the deletion is refused.
+      x-lifecycle: released
+      parameters:
+      - name: job_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '204':
+          description: The job was deleted.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /offers:
+    get:
+      operationId: recruitingListOffers
+      tags:
+      - recruiting
+      security:
+      - bearerAuth: []
+      summary: GET /offers
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: recruitingCreateOffers
+      tags:
+      - recruiting
+      security:
+      - bearerAuth: []
+      summary: POST /offers
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /offers/{offer_id}:
+    get:
+      operationId: recruitingGetOffers
+      tags:
+      - recruiting
+      security:
+      - bearerAuth: []
+      summary: GET /offers/{offer_id}
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    put:
+      operationId: recruitingUpdateOffers
+      tags:
+      - recruiting
+      security:
+      - bearerAuth: []
+      summary: PUT /offers/{offer_id}
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /offers/{offer_id}/accept:
+    post:
+      operationId: recruitingCreateOffersaccept
+      tags:
+      - recruiting
+      security:
+      - bearerAuth: []
+      summary: POST /offers/{offer_id}/accept
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /offers/{offer_id}/hire:
+    post:
+      operationId: recruitingCreateOffershire
+      tags:
+      - recruiting
+      security:
+      - bearerAuth: []
+      summary: POST /offers/{offer_id}/hire
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /offers/{offer_id}/letter:
+    post:
+      operationId: recruitingCreateOffersletter
+      tags:
+      - recruiting
+      security:
+      - bearerAuth: []
+      summary: POST /offers/{offer_id}/letter
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /requisitions:
+    get:
+      operationId: recruitingListRequisitions
+      tags:
+      - recruiting
+      security:
+      - bearerAuth: []
+      summary: GET /requisitions
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: recruitingCreateRequisitions
+      tags:
+      - recruiting
+      security:
+      - bearerAuth: []
+      summary: POST /requisitions
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /requisitions/{requisition_id}:
+    get:
+      operationId: recruitingGetRequisitions
+      tags:
+      - recruiting
+      security:
+      - bearerAuth: []
+      summary: GET /requisitions/{requisition_id}
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    put:
+      operationId: recruitingUpdateRequisitions
+      tags:
+      - recruiting
+      security:
+      - bearerAuth: []
+      summary: PUT /requisitions/{requisition_id}
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'

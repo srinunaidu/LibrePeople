@@ -1,0 +1,25 @@
+{
+  "head": "969d403883c4e39cee17e1d5d25de53476005039",
+  "branch": "feature/librepeople-production",
+  "generated_utc": "2026-11-23T00:05:16.135233+00:00",
+  "inventory_date": "2026-11-23",
+  "backend": {
+    "source": ".venv311 pip freeze",
+    "rows": 114,
+    "file": "docs/licensing/sbom/backend-transitive.json",
+    "license_rule": "license is UNVERIFIED unless short single-line METADATA License or License-Expression is present; never inferred from classifiers/registries; full license texts withheld (withheld entries marked UNVERIFIED); no LICENSE/NOTICE published."
+  },
+  "frontend": {
+    "source": "frontend/package-lock.json",
+    "lockfileVersion": 3,
+    "packages_entries_total": 538,
+    "nonroot_entries": 537,
+    "toplevel_node_modules": 335,
+    "file": "docs/licensing/sbom/frontend-transitive.json",
+    "license_rule": "license is the package-lock entry license field verbatim and citable to the lock file; UNVERIFIED means the lock entry carries no license field; no LICENSE/NOTICE published."
+  },
+  "notes": [
+    "Do NOT publish LICENSE/NOTICE from these files.",
+    "Backend licenses are not lock-confirmed (no backend lock file). Frontend licenses citable to frontend/package-lock.json."
+  ]
+}

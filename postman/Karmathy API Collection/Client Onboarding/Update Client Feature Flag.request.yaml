@@ -1,0 +1,15 @@
+$kind: http-request
+description: Update a client feature flag
+url: http://localhost:8000/onboarding-portal/clients/{client_id}/feature-flags/{key}
+method: PUT
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Update Client Feature Flag.resources/examples
+order: 15000

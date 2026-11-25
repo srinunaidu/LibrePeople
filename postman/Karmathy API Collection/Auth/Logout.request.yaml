@@ -1,0 +1,15 @@
+$kind: http-request
+description: Revoke the presented refresh token and its family
+url: http://localhost:8000/auth/logout
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Logout.resources/examples
+order: 3000

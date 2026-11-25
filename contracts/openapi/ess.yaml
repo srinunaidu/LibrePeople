@@ -1,0 +1,334 @@
+tags:
+- name: ess
+  description: ess domain endpoints.
+paths:
+  /ess/announcements:
+    get:
+      operationId: essListEssannouncements
+      tags:
+      - ess
+      security:
+      - bearerAuth: []
+      summary: GET /ess/announcements
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: essCreateEssannouncements
+      tags:
+      - ess
+      security:
+      - bearerAuth: []
+      summary: POST /ess/announcements
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /ess/announcements/{announcement_id}/publish:
+    put:
+      operationId: essUpdateEssannouncementspublish
+      tags:
+      - ess
+      security:
+      - bearerAuth: []
+      summary: PUT /ess/announcements/{announcement_id}/publish
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /ess/compliance-checks:
+    get:
+      operationId: essListEsscompliancechecks
+      tags:
+      - ess
+      security:
+      - bearerAuth: []
+      summary: GET /ess/compliance-checks
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /ess/compliance-checks/run:
+    post:
+      operationId: essCreateEsscompliancechecksrun
+      tags:
+      - ess
+      security:
+      - bearerAuth: []
+      summary: POST /ess/compliance-checks/run
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /ess/continuous-feedback:
+    get:
+      operationId: essGetEsscontinuousfeedback
+      tags:
+      - ess
+      security:
+      - bearerAuth: []
+      summary: GET /ess/continuous-feedback
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: essCreateEsscontinuousfeedback
+      tags:
+      - ess
+      security:
+      - bearerAuth: []
+      summary: POST /ess/continuous-feedback
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /ess/directory:
+    get:
+      operationId: essGetEssdirectory
+      tags:
+      - ess
+      security:
+      - bearerAuth: []
+      summary: GET /ess/directory
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /ess/directory/sync:
+    post:
+      operationId: essCreateEssdirectorysync
+      tags:
+      - ess
+      security:
+      - bearerAuth: []
+      summary: POST /ess/directory/sync
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /ess/employee-files:
+    get:
+      operationId: essListEssemployeefiles
+      tags:
+      - ess
+      security:
+      - bearerAuth: []
+      summary: GET /ess/employee-files
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: essCreateEssemployeefiles
+      tags:
+      - ess
+      security:
+      - bearerAuth: []
+      summary: POST /ess/employee-files
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /ess/ess/profile:
+    post:
+      operationId: essCreateEssessprofile
+      tags:
+      - ess
+      security:
+      - bearerAuth: []
+      summary: POST /ess/ess/profile
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /ess/ess/profile/{employee_id}:
+    get:
+      operationId: essGetEssessprofile
+      tags:
+      - ess
+      security:
+      - bearerAuth: []
+      summary: GET /ess/ess/profile/{employee_id}
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    put:
+      operationId: essUpdateEssessprofile
+      tags:
+      - ess
+      security:
+      - bearerAuth: []
+      summary: PUT /ess/ess/profile/{employee_id}
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /ess/goal-alignments:
+    get:
+      operationId: essListEssgoalalignments
+      tags:
+      - ess
+      security:
+      - bearerAuth: []
+      summary: GET /ess/goal-alignments
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: essCreateEssgoalalignments
+      tags:
+      - ess
+      security:
+      - bearerAuth: []
+      summary: POST /ess/goal-alignments
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /ess/notifications:
+    get:
+      operationId: essListEssnotifications
+      tags:
+      - ess
+      security:
+      - bearerAuth: []
+      summary: GET /ess/notifications
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: essCreateEssnotifications
+      tags:
+      - ess
+      security:
+      - bearerAuth: []
+      summary: POST /ess/notifications
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /ess/notifications/{notification_id}/read:
+    put:
+      operationId: essUpdateEssnotificationsread
+      tags:
+      - ess
+      security:
+      - bearerAuth: []
+      summary: PUT /ess/notifications/{notification_id}/read
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /ess/org-chart:
+    get:
+      operationId: essGetEssorgchart
+      tags:
+      - ess
+      security:
+      - bearerAuth: []
+      summary: GET /ess/org-chart
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /ess/org-chart/rebuild:
+    post:
+      operationId: essCreateEssorgchartrebuild
+      tags:
+      - ess
+      security:
+      - bearerAuth: []
+      summary: POST /ess/org-chart/rebuild
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'

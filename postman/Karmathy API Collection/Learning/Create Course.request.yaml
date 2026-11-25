@@ -1,0 +1,15 @@
+$kind: http-request
+description: Create a course
+url: http://localhost:8000/learning/courses
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Create Course.resources/examples
+order: 2000

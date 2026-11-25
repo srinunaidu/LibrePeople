@@ -1,0 +1,9 @@
+$kind: http-request
+description: Delete a department nothing points at; refuse one that something does
+url: http://localhost:8000/departments/{department_id}
+method: DELETE
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/Delete Department.resources/examples
+order: 5000

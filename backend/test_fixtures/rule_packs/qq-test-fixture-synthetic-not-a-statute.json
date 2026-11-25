@@ -1,0 +1,168 @@
+{
+  "pack_id": "test-fixture-synthetic",
+  "name": "TEST FIXTURE - synthetic values, no statute - NOT FOR PRODUCTION",
+  "jurisdiction": {
+    "country": "QQ",
+    "region": "TEST",
+    "display_name": "Synthetic Test Jurisdiction (not a real country)"
+  },
+  "version": "1.0.0-test",
+  "status": "verified",
+  "effective_from": "2020-01-01",
+  "effective_to": null,
+  "tz": "UTC",
+  "source": {
+    "document_title": "TEST FIXTURE - no statute, no published document, no gazette",
+    "publisher": "Karmathy test fixtures",
+    "document_reference": "TEST-FIXTURE-001",
+    "url": "https://example.invalid/test-fixture-pack",
+    "retrieved_on": "2026-10-22",
+    "notes": "THIS IS A TEST FIXTURE, NOT A RULE PACK FOR A REAL JURISDICTION. Every number in it is invented for the test suite that reads it. The country code QQ is a user-assigned code that no country uses, so this file can never enable a real jurisdiction. It lives outside rule_packs/ so that the product never loads it. A real pack is written and verified by a named human against a cited source; this one is neither."
+  },
+  "verification": {
+    "verified_by_name": "TEST FIXTURE (automated - not a human verification)",
+    "verified_by_role": "Test fixture",
+    "verified_on": "2026-10-22",
+    "source_document_reference": "TEST-FIXTURE-001",
+    "golden_case_set_id": "gc-test-fixture-1"
+  },
+  "rate_tables": {
+    "social_insurance_employee": {
+      "description": "SYNTHETIC TEST FIXTURE employee contribution. Not a real rate.",
+      "effective_from": "2020-01-01",
+      "values": {
+        "fixture_employee": {
+          "value": 1.0,
+          "unit": "percent",
+          "label": "Fixture employee contribution (synthetic)",
+          "notes": "SYNTHETIC TEST FIXTURE - invented for the tests"
+        }
+      }
+    },
+    "social_insurance_employer": {
+      "description": "SYNTHETIC TEST FIXTURE employer contribution. Not a real rate.",
+      "effective_from": "2020-01-01",
+      "values": {
+        "fixture_employer": {
+          "value": 2.0,
+          "unit": "percent",
+          "label": "Fixture employer contribution (synthetic)",
+          "notes": "SYNTHETIC TEST FIXTURE - invented for the tests"
+        }
+      }
+    }
+  },
+  "thresholds": {
+    "weekly_max_hours": 48,
+    "daily_min_rest_hours": 11,
+    "max_consecutive_work_days": 6,
+    "daily_overtime_threshold_hours": 8,
+    "weekly_overtime_threshold_hours": 40,
+    "overtime_premium_multiplier": 1.5,
+    "overtime_daily_cap_hours": 2,
+    "minimum_wage_amount": null,
+    "minimum_wage_unit": null
+  },
+  "overtime": {
+    "daily_threshold_hours": 8,
+    "weekly_threshold_hours": 40,
+    "premium_multiplier": 1.5,
+    "daily_cap_hours": 2,
+    "rules": [
+      {
+        "rule_id": "OT_FIXTURE",
+        "description": "SYNTHETIC TEST FIXTURE overtime rule.",
+        "severity": "block",
+        "applies_when": "Hours worked exceed the fixture threshold"
+      }
+    ]
+  },
+  "leave_types": [
+    {
+      "code": "fixture-annual",
+      "name": "Fixture annual leave (synthetic)",
+      "entitlement_days": 20,
+      "accrual": {
+        "frequency": "per_month",
+        "tenure_tiers": []
+      },
+      "carry_over_limit_days": 0,
+      "expiry_month": 3,
+      "encashable": false,
+      "entitlement_source": "SYNTHETIC TEST FIXTURE - no statute",
+      "rule_ids": []
+    }
+  ],
+  "working_time_limits": {
+    "max_weekly_hours": 48,
+    "min_daily_rest_hours": 11,
+    "max_consecutive_days": 6,
+    "max_night_work_hours": 8,
+    "min_rest_between_shifts_hours": 11,
+    "rules": []
+  },
+  "break_rules": [],
+  "mandatory_payslip_fields": [
+    "gross_pay",
+    "net_pay",
+    "total_deductions"
+  ],
+  "mandatory_payslip_notes": [
+    "SYNTHETIC TEST FIXTURE - this payslip is a configurable calculation, not a statutory document."
+  ],
+  "pay_frequency_rules": {
+    "allowed_frequencies": ["monthly", "semimonthly", "biweekly", "weekly"],
+    "pay_day_rule": "SYNTHETIC TEST FIXTURE - the last day of the period.",
+    "cut_off_days_before_pay_day": 3,
+    "pay_date_rule_id": "PAY_FIXTURE_LAST_DAY"
+  },
+  "reporting_obligations": [
+    {
+      "report_id": "FIXTURE_REPORT",
+      "name": "Fixture report (synthetic)",
+      "frequency": "monthly",
+      "due_within_days": 15,
+      "template_ref": "SYNTHETIC_FIXTURE_TEMPLATE",
+      "authority": "Synthetic Fixture Authority",
+      "description": "SYNTHETIC TEST FIXTURE - there is no authority and no report."
+    }
+  ],
+  "public_holiday_rules": {
+    "source": "SYNTHETIC TEST FIXTURE - not a holiday calendar",
+    "region_dependent": false,
+    "holiday_count_by_year": {
+      "2026": 1
+    }
+  },
+  "signing": {
+    "algorithm": "ed25519",
+    "key_id": "test-fixture-key",
+    "signature": "U1lOVEhFVElEX1RPU1RfRklYVFVSRV9TSUdOQVRVUkVfTk9UX1JFQUw=",
+    "signed_at": "2026-10-22T00:00:00Z",
+    "signed_by": "Karmathy Test Fixture Generator"
+  },
+  "golden_cases": [
+    {
+      "case_id": "gc-test-fixture-basic",
+      "description": "SYNTHETIC TEST FIXTURE: a basic monthly payslip with no overtime.",
+      "input": {
+        "base_salary": "5000.00",
+        "pay_frequency": "monthly",
+        "hours_worked": 0,
+        "overtime_hours": 0,
+        "overtime_hourly_rate": 0,
+        "leave_days": 0,
+        "tax_withholding_override": "10",
+        "benefit_deductions": "0.00",
+        "other_earnings": "0.00",
+        "other_deductions": "0.00"
+      },
+      "expected": {
+        "gross": "5000.00",
+        "total_deductions": "550.00",
+        "net": "4450.00",
+        "pay_floor_check": "pass"
+      }
+    }
+  ]
+}

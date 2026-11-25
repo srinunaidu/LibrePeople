@@ -1,0 +1,9 @@
+$kind: http-request
+description: List users (admins only)
+url: http://localhost:8000/auth/users
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/Admin List Users.resources/examples
+order: 10000

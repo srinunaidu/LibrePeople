@@ -1,0 +1,144 @@
+tags:
+- name: benefits
+  description: benefits domain endpoints.
+paths:
+  /benefits/benefit-enrollments:
+    get:
+      operationId: benefitsListBenefitsbenefitenrollments
+      tags:
+      - benefits
+      security:
+      - bearerAuth: []
+      summary: GET /benefits/benefit-enrollments
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: benefitsCreateBenefitsbenefitenrollments
+      tags:
+      - benefits
+      security:
+      - bearerAuth: []
+      summary: POST /benefits/benefit-enrollments
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /benefits/benefit-plans:
+    get:
+      operationId: benefitsListBenefitsbenefitplans
+      tags:
+      - benefits
+      security:
+      - bearerAuth: []
+      summary: GET /benefits/benefit-plans
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: benefitsCreateBenefitsbenefitplans
+      tags:
+      - benefits
+      security:
+      - bearerAuth: []
+      summary: POST /benefits/benefit-plans
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /benefits/leaves-of-absence:
+    get:
+      operationId: benefitsGetBenefitsleavesofabsence
+      tags:
+      - benefits
+      security:
+      - bearerAuth: []
+      summary: GET /benefits/leaves-of-absence
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: benefitsCreateBenefitsleavesofabsence
+      tags:
+      - benefits
+      security:
+      - bearerAuth: []
+      summary: POST /benefits/leaves-of-absence
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /benefits/leaves-of-absence/{loa_id}/approve:
+    put:
+      operationId: benefitsUpdateBenefitsleavesofabsenceapprove
+      tags:
+      - benefits
+      security:
+      - bearerAuth: []
+      summary: PUT /benefits/leaves-of-absence/{loa_id}/approve
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /benefits/life-events:
+    get:
+      operationId: benefitsListBenefitslifeevents
+      tags:
+      - benefits
+      security:
+      - bearerAuth: []
+      summary: GET /benefits/life-events
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: benefitsCreateBenefitslifeevents
+      tags:
+      - benefits
+      security:
+      - bearerAuth: []
+      summary: POST /benefits/life-events
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'

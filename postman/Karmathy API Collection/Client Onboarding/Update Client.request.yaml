@@ -1,0 +1,15 @@
+$kind: http-request
+description: Update a client
+url: http://localhost:8000/onboarding-portal/clients/{client_id}
+method: PUT
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Update Client.resources/examples
+order: 4000

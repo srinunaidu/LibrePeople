@@ -1,0 +1,9 @@
+$kind: http-request
+description: List performance reviews
+url: http://localhost:8000/performance/reviews
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/List Performance Reviews.resources/examples
+order: 3000

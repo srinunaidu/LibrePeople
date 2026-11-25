@@ -1,0 +1,6 @@
+employee_id,first_name,last_name,email,hire_date,job_code,department_code,status,salary
+EMP-0002,Bad,Date,bd@example.com,31/12/2026,J-ENG,ALPHA,Active,7500
+EMP-0003,Bad,Enum,be@example.com,2026-01-15,J-ENG,ALPHA,Retired,7500
+EMP-0004,Bad,Email,not-an-email,2026-01-15,J-ENG,ALPHA,Active,7500
+EMP-0005,Bad,Ref,br@example.com,2026-01-15,J-NOSUCH,ALPHA,Active,7500
+EMP-0006,Bad,Type,bt@example.com,2026-01-15,J-ENG,ALPHA,Active,not-a-number

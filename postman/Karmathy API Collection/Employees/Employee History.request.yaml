@@ -1,0 +1,9 @@
+$kind: http-request
+description: Effective-dated employment history, oldest first
+url: http://localhost:8000/employees/{employee_id}/history
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/Employee History.resources/examples
+order: 6000

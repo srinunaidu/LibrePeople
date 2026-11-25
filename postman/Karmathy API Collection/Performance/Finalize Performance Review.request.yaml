@@ -1,0 +1,9 @@
+$kind: http-request
+description: Finalize a performance review
+url: http://localhost:8000/performance/reviews/{review_id}/finalize
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/Finalize Performance Review.resources/examples
+order: 5000

@@ -1,0 +1,9 @@
+$kind: http-request
+description: Get a cost center by ID
+url: http://localhost:8000/core-hr/cost-centers/{cost_center_id}
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/Get Cost Center.resources/examples
+order: 2000

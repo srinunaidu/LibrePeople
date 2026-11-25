@@ -1,0 +1,5275 @@
+# OpenAPI 3.1 shared components for the Karmathy contract.
+#
+# This file holds ONLY the pieces that are shared by more than one domain
+# fragment. It is never merged as a domain fragment: `scripts/merge_openapi.py`
+# reads it separately and injects it as `components` in the merged document.
+#
+# Rules for this file:
+#   * Every `$ref` in a domain fragment must resolve against this file.
+#   * The error shapes here mirror `contracts/errors.md` exactly. The error
+#     envelope is the ONE envelope for the whole system.
+#   * One deployment = one customer. There is no tenant parameter, no
+#     tenant filter and no cross-tenant query anywhere in this contract.
+#
+# Companion documents:
+#   contracts/errors.md   - the error code list and the envelope rules
+#   contracts/README.md   - how to use the contract tree, merge and drift tools
+
+securitySchemes:
+  bearerAuth:
+    type: http
+    scheme: bearer
+    bearerFormat: JWT
+    description: >-
+      Access token issued by `POST /auth/login`. Send it as
+      `Authorization: Bearer <access_token>`. Tokens are JWTs signed by the
+      deployment. A 401 response always carries `WWW-Authenticate: Bearer`.
+
+parameters:
+  pageParam:
+    name: page
+    in: query
+    required: false
+    description: 1-based page number.
+    schema:
+      type: integer
+      minimum: 1
+      default: 1
+  pageSizeParam:
+    name: page_size
+    in: query
+    required: false
+    description: >-
+      Rows per page. The server may return fewer rows than requested.
+    schema:
+      type: integer
+      minimum: 1
+      maximum: 200
+      default: 50
+  idempotencyKeyHeader:
+    name: Idempotency-Key
+    in: header
+    required: true
+    description: >-
+      Caller-generated key (1-200 characters) that makes this mutation
+      safe to retry. Replaying the same key with the same payload returns
+      the original result; replaying it with a different payload is a
+      409 `idempotency_key_reuse`.
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 200
+  requestIdHeader:
+    name: X-Request-ID
+    in: header
+    required: false
+    description: >-
+      Optional client correlation id. Echoed back in the `X-Request-ID`
+      response header and attached to the server log line for this request.
+    schema:
+      type: string
+
+headers:
+  requestIdHeader:
+    description: >-
+      Correlation id for this request. Quoted in support conversations and
+      matched against the server log line.
+    schema:
+      type: string
+
+responses:
+  ErrorResponse:
+    description: >-
+      The one and only error body. `error.code` is the stable machine
+      readable identifier; `error.message` is for display and may be
+      reworded without notice. See `contracts/errors.md`.
+    headers:
+      X-Request-ID:
+        $ref: '#/components/headers/requestIdHeader'
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/ErrorEnvelope'
+        examples:
+          not_found:
+            summary: The record does not exist or is not visible to the caller
+            value:
+              error:
+                code: employee_not_found
+                category: not_found
+                message: Employee not found
+                retryable: false
+                details: {}
+                request_id: 01J8Z9K2QF3M7N4P0R5S6T7V8W
+  Unauthorized:
+    description: >-
+      The access token is missing, malformed, expired or invalid. The body
+      carries the `unauthenticated` code. A client may attempt exactly one
+      token refresh before signing out.
+    headers:
+      WWW-Authenticate:
+        description: Always `Bearer`.
+        schema:
+          type: string
+          example: Bearer
+      X-Request-ID:
+        $ref: '#/components/headers/requestIdHeader'
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/ErrorEnvelope'
+  Forbidden:
+    description: >-
+      The caller is authenticated but not permitted. The body carries
+      `forbidden`, `insufficient_scope`, `outside_visibility_scope` or
+      `separation_of_duties`. A record that must not be revealed as
+      existing is reported as 404, not 403.
+    headers:
+      X-Request-ID:
+        $ref: '#/components/headers/requestIdHeader'
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/ErrorEnvelope'
+  NotFound:
+    description: >-
+      The object does not exist, or it is outside the caller's visibility
+      scope. The body carries `not_found` or a domain specific variant.
+    headers:
+      X-Request-ID:
+        $ref: '#/components/headers/requestIdHeader'
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/ErrorEnvelope'
+  Conflict:
+    description: >-
+      The request conflicts with the current state of the resource: a
+      duplicate natural key, an illegal state transition, a reused
+      idempotency key, or a concurrent modification. The body carries the
+      `conflict` or `concurrency` category.
+    headers:
+      X-Request-ID:
+        $ref: '#/components/headers/requestIdHeader'
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/ErrorEnvelope'
+  ValidationError:
+    description: >-
+      The request failed validation. The body carries the `validation`
+      category; `details` holds the field level context for the specific
+      code (for example `password_policy_violation` carries
+      `{violations: [...]}`).
+    headers:
+      X-Request-ID:
+        $ref: '#/components/headers/requestIdHeader'
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/ErrorEnvelope'
+  RateLimited:
+    description: >-
+      The caller exceeded a rate limit. The body carries the `rate_limit`
+      category and the `Retry-After` header states how long to wait.
+    headers:
+      Retry-After:
+        description: Seconds to wait before retrying.
+        schema:
+          type: integer
+          minimum: 0
+      X-Request-ID:
+        $ref: '#/components/headers/requestIdHeader'
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/ErrorEnvelope'
+  DependencyUnavailable:
+    description: >-
+      A required dependency (database, object storage, solver, rule pack
+      loader) is unavailable. The body carries the `dependency` category
+      and the `Retry-After` header states how long to wait. The identical
+      request may succeed later.
+    headers:
+      Retry-After:
+        description: Seconds to wait before retrying.
+        schema:
+          type: integer
+          minimum: 0
+      X-Request-ID:
+        $ref: '#/components/headers/requestIdHeader'
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/ErrorEnvelope'
+  InternalError:
+    description: >-
+      An unexpected server side failure. The body carries the `internal`
+      category and the `request_id`; technical detail is logged server side
+      and never returned.
+    headers:
+      X-Request-ID:
+        $ref: '#/components/headers/requestIdHeader'
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/ErrorEnvelope'
+
+schemas:
+  # ---------------------------------------------------------------- errors --
+  Error:
+    type: object
+    description: >-
+      The single error object. Mirrors `contracts/errors.md` section 1; the
+      two must be changed together.
+    required:
+      - code
+      - category
+      - message
+      - retryable
+      - details
+      - request_id
+    properties:
+      code:
+        type: string
+        description: >-
+          Stable machine readable identifier. Snake case. Clients branch on
+          this and never on `message`. Renaming a published code is a
+          breaking change.
+        examples:
+          - employee_not_found
+      category:
+        type: string
+        description: >-
+          Drives generic client behaviour (retry, re-authenticate, render a
+          permission state).
+        enum:
+          - validation
+          - auth
+          - permission
+          - not_found
+          - conflict
+          - concurrency
+          - dependency
+          - rate_limit
+          - internal
+      message:
+        type: string
+        description: >-
+          Safe to display to a user. No stack traces, no SQL, no hostnames,
+          no record ids that would confirm an object exists. May be reworded
+          at any time, so clients must not parse it.
+      retryable:
+        type: boolean
+        description: >-
+          Whether the identical request may succeed later. True only for
+          `dependency`, `rate_limit` and `internal`.
+      details:
+        type: object
+        description: >-
+          Structured, machine readable context. Empty object when there is
+          nothing to add. Must never contain personal data, amounts or
+          identifiers copied from a record.
+        additionalProperties: true
+      request_id:
+        type: string
+        description: >-
+          Correlates the response with the server log line. Echoed in the
+          `X-Request-ID` response header.
+        examples:
+          - 01J8Z9K2QF3M7N4P0R5S6T7V8W
+  ErrorEnvelope:
+    type: object
+    description: >-
+      The top level error body. `error` is the only key; no other top level
+      key is permitted.
+    required:
+      - error
+    additionalProperties: false
+    properties:
+      error:
+        $ref: '#/components/schemas/Error'
+
+  # ------------------------------------------------------------ pagination --
+  PageMeta:
+    type: object
+    description: Pagination envelope returned with every paged collection.
+    required:
+      - page
+      - page_size
+      - total
+      - total_pages
+    properties:
+      page:
+        type: integer
+        minimum: 1
+        description: The 1-based page that was returned.
+      page_size:
+        type: integer
+        minimum: 1
+        maximum: 200
+        description: The page size the server applied.
+      total:
+        type: integer
+        minimum: 0
+        description: Total number of rows matching the filter.
+      total_pages:
+        type: integer
+        minimum: 0
+        description: Total number of pages available at this page size.
+  PaginatedResponse:
+    type: object
+    description: >-
+      Generic paged collection. Domain variants narrow the `items` array to
+      the entity type of the collection.
+    required:
+      - items
+      - meta
+    properties:
+      items:
+        type: array
+        items:
+          type: object
+      meta:
+        $ref: '#/components/schemas/PageMeta'
+  PaginatedUsers:
+    allOf:
+      - $ref: '#/components/schemas/PaginatedResponse'
+      - type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/AuthUser'
+  PaginatedEmployees:
+    allOf:
+      - $ref: '#/components/schemas/PaginatedResponse'
+      - type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/Employee'
+  PaginatedEmployeeDocuments:
+    allOf:
+      - $ref: '#/components/schemas/PaginatedResponse'
+      - type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/EmployeeDocument'
+  PaginatedTimeEntries:
+    allOf:
+      - $ref: '#/components/schemas/PaginatedResponse'
+      - type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/TimeEntry'
+  PaginatedTimesheets:
+    allOf:
+      - $ref: '#/components/schemas/PaginatedResponse'
+      - type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/Timesheet'
+  PaginatedWorkingTimeViolations:
+    allOf:
+      - $ref: '#/components/schemas/PaginatedResponse'
+      - type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/WorkingTimeViolation'
+  PaginatedLeaveRequests:
+    allOf:
+      - $ref: '#/components/schemas/PaginatedResponse'
+      - type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/LeaveRequest'
+  PaginatedHolidays:
+    allOf:
+      - $ref: '#/components/schemas/PaginatedResponse'
+      - type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/Holiday'
+  PaginatedShiftTemplates:
+    allOf:
+      - $ref: '#/components/schemas/PaginatedResponse'
+      - type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/ShiftTemplate'
+  PaginatedRosterVersions:
+    allOf:
+      - $ref: '#/components/schemas/PaginatedResponse'
+      - type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/RosterVersion'
+  PaginatedRosterEntries:
+    allOf:
+      - $ref: '#/components/schemas/PaginatedResponse'
+      - type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/RosterEntry'
+  PaginatedPayRuns:
+    allOf:
+      - $ref: '#/components/schemas/PaginatedResponse'
+      - type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/PayRun'
+  PaginatedPayslips:
+    allOf:
+      - $ref: '#/components/schemas/PaginatedResponse'
+      - type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/Payslip'
+  PaginatedForecastRuns:
+    allOf:
+      - $ref: '#/components/schemas/PaginatedResponse'
+      - type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/ForecastRun'
+  PaginatedScenarios:
+    allOf:
+      - $ref: '#/components/schemas/PaginatedResponse'
+      - type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/ForecastScenario'
+  PaginatedImports:
+    allOf:
+      - $ref: '#/components/schemas/PaginatedResponse'
+      - type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/ImportSummary'
+  PaginatedJobs:
+    allOf:
+      - $ref: '#/components/schemas/PaginatedResponse'
+      - type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/Job'
+  PaginatedAuditEntries:
+    allOf:
+      - $ref: '#/components/schemas/PaginatedResponse'
+      - type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/AuditEntry'
+  PaginatedErasureRequests:
+    allOf:
+      - $ref: '#/components/schemas/PaginatedResponse'
+      - type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/ErasureRequest'
+  PaginatedDsarExports:
+    allOf:
+      - $ref: '#/components/schemas/PaginatedResponse'
+      - type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/DsarExport'
+  PaginatedRulePacks:
+    allOf:
+      - $ref: '#/components/schemas/PaginatedResponse'
+      - type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/RulePack'
+
+  # --------------------------------------------------------- platform base --
+  Health:
+    type: object
+    description: >-
+      Deployment health. The deployment holds exactly one customer's data in
+      exactly one Oracle schema; the health probe never reveals the schema
+      name or the DSN.
+    required:
+      - status
+      - version
+    properties:
+      status:
+        type: string
+        enum:
+          - ok
+          - degraded
+          - unhealthy
+      version:
+        type: string
+        description: Running application version.
+      checks:
+        type: array
+        items:
+          $ref: '#/components/schemas/HealthCheck'
+  HealthCheck:
+    type: object
+    required:
+      - name
+      - status
+    properties:
+      name:
+        type: string
+        description: Name of the dependency that was probed.
+      status:
+        type: string
+        enum:
+          - ok
+          - degraded
+          - unhealthy
+          - skipped
+      detail:
+        type: string
+        description: Safe to display detail. No DSN, no host, no path.
+  JobStatus:
+    type: string
+    description: >-
+      Lifecycle state of a background job. A job that exhausts `max_attempts`
+      moves to `dead` and stays visible in the dead letter view; a dead job
+      is never silently discarded.
+    enum:
+      - pending
+      - running
+      - succeeded
+      - failed
+      - dead
+      - cancelled
+      - discarded
+  Job:
+    type: object
+    description: >-
+      A background job. Jobs report failures with the same code vocabulary
+      as the HTTP API (see `contracts/errors.md` section 6).
+    required:
+      - id
+      - type
+      - state
+      - attempts
+      - max_attempts
+      - created_at
+      - updated_at
+    properties:
+      id:
+        type: string
+      type:
+        type: string
+        description: Job type, for example `import_commit` or `payroll_calculate`.
+      state:
+        $ref: '#/components/schemas/JobStatus'
+      attempts:
+        type: integer
+        minimum: 0
+      max_attempts:
+        type: integer
+        minimum: 1
+      created_at:
+        type: string
+        format: date-time
+      updated_at:
+        type: string
+        format: date-time
+      started_at:
+        type: string
+        format: date-time
+      last_error_at:
+        type: string
+        format: date-time
+      error_code:
+        type: string
+        description: A code from the shared code list in `contracts/errors.md`.
+      error_message:
+        type: string
+        description: Safe to display. Never contains internals.
+      payload:
+        type: object
+        additionalProperties: true
+      result:
+        type: object
+        additionalProperties: true
+
+  # ------------------------------------------------------------------ auth --
+  AuthLoginRequest:
+    type: object
+    description: >-
+      Credentials. The response is identical for an unknown username and a
+      wrong password; the API never enumerates users.
+    required:
+      - username
+      - password
+    properties:
+      username:
+        type: string
+        minLength: 1
+        maxLength: 150
+      password:
+        type: string
+        format: password
+        minLength: 1
+        maxLength: 256
+  AuthLoginResponse:
+    type: object
+    required:
+      - access_token
+      - token_type
+      - expires_in
+      - role
+      - must_change_password
+    properties:
+      access_token:
+        type: string
+        description: "JWT access token. Send as `Authorization: Bearer <token>`."
+      token_type:
+        type: string
+        enum:
+          - bearer
+      expires_in:
+        type: integer
+        minimum: 1
+        description: Access token lifetime in seconds.
+      role:
+        type: string
+        description: Role granted to the account.
+      must_change_password:
+        type: boolean
+        description: >-
+          True when the account still has to set its own password. The token
+          is valid but privileged calls return 401 `password_change_required`.
+      refresh_token:
+        type: string
+        description: >-
+          Refresh token, issued when refresh token rotation is enabled.
+          Presented to `POST /auth/refresh`, never to any other endpoint.
+  AuthRefreshRequest:
+    type: object
+    required:
+      - refresh_token
+    properties:
+      refresh_token:
+        type: string
+        minLength: 1
+  AuthRefreshResponse:
+    type: object
+    required:
+      - access_token
+      - token_type
+      - expires_in
+      - refresh_token
+    properties:
+      access_token:
+        type: string
+      token_type:
+        type: string
+        enum:
+          - bearer
+      expires_in:
+        type: integer
+        minimum: 1
+      refresh_token:
+        type: string
+        description: >-
+          The rotated refresh token. The presented token is invalidated. If
+          an already rotated token is presented again the whole token family
+          is revoked and the response is 401 `refresh_token_reused`.
+  AuthLogoutRequest:
+    type: object
+    properties:
+      refresh_token:
+        type: string
+        description: >-
+          Optional refresh token to revoke. Without it only the presented
+          access token is invalidated.
+  AuthLogoutResponse:
+    type: object
+    required:
+      - revoked
+    properties:
+      revoked:
+        type: boolean
+        description: True when the access token and any supplied refresh token were revoked.
+  AuthUser:
+    type: object
+    description: A user account of this deployment.
+    required:
+      - id
+      - username
+      - role
+      - is_active
+    properties:
+      id:
+        type: string
+      username:
+        type: string
+      email:
+        type: string
+        format: email
+      role:
+        type: string
+        description: Role held by the account.
+      is_active:
+        type: boolean
+        description: A disabled account cannot authenticate.
+      must_change_password:
+        type: boolean
+      mfa_enabled:
+        type: boolean
+      created_at:
+        type: string
+        format: date-time
+      last_login_at:
+        type: string
+        format: date-time
+  AuthUserCreateRequest:
+    type: object
+    required:
+      - username
+      - email
+      - password
+      - role
+    properties:
+      username:
+        type: string
+        minLength: 3
+        maxLength: 150
+      email:
+        type: string
+        format: email
+      password:
+        type: string
+        format: password
+        description: >-
+          Must satisfy the deployment password policy. A rejected password
+          returns 422 `password_policy_violation`; a password on the local
+          breached list returns 422 `password_breached`.
+      role:
+        type: string
+        description: Role to grant. Only an administrator may call this endpoint.
+      send_invite:
+        type: boolean
+        default: true
+        description: >-
+          When true the account is created with `must_change_password` set and
+          no password is delivered to the user.
+  AuthUserUpdateRequest:
+    type: object
+    description: >-
+      Partial update. `role` changes are audited; setting `is_active` to
+      false revokes every live session of that account.
+    properties:
+      email:
+        type: string
+        format: email
+      role:
+        type: string
+      is_active:
+        type: boolean
+  AuthUserPasswordRequest:
+    type: object
+    required:
+      - password
+    properties:
+      password:
+        type: string
+        format: password
+        description: >-
+          The administrator sets the initial password. The account is marked
+          `must_change_password` and cannot act until it is changed.
+  AuthPasswordChangeRequest:
+    type: object
+    required:
+      - current_password
+      - new_password
+    properties:
+      current_password:
+        type: string
+        format: password
+      new_password:
+        type: string
+        format: password
+        description: >-
+          Must satisfy the password policy and must not repeat one of the last
+          N passwords. Failures return 422 `password_policy_violation`,
+          `password_reuse` or `password_breached`.
+  AuthPasswordChangeResponse:
+    type: object
+    required:
+      - changed
+    properties:
+      changed:
+        type: boolean
+      sessions_revoked:
+        type: boolean
+        description: True when all other sessions of the account were revoked.
+  AuthMfaEnrollResponse:
+    type: object
+    description: >-
+      TOTP enrolment material. The shared secret is returned exactly once, at
+      enrolment time. It is never shown again and never included in any
+      later response.
+    required:
+      - secret
+      - otpauth_uri
+    properties:
+      secret:
+        type: string
+        description: Base32 TOTP shared secret. Shown once.
+      otpauth_uri:
+        type: string
+        description: "The `otpauth://` URI to scan into an authenticator app."
+      digits:
+        type: integer
+        default: 6
+      period:
+        type: integer
+        default: 30
+        description: TOTP time step in seconds.
+      algorithm:
+        type: string
+        default: SHA1
+  AuthMfaConfirmRequest:
+    type: object
+    required:
+      - code
+    properties:
+      code:
+        type: string
+        minLength: 6
+        maxLength: 10
+        description: The current TOTP code. A wrong code returns 422 `mfa_invalid_code`.
+  AuthMfaDisableRequest:
+    type: object
+    required:
+      - recovery_code
+    properties:
+      recovery_code:
+        type: string
+        minLength: 1
+        description: >-
+          One unused recovery code. A wrong code returns 422
+          `mfa_recovery_code_invalid` and MFA stays enabled.
+  AuthRecoveryCodesResponse:
+    type: object
+    description: >-
+      Fresh recovery codes. The plaintext is returned exactly once, at
+      generation time, and is not recoverable afterwards.
+    required:
+      - codes
+      - generated_at
+    properties:
+      codes:
+        type: array
+        items:
+          type: string
+      generated_at:
+        type: string
+        format: date-time
+
+  # ------------------------------------------------------------- employees --
+  Employee:
+    type: object
+    description: >-
+      An employee record of this deployment, as the record is stored. The
+      employee number is a string business key (`employee_id`); `id` is the
+      database identity. `email` is the address as stored and is not
+      re-validated on the way out: a row written by an import or an older
+      release must not take the directory down. The record has no position,
+      location, employment type, termination date or effective-dated history
+      yet; those are separate capabilities, not fields this schema can
+      promise.
+    required:
+      - id
+      - employee_id
+      - first_name
+      - last_name
+      - email
+      - hire_date
+      - job_id
+      - department_id
+      - status
+    properties:
+      id:
+        type: integer
+      employee_id:
+        type: string
+        description: Stable business key. Unique inside the deployment.
+      first_name:
+        type: string
+      last_name:
+        type: string
+      email:
+        type: string
+        description: The address as stored.
+      phone:
+        type: string
+        nullable: true
+      hire_date:
+        type: string
+        format: date
+      job_id:
+        type: integer
+      department_id:
+        type: integer
+      manager_id:
+        type: integer
+        nullable: true
+      status:
+        type: string
+        description: >-
+          The stored employment status. The deployment writes `Active`,
+          `On Leave`, `Terminated` and `Rehired`; the value is not constrained
+          on the way out, so a row written by an import or an older release is
+          still returned.
+      employment_type:
+        type: string
+        nullable: true
+        description: Full-time, Part-time, Contract or Intern.
+      termination_date:
+        type: string
+        format: date
+        nullable: true
+        description: >-
+          Set when the employee moved to `Terminated`, cleared by `Rehired`.
+      salary:
+        type: number
+        nullable: true
+      created_at:
+        type: string
+        format: date-time
+        nullable: true
+  EmployeeCreate:
+    type: object
+    description: >-
+      The body `POST /employees` accepts. The employee number is required and
+      is supplied by the caller; the deployment does not allocate one.
+    required:
+      - employee_id
+      - first_name
+      - last_name
+      - email
+      - hire_date
+      - job_id
+      - department_id
+    properties:
+      employee_id:
+        type: string
+        description: >-
+          The employee number. A duplicate returns 409 `duplicate_natural_key`.
+      first_name:
+        type: string
+        minLength: 1
+      last_name:
+        type: string
+        minLength: 1
+      email:
+        type: string
+        format: email
+      phone:
+        type: string
+        nullable: true
+      hire_date:
+        type: string
+        format: date
+      job_id:
+        type: integer
+      department_id:
+        type: integer
+      manager_id:
+        type: integer
+        nullable: true
+      status:
+        type: string
+        default: Active
+        description: The stored employment status, for example `Active`.
+      employment_type:
+        type: string
+        nullable: true
+        description: Full-time, Part-time, Contract or Intern.
+      salary:
+        type: number
+        nullable: true
+  EmployeeUpdate:
+    type: object
+    description: >-
+      Partial update of the stored record. Only the fields sent are changed.
+      There is no effective date or reason yet: the effective-dated history
+      is a separate, unimplemented capability (`HR-03`), and pretending the
+      field existed would be worse than its absence.
+    properties:
+      first_name:
+        type: string
+      last_name:
+        type: string
+      email:
+        type: string
+        format: email
+      phone:
+        type: string
+        nullable: true
+      hire_date:
+        type: string
+        format: date
+      job_id:
+        type: integer
+      department_id:
+        type: integer
+      manager_id:
+        type: integer
+        nullable: true
+      status:
+        type: string
+        description: >-
+          The next employment status. The lifecycle is enforced; an undefined
+          move returns 409 `invalid_state_transition`.
+      employment_type:
+        type: string
+        nullable: true
+        description: Full-time, Part-time, Contract or Intern.
+      salary:
+        type: number
+        nullable: true
+      effective_from:
+        type: string
+        format: date
+        description: >-
+          First day the change is in force. Defaults to today. A future date
+          is refused with 422 because the deployment has no scheduler.
+      reason:
+        type: string
+        maxLength: 500
+        nullable: true
+        description: Why the change was made; stored on every history row it produces.
+  EmployeeHistoryEntry:
+    type: object
+    description: >-
+      One effective dated change to the employment record. History is
+      append only; a row is closed with `effective_to` when a newer change
+      supersedes it.
+    required:
+      - id
+      - field
+      - effective_from
+      - changed_at
+    properties:
+      id:
+        type: integer
+      field:
+        type: string
+        description: The field that changed, for example `status` or `manager_id`.
+      previous_value:
+        type: string
+        nullable: true
+      new_value:
+        type: string
+        nullable: true
+      effective_from:
+        type: string
+        format: date
+      effective_to:
+        type: string
+        format: date
+        nullable: true
+      reason:
+        type: string
+        nullable: true
+      changed_by:
+        type: string
+        nullable: true
+        description: Username of the actor that made the change.
+      changed_at:
+        type: string
+        format: date-time
+  EmployeeDocument:
+    type: object
+    description: >-
+      A document attached to an employee. The file itself is not returned by
+      this endpoint; only its metadata.
+    required:
+      - id
+      - employee_id
+      - filename
+      - uploaded_at
+    properties:
+      id:
+        type: string
+      employee_id:
+        type: string
+      filename:
+        type: string
+      content_type:
+        type: string
+      size_bytes:
+        type: integer
+        minimum: 0
+      category:
+        type: string
+        description: Free classification, for example `contract` or `id_proof`.
+      checksum:
+        type: string
+        description: SHA-256 of the stored object.
+      uploaded_at:
+        type: string
+        format: date-time
+      uploaded_by:
+        type: string
+  EmployeeDocumentUpload:
+    type: object
+    description: >-
+      The parts of a document upload. The `file` part carries the bytes, the
+      other parts carry the metadata.
+    required:
+      - file
+    properties:
+      file:
+        type: string
+        format: binary
+        description: >-
+          The document. The accepted file types and the size limit are
+          deployment settings, reported by the configuration assistant.
+      category:
+        type: string
+        description: Free classification, for example `contract` or `id_proof`.
+      description:
+        type: string
+        maxLength: 500
+      effective_from:
+        type: string
+        format: date
+        description: Date the document takes effect from.
+  OrgChartNode:
+    type: object
+    description: A node of the reporting tree.
+    required:
+      - employee_id
+      - name
+    properties:
+      employee_id:
+        type: string
+      name:
+        type: string
+        description: Display name of the employee. Not a credential.
+      position_id:
+        type: string
+        nullable: true
+      department_id:
+        type: string
+        nullable: true
+      manager_id:
+        type: string
+        nullable: true
+      direct_reports:
+        type: array
+        items:
+          $ref: '#/components/schemas/OrgChartNode'
+
+  # ------------------------------------------------------------------ time --
+  TimeEntry:
+    type: object
+    description: A single recorded working period.
+    required:
+      - id
+      - employee_id
+      - work_date
+      - minutes
+    properties:
+      id:
+        type: string
+      employee_id:
+        type: string
+      work_date:
+        type: string
+        format: date
+      clock_in:
+        type: string
+        format: date-time
+        nullable: true
+      clock_out:
+        type: string
+        format: date-time
+        nullable: true
+      minutes:
+        type: integer
+        description: Worked minutes, already reduced by breaks.
+      break_minutes:
+        type: integer
+        minimum: 0
+      source:
+        type: string
+        enum:
+          - terminal
+          - mobile
+          - manual
+          - import
+          - correction
+      status:
+        type: string
+        enum:
+          - open
+          - complete
+          - approved
+          - rejected
+      shift_template_id:
+        type: string
+        nullable: true
+      roster_entry_id:
+        type: string
+        nullable: true
+        description: Link to the roster entry this time entry was created from (if any).
+  ClockInRequest:
+    type: object
+    description: >-
+      Starts a working period. When `employee_id` is omitted the clock in is
+      attributed to the caller.
+    properties:
+      employee_id:
+        type: string
+        description: Only an administrator or manager may clock in on behalf of someone else.
+      location_id:
+        type: string
+      source:
+        type: string
+        default: terminal
+        enum:
+          - terminal
+          - mobile
+          - manual
+          - import
+          - correction
+      device_id:
+        type: string
+      notes:
+        type: string
+        maxLength: 500
+  ClockOutRequest:
+    type: object
+    description: >-
+      Closes the open working period of the caller, or of `employee_id` when
+      an administrator or manager clocks someone out.
+    properties:
+      employee_id:
+        type: string
+      entry_id:
+        type: string
+        description: Explicit entry to close. Defaults to the open entry of the employee.
+      source:
+        type: string
+        default: terminal
+        enum:
+          - terminal
+          - mobile
+          - manual
+          - import
+          - correction
+      notes:
+        type: string
+        maxLength: 500
+  Timesheet:
+    type: object
+    description: >-
+      The timesheet of one employee for one period. A period that is locked
+      by a payroll cut off returns 409 `timesheet_locked`.
+    required:
+      - id
+      - employee_id
+      - period_start
+      - period_end
+      - status
+    properties:
+      id:
+        type: string
+      employee_id:
+        type: string
+      period_start:
+        type: string
+        format: date
+      period_end:
+        type: string
+        format: date
+      status:
+        type: string
+        enum:
+          - open
+          - submitted
+          - approved
+          - rejected
+          - locked
+      total_minutes:
+        type: integer
+        minimum: 0
+      overtime_minutes:
+        type: integer
+        minimum: 0
+      lines:
+        type: array
+        items:
+          $ref: '#/components/schemas/TimesheetLine'
+      submitted_at:
+        type: string
+        format: date-time
+        nullable: true
+      approved_by:
+        type: string
+        nullable: true
+  TimesheetLine:
+    type: object
+    required:
+      - entry_id
+      - work_date
+      - minutes
+    properties:
+      entry_id:
+        type: string
+      work_date:
+        type: string
+        format: date
+      minutes:
+        type: integer
+        minimum: 0
+      source:
+        type: string
+  EntryCorrectionRequest:
+    type: object
+    description: >-
+      A manual correction of a recorded working period. A correction is
+      never applied directly: it is recorded as a pending request and the
+      entry keeps its original value until a manager approves it.
+    required:
+      - reason
+    properties:
+      work_date:
+        type: string
+        format: date
+      clock_in:
+        type: string
+        format: date-time
+      clock_out:
+        type: string
+        format: date-time
+      minutes:
+        type: integer
+        minimum: 0
+        description: Total worked minutes after correction.
+      reason:
+        type: string
+        minLength: 5
+        maxLength: 500
+        description: Why the correction is needed. Stored on the audit trail.
+  WorkingTimeViolation:
+    type: object
+    description: >-
+      A detected breach of the configured working time rules, for example a
+      missing break or a daily maximum overrun.
+    required:
+      - id
+      - employee_id
+      - work_date
+      - kind
+      - severity
+    properties:
+      id:
+        type: string
+      employee_id:
+        type: string
+      work_date:
+        type: string
+        format: date
+      kind:
+        type: string
+        description: Machine readable violation kind, for example `missing_break` or `max_daily_exceeded`.
+      severity:
+        type: string
+        enum:
+          - info
+          - warning
+          - critical
+      minutes:
+        type: integer
+        description: Minutes involved in the violation.
+      detected_at:
+        type: string
+        format: date-time
+      resolved:
+        type: boolean
+
+  # ----------------------------------------------------------------- leave --
+  LeaveType:
+    type: object
+    description: A leave type configured for this deployment.
+    required:
+      - id
+      - code
+      - name
+      - unit
+    properties:
+      id:
+        type: string
+      code:
+        type: string
+        description: Stable code used in imports and exports.
+      name:
+        type: string
+      unit:
+        type: string
+        enum:
+          - days
+          - hours
+      accrual_method:
+        type: string
+        enum:
+          - none
+          - annual
+          - per_period
+          - seniority
+      requires_approval:
+        type: boolean
+      max_consecutive_days:
+        type: integer
+        nullable: true
+      active:
+        type: boolean
+  LeaveBalance:
+    type: object
+    description: >-
+      The leave balance of one employee for one leave type and one year.
+      Balances are derived from the ledger; the numbers here are the
+      projection at the reporting date.
+    required:
+      - employee_id
+      - leave_type_id
+      - year
+      - entitled
+      - available
+    properties:
+      employee_id:
+        type: string
+      leave_type_id:
+        type: string
+      leave_type_code:
+        type: string
+      year:
+        type: integer
+      entitled:
+        type: number
+      taken:
+        type: number
+      pending:
+        type: number
+      available:
+        type: number
+      as_of:
+        type: string
+        format: date
+        description: Date the balance was computed.
+  LeaveLedgerEntry:
+    type: object
+    description: >-
+      One immutable movement of a leave balance. The ledger is the history
+      of the balance; the balance itself is the sum of the movements. A row
+      is never edited and never deleted: a correcting movement is appended
+      and references the row it corrects. The ledger carries no reason and
+      no diagnosis — the reason for a leave stays on the leave request.
+    required:
+      - id
+      - balance_id
+      - employee_id
+      - leave_type_id
+      - entitlement_year
+      - entry_type
+      - signed_days
+      - running_balance
+      - source
+    properties:
+      id:
+        type: string
+      balance_id:
+        type: string
+        description: The balance the movement belongs to.
+      employee_id:
+        type: string
+      leave_type_id:
+        type: string
+      entitlement_year:
+        type: integer
+      entry_type:
+        type: string
+        enum:
+          - accrual
+          - entitlement
+          - carry_over
+          - usage
+          - adjustment
+          - expiry
+          - encashment
+        description: >-
+          The kind of movement. The sign is in `signed_days`; a usage that
+          was reversed is a usage with the other sign.
+      signed_days:
+        type: number
+        description: >-
+          The movement in days. Positive when the days come to the balance,
+          negative when they go from it.
+      reference_type:
+        type: string
+        nullable: true
+        description: What the movement refers to, when it refers to something.
+      reference_id:
+        type: string
+        nullable: true
+      description:
+        type: string
+        nullable: true
+        description: >-
+          What the movement was. Never the reason for the leave, and never
+          anything about the person's health.
+      created_at:
+        type: string
+        format: date-time
+        nullable: true
+      running_balance:
+        type: number
+        description: Balance after this movement was applied.
+      source:
+        type: string
+        enum:
+          - policy
+          - request
+          - manual
+          - payroll
+  LeaveRequest:
+    type: object
+    description: A leave request and its decision state.
+    required:
+      - id
+      - employee_id
+      - leave_type_id
+      - start_date
+      - end_date
+      - status
+    properties:
+      id:
+        type: string
+      employee_id:
+        type: string
+      leave_type_id:
+        type: string
+      start_date:
+        type: string
+        format: date
+      end_date:
+        type: string
+        format: date
+      quantity:
+        type: number
+      unit:
+        type: string
+        enum:
+          - days
+          - hours
+      status:
+        type: string
+        enum:
+          - pending
+          - approved
+          - rejected
+          - cancelled
+      reason:
+        type: string
+        nullable: true
+      created_at:
+        type: string
+        format: date-time
+      decided_at:
+        type: string
+        format: date-time
+        nullable: true
+      decided_by:
+        type: string
+        nullable: true
+      decision_note:
+        type: string
+        nullable: true
+  LeaveRequestCreate:
+    type: object
+    required:
+      - leave_type_id
+      - start_date
+      - end_date
+    properties:
+      leave_type_id:
+        type: string
+      start_date:
+        type: string
+        format: date
+      end_date:
+        type: string
+        format: date
+      quantity:
+        type: number
+        description: >-
+          Optional. When omitted the server derives the quantity from the
+          leave calendar of the employee.
+      reason:
+        type: string
+        maxLength: 500
+      half_day:
+        type: boolean
+        default: false
+      notes:
+        type: string
+        maxLength: 1000
+  LeaveReconciliationRow:
+    type: object
+    description: >-
+      One leave balance, read against the ledger that should explain it.
+      The row carries the numbers that disagree and nothing else.
+    required:
+      - balance_id
+      - employee_id
+      - leave_type_id
+      - entitlement_year
+      - cached_available_days
+      - ledger_available_days
+      - difference_days
+      - state
+    properties:
+      balance_id:
+        type: string
+      employee_id:
+        type: string
+      leave_type_id:
+        type: string
+      leave_type_name:
+        type: string
+        nullable: true
+      entitlement_year:
+        type: integer
+      cached_entitled_days:
+        type: number
+      cached_carried_over_days:
+        type: number
+      cached_used_days:
+        type: number
+      cached_available_days:
+        type: number
+        description: What the balance's own columns add up to.
+      ledger_available_days:
+        type: number
+        description: What the ledger adds up to. This is the balance.
+      difference_days:
+        type: number
+        description: The ledger minus the cache. Zero when they agree.
+      ledger_entries:
+        type: integer
+        description: How many rows the ledger holds for this balance.
+      state:
+        type: string
+        enum:
+          - in_sync
+          - out_of_sync
+          - no_ledger
+        description: >-
+          `no_ledger` is a balance that has no history yet; `out_of_sync`
+          is a balance whose history and whose cache disagree.
+  LeaveReconciliationSummary:
+    type: object
+    description: What the reconciliation found, in one line of numbers.
+    required:
+      - balances
+      - in_sync
+      - out_of_sync
+      - no_ledger
+    properties:
+      balances:
+        type: integer
+      in_sync:
+        type: integer
+      out_of_sync:
+        type: integer
+      no_ledger:
+        type: integer
+      difference_days:
+        type: number
+  LeaveReconciliation:
+    type: object
+    description: >-
+      The reconciliation of a deployment's leave balances against their
+      ledgers.
+    required:
+      - rows
+      - summary
+    properties:
+      year:
+        type: integer
+        nullable: true
+      rows:
+        type: array
+        items:
+          $ref: '#/components/schemas/LeaveReconciliationRow'
+      summary:
+        $ref: '#/components/schemas/LeaveReconciliationSummary'
+  LeavePayrollInputEntry:
+    type: object
+    description: >-
+      One piece of approved leave, quantified, for the payroll lane.
+    required:
+      - employee_id
+      - leave_type_id
+      - leave_request_id
+      - start_date
+      - end_date
+      - quantity_days
+    properties:
+      employee_id:
+        type: string
+      leave_type_id:
+        type: string
+      leave_type_code:
+        type: string
+      is_paid:
+        type: boolean
+        description: Whether the leave type is paid, so the caller can treat it.
+      leave_request_id:
+        type: string
+        description: The leave request the leave came from, for traceability.
+      start_date:
+        type: string
+        format: date
+      end_date:
+        type: string
+        format: date
+      quantity_days:
+        type: number
+        description: The leave in days, inside the period asked for.
+  LeavePayrollInput:
+    type: object
+    description: >-
+      The approved leave of a period, in the shape the payroll lane reads.
+    required:
+      - period_start
+      - period_end
+      - entries
+      - total_days
+    properties:
+      period_start:
+        type: string
+        format: date
+      period_end:
+        type: string
+        format: date
+      entries:
+        type: array
+        items:
+          $ref: '#/components/schemas/LeavePayrollInputEntry'
+      total_days:
+        type: number
+  Holiday:
+    type: object
+    description: >-
+      A non working day for one location. The list is maintained by the
+      customer; statutory dates are never hard coded by the platform.
+    required:
+      - id
+      - name
+      - date
+      - location_id
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      date:
+        type: string
+        format: date
+      location_id:
+        type: string
+      jurisdiction:
+        type: string
+        nullable: true
+        description: Optional jurisdiction label, used to match a rule pack.
+      is_public:
+        type: boolean
+        default: true
+  HolidayBulkCreate:
+    type: object
+    description: >-
+      A set of non working days for one location and one year. The whole
+      set is applied in one transaction.
+    required:
+      - year
+      - location_id
+      - holidays
+    properties:
+      year:
+        type: integer
+        minimum: 2000
+        maximum: 2100
+      location_id:
+        type: string
+      jurisdiction:
+        type: string
+        description: Optional jurisdiction label to attach to every created holiday.
+      holidays:
+        type: array
+        minItems: 1
+        items:
+          type: object
+          required:
+            - name
+            - date
+          properties:
+            name:
+              type: string
+            date:
+              type: string
+              format: date
+            is_public:
+              type: boolean
+              default: true
+
+  # ------------------------------------------------------------ scheduling --
+  ShiftTemplate:
+    type: object
+    description: A reusable shift definition.
+    required:
+      - id
+      - name
+      - start_time
+      - end_time
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      start_time:
+        type: string
+        description: Local start time in `HH:MM`.
+      end_time:
+        type: string
+        description: Local end time in `HH:MM`. May be earlier than the start when the shift crosses midnight.
+      duration_minutes:
+        type: integer
+        minimum: 1
+      crosses_midnight:
+        type: boolean
+      location_id:
+        type: string
+        nullable: true
+      required_skills:
+        type: array
+        items:
+          type: string
+      min_rest_minutes:
+        type: integer
+        description: Minimum rest between two shifts of the same employee.
+      version:
+        type: integer
+        minimum: 1
+  ShiftTemplateCreate:
+    type: object
+    required:
+      - name
+      - start_time
+      - end_time
+    properties:
+      name:
+        type: string
+      start_time:
+        type: string
+        description: Local start time in `HH:MM`.
+      end_time:
+        type: string
+        description: Local end time in `HH:MM`.
+      location_id:
+        type: string
+      required_skills:
+        type: array
+        items:
+          type: string
+      min_rest_minutes:
+        type: integer
+        minimum: 0
+      crosses_midnight:
+        type: boolean
+        default: false
+  RosterEntry:
+    type: object
+    description: One assigned shift in a roster version.
+    required:
+      - id
+      - employee_id
+      - shift_template_id
+      - work_date
+    properties:
+      id:
+        type: string
+      roster_version_id:
+        type: string
+      employee_id:
+        type: string
+      shift_template_id:
+        type: string
+      work_date:
+        type: string
+        format: date
+      start_time:
+        type: string
+      end_time:
+        type: string
+      minutes:
+        type: integer
+      status:
+        type: string
+        enum:
+          - draft
+          - published
+          - locked
+  RosterGenerateRequest:
+    type: object
+    description: >-
+      The input of the roster solver: how many people are needed, what must
+      hold, and how the solver should trade the objectives off. A request
+      that contradicts itself returns 422 `validation_error`.
+    required:
+      - start_date
+      - end_date
+      - location_id
+      - demand
+    properties:
+      start_date:
+        type: string
+        format: date
+      end_date:
+        type: string
+        format: date
+      location_id:
+        type: string
+      demand:
+        type: array
+        minItems: 1
+        description: Required headcount per shift template and date.
+        items:
+          type: object
+          required:
+            - shift_template_id
+            - required_headcount
+          properties:
+            shift_template_id:
+              type: string
+            work_date:
+              type: string
+              format: date
+              description: Optional. When omitted the demand applies to every date in the range.
+            required_headcount:
+              type: integer
+              minimum: 0
+      constraints:
+        type: object
+        description: >-
+          Hard constraints. The solver never breaks these; when they cannot
+          all hold the response carries unfilled slots and their causes.
+        properties:
+          max_shifts_per_employee:
+            type: integer
+            minimum: 0
+          max_weekly_hours:
+            type: number
+            minimum: 0
+          min_rest_minutes:
+            type: integer
+            minimum: 0
+          required_skills:
+            type: array
+            items:
+              type: string
+          exclude_employees:
+            type: array
+            items:
+              type: string
+          respect_leave:
+            type: boolean
+            default: true
+            description: Do not assign an employee who is on approved leave.
+      weights:
+        type: object
+        description: >-
+          Relative weight of each objective. The solver minimises the
+          weighted sum. A weight of zero removes the objective.
+        properties:
+          labour_cost:
+            type: number
+            minimum: 0
+          fairness:
+            type: number
+            minimum: 0
+          preference:
+            type: number
+            minimum: 0
+          overtime:
+            type: number
+            minimum: 0
+      time_limit_seconds:
+        type: integer
+        minimum: 1
+        default: 30
+        description: Solver time limit. Exceeding it returns 503 `solver_timeout` with the unmet slot list.
+  RosterGenerateResponse:
+    type: object
+    description: >-
+      A candidate roster plus everything the solver could not fill. The
+      candidate is not live until it is published.
+    required:
+      - roster_version_id
+      - candidates
+      - unfilled
+      - solver
+    properties:
+      roster_version_id:
+        type: string
+        description: Version the candidates belong to. The version stays in `draft`.
+      candidates:
+        type: array
+        items:
+          $ref: '#/components/schemas/RosterEntry'
+      unfilled:
+        type: array
+        items:
+          $ref: '#/components/schemas/UnfilledSlot'
+      solver:
+        $ref: '#/components/schemas/SolverMetadata'
+      warnings:
+        type: array
+        items:
+          type: string
+  UnfilledSlot:
+    type: object
+    description: >-
+      A requirement the solver could not satisfy, and why. `causes` is
+      machine readable so a client can explain the gap without parsing
+      prose.
+    required:
+      - shift_template_id
+      - work_date
+      - required_headcount
+      - filled
+      - causes
+    properties:
+      shift_template_id:
+        type: string
+      work_date:
+        type: string
+        format: date
+      required_headcount:
+        type: integer
+        minimum: 0
+      filled:
+        type: integer
+        minimum: 0
+      causes:
+        type: array
+        items:
+          type: string
+        description: >-
+          Why the slot stayed open, for example `no_eligible_employee`,
+          `hard_constraint_conflict` or `time_limit_reached`.
+  SolverMetadata:
+    type: object
+    description: >-
+      How the candidate roster was produced. Recorded so a planner can judge
+      the result and reproduce it later.
+    required:
+      - solver
+      - status
+    properties:
+      solver:
+        type: string
+        description: Solver engine and version that produced the result.
+      status:
+        type: string
+        enum:
+          - optimal
+          - feasible
+          - timeout
+          - infeasible
+      time_limit_seconds:
+        type: integer
+      solve_time_ms:
+        type: integer
+      objective_value:
+        type: number
+        description: Value of the weighted objective the solver minimised.
+      evaluated_nodes:
+        type: integer
+      input_hash:
+        type: string
+        description: Hash of the solver input, so the same input gives the same result.
+  RosterPublishRequest:
+    type: object
+    required:
+      - roster_version_id
+    properties:
+      roster_version_id:
+        type: string
+      publish_at:
+        type: string
+        format: date-time
+        description: Optional. Publish now when omitted.
+      notify:
+        type: boolean
+        default: true
+        description: Notify the affected employees after publishing.
+  RosterVersion:
+    type: object
+    description: A version of the roster for one location and one date range.
+    required:
+      - id
+      - location_id
+      - start_date
+      - end_date
+      - status
+    properties:
+      id:
+        type: string
+      location_id:
+        type: string
+      start_date:
+        type: string
+        format: date
+      end_date:
+        type: string
+        format: date
+      status:
+        type: string
+        enum:
+          - draft
+          - published
+          - superseded
+      entry_count:
+        type: integer
+        minimum: 0
+      unfilled_count:
+        type: integer
+        minimum: 0
+      published_at:
+        type: string
+        format: date-time
+        nullable: true
+      published_by:
+        type: string
+        nullable: true
+  CoverageResponse:
+    type: object
+    description: >-
+      Coverage of the demand for a location and a period, with the gaps that
+      remain.
+    required:
+      - location_id
+      - start_date
+      - end_date
+      - demand_total
+      - covered
+    properties:
+      location_id:
+        type: string
+      start_date:
+        type: string
+        format: date
+      end_date:
+        type: string
+        format: date
+      demand_total:
+        type: integer
+        minimum: 0
+      covered:
+        type: integer
+        minimum: 0
+      coverage_ratio:
+        type: number
+        minimum: 0
+        maximum: 1
+      gaps:
+        type: array
+        items:
+          type: object
+          required:
+            - work_date
+            - shift_template_id
+            - shortfall
+          properties:
+            work_date:
+              type: string
+              format: date
+            shift_template_id:
+              type: string
+            shortfall:
+              type: integer
+              minimum: 0
+  SwapRequest:
+    type: object
+    description: A request to hand a shift to another employee.
+    required:
+      - roster_entry_id
+      - to_employee_id
+    properties:
+      roster_entry_id:
+        type: string
+      to_employee_id:
+        type: string
+      reason:
+        type: string
+        maxLength: 500
+  Swap:
+    type: object
+    description: The state of a shift swap.
+    required:
+      - id
+      - status
+    properties:
+      id:
+        type: string
+      roster_entry_id:
+        type: string
+      from_employee_id:
+        type: string
+      to_employee_id:
+        type: string
+      requester_id:
+        type: string
+      status:
+        type: string
+        enum:
+          - pending
+          - approved
+          - rejected
+      violations:
+        type: array
+        items:
+          type: string
+        description: >-
+          Hard constraints the swap would break. A swap that breaks one is
+          rejected with 409 `swap_violates_constraints`.
+      decided_at:
+        type: string
+        format: date-time
+        nullable: true
+      decided_by:
+        type: string
+        nullable: true
+
+
+  RosterAttendanceEntry:
+    type: object
+    description: A roster entry with its linked time entry (if any).
+    required:
+      - roster_entry
+    properties:
+      roster_entry:
+        $ref: '#/components/schemas/RosterEntry'
+      time_entry:
+        $ref: '#/components/schemas/TimeEntry'
+        nullable: true
+
+  RosterAttendanceResponse:
+    type: object
+    description: Attendance data for a published roster version.
+    required:
+      - version_id
+      - period_start
+      - period_end
+      - entries
+      - summary
+    properties:
+      version_id:
+        type: integer
+      location_code:
+        type: string
+        nullable: true
+      period_start:
+        type: string
+        format: date
+      period_end:
+        type: string
+        format: date
+      entries:
+        type: array
+        items:
+          $ref: '#/components/schemas/RosterAttendanceEntry'
+      summary:
+        type: object
+        description: Summary counts (total, matched, missing, extra).
+        additionalProperties:
+          type: integer
+
+  AutoCreateAttendanceRequest:
+    type: object
+    description: Request to auto-create time entries from roster (kiosk mode).
+    properties:
+      source:
+        type: string
+        default: "Kiosk"
+        description: Source identifier for auto-created entries.
+
+  AutoCreateAttendanceResponse:
+    type: object
+    description: Response from auto-creating attendance.
+    required:
+      - version_id
+      - created_count
+      - skipped_count
+      - entries
+    properties:
+      version_id:
+        type: integer
+      created_count:
+        type: integer
+        minimum: 0
+      skipped_count:
+        type: integer
+        minimum: 0
+      entries:
+        type: array
+        items:
+          $ref: '#/components/schemas/TimeEntry'
+
+  DeviationEntry:
+    type: object
+    description: A single deviation (violation) for a roster entry.
+    required:
+      - roster_entry
+      - violations
+    properties:
+      roster_entry:
+        $ref: '#/components/schemas/RosterEntry'
+      time_entry:
+        $ref: '#/components/schemas/TimeEntry'
+        nullable: true
+      violations:
+        type: array
+        items:
+          $ref: '#/components/schemas/WorkingTimeViolation'
+
+  DeviationsResponse:
+    type: object
+    description: Deviations for a published roster version.
+    required:
+      - version_id
+      - period_start
+      - period_end
+      - deviations
+      - summary
+    properties:
+      version_id:
+        type: integer
+      location_code:
+        type: string
+        nullable: true
+      period_start:
+        type: string
+        format: date
+      period_end:
+        type: string
+        format: date
+      deviations:
+        type: array
+        items:
+          $ref: '#/components/schemas/DeviationEntry'
+      summary:
+        type: object
+        description: Summary counts by kind and severity.
+        additionalProperties:
+          type: integer
+
+  LeaveBlockedDay:
+    type: object
+    description: One day an approved leave request blocks, with the leave reference.
+    required:
+      - date
+      - leave_request_id
+      - leave_type_id
+    properties:
+      date:
+        type: string
+        format: date
+      leave_request_id:
+        type: integer
+      leave_type_id:
+        type: integer
+      leave_type_code:
+        type: string
+        nullable: true
+
+  LeaveReference:
+    type: object
+    description: The leave request behind a run of blocked days, quantified.
+    required:
+      - leave_request_id
+      - leave_type_id
+      - start_date
+      - end_date
+      - days
+    properties:
+      leave_request_id:
+        type: integer
+      leave_type_id:
+        type: integer
+      leave_type_code:
+        type: string
+        nullable: true
+      start_date:
+        type: string
+        format: date
+      end_date:
+        type: string
+        format: date
+      days:
+        type: integer
+        minimum: 1
+
+  EmployeeAvailability:
+    type: object
+    description: Per-employee availability over the queried window.
+    required:
+      - employee_id
+      - available_dates
+      - unavailable_dates
+      - leave_requests
+    properties:
+      employee_id:
+        type: integer
+      available_dates:
+        type: array
+        items:
+          type: string
+          format: date
+      unavailable_dates:
+        type: array
+        items:
+          $ref: '#/components/schemas/LeaveBlockedDay'
+      leave_requests:
+        type: array
+        items:
+          $ref: '#/components/schemas/LeaveReference'
+
+  AvailabilityResponse:
+    type: object
+    description: >-
+      Availability for the queried window: approved leave subtracted, every
+      blocked day carrying the leave reference.
+    required:
+      - start_date
+      - end_date
+      - employees
+    properties:
+      start_date:
+        type: string
+        format: date
+      end_date:
+        type: string
+        format: date
+      employees:
+        type: array
+        items:
+          $ref: '#/components/schemas/EmployeeAvailability'
+
+  RosterDraftOut:
+    type: object
+    description: Full draft roster data for manager review.
+    required:
+      - draft_id
+      - period_start
+      - period_end
+      - status
+      - created_at
+      - problem
+      - result
+      - assignments
+      - roster
+      - unfilled_slots
+      - unfilled
+      - weight_breakdown
+      - input_hash
+    properties:
+      draft_id:
+        type: integer
+      location_code:
+        type: string
+        nullable: true
+      period_start:
+        type: string
+        format: date
+      period_end:
+        type: string
+        format: date
+      status:
+        type: string
+      solver_status:
+        type: string
+        nullable: true
+      created_at:
+        type: string
+        format: date-time
+      problem:
+        type: object
+      result:
+        type: object
+      assignments:
+        type: array
+        items:
+          type: object
+      roster:
+        type: array
+        items:
+          type: object
+      unfilled_slots:
+        type: array
+        items:
+          $ref: '#/components/schemas/UnfilledSlot'
+      unfilled:
+        type: array
+        items:
+          $ref: '#/components/schemas/UnfilledSlot'
+      weight_breakdown:
+        $ref: '#/components/schemas/WeightBreakdown'
+      objective_value:
+        type: number
+        nullable: true
+      input_hash:
+        type: string
+
+  AdjustmentAction:
+    type: object
+    description: Manual assignment adjustment.
+    required:
+      - slot_instance_id
+    properties:
+      slot_instance_id:
+        type: string
+      employee_id:
+        type: integer
+        nullable: true
+      action:
+        type: string
+        enum: [assign, unassign, reassign]
+        default: reassign
+
+  AdjustmentResponse:
+    type: object
+    description: Response from a manual adjustment.
+    required:
+      - draft_id
+      - assignments
+      - unfilled_slots
+      - violations
+      - valid
+    properties:
+      draft_id:
+        type: integer
+      assignments:
+        type: array
+        items:
+          type: object
+      unfilled_slots:
+        type: array
+        items:
+          $ref: '#/components/schemas/UnfilledSlot'
+      violations:
+        type: array
+        items:
+          type: string
+      valid:
+        type: boolean
+
+  RosterVersionDetailOut:
+    type: object
+    description: Roster version with full entries and solver data.
+    allOf:
+      - $ref: '#/components/schemas/RosterVersion'
+      - type: object
+        properties:
+          entries:
+            type: array
+            items:
+              $ref: '#/components/schemas/RosterEntry'
+          problem:
+            type: object
+          result:
+            type: object
+          assignments:
+            type: array
+            items:
+              type: object
+          unfilled_slots:
+            type: array
+            items:
+              $ref: '#/components/schemas/UnfilledSlot'
+          weight_breakdown:
+            $ref: '#/components/schemas/WeightBreakdown'
+          objective_value:
+            type: number
+            nullable: true
+          input_hash:
+            type: string
+
+  CreateDraftFromVersionRequest:
+    type: object
+    description: Request to create a new draft from a published version.
+    properties:
+      new_period_start:
+        type: string
+        format: date
+        nullable: true
+      new_period_end:
+        type: string
+        format: date
+        nullable: true
+      notes:
+        type: string
+        nullable: true
+
+  CreateDraftFromVersionResponse:
+    type: object
+    description: Response from creating a draft from a version.
+    required:
+      - draft_id
+      - status
+      - period_start
+      - period_end
+      - created_at
+    properties:
+      draft_id:
+        type: integer
+      status:
+        type: string
+      location_code:
+        type: string
+        nullable: true
+      period_start:
+        type: string
+        format: date
+      period_end:
+        type: string
+        format: date
+      created_at:
+        type: string
+        format: date-time
+
+  VersionCompareResponse:
+    type: object
+    description: Response from comparing two roster versions.
+    required:
+      - version_id
+      - base_version_id
+      - added
+      - removed
+      - changed
+      - summary
+    properties:
+      version_id:
+        type: integer
+      base_version_id:
+        type: integer
+      added:
+        type: array
+        items:
+          $ref: '#/components/schemas/VersionDiffEntry'
+      removed:
+        type: array
+        items:
+          $ref: '#/components/schemas/VersionDiffEntry'
+      changed:
+        type: array
+        items:
+          $ref: '#/components/schemas/VersionDiffEntry'
+      summary:
+        type: object
+        additionalProperties:
+          type: integer
+
+  VersionDiffEntry:
+    type: object
+    description: A single entry in a version comparison diff.
+    required:
+      - type
+    properties:
+      type:
+        type: string
+        enum: [added, removed, changed]
+      entry:
+        $ref: '#/components/schemas/RosterEntry'
+        nullable: true
+      base_entry:
+        $ref: '#/components/schemas/RosterEntry'
+        nullable: true
+      changes:
+        type: object
+        additionalProperties: true
+
+  WeightBreakdown:
+    type: object
+    description: Weight breakdown from the solver.
+    properties:
+      fairness:
+        type: object
+      preference:
+        type: integer
+      cost:
+        type: number
+      continuity:
+        type: integer
+      weights:
+        type: object
+        additionalProperties:
+          type: number
+
+  UnfilledSlot:
+    type: object
+    description: An unfilled slot with its cause.
+    required:
+      - slot_id
+      - date
+      - headcount
+      - cause
+    properties:
+      slot_id:
+        type: string
+      date:
+        type: string
+        format: date
+      location:
+        type: string
+        nullable: true
+      role:
+        type: string
+        nullable: true
+      headcount:
+        type: integer
+      cause:
+        type: string
+      blocking_constraint:
+        type: string
+        nullable: true
+      constraint:
+        type: string
+        nullable: true
+
+  # --------------------------------------------------------------- payroll --
+  PayComponent:
+    type: object
+    description: One element of a pay profile.
+    required:
+      - id
+      - code
+      - name
+      - category
+    properties:
+      id:
+        type: string
+      code:
+        type: string
+      name:
+        type: string
+      category:
+        type: string
+        enum:
+          - earning
+          - deduction
+          - employer_contribution
+      taxable:
+        type: boolean
+      calculation_type:
+        type: string
+        enum:
+          - fixed
+          - percentage
+          - formula
+      calculation_value:
+        type: string
+        description: >-
+          Opaque calculation expression. The customer owns the formula; the
+          platform does not publish statutory values.
+      sequence:
+        type: integer
+        description: Order in which the component is calculated.
+  PayProfile:
+    type: object
+    description: A named set of pay components used by pay runs.
+    required:
+      - id
+      - name
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      currency:
+        type: string
+        description: ISO 4217 currency code of the profile.
+      pay_frequency:
+        type: string
+        enum:
+          - weekly
+          - biweekly
+          - semimonthly
+          - monthly
+      component_ids:
+        type: array
+        items:
+          type: string
+      active:
+        type: boolean
+  PayRun:
+    type: object
+    description: >-
+      One payroll run. A run moves `draft` to `calculated` to `approved` to
+      `finalised`; a finalised run can no longer be edited and returns 409
+      `pay_run_already_finalised`.
+    required:
+      - id
+      - status
+      - jurisdiction
+    properties:
+      id:
+        type: string
+      period_id:
+        type: string
+      status:
+        type: string
+        enum:
+          - draft
+          - calculated
+          - approved
+          - finalised
+      jurisdiction:
+        type: string
+        description: >-
+          Jurisdiction whose rule pack applies to this run. The run may not
+          be calculated unless the pack for this jurisdiction is `verified`.
+      rule_pack_id:
+        type: string
+        nullable: true
+      employee_count:
+        type: integer
+        minimum: 0
+      currency:
+        type: string
+      totals:
+        type: object
+        description: Aggregates of the run. Amounts are in the run currency.
+        additionalProperties: true
+      calculated_at:
+        type: string
+        format: date-time
+        nullable: true
+      approved_at:
+        type: string
+        format: date-time
+        nullable: true
+      approved_by:
+        type: string
+        nullable: true
+      finalised_at:
+        type: string
+        format: date-time
+        nullable: true
+  PayRunCreate:
+    type: object
+    required:
+      - period_id
+      - jurisdiction
+    properties:
+      period_id:
+        type: string
+      jurisdiction:
+        type: string
+        description: >-
+          Jurisdiction that determines the rule pack. A jurisdiction with no
+          pack returns 422 `rule_pack_missing`.
+      employee_ids:
+        type: array
+        items:
+          type: string
+        description: Subset of employees to include. All active employees when omitted.
+      run_type:
+        type: string
+        default: regular
+        enum:
+          - regular
+          - off_cycle
+          - correction
+      currency:
+        type: string
+  PayRunCalculateRequest:
+    type: object
+    description: >-
+      Calculation input. `dry_run` defaults to true: a dry run computes
+      everything and writes nothing.
+    properties:
+      dry_run:
+        type: boolean
+        default: true
+        description: >-
+          True computes the run without persisting results. False persists
+          the calculation and moves the run to `calculated`.
+      employee_ids:
+        type: array
+        items:
+          type: string
+        description: Restrict the calculation to these employees.
+      include_zero:
+        type: boolean
+        default: false
+        description: Include employees with a zero result.
+  ReconciliationReport:
+    type: object
+    description: >-
+      A comparison of the computed run against the source data and the
+      previous period, with the variances that need a human look.
+    required:
+      - run_id
+      - checks
+    properties:
+      run_id:
+        type: string
+      generated_at:
+        type: string
+        format: date-time
+      totals:
+        type: object
+        additionalProperties: true
+      by_component:
+        type: array
+        items:
+          type: object
+          additionalProperties: true
+      variances:
+        type: array
+        items:
+          type: object
+          required:
+            - code
+          properties:
+            code:
+              type: string
+              description: Machine readable variance kind, for example `headcount_delta`.
+            entity:
+              type: string
+              nullable: true
+            amount:
+              type: number
+            explanation:
+              type: string
+      checks:
+        type: array
+        items:
+          type: object
+          required:
+            - name
+            - passed
+          properties:
+            name:
+              type: string
+            passed:
+              type: boolean
+            detail:
+              type: string
+  Payslip:
+    type: object
+    description: >-
+      The payslip of one employee for one run. Amounts are in the run
+      currency and are only final once the run is finalised.
+    required:
+      - id
+      - run_id
+      - employee_id
+    properties:
+      id:
+        type: string
+      run_id:
+        type: string
+      employee_id:
+        type: string
+      period_id:
+        type: string
+      currency:
+        type: string
+      gross:
+        type: number
+      deductions:
+        type: number
+      net:
+        type: number
+      lines:
+        type: array
+        items:
+          type: object
+          required:
+            - code
+            - name
+            - amount
+          properties:
+            code:
+              type: string
+            name:
+              type: string
+            amount:
+              type: number
+            category:
+              type: string
+      inputs_json:
+        type: string
+        nullable: true
+        description: >-
+          The approved time and leave the slip was calculated from, as a JSON
+          object: the approved and unapproved time entry counts, the approved
+          worked and overtime hours, and the paid and unpaid leave days. Null
+          on a slip written before the record existed.
+      issued_at:
+        type: string
+        format: date-time
+        nullable: true
+  PaymentFile:
+    type: object
+    description: >-
+      The exported payment file of a finalised run. The file itself is
+      fetched from the download URL, never inlined.
+    required:
+      - run_id
+      - format
+      - filename
+    properties:
+      run_id:
+        type: string
+      format:
+        type: string
+        enum:
+          - csv
+          - camt053
+          - sepa
+          - ach
+      filename:
+        type: string
+      content_type:
+        type: string
+      size_bytes:
+        type: integer
+        minimum: 0
+      sha256:
+        type: string
+      generated_at:
+        type: string
+        format: date-time
+      download_url:
+        type: string
+        description: Short lived URL. The file is served by the object storage backend.
+
+  # ----------------------------------------------------------- forecasting --
+  ForecastRunCreate:
+    type: object
+    description: >-
+      What to forecast, how, and for how long. The series is a metric of
+      this deployment, not a cross tenant query.
+    required:
+      - series
+      - horizon
+    properties:
+      series:
+        type: object
+        description: The metric to forecast.
+        required:
+          - metric
+        properties:
+          metric:
+            type: string
+            description: Metric key, for example `headcount` or `absence_rate`.
+          filters:
+            type: object
+            additionalProperties: true
+            description: Optional dimension filters inside this deployment.
+          granularity:
+            type: string
+            default: week
+            enum:
+              - day
+              - week
+              - month
+      method:
+        type: string
+        default: auto
+        description: >-
+          Forecast method. `auto` lets the server pick from the data. Every
+          other value is an explicit override and is recorded in the result.
+        enum:
+          - auto
+          - exponential_smoothing
+          - holt_winters
+          - moving_average
+          - seasonal_naive
+          - linear_regression
+      horizon:
+        type: integer
+        minimum: 1
+        description: Number of periods to forecast.
+      backtest_window:
+        type: integer
+        minimum: 1
+        description: Number of holdout periods used to measure the error.
+      min_history_weeks:
+        type: integer
+        minimum: 1
+        description: >-
+          Minimum history the method needs. Below it the run is still
+          created but is flagged `insufficient_history` and the forecast
+          values are omitted.
+  ForecastRun:
+    type: object
+    description: >-
+      One forecast run, with everything needed to judge it: the method that
+      was used, the window it was fitted on, the measured error on a
+      holdout, the confidence band, and a hash of the input so the run can
+      be reproduced.
+    required:
+      - id
+      - series
+      - method
+      - version
+      - input_hash
+      - insufficient_history
+    properties:
+      id:
+        type: string
+      series:
+        type: object
+        additionalProperties: true
+      method:
+        type: string
+        description: The method that was actually used. Resolved when the request said `auto`.
+      method_version:
+        type: string
+        description: Version of the forecasting implementation that produced the result.
+      data_window:
+        type: object
+        description: The observations the model was fitted on.
+        required:
+          - start
+          - end
+          - observations
+        properties:
+          start:
+            type: string
+            format: date
+          end:
+            type: string
+            format: date
+          observations:
+            type: integer
+            minimum: 0
+      backtest:
+        type: object
+        description: >-
+          The measured error on a holdout. `mape` is the mean absolute
+          percentage error, `mase` the mean absolute scaled error.
+        required:
+          - mape
+          - mase
+          - holdout_length
+        properties:
+          mape:
+            type: number
+            nullable: true
+            description: Mean absolute percentage error over the holdout. Null when it cannot be computed.
+          mase:
+            type: number
+            nullable: true
+            description: Mean absolute scaled error over the holdout. Null when it cannot be computed.
+          holdout_length:
+            type: integer
+            minimum: 0
+            description: Number of periods held out of the fit.
+          holdout_start:
+            type: string
+            format: date
+          holdout_end:
+            type: string
+            format: date
+      confidence_band:
+        type: object
+        description: The interval the forecast is stated with.
+        properties:
+          level:
+            type: number
+            description: Coverage of the interval, for example 0.8.
+          method:
+            type: string
+            description: How the band was derived, for example `residual_variance`.
+      forecast:
+        type: array
+        items:
+          type: object
+          required:
+            - period
+            - value
+          properties:
+            period:
+              type: string
+              format: date
+            value:
+              type: number
+            lower:
+              type: number
+            upper:
+              type: number
+      input_hash:
+        type: string
+        description: >-
+          Hash of the exact input the run was computed from. The same input
+          hash means the same run.
+      version:
+        type: integer
+        minimum: 1
+        description: Version of this run. A re-run of the same input creates a new version.
+      insufficient_history:
+        type: boolean
+        description: >-
+          True when the series had less history than the method requires.
+          The run is recorded but the forecast values are omitted.
+      created_at:
+        type: string
+        format: date-time
+      created_by:
+        type: string
+  ForecastScenario:
+    type: object
+    description: >-
+      A named set of assumptions on top of a forecast run. The assumptions
+      are always shown, never applied silently. A scenario is versioned:
+      editing it stores a NEW version under the same lineage root and the
+      old versions stay intact and comparable.
+    required:
+      - id
+      - name
+      - assumptions
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      description:
+        type: string
+      base_run_id:
+        type: string
+        nullable: true
+      version_no:
+        type: integer
+        minimum: 1
+        description: 1 for the first version; each edit creates the next number.
+      root_id:
+        type: string
+        nullable: true
+        description: The lineage root — the id of the first version of this scenario.
+      source:
+        type: string
+        enum: [created, edited, forked]
+        description: How this version came into existence.
+      forked_from_scenario_id:
+        type: string
+        nullable: true
+        description: For forks only — the exact version whose assumptions were copied.
+      assumptions:
+        type: array
+        minItems: 1
+        items:
+          type: object
+          required:
+            - key
+            - value
+          properties:
+            key:
+              type: string
+              description: Machine readable assumption key, for example `absence_rate_delta`.
+            value:
+              type: number
+            unit:
+              type: string
+            note:
+              type: string
+              description: Why the assumption was made.
+      created_at:
+        type: string
+        format: date-time
+  ScenarioComparisonRequest:
+    type: object
+    description: >-
+      Compare scenarios. Every assumption that is applied is returned in the
+      response so the comparison is reproducible.
+    required:
+      - scenario_ids
+    properties:
+      scenario_ids:
+        type: array
+        minItems: 2
+        items:
+          type: string
+      horizon:
+        type: integer
+        minimum: 1
+        description: Periods to compare. Defaults to the shortest scenario horizon.
+  ScenarioComparison:
+    type: object
+    description: The side by side result of a scenario comparison.
+    required:
+      - scenarios
+      - assumptions
+    properties:
+      scenarios:
+        type: array
+        items:
+          $ref: '#/components/schemas/ForecastScenario'
+      assumptions:
+        type: array
+        items:
+          type: object
+          additionalProperties: true
+        description: The assumptions that were in force, with their origin.
+      series:
+        type: array
+        items:
+          type: object
+          additionalProperties: true
+        description: One row per period with the value of every scenario.
+      deltas:
+        type: array
+        items:
+          type: object
+          additionalProperties: true
+        description: Difference of every scenario against the first one.
+
+  ScenarioAssumption:
+    type: object
+    description: A single named assumption in a scenario.
+    required:
+      - key
+      - value
+      - unit
+    properties:
+      key:
+        type: string
+        description: "Assumption type: demand_multiplier, demand_delta, headcount_cap, seasonality_override, method_override"
+      value:
+        type: number
+        description: Assumption value (ratio for multiplier, absolute for delta/cap)
+      unit:
+        type: string
+        description: "Unit: ratio, absolute, days, method"
+      note:
+        type: string
+        nullable: true
+        description: Human-readable explanation of this assumption
+
+  ScenarioCreate:
+    type: object
+    description: Request to create a scenario from a base forecast run.
+    required:
+      - base_run_id
+      - name
+      - assumptions
+    properties:
+      base_run_id:
+        type: integer
+        description: The forecast run this scenario is based on
+      name:
+        type: string
+        minLength: 1
+        maxLength: 200
+      description:
+        type: string
+        nullable: true
+      assumptions:
+        type: array
+        minItems: 1
+        items:
+          $ref: '#/components/schemas/ScenarioAssumption'
+
+  Scenario:
+    allOf:
+      - $ref: '#/components/schemas/ForecastScenario'
+      - type: object
+        properties:
+          results:
+            type: array
+            items:
+              type: object
+              required:
+                - horizon_step
+                - forecast_date
+                - predicted_value
+              properties:
+                horizon_step:
+                  type: integer
+                forecast_date:
+                  type: string
+                  format: date
+                predicted_value:
+                  type: number
+                lower_bound:
+                  type: number
+                  nullable: true
+                upper_bound:
+                  type: number
+                  nullable: true
+                method_used:
+                  type: string
+                input_hash:
+                  type: string
+                rule_version:
+                  type: string
+                data_start_date:
+                  type: string
+                  format: date-time
+                  nullable: true
+                data_end_date:
+                  type: string
+                  format: date-time
+                  nullable: true
+                series_key:
+                  type: string
+
+  PaginatedScenarios:
+    allOf:
+      - $ref: '#/components/schemas/PaginatedResponse'
+      - type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/Scenario'
+
+  ScenarioComparisonRequest:
+    type: object
+    description: >-
+      Request to compare scenarios. Each id may be ANY version of a
+      scenario — the response carries every participant's version
+      metadata. Hourly rates are optional: when they are supplied, every
+      participant also gets an explicit cost projection of its own
+      projected demand.
+    required:
+      - scenario_ids
+    properties:
+      scenario_ids:
+        type: array
+        minItems: 2
+        items:
+          type: integer
+      hourly_costs:
+        type: object
+        additionalProperties:
+          type: number
+        description: >-
+          Optional explicit hourly rates for a cost projection per
+          participant. Must include a `default` rate (or be exactly one
+          rate). Costs appear ONLY when the caller supplies them; every
+          row is labelled `excludes statutory on-costs`.
+
+  ScenarioComparison:
+    type: object
+    description: Side-by-side comparison of scenarios and versions.
+    required:
+      - scenarios
+      - comparison
+    properties:
+      scenarios:
+        type: array
+        items:
+          $ref: '#/components/schemas/Scenario'
+      costs:
+        type: object
+        nullable: true
+        additionalProperties:
+          $ref: '#/components/schemas/ScenarioCostProjection'
+        description: >-
+          The participants' explicit cost projections, keyed by scenario
+          id. Present only when the request supplied hourly rates.
+
+  ScenarioEditCreate:
+    type: object
+    description: >-
+      Request to edit a scenario. Editing stores a NEW version of the
+      scenario; the previous versions stay intact and comparable. Assumptions
+      are the full, edited set — every key must be a known assumption type.
+    required:
+      - assumptions
+    properties:
+      assumptions:
+        type: array
+        minItems: 1
+        items:
+          $ref: '#/components/schemas/ScenarioAssumption'
+      name:
+        type: string
+        minLength: 1
+        maxLength: 200
+      description:
+        type: string
+
+  ScenarioForkCreate:
+    type: object
+    description: >-
+      Request to fork a scenario version into a new, independent lineage.
+      The fork copies the source version's assumptions and records which
+      version it forked from.
+    properties:
+      name:
+        type: string
+        minLength: 1
+        maxLength: 200
+      description:
+        type: string
+
+  ScenarioVersionSummary:
+    allOf:
+      - $ref: '#/components/schemas/Scenario'
+    description: One version of a scenario lineage.
+
+  ScenarioVersionSummaryList:
+    type: object
+    description: All versions of a scenario's lineage, oldest first.
+    required:
+      - items
+    properties:
+      items:
+        type: array
+        items:
+          $ref: '#/components/schemas/ScenarioVersionSummary'
+
+  ScenarioCostProjectionRow:
+    type: object
+    description: >-
+      One cost line of a participant's cost projection: projected demand
+      hours for one month multiplied by the assumed hourly rate.
+    required:
+      - period
+      - hours
+      - hourly_cost
+      - cost
+    properties:
+      period:
+        type: string
+        description: Month bucket, YYYY-MM.
+      hours:
+        type: number
+      hourly_cost:
+        type: number
+      cost:
+        type: number
+      cost_basis:
+        type: string
+        description: Always `excludes statutory on-costs`.
+
+  ScenarioCostProjection:
+    type: object
+    description: >-
+      A participant's explicit cost projection of its projected demand.
+      Rates come from the request; wage_growth_pct compounds them month
+      by month. Nothing here is implicit.
+    required:
+      - hourly_costs
+      - wage_growth_pct
+      - rows
+    properties:
+      scenario_id:
+        type: integer
+      hourly_costs:
+        type: object
+        additionalProperties:
+          type: number
+      wage_growth_pct:
+        type: number
+      rows:
+        type: array
+        items:
+          $ref: '#/components/schemas/ScenarioCostProjectionRow'
+      total_hours:
+        type: number
+      total_cost:
+        type: number
+      total_cost_delta:
+        type: number
+        nullable: true
+        description: Against the first participant of the comparison.
+      label:
+        type: string
+        description: Always `excludes statutory on-costs`.
+      cost_basis:
+        type: string
+        description: Always `excludes statutory on-costs`.
+      comparison:
+        type: array
+        items:
+          type: object
+          required:
+            - horizon_step
+            - forecast_date
+            - base_value
+            - scenario_values
+            - deltas
+            - assumptions
+          properties:
+            horizon_step:
+              type: integer
+            forecast_date:
+              type: string
+              format: date
+            base_value:
+              type: number
+              nullable: true
+            scenario_values:
+              type: object
+              additionalProperties:
+                type: number
+            deltas:
+              type: object
+              additionalProperties:
+                type: number
+            assumptions:
+              type: object
+              additionalProperties:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ScenarioAssumption'
+
+  # ------------------------------------------------------ forecasting (AN-01) --
+  ForecastDataPoint:
+    type: object
+    required:
+      - date
+      - value
+    properties:
+      date:
+        type: string
+        format: date
+      value:
+        type: number
+  ForecastRunCreate:
+    type: object
+    required:
+      - series_data
+    properties:
+      name:
+        type: string
+        maxLength: 200
+      description:
+        type: string
+      series_data:
+        type: array
+        minItems: 1
+        items:
+          $ref: '#/components/schemas/ForecastDataPoint'
+      horizon_days:
+        type: integer
+        minimum: 1
+        maximum: 365
+        default: 30
+      method:
+        type: string
+        enum: [seasonal_naive, holt_winters, auto]
+        default: auto
+      seasonality:
+        type: integer
+        minimum: 2
+        maximum: 365
+        default: 7
+      series_selector:
+        type: string
+        default: default
+      location_id:
+        type: integer
+      role_id:
+        type: integer
+  ForecastRun:
+    type: object
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      description:
+        type: string
+      status:
+        type: string
+        enum: [pending, running, completed, failed]
+      horizon_days:
+        type: integer
+      method:
+        type: string
+      location_id:
+        type: integer
+      role_id:
+        type: integer
+      data_start_date:
+        type: string
+        format: date
+      data_end_date:
+        type: string
+        format: date
+      backtest_mape:
+        type: number
+      backtest_mase:
+        type: number
+      backtest_holdout_days:
+        type: integer
+      created_at:
+        type: string
+        format: date-time
+      finished_at:
+        type: string
+        format: date-time
+      results:
+        type: array
+        items:
+          $ref: '#/components/schemas/ForecastResult'
+  ForecastResult:
+    type: object
+    properties:
+      horizon_step:
+        type: integer
+      forecast_date:
+        type: string
+        format: date
+      predicted_value:
+        type: number
+      lower_bound:
+        type: number
+      upper_bound:
+        type: number
+      method_used:
+        type: string
+      input_hash:
+        type: string
+      rule_version:
+        type: string
+      data_start_date:
+        type: string
+        format: date
+      data_end_date:
+        type: string
+        format: date
+      series_key:
+        type: string
+  PaginatedForecastRuns:
+    allOf:
+      - $ref: '#/components/schemas/PaginatedResponse'
+      - type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/ForecastRun'
+  ForecastDemandSeries:
+    type: object
+    properties:
+      forecast_run_id:
+        type: integer
+      metadata:
+        type: object
+        properties:
+          forecast_run_id:
+            type: integer
+          name:
+            type: string
+          description:
+            type: string
+          location_id:
+            type: integer
+          location_code:
+            type: string
+          role_id:
+            type: integer
+          role:
+            type: string
+          role_code:
+            type: string
+          horizon_days:
+            type: integer
+          method:
+            type: string
+          data_start_date:
+            type: string
+            format: date
+          data_end_date:
+            type: string
+            format: date
+          backtest_mape:
+            type: number
+          backtest_mase:
+            type: number
+          backtest_holdout_days:
+            type: integer
+          status:
+            type: string
+          created_at:
+            type: string
+            format: date-time
+          finished_at:
+            type: string
+            format: date-time
+      count:
+        type: integer
+      series:
+        type: array
+        items:
+          type: object
+          properties:
+            date:
+              type: string
+              format: date
+            value:
+              type: number
+            lower_bound:
+              type: number
+            upper_bound:
+              type: number
+            location_id:
+              type: integer
+            location_code:
+              type: string
+            role_id:
+              type: integer
+            role:
+              type: string
+            role_code:
+              type: string
+            source:
+              type: string
+            forecast_run_id:
+              type: integer
+  DriverCSVResponse:
+    type: object
+    properties:
+      count:
+        type: integer
+      series:
+        type: array
+        items:
+          type: object
+          properties:
+            date:
+              type: string
+              format: date
+            value:
+              type: number
+            location_id:
+              type: integer
+            location_code:
+              type: string
+            role:
+              type: string
+  DemandSeriesRequest:
+    type: object
+    required:
+      - start_date
+      - end_date
+    properties:
+      start_date:
+        type: string
+        format: date
+      end_date:
+        type: string
+        format: date
+      location_id:
+        type: integer
+      role:
+        type: string
+      job_id:
+        type: integer
+      include_time_entries:
+        type: boolean
+        default: true
+      include_leave:
+        type: boolean
+        default: true
+      include_roster:
+        type: boolean
+        default: true
+  DemandSeriesResponse:
+    type: object
+    properties:
+      count:
+        type: integer
+      series:
+        type: array
+        items:
+          type: object
+          properties:
+            date:
+              type: string
+              format: date
+            value:
+              type: number
+            actual_hours:
+              type: number
+            leave_hours:
+              type: number
+            scheduled_hours:
+              type: number
+            location_id:
+              type: integer
+            role:
+              type: string
+
+
+  # --------------------------------------------------------------- imports --
+  ImportUpload:
+    type: object
+    description: >-
+      An uploaded import file, before it is dry run or committed. The upload
+      expires if it is not used.
+    required:
+      - id
+      - entity
+      - filename
+      - status
+      - uploaded_at
+    properties:
+      id:
+        type: string
+      entity:
+        type: string
+        description: The entity the file targets, for example `employee`.
+      filename:
+        type: string
+      content_type:
+        type: string
+      size_bytes:
+        type: integer
+        minimum: 0
+      checksum:
+        type: string
+      status:
+        type: string
+        enum:
+          - uploaded
+          - dry_run_complete
+          - committed
+          - rejected
+          - expired
+      template_version:
+        type: string
+        description: Version of the template the file was validated against.
+      uploaded_at:
+        type: string
+        format: date-time
+      uploaded_by:
+        type: string
+      expires_at:
+        type: string
+        format: date-time
+  ImportUploadRequest:
+    type: object
+    description: >-
+      The parts of an import upload. The `file` part carries the bytes, the
+      other parts carry the metadata.
+    required:
+      - file
+    properties:
+      file:
+        type: string
+        format: binary
+        description: The CSV file to import.
+      entity:
+        type: string
+        description: >-
+          The entity the file targets, for example `employee`. When it is
+          omitted the server derives it from the headers of the file.
+      template_version:
+        type: string
+        description: >-
+          The version of the template the caller built the file from. It is
+          reported back on the upload so a mismatch can be spotted.
+      dry_run:
+        type: boolean
+        default: false
+        description: >-
+          Validate the file as soon as it is uploaded instead of waiting for
+          an explicit dry run.
+  ImportTemplate:
+    type: object
+    description: >-
+      The exact columns one import entity expects. A file with an unknown
+      column is rejected with 422 `import_header_unknown`; the list here is
+      what a client must build the file from.
+    required:
+      - entity
+      - version
+      - columns
+    properties:
+      entity:
+        type: string
+      version:
+        type: string
+      delimiter:
+        type: string
+        default: ','
+      encoding:
+        type: string
+        default: utf-8
+      columns:
+        type: array
+        minItems: 1
+        items:
+          type: object
+          required:
+            - name
+            - required
+            - type
+          properties:
+            name:
+              type: string
+              description: Exact header text expected in the file.
+            required:
+              type: boolean
+            type:
+              type: string
+              enum:
+                - string
+                - integer
+                - decimal
+                - date
+                - datetime
+                - boolean
+                - enum
+            description:
+              type: string
+            allowed_values:
+              type: array
+              items:
+                type: string
+            max_length:
+              type: integer
+  ImportDryRunResult:
+    type: object
+    description: >-
+      The outcome of validating a file without writing anything. The
+      `result_hash` covers the counts and the rejected rows; the commit
+      must present a confirmation token that is bound to it.
+    required:
+      - upload_id
+      - counts
+      - result_hash
+    properties:
+      upload_id:
+        type: string
+      counts:
+        type: object
+        required:
+          - created
+          - updated
+          - unchanged
+          - rejected
+          - total
+        properties:
+          created:
+            type: integer
+            minimum: 0
+          updated:
+            type: integer
+            minimum: 0
+          unchanged:
+            type: integer
+            minimum: 0
+          rejected:
+            type: integer
+            minimum: 0
+          total:
+            type: integer
+            minimum: 0
+      result_hash:
+        type: string
+        description: >-
+          Hash of the dry run outcome. The commit request must quote it and
+          the confirmation token must be bound to it.
+      confirmation_token:
+        type: string
+        description: >-
+          Opaque token to present at commit time. It is bound to the result
+          hash; a token that does not match returns 422
+          `import_confirm_token_invalid`.
+      errors:
+        type: array
+        description: A sample of the rejected rows, for display only.
+        items:
+          type: object
+          required:
+            - row
+            - reason
+          properties:
+            row:
+              type: integer
+              minimum: 1
+            field:
+              type: string
+              nullable: true
+            reason:
+              type: string
+            code:
+              type: string
+              description: A code from the shared code list, for example `import_row_invalid`.
+      errors_csv:
+        type: object
+        description: The downloadable row error report.
+        required:
+          - filename
+          - download_url
+        properties:
+          filename:
+            type: string
+          download_url:
+            type: string
+            description: Short lived URL of the CSV with one row per rejected line.
+          expires_at:
+            type: string
+            format: date-time
+      expires_at:
+        type: string
+        format: date-time
+        description: After this moment the confirmation token is no longer valid.
+  ImportCommitRequest:
+    type: object
+    description: >-
+      The confirmation of an import. The token and the result hash must
+      match the dry run they refer to.
+    required:
+      - confirmation_token
+      - result_hash
+    properties:
+      confirmation_token:
+        type: string
+        description: The token returned by the dry run.
+      result_hash:
+        type: string
+        description: The result hash returned by the dry run.
+      comment:
+        type: string
+        maxLength: 500
+        description: Optional note stored with the import record.
+  ImportSummary:
+    type: object
+    description: The record of one import run.
+    required:
+      - id
+      - entity
+      - status
+    properties:
+      id:
+        type: string
+      entity:
+        type: string
+      status:
+        type: string
+        enum:
+          - uploaded
+          - dry_run_complete
+          - committed
+          - rejected
+          - expired
+      counts:
+        type: object
+        additionalProperties: true
+      result_hash:
+        type: string
+        nullable: true
+      job_id:
+        type: string
+        nullable: true
+        description: Background job that applied the import.
+      committed_at:
+        type: string
+        format: date-time
+        nullable: true
+      committed_by:
+        type: string
+        nullable: true
+
+  # ------------------------------------------------------------ onboarding --
+  OnboardingState:
+    type: object
+    description: >-
+      The resumable setup state machine of this deployment. Every step can
+      be submitted again; the state records what is done and what is next.
+    required:
+      - current_step
+      - completed_steps
+      - progress
+    properties:
+      current_step:
+        type: string
+        nullable: true
+        description: >-
+          The step the deployment is waiting on. Null when the setup is
+          finished.
+        enum:
+          - company_profile
+          - business_type
+          - modules
+          - import
+          - roles
+          - review
+          - launch
+          - null
+      completed_steps:
+        type: array
+        items:
+          type: string
+          enum:
+            - company_profile
+            - business_type
+            - modules
+            - import
+            - roles
+            - review
+            - launch
+      steps:
+        type: array
+        items:
+          type: object
+          required:
+            - id
+            - status
+          properties:
+            id:
+              type: string
+            title:
+              type: string
+            status:
+              type: string
+              enum:
+                - pending
+                - in_progress
+                - complete
+                - skipped
+            required:
+              type: boolean
+            completed_at:
+              type: string
+              format: date-time
+              nullable: true
+      progress:
+        type: object
+        required:
+          - completed
+          - total
+        properties:
+          completed:
+            type: integer
+            minimum: 0
+          total:
+            type: integer
+            minimum: 0
+          percent:
+            type: integer
+            minimum: 0
+            maximum: 100
+      started_at:
+        type: string
+        format: date-time
+      updated_at:
+        type: string
+        format: date-time
+      deployment_ready:
+        type: boolean
+        description: True when the deployment has been launched and is ready for use.
+  OnboardingStepSubmission:
+    type: object
+    description: >-
+      The payload of one setup step. The accepted fields depend on the step
+      named in the path; a field the step does not know is rejected with 422
+      `validation_error`.
+    properties:
+      data:
+        type: object
+        additionalProperties: true
+        description: The step payload. Shape depends on the step.
+      skip:
+        type: boolean
+        default: false
+        description: >-
+          Mark an optional step as skipped. A required step cannot be
+          skipped.
+      confirm:
+        type: boolean
+        default: true
+        description: Recompute the downstream steps after this submission.
+  OnboardingPreset:
+    type: object
+    description: >-
+      A starting configuration for a kind of business: the modules to
+      enable, the default roles and the recommended settings.
+    required:
+      - id
+      - name
+      - modules
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      description:
+        type: string
+      industry:
+        type: string
+        nullable: true
+      modules:
+        type: array
+        items:
+          type: string
+      default_roles:
+        type: array
+        items:
+          type: object
+          additionalProperties: true
+      recommended_settings:
+        type: object
+        additionalProperties: true
+  OnboardingLaunchRequest:
+    type: object
+    description: >-
+      The launch of this deployment. The call is idempotent: launching an
+      already launched deployment returns the same result.
+    properties:
+      confirm:
+        type: boolean
+        default: true
+        description: Must be true. Guards against an accidental launch.
+      dry_run:
+        type: boolean
+        default: false
+        description: Report what the launch would do without doing it.
+  OnboardingLaunchResponse:
+    type: object
+    required:
+      - launched
+    properties:
+      launched:
+        type: boolean
+      already_launched:
+        type: boolean
+        description: True when the deployment was already launched. The call was a no op.
+      job_id:
+        type: string
+        nullable: true
+        description: Background job that prepares the deployment, when there is one.
+  ConfigGap:
+    type: object
+    description: >-
+      One result of the configuration assistant: something that is missing
+      or inconsistent, what it means, and what can be done about it.
+    required:
+      - rule_id
+      - severity
+      - message
+      - fix_target
+    properties:
+      rule_id:
+        type: string
+        description: Stable id of the configuration rule.
+      severity:
+        type: string
+        enum:
+          - blocking
+          - warning
+          - info
+      message:
+        type: string
+        description: What is wrong, in words a person can act on.
+      fix_target:
+        type: string
+        description: >-
+          What has to change: a module, an entity or a field. The fix endpoint
+          takes this value back.
+      entity:
+        type: string
+        nullable: true
+      auto_fixable:
+        type: boolean
+        description: True when the fix can be applied without further input.
+      applied:
+        type: boolean
+        description: True when the gap has already been resolved.
+  ConfigGapFixRequest:
+    type: object
+    description: The request that resolves one configuration gap.
+    properties:
+      parameters:
+        type: object
+        additionalProperties: true
+        description: Values the fix needs. Empty for an auto fix.
+      dry_run:
+        type: boolean
+        default: false
+        description: Report what the fix would do without applying it.
+
+  # ----------------------------------------------------------------- admin --
+  AuditEntry:
+    type: object
+    description: >-
+      One link of the audit chain. Each entry hashes the previous entry, so
+      a removed or edited row breaks the chain at that point.
+    required:
+      - id
+      - action
+      - entity_type
+      - occurred_at
+      - entry_hash
+    properties:
+      id:
+        type: string
+      actor_id:
+        type: string
+        nullable: true
+      actor_username:
+        type: string
+        nullable: true
+      action:
+        type: string
+        description: What was done, for example `leave.approve`.
+      entity_type:
+        type: string
+      entity_id:
+        type: string
+        nullable: true
+      outcome:
+        type: string
+        enum:
+          - success
+          - failure
+      request_id:
+        type: string
+        nullable: true
+      occurred_at:
+        type: string
+        format: date-time
+      previous_hash:
+        type: string
+        nullable: true
+      entry_hash:
+        type: string
+        description: Hash of this entry, including the hash of the previous one.
+  AuditVerification:
+    type: object
+    description: >-
+      The result of walking the audit chain. When the chain is broken the
+      first broken link is reported, with the index it was found at.
+    required:
+      - verified
+      - checked_entries
+    properties:
+      verified:
+        type: boolean
+      checked_entries:
+        type: integer
+        minimum: 0
+      head:
+        type: string
+        nullable: true
+        description: >-
+          The head hash the walk compared against. Record it with
+          `checked_entries` outside the database; the chain alone cannot
+          detect a full rewrite. The verification's own entry becomes the
+          next head, so the pair is the anchor.
+      head_id:
+        type: integer
+        nullable: true
+        description: The id of the entry the head names.
+      first_broken:
+        type: object
+        nullable: true
+        description: Where the chain stopped holding.
+        required:
+          - index
+          - reason
+        properties:
+          id:
+            type: string
+            nullable: true
+          index:
+            type: integer
+            minimum: 0
+          reason:
+            type: string
+            description: >-
+              Machine readable reason: `hash_mismatch` (an entry was edited),
+              `missing_predecessor` (an entry was inserted, removed or reordered
+              in the middle) or `head_mismatch` (entries were removed from the
+              end, or the head was rewritten).
+      verified_at:
+        type: string
+        format: date-time
+  AdminStatus:
+    type: object
+    description: >-
+      The operational status of the deployment: upgrade status, backup
+      status and actionable operational warnings. Read only.
+    required:
+      - app_version
+      - environment
+      - upgrade
+      - backup
+      - warnings
+      - checked_at
+    properties:
+      app_version:
+        type: string
+      environment:
+        type: string
+      upgrade:
+        $ref: '#/components/schemas/UpgradeStatus'
+      backup:
+        $ref: '#/components/schemas/BackupStatus'
+      warnings:
+        type: array
+        items:
+          $ref: '#/components/schemas/OperationalWarning'
+      checked_at:
+        type: string
+        format: date-time
+  UpgradeStatus:
+    type: object
+    description: >-
+      Which release the database schema matches, if that is known.
+    properties:
+      current_revision:
+        type: string
+        nullable: true
+      head_revision:
+        type: string
+        nullable: true
+      up_to_date:
+        type: boolean
+        nullable: true
+      status:
+        type: string
+  BackupStatus:
+    type: object
+    description: >-
+      What the operator arranged for backups, read from the BACKUP_*
+      environment defaults. Unset means not arranged.
+    required:
+      - configured
+      - schedule
+    properties:
+      configured:
+        type: boolean
+      schedule:
+        type: string
+      last_success_at:
+        type: string
+        format: date-time
+        nullable: true
+      stale:
+        type: boolean
+        nullable: true
+  OperationalWarning:
+    type: object
+    description: One actionable condition the administrator should look at.
+    required:
+      - code
+      - severity
+      - message
+    properties:
+      code:
+        type: string
+      severity:
+        type: string
+      message:
+        type: string
+  RetentionSchedule:
+    type: object
+    description: >-
+      How long the records of one entity are kept, and what happens to them
+      afterwards. The schedule is the customer policy; the platform does
+      not impose statutory retention values.
+    required:
+      - entity
+      - retention_days
+      - action
+    properties:
+      entity:
+        type: string
+      retention_days:
+        type: integer
+        minimum: 1
+      action:
+        type: string
+        enum:
+          - purge
+          - anonymise
+          - archive
+      legal_hold:
+        type: boolean
+        description: >-
+          While a hold is in place the schedule does not run, whatever it
+          says.
+      updated_at:
+        type: string
+        format: date-time
+      updated_by:
+        type: string
+      last_run_at:
+        type: string
+        format: date-time
+        nullable: true
+  RetentionScheduleUpdate:
+    type: object
+    required:
+      - entity
+      - retention_days
+      - action
+    properties:
+      entity:
+        type: string
+      retention_days:
+        type: integer
+        minimum: 1
+      action:
+        type: string
+        enum:
+          - purge
+          - anonymise
+          - archive
+      legal_hold:
+        type: boolean
+  ErasureRequest:
+    type: object
+    description: >-
+      A request to erase the personal data of one subject. The request is
+      handled by a background job and never removes rows that are under a
+      legal hold.
+    required:
+      - id
+      - subject_type
+      - status
+      - requested_at
+    properties:
+      id:
+        type: string
+      employee_id:
+        type: string
+        nullable: true
+      subject_type:
+        type: string
+        enum:
+          - employee
+          - applicant
+          - contractor
+      status:
+        type: string
+        enum:
+          - open
+          - processing
+          - completed
+          - rejected
+      legal_basis:
+        type: string
+        nullable: true
+        description: The basis the erasure was made under.
+      requested_at:
+        type: string
+        format: date-time
+      completed_at:
+        type: string
+        format: date-time
+        nullable: true
+      job_id:
+        type: string
+        nullable: true
+  ErasureRequestCreate:
+    type: object
+    required:
+      - subject_type
+    properties:
+      employee_id:
+        type: string
+        description: Required when `subject_type` is `employee`.
+      subject_type:
+        type: string
+        enum:
+          - employee
+          - applicant
+          - contractor
+      legal_basis:
+        type: string
+        maxLength: 500
+      reason:
+        type: string
+        maxLength: 500
+  DsarExport:
+    type: object
+    description: >-
+      A data subject access export: the whole record the platform holds
+      about one subject, in one file.
+    required:
+      - id
+      - subject_type
+      - status
+      - requested_at
+    properties:
+      id:
+        type: string
+      employee_id:
+        type: string
+        nullable: true
+      subject_type:
+        type: string
+        enum:
+          - employee
+          - applicant
+          - contractor
+      status:
+        type: string
+        enum:
+          - queued
+          - building
+          - ready
+          - expired
+          - failed
+      format:
+        type: string
+        enum:
+          - json
+          - zip
+      requested_at:
+        type: string
+        format: date-time
+      completed_at:
+        type: string
+        format: date-time
+        nullable: true
+      download_url:
+        type: string
+        nullable: true
+        description: Short lived URL of the export file.
+      expires_at:
+        type: string
+        format: date-time
+        nullable: true
+      file_sha256:
+        type: string
+        nullable: true
+      job_id:
+        type: string
+        nullable: true
+  DsarExportCreate:
+    type: object
+    required:
+      - subject_type
+    properties:
+      employee_id:
+        type: string
+      subject_type:
+        type: string
+        enum:
+          - employee
+          - applicant
+          - contractor
+      format:
+        type: string
+        default: json
+        enum:
+          - json
+          - zip
+  RulePack:
+    type: object
+    description: >-
+      A rule pack: the versioned rule set of one jurisdiction. A payroll
+      run may only be calculated when the pack of its jurisdiction is
+      `verified`.
+    required:
+      - id
+      - name
+      - jurisdiction
+      - version
+      - status
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      jurisdiction:
+        type: string
+      version:
+        type: string
+      status:
+        type: string
+        enum:
+          - draft
+          - verified
+          - deprecated
+          - rejected
+      source:
+        type: object
+        description: Where the pack came from.
+        properties:
+          type:
+            type: string
+            enum:
+              - bundled
+              - uploaded
+              - catalogue
+          reference:
+            type: string
+          installed_at:
+            type: string
+            format: date-time
+      verification:
+        type: object
+        description: The verification state of the pack.
+        properties:
+          verified_at:
+            type: string
+            format: date-time
+            nullable: true
+          verified_by:
+            type: string
+            nullable: true
+          checks:
+            type: array
+            items:
+              type: object
+              additionalProperties: true
+      signing:
+        type: object
+        description: The signature of the pack.
+        properties:
+          algorithm:
+            type: string
+          key_id:
+            type: string
+          signature:
+            type: string
+          signed_at:
+            type: string
+            format: date-time
+      checksum:
+        type: string
+        description: Hash of the pack contents.
+  PublicContact:
+    type: object
+    description: >-
+      A message from the public contact form. The shape is closed: a field
+      that is not one of these three is refused rather than ignored.
+    required:
+      - name
+      - email
+      - message
+    properties:
+      name:
+        type: string
+        maxLength: 120
+        description: The sender's name.
+      email:
+        type: string
+        format: email
+        maxLength: 255
+        description: The address the message was sent from.
+      message:
+        type: string
+        maxLength: 4000
+        description: The message itself.
+  PublicContactAccepted:
+    type: object
+    description: >-
+      The receipt. It says that the message was received and nothing else:
+      the case id is not returned, because a sequential id is a thing a
+      visitor can walk.
+    required:
+      - received
+    properties:
+      received:
+        type: boolean
+  ImportRowErrorCode:
+    type: string
+    description: >-
+      Row-level error code returned by the import module. These are
+      not HTTP envelope codes; they appear inside `rows[].errors[].code`.
+      See `contracts/errors.md` §3.10.
+    enum:
+      - unknown_headers
+      - missing_required
+      - invalid_integer
+      - invalid_number
+      - invalid_boolean
+      - invalid_date
+      - invalid_datetime
+      - invalid_time
+      - invalid_email
+      - invalid_enum
+      - too_long
+      - below_minimum
+      - above_maximum
+      - reference_not_found
+      - cross_file_reference_not_found
+      - duplicate_in_file
+      - duplicate_exists
+      - inconsistent_values
+      - too_many_rows
+      - file_too_large
+      - not_utf8
+      - malformed_csv
+      - empty_file
+      - no_header
+      - write_failed
+      - too_many_fields
+      - too_few_fields
+      - ledger_reduction_refused
+      - ledger_no_movement
+  CostForecastCreate:
+    type: object
+    description: >-
+      Request to cost a forecast run. The hourly rates are explicit
+      assumptions: matched to the demand series by role title or role code
+      (case-insensitive), with a `default` catch-all. A demand group with
+      no matching rate and no default is answered 422 — rates are never
+      implicit.
+    required:
+      - hourly_costs
+    properties:
+      hourly_costs:
+        type: object
+        additionalProperties:
+          type: number
+          description: Hourly rate (currency units per hour).
+        description: >-
+          Rate per role title or role code, plus an optional `default`
+          catch-all.
+      start_date:
+        type: string
+        format: date
+        description: Cost only forecast results from this date (inclusive).
+      end_date:
+        type: string
+        format: date
+        description: Cost only forecast results up to this date (inclusive).
+  CostForecastRow:
+    type: object
+    description: >-
+      One cost line of a stored cost forecast: forecast demand hours for
+      one month x location x role, at the assumed rate. The assumptions
+      and the statutory label are always shown, never implicit.
+    required:
+      - period
+      - hours
+      - hourly_cost
+      - cost
+    properties:
+      period:
+        type: string
+        description: Month bucket of the demand, `YYYY-MM`.
+      location_id:
+        type: integer
+        nullable: true
+      location_code:
+        type: string
+        nullable: true
+      role_id:
+        type: integer
+        nullable: true
+      role:
+        type: string
+        nullable: true
+      role_code:
+        type: string
+        nullable: true
+      hours:
+        type: number
+        description: Forecast demand hours for this period/location/role.
+      hourly_cost:
+        type: number
+        description: The hourly rate that was applied (the assumption in force).
+      cost:
+        type: number
+        description: |-
+          hours x hourly_cost for this period/location/role. **Excludes
+          statutory on-costs.**
+  CostForecast:
+    type: object
+    description: >-
+      A stored, versioned labour cost forecast of one forecast run. A
+      re-run of the same run creates a new version; the earlier versions
+      stay intact for auditability. The result **excludes statutory
+      on-costs** — employer contributions and statutory on-costs are not
+      included, and the label is carried on every response and export.
+    required:
+      - id
+      - forecast_run_id
+      - version
+      - label
+      - hourly_costs
+      - input_hash
+      - periods
+      - total_hours
+      - total_cost
+    properties:
+      id:
+        type: integer
+      forecast_run_id:
+        type: integer
+      version:
+        type: integer
+        description: 1 = the first cost forecast of this run; each POST stores the next version.
+      label:
+        type: string
+        enum:
+        - excludes statutory on-costs
+        description: Always "excludes statutory on-costs"; the cost is a labour-only projection.
+      cost_basis:
+        type: string
+        description: Same label, carried on every row of every export.
+      hourly_costs:
+        type: object
+        additionalProperties:
+          type: number
+        description: The rates that were applied (the assumptions in force).
+      input_hash:
+        type: string
+        description: Hash of the run's forecast results plus the rates used.
+      start_date:
+        type: string
+        format: date
+        nullable: true
+      end_date:
+        type: string
+        format: date
+        nullable: true
+      periods:
+        type: integer
+        description: Number of monthly cost lines stored.
+      total_hours:
+        type: number
+      total_cost:
+        type: number
+        description: |-
+          The costed total of the horizon. **Excludes statutory on-costs.**
+      created_at:
+        type: string
+        format: date-time
+      rows:
+        type: array
+        items:
+          $ref: '#/components/schemas/CostForecastRow'
+  CostForecastVersion:
+    type: object
+    description: A stored cost forecast version, without its rows.
+    properties:
+      id:
+        type: integer
+      forecast_run_id:
+        type: integer
+      version:
+        type: integer
+      label:
+        type: string
+      cost_basis:
+        type: string
+      hourly_costs:
+        type: object
+        additionalProperties:
+          type: number
+      input_hash:
+        type: string
+      start_date:
+        type: string
+        format: date
+        nullable: true
+      end_date:
+        type: string
+        format: date
+        nullable: true
+      periods:
+        type: integer
+      total_hours:
+        type: number
+      total_cost:
+        type: number
+      created_at:
+        type: string
+        format: date-time
+  CostForecastVersionList:
+    type: object
+    description: All stored versions of a run's cost forecast, newest first.
+    required:
+      - items
+    properties:
+      items:
+        type: array
+        items:
+          $ref: '#/components/schemas/CostForecastVersion'
+  ForecastAccuracyRecord:
+    type: object
+    description: >-
+      One forecast-vs-actual accuracy row: for one forecast run, one
+      month period, one location and one role, the forecast hours
+      compared with the actual hours the same window measured. MAPE is
+      a fraction (0.10 is 10 %) over the pairs whose actual is not
+      zero; MAE and bias are in hours over every pair; bias is forecast
+      minus actual, so positive means over-predicted. `status` is the
+      confidence indicator, recomputed on every read from the stored
+      MAPE against the thresholds of the request: `ok` at or under
+      `review_threshold`, `review` at or under `degraded_threshold`,
+      `degraded` over it. A MAPE that cannot be computed (every pair's
+      actual is zero) is never `ok`; it is flagged `review`.
+    required:
+      - id
+      - forecast_run_id
+      - model_version
+      - method_used
+      - period
+      - forecast_hours
+      - actual_hours
+      - mae
+      - bias
+      - sample_size
+      - status
+    properties:
+      id:
+        type: integer
+      forecast_run_id:
+        type: integer
+      model_version:
+        type: string
+      method_used:
+        type: string
+      period:
+        type: string
+        description: The month bucket of the comparison dates, "YYYY-MM".
+      location_id:
+        type: integer
+        nullable: true
+      role_id:
+        type: integer
+        nullable: true
+      forecast_hours:
+        type: number
+      actual_hours:
+        type: number
+      mape:
+        type: number
+        nullable: true
+      mae:
+        type: number
+      bias:
+        type: number
+      sample_size:
+        type: integer
+      status:
+        type: string
+        enum: [ok, review, degraded]
+      measured_at:
+        type: string
+        format: date-time
+  ForecastAccuracySyncRequest:
+    type: object
+    description: >-
+      The window to compare and the confidence thresholds to apply. The
+      synchronous job compares every completed forecast run with
+      results in the window against the actual hours measured, and
+      replaces the rows it computes, so a re-run never stacks
+      duplicates.
+    required:
+      - start_date
+      - end_date
+    properties:
+      start_date:
+        type: string
+        format: date
+      end_date:
+        type: string
+        format: date
+      location_id:
+        type: integer
+        nullable: true
+      role_id:
+        type: integer
+        nullable: true
+      run_id:
+        type: integer
+        nullable: true
+      review_threshold:
+        type: number
+        description: The MAPE at or under which a row is `ok`. Default 0.10.
+      degraded_threshold:
+        type: number
+        description: The MAPE at or under which a row is `review`. Default 0.25.
+  ForecastAccuracySyncResult:
+    type: object
+    description: The result of one accuracy sync run.
+    required:
+      - start_date
+      - end_date
+      - review_threshold
+      - degraded_threshold
+      - replaced
+      - records
+    properties:
+      start_date:
+        type: string
+      end_date:
+        type: string
+      review_threshold:
+        type: number
+      degraded_threshold:
+        type: number
+      replaced:
+        type: integer
+        description: How many stored rows this run replaced.
+      records:
+        type: array
+        items:
+          $ref: '#/components/schemas/ForecastAccuracyRecord'
+  PaginatedForecastAccuracy:
+    allOf:
+      - $ref: '#/components/schemas/PaginatedResponse'
+      - type: object
+        properties:
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/ForecastAccuracyRecord'

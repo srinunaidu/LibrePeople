@@ -1,0 +1,15 @@
+$kind: http-request
+description: Create a time entry
+url: http://localhost:8000/time/entries
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Create Time Entry.resources/examples
+order: 5000

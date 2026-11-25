@@ -1,0 +1,15 @@
+{
+  "entity": "employees",
+  "total_rows": 5,
+  "create": 0,
+  "update": 0,
+  "unchanged": 0,
+  "reject": 5,
+  "rows": [
+    {"row": 2, "status": "reject", "errors": [{"column": "hire_date", "code": "invalid_date"}]},
+    {"row": 3, "status": "reject", "errors": [{"column": "status", "code": "invalid_enum"}]},
+    {"row": 4, "status": "reject", "errors": [{"column": "email", "code": "invalid_email"}]},
+    {"row": 5, "status": "reject", "errors": [{"column": "job_code", "code": "reference_not_found"}]},
+    {"row": 6, "status": "reject", "errors": [{"column": "salary", "code": "invalid_number"}]}
+  ]
+}

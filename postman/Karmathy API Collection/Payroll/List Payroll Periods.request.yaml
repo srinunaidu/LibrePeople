@@ -1,0 +1,9 @@
+$kind: http-request
+description: List payroll periods
+url: http://localhost:8000/payroll/periods
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/List Payroll Periods.resources/examples
+order: 9000

@@ -1,0 +1,9 @@
+$kind: http-request
+description: Get a position by ID
+url: http://localhost:8000/core-hr/positions/{position_id}
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/Get Position.resources/examples
+order: 11000

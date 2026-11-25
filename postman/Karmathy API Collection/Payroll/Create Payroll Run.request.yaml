@@ -1,0 +1,15 @@
+$kind: http-request
+description: Create a payroll run
+url: http://localhost:8000/payroll/runs
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Create Payroll Run.resources/examples
+order: 12000

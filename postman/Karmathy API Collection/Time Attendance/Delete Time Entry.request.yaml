@@ -1,0 +1,9 @@
+$kind: http-request
+description: Delete a time entry
+url: http://localhost:8000/time/entries/{entry_id}
+method: DELETE
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/Delete Time Entry.resources/examples
+order: 7000

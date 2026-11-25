@@ -1,0 +1,191 @@
+tags:
+- name: learning
+  description: learning domain endpoints.
+paths:
+  /learning/certifications:
+    get:
+      operationId: learningListLearningcertifications
+      tags:
+      - learning
+      security:
+      - bearerAuth: []
+      summary: GET /learning/certifications
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: learningCreateLearningcertifications
+      tags:
+      - learning
+      security:
+      - bearerAuth: []
+      summary: POST /learning/certifications
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /learning/course-enrollments:
+    get:
+      operationId: learningListLearningcourseenrollments
+      tags:
+      - learning
+      security:
+      - bearerAuth: []
+      summary: GET /learning/course-enrollments
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: learningCreateLearningcourseenrollments
+      tags:
+      - learning
+      security:
+      - bearerAuth: []
+      summary: POST /learning/course-enrollments
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /learning/course-enrollments/{enrollment_id}/complete:
+    put:
+      operationId: learningUpdateLearningcourseenrollmentscomplete
+      tags:
+      - learning
+      security:
+      - bearerAuth: []
+      summary: PUT /learning/course-enrollments/{enrollment_id}/complete
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /learning/courses:
+    get:
+      operationId: learningListLearningcourses
+      tags:
+      - learning
+      security:
+      - bearerAuth: []
+      summary: GET /learning/courses
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: learningCreateLearningcourses
+      tags:
+      - learning
+      security:
+      - bearerAuth: []
+      summary: POST /learning/courses
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /learning/succession-plans:
+    get:
+      operationId: learningListLearningsuccessionplans
+      tags:
+      - learning
+      security:
+      - bearerAuth: []
+      summary: GET /learning/succession-plans
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: learningCreateLearningsuccessionplans
+      tags:
+      - learning
+      security:
+      - bearerAuth: []
+      summary: POST /learning/succession-plans
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /learning/talent-pool-members:
+    post:
+      operationId: learningCreateLearningtalentpoolmembers
+      tags:
+      - learning
+      security:
+      - bearerAuth: []
+      summary: POST /learning/talent-pool-members
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /learning/talent-pools:
+    get:
+      operationId: learningListLearningtalentpools
+      tags:
+      - learning
+      security:
+      - bearerAuth: []
+      summary: GET /learning/talent-pools
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: learningCreateLearningtalentpools
+      tags:
+      - learning
+      security:
+      - bearerAuth: []
+      summary: POST /learning/talent-pools
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'

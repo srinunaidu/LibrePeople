@@ -1,0 +1,9 @@
+$kind: http-request
+description: Cancel a leave request
+url: http://localhost:8000/leave/requests/{request_id}/cancel
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/Cancel Leave Request.resources/examples
+order: 8000

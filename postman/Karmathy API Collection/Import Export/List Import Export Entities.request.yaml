@@ -1,0 +1,9 @@
+$kind: http-request
+description: List import/export entities
+url: http://localhost:8000/import-export/entities
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/List Import Export Entities.resources/examples
+order: 1000

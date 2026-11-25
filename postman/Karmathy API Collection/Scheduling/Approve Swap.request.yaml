@@ -1,0 +1,9 @@
+$kind: http-request
+description: Approve a swap
+url: http://localhost:8000/scheduling/swaps/{swap_id}/approve
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/Approve Swap.resources/examples
+order: 11000

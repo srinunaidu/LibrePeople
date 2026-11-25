@@ -1,0 +1,9 @@
+$kind: http-request
+description: List offers
+url: http://localhost:8000/offers
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/List Offers.resources/examples
+order: 1000

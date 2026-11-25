@@ -1,0 +1,192 @@
+tags:
+- name: platform
+  description: platform domain endpoints.
+paths:
+  /platform/background-checks:
+    get:
+      operationId: platformListPlatformbackgroundchecks
+      tags:
+      - platform
+      security:
+      - bearerAuth: []
+      summary: GET /platform/background-checks
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: platformCreatePlatformbackgroundchecks
+      tags:
+      - platform
+      security:
+      - bearerAuth: []
+      summary: POST /platform/background-checks
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /platform/background-checks/{check_id}/complete:
+    put:
+      operationId: platformUpdatePlatformbackgroundcheckscomplete
+      tags:
+      - platform
+      security:
+      - bearerAuth: []
+      summary: PUT /platform/background-checks/{check_id}/complete
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /platform/e-signatures:
+    get:
+      operationId: platformListPlatformesignatures
+      tags:
+      - platform
+      security:
+      - bearerAuth: []
+      summary: GET /platform/e-signatures
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: platformCreatePlatformesignatures
+      tags:
+      - platform
+      security:
+      - bearerAuth: []
+      summary: POST /platform/e-signatures
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /platform/e-signatures/{sig_id}/sign:
+    put:
+      operationId: platformUpdatePlatformesignaturessign
+      tags:
+      - platform
+      security:
+      - bearerAuth: []
+      summary: PUT /platform/e-signatures/{sig_id}/sign
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /platform/sso-configs:
+    get:
+      operationId: platformListPlatformssoconfigs
+      tags:
+      - platform
+      security:
+      - bearerAuth: []
+      summary: GET /platform/sso-configs
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: platformCreatePlatformssoconfigs
+      tags:
+      - platform
+      security:
+      - bearerAuth: []
+      summary: POST /platform/sso-configs
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /platform/webhooks:
+    get:
+      operationId: platformListPlatformwebhooks
+      tags:
+      - platform
+      security:
+      - bearerAuth: []
+      summary: GET /platform/webhooks
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: platformCreatePlatformwebhooks
+      tags:
+      - platform
+      security:
+      - bearerAuth: []
+      summary: POST /platform/webhooks
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /platform/webhooks/{webhook_id}/deliver:
+    post:
+      operationId: platformCreatePlatformwebhooksdeliver
+      tags:
+      - platform
+      security:
+      - bearerAuth: []
+      summary: POST /platform/webhooks/{webhook_id}/deliver
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /platform/webhooks/{webhook_id}/deliveries:
+    get:
+      operationId: platformListPlatformwebhooksdeliveries
+      tags:
+      - platform
+      security:
+      - bearerAuth: []
+      summary: GET /platform/webhooks/{webhook_id}/deliveries
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'

@@ -1,0 +1,15 @@
+$kind: http-request
+description: Create an offer
+url: http://localhost:8000/offers
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Create Offer.resources/examples
+order: 3000

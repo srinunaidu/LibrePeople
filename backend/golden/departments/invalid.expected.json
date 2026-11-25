@@ -1,0 +1,16 @@
+{
+  "entity": "departments",
+  "total_rows": 6,
+  "create": 1,
+  "update": 0,
+  "unchanged": 0,
+  "reject": 5,
+  "rows": [
+    {"row": 2, "status": "reject", "errors": [{"column": "name", "code": "missing_required"}]},
+    {"row": 3, "status": "reject", "errors": [{"column": "code", "code": "missing_required"}]},
+    {"row": 4, "status": "reject", "errors": [{"column": "is_active", "code": "invalid_boolean"}]},
+    {"row": 5, "status": "reject", "errors": [{"column": "code", "code": "too_long"}]},
+    {"row": 6, "status": "create"},
+    {"row": 7, "status": "reject", "errors": [{"column": "code", "code": "duplicate_in_file"}]}
+  ]
+}

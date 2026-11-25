@@ -1,0 +1,139 @@
+tags:
+- name: departments
+  description: departments domain endpoints.
+paths:
+  /departments:
+    get:
+      operationId: departmentsListDepartments
+      tags:
+      - departments
+      security:
+      - bearerAuth: []
+      summary: GET /departments
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      parameters:
+      - name: include_inactive
+        in: query
+        required: false
+        description: Include archived rows, so a maintenance list can see and restore one.
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: departmentsCreateDepartments
+      tags:
+      - departments
+      security:
+      - bearerAuth: []
+      summary: POST /departments
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /departments/{department_id}:
+    get:
+      operationId: departmentsGetDepartments
+      tags:
+      - departments
+      security:
+      - bearerAuth: []
+      summary: GET /departments/{department_id}
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    patch:
+      operationId: departmentsUpdateDepartment
+      tags:
+      - departments
+      security:
+      - bearerAuth: []
+      summary: Edit a department
+      description: 'Changes the fields the client sends and nothing else: a department can be
+        renamed, re-coded, described, archived and restored without touching anything it did not
+        name. A code another department already owns is refused with 409 `duplicate_natural_key`.'
+      x-lifecycle: released
+      parameters:
+      - name: department_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                code:
+                  type: string
+                description:
+                  type: string
+                  nullable: true
+                is_active:
+                  type: boolean
+      responses:
+        '200':
+          description: The department after the edit.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      operationId: departmentsDeleteDepartment
+      tags:
+      - departments
+      security:
+      - bearerAuth: []
+      summary: Delete a department nothing points at
+      description: >-
+        Deletes the department. It is refused with 409 `reference_in_use` while an employee, a job,
+        a position, a cost centre, a requisition or a headcount plan still refers to it, and the
+        refusal names what and how many. Archiving the department — `PATCH` with `is_active: false`
+        — is then the allowed operation, and nothing is written when the deletion is refused.
+      x-lifecycle: released
+      parameters:
+      - name: department_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '204':
+          description: The department was deleted.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'

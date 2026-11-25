@@ -1,0 +1,4 @@
+name,code,city,country,timezone,is_active
+,HQ-2,missing the name,true
+Second Location,HQ-3,not a timezone,GB,this-is-not-a-timezone-and-it-is-much-longer-than-sixty-characters,true
+Third Location,HQ-4,City,GB,Europe/London,true

@@ -1,0 +1,7 @@
+name,code,description,is_active
+,ALPHA,no name,true
+Alpha,,no code,true
+Alpha,ALPHA,not a boolean,perhaps
+Alpha,a code that is much too long to store,true
+Dup,DUP,first,true
+Dup,DUP,second,true

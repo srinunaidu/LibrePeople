@@ -1,0 +1,15 @@
+$kind: http-request
+description: Partially update an employee's employment record (effective-dated)
+url: http://localhost:8000/employees/{employee_id}
+method: PATCH
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Update Employee Partial.resources/examples
+order: 5000

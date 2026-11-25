@@ -1,0 +1,225 @@
+# Import domain events.
+# CSV upload, dry-run validation, commit and rejection outcomes, emitted by the import module.
+#
+# Subscribers used in this file: `audit` (the audit trail), `notifications` (user messages)
+# and `webhooks` (outbound webhook delivery).
+
+envelope:
+  type: object
+  additionalProperties: false
+  required: [event_id, event_type, event_version, occurred_at, producer, tenant, data, request_id]
+  properties:
+    event_id:
+      type: string
+      format: uuid
+      description: "Unique identifier of this single emission, as a UUID. It is unique per emission and is carried unchanged on any redelivery of the same event, so a consumer can make consumption idempotent: an event_id it has already processed is a duplicate, not a new fact."
+    event_type:
+      type: string
+      pattern: '^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$'
+      description: "Dotted lowercase event name such as `shift.published`. It mirrors the `type` field of the event definition in the same file. Consumers route on this value and never on the human-readable description."
+    event_version:
+      type: integer
+      minimum: 1
+      description: "Version of this event type's payload schema. It starts at 1 for every event type and is incremented only when a payload change is breaking. A consumer that does not recognise a version MUST reject the event into its own dead-letter path rather than guess at the payload."
+    occurred_at:
+      type: string
+      format: date-time
+      description: "RFC 3339 / ISO 8601 timestamp with an explicit timezone offset, always expressed in UTC, for example 2026-01-31T09:15:00Z. It is the instant the domain fact happened, which is not necessarily the instant the event was written to the queue."
+    producer:
+      type: string
+      description: "Name of the service or module that emitted the event, taken from the `publisher` field of the event definition in the file that declares it, so a consumer can tell which domain owns the contract. It is fixed by configuration and never taken from request input."
+    tenant:
+      type: object
+      description: "Tenant coordinates of the event. This product is deployed one customer per deployment with a separate Oracle HCM schema per customer, so a tenant is identified by the customer-specific Oracle schema plus the deployment it runs on. There is no shared multi-tenant store to route between."
+      additionalProperties: false
+      required: [schema, deployment]
+      properties:
+        schema:
+          type: string
+          description: "Name of the customer-specific Oracle schema that owns the data the event is about, and therefore the customer the event belongs to. Never null."
+        deployment:
+          type: string
+          description: "Identifier of the deployment instance that produced the event, for example a production or UAT deployment id. It separates events from one environment of a customer from events of the same customer in another environment."
+    data:
+      type: object
+      description: "Event-specific payload. Its schema is the `payload` block of the event definition named by `event_type` in the same file. The payload carries only the fields that schema declares, and it never carries a personal name, a salary figure, a bank detail, a national identifier or a health datum."
+    request_id:
+      type: ["string", "null"]
+      description: "Correlates the event with the HTTP request or background job that caused it, using the same request id that appears in the shared error envelope and the `X-Request-ID` response header. It is null for scheduled or otherwise system-initiated events."
+    causation_id:
+      type: ["string", "null"]
+      description: "Identifier of the cause of this event: the `event_id` of the event that triggered it, or the `request_id` of the request that did. It is null when the event has no traceable cause, for example the first event of a chain."
+
+events:
+  import.uploaded:
+    description: "A CSV file was uploaded and accepted for processing. The upload itself changes nothing: the file is validated in a dry run before any row is written, and the upload carries the content digest that later identifies the same file."
+    type: import.uploaded
+    publisher: imports
+    subscribers: [audit]
+    payload:
+      type: object
+      additionalProperties: false
+      required: [import_id, entity_type, filename, size_bytes, content_sha256, uploaded_by, uploaded_at]
+      properties:
+        import_id:
+          type: string
+          description: "Identifier of this import run. It correlates the upload with its validation and, if it gets that far, its commit."
+        entity_type:
+          type: string
+          enum: [departments, locations, jobs, employees, leave_balances, shift_templates]
+          description: "Entity the file is intended to import. It selects the column set, the required fields and the natural key the import matches rows on."
+        filename:
+          type: string
+          description: "Client-supplied name of the uploaded file, kept so the uploader can recognise their own file. A name can embed a person's name, for example in a leave file, so it is treated as personal data: it must not be logged raw, and it must not be copied into notification bodies."
+        size_bytes:
+          type: integer
+          minimum: 0
+          description: "Size of the uploaded file in bytes, as accepted by the storage service."
+        content_sha256:
+          type: string
+          pattern: '^[0-9a-f]{64}$'
+          description: "Lowercase hex SHA-256 digest of the uploaded file bytes. It identifies the exact content, so the same file can be recognised on a later upload and a file whose content changed is never mistaken for the same one."
+        uploaded_by:
+          type: string
+          description: "Identifier of the account that performed the upload. A reference id, never a personal name."
+        uploaded_at:
+          type: string
+          format: date-time
+          description: "RFC 3339 timestamp with timezone, in UTC, at which the file was accepted."
+
+  import.validated:
+    description: "The dry run finished: the file was validated in full and nothing was written. The result_hash is the value the commit confirmation token binds to, so a commit is accepted only when the token presented at commit time carries exactly this digest, and a file that changed between validation and commit is refused with `import_confirm_token_invalid`. A re-import of the same file must produce zero changes, that is an all-unchanged result with the same result_hash, because rows are matched on the entity's natural key rather than appended."
+    type: import.validated
+    publisher: imports
+    subscribers: [audit, notifications]
+    payload:
+      type: object
+      additionalProperties: false
+      required: [import_id, entity_type, counts, result_hash, row_error_document_id, dry_run, duration_seconds, finished_at]
+      properties:
+        import_id:
+          type: string
+          description: "Identifier of the import run that was validated. It matches the import_id of the import.uploaded event for the same file."
+        entity_type:
+          type: string
+          enum: [departments, locations, jobs, employees, leave_balances, shift_templates]
+          description: "Entity the file was validated against. It is the same entity_type as on upload."
+        counts:
+          type: object
+          additionalProperties: false
+          required: [created, updated, unchanged, rejected]
+          description: "Row counts produced by the dry run. The four counts add up to the number of data rows in the file."
+          properties:
+            created:
+              type: integer
+              minimum: 0
+              description: "Rows whose natural key does not exist yet and would be created."
+            updated:
+              type: integer
+              minimum: 0
+              description: "Rows whose natural key already exists and whose values differ, so they would be updated."
+            unchanged:
+              type: integer
+              minimum: 0
+              description: "Rows whose natural key already exists and whose values are identical, so they would be left alone."
+            rejected:
+              type: integer
+              minimum: 0
+              description: "Rows that failed validation and would not be written. The reason for each is in the row error document."
+        result_hash:
+          type: string
+          pattern: '^[0-9a-f]{64}$'
+          description: "Digest over the validated result set, that is the counts and the resulting state of every row. This is the value the commit confirmation token binds to: the commit step compares the token against this digest and refuses the commit when they differ, so the applied set is exactly the set that was previewed. Re-importing the same file produces the same digest and zero changes."
+        row_error_document_id:
+          type: ["string", "null"]
+          description: "Identifier of the document that holds the per-row validation errors, when there are rejected rows. It is null when no row was rejected. The detail lives in that document only, so no row content, and therefore no personal data, is carried by the event."
+        dry_run:
+          type: boolean
+          description: "Always true for this event. The validation step never writes a row; the field is kept so a consumer can assert that nothing was applied by this step."
+        duration_seconds:
+          type: number
+          minimum: 0
+          description: "Wall-clock duration of the dry run in seconds."
+        finished_at:
+          type: string
+          format: date-time
+          description: "RFC 3339 timestamp with timezone, in UTC, at which the dry run finished."
+
+  import.committed:
+    description: "The validated import was committed and the rows the dry run described have been written. The commit is only accepted when the confirmation token matches the result_hash of the matching import.validated event, so what was applied is exactly what was previewed. A commit that was refused produces an import.rejected event instead of this one."
+    type: import.committed
+    publisher: imports
+    subscribers: [audit, webhooks, notifications]
+    payload:
+      type: object
+      additionalProperties: false
+      required: [import_id, entity_type, applied, result_hash, confirmation_token_used, committed_by, committed_at]
+      properties:
+        import_id:
+          type: string
+          description: "Identifier of the import run that was committed. It matches the import_id of the import.uploaded and import.validated events for the same file."
+        entity_type:
+          type: string
+          enum: [departments, locations, jobs, employees, leave_balances, shift_templates]
+          description: "Entity whose rows were written. It is the same entity_type as on upload."
+        applied:
+          type: object
+          additionalProperties: false
+          required: [created, updated, unchanged]
+          description: "Row counts actually written. There is no rejected count because a rejected row is never written."
+          properties:
+            created:
+              type: integer
+              minimum: 0
+              description: "Rows created by the commit."
+            updated:
+              type: integer
+              minimum: 0
+              description: "Rows updated by the commit."
+            unchanged:
+              type: integer
+              minimum: 0
+              description: "Rows that matched the stored record exactly and were left alone. On a re-import of the same file this count is the whole file."
+        result_hash:
+          type: string
+          pattern: '^[0-9a-f]{64}$'
+          description: "Digest the commit bound to. It must equal the result_hash of the matching import.validated event; a mismatch means the commit was refused and no import.committed event was emitted."
+        confirmation_token_used:
+          type: string
+          description: "Reference id of the single-use confirmation token presented at commit time, the token that binds the commit to the dry-run result. The token's secret value is never emitted, and a token that has already been used is refused with `import_confirm_token_invalid`."
+        committed_by:
+          type: string
+          description: "Identifier of the account that confirmed the import. A reference id, never a personal name."
+        committed_at:
+          type: string
+          format: date-time
+          description: "RFC 3339 timestamp with timezone, in UTC, at which the commit was applied."
+
+  import.rejected:
+    description: "The import was refused and nothing was written. The error_code comes from the shared error-code list in `contracts/errors.md` and the error_message is display-safe, carrying no stack trace and no personal data."
+    type: import.rejected
+    publisher: imports
+    subscribers: [audit, notifications]
+    payload:
+      type: object
+      additionalProperties: false
+      required: [import_id, entity_type, error_code, error_message, failed_at]
+      properties:
+        import_id:
+          type: string
+          description: "Identifier of the import run that was refused. It matches the import_id of the import.uploaded event for the same file."
+        entity_type:
+          type: string
+          enum: [departments, locations, jobs, employees, leave_balances, shift_templates]
+          description: "Entity the file was being imported for."
+        error_code:
+          type: string
+          pattern: '^[a-z][a-z0-9_]*$'
+          description: "Machine-readable error code taken from the shared code list in `contracts/errors.md`, for example `import_confirm_token_invalid`, `import_header_unknown` or `import_row_invalid`. The code is the contract; the message is not."
+        error_message:
+          type: string
+          description: "Human-readable, display-safe description of why the import was refused. It never contains a stack trace, a SQL statement or a value copied from a rejected row, and it may be reworded at any time."
+        failed_at:
+          type: string
+          format: date-time
+          description: "RFC 3339 timestamp with timezone, in UTC, at which the import was refused."

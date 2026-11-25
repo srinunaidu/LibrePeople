@@ -1,0 +1,4 @@
+title,code,department_code,min_salary,max_salary,is_active
+No Department,J-NODEPT,,5000,9000,true
+Unknown Department,J-BADDEPT,NOSUCH,5000,9000,true
+Band Inverted,J-BADBAND,ALPHA,9000,5000,true

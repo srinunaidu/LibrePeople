@@ -1,0 +1,9 @@
+$kind: http-request
+description: List SSO configurations
+url: http://localhost:8000/platform/sso-configs
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/List SSO Configs.resources/examples
+order: 7000

@@ -1,0 +1,9 @@
+$kind: http-request
+description: Get the signed-in user's own profile
+url: http://localhost:8000/auth/me
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/Current User.resources/examples
+order: 4000

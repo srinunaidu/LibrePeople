@@ -1,0 +1,4 @@
+Verdict: PASS | FAIL | BLOCKED
+Criteria:
+| # | Criterion | Evidence | Result |
+|---|-----------|----------|--------|

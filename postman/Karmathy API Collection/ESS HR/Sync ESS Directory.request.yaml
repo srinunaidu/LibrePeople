@@ -1,0 +1,15 @@
+$kind: http-request
+description: Sync the ESS directory
+url: http://localhost:8000/ess/directory/sync
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Sync ESS Directory.resources/examples
+order: 5000

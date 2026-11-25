@@ -1,0 +1,5 @@
+[project]
+name = "karmathy-backend"
+version = "0.0.0"
+description = "Karmathy backend (FastAPI). Python is pinned to 3.11: ortools 9.15 ships no 3.14/3.15 wheels."
+requires-python = "==3.11.*"

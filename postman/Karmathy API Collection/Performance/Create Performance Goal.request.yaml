@@ -1,0 +1,15 @@
+$kind: http-request
+description: Create a performance goal
+url: http://localhost:8000/performance/goals
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Create Performance Goal.resources/examples
+order: 8000

@@ -1,0 +1,704 @@
+tags:
+- name: onboarding
+  description: 'The setup of this deployment. The setup is a resumable state machine with seven steps:
+    `company_profile`, `business_type`, `modules`, `import`, `roles`, `review` and `launch`. Every step
+    can be submitted again and the state records what is done and what is next. The configuration assistant
+    reports what is still missing or inconsistent, and each of its findings can be fixed from here. The
+    launch is idempotent: launching a deployment that is already launched does nothing and says so.'
+paths:
+  /onboarding/state:
+    get:
+      operationId: onboardingGetState
+      tags:
+      - onboarding
+      security:
+      - bearerAuth: []
+      summary: Read the setup state
+      description: 'Returns the state of the setup: the step the deployment is waiting on, the steps that
+        are done, the state of every step and the progress. A deployment that has not started has no current
+        step and zero progress. A deployment that has been launched reports `deployment_ready` and no
+        current step.'
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: The setup state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OnboardingState'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /onboarding/steps/{step}:
+    post:
+      operationId: onboardingSubmitStep
+      tags:
+      - onboarding
+      security:
+      - bearerAuth: []
+      summary: Submit one setup step
+      description: 'Submits one step of the setup and moves the state machine on. The step is named in
+        the path and is one of `company_profile`, `business_type`, `modules`, `import`, `roles`, `review`
+        or `launch`. The payload depends on the step: the profile step takes the company details, the
+        modules step takes the modules to enable, the roles step takes the roles to create. A payload
+        with a field the step does not know returns 422 `validation_error`; a step that cannot be submitted
+        yet, because an earlier step is missing, returns 409 `invalid_state_transition`. Enabling a module
+        whose dependencies are not enabled returns 422 `module_dependency_unmet`. Submitting the same
+        step again is allowed and replaces what that step said.'
+      x-lifecycle: planned
+      parameters:
+      - name: step
+        in: path
+        required: true
+        description: The step to submit.
+        schema:
+          type: string
+          enum:
+          - company_profile
+          - business_type
+          - modules
+          - import
+          - roles
+          - review
+          - launch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OnboardingStepSubmission'
+      responses:
+        '200':
+          description: The step was applied and the state was updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OnboardingState'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /onboarding/presets:
+    get:
+      operationId: onboardingListPresets
+      tags:
+      - onboarding
+      security:
+      - bearerAuth: []
+      summary: List the configuration presets
+      description: 'Lists the presets of this deployment: a ready made starting configuration for a kind
+        of business, with the modules to enable, the default roles and the recommended settings. The list
+        is paged; `page` and `page_size` control the window. A preset that is not applicable to this deployment
+        is not listed.'
+      x-lifecycle: planned
+      parameters:
+      - $ref: '#/components/parameters/pageParam'
+      - $ref: '#/components/parameters/pageSizeParam'
+      - name: industry
+        in: query
+        required: false
+        description: Only the presets of this industry.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: A page of presets.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OnboardingPreset'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /onboarding/presets/{preset_id}:
+    get:
+      operationId: onboardingGetPreset
+      tags:
+      - onboarding
+      security:
+      - bearerAuth: []
+      summary: Read one configuration preset
+      description: Returns one preset with its modules, its default roles and its recommended settings.
+        A preset that does not exist returns 404 `preset_not_found`.
+      x-lifecycle: planned
+      parameters:
+      - name: preset_id
+        in: path
+        required: true
+        description: Identifier of the preset.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: The preset.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OnboardingPreset'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /onboarding/presets/{preset_id}/diff:
+    get:
+      operationId: onboardingGetPresetDiff
+      tags:
+      - onboarding
+      security:
+      - bearerAuth: []
+      summary: Report what a preset would change
+      description: 'Reports the difference between a preset and the configuration of this deployment:
+        what the preset adds, what it leaves alone, what it would overwrite and what it cannot decide.
+        Nothing is changed by the call. The report carries the provenance of every setting: whether the
+        value came from the preset, was set by the customer, or is the customer''s change to a value the
+        preset suggested. The customer''s own configuration always wins: an entry in `overwrites` is reported
+        so that the difference is visible, and the customer''s value is the one that stands. A preset
+        that does not exist returns 404 `preset_not_found`.'
+      x-lifecycle: planned
+      parameters:
+      - name: preset_id
+        in: path
+        required: true
+        description: Identifier of the preset.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: The difference between the preset and this deployment.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - preset_id
+                - preset_version
+                - adds
+                - unchanged
+                - overwrites
+                - undecided
+                - tenant_only
+                - modules_to_enable
+                - modules_left_alone
+                - exclusions
+                - provenance
+                - generated_at
+                properties:
+                  preset_id:
+                    type: string
+                  preset_version:
+                    type: string
+                  adds:
+                    type: array
+                    description: The settings the preset proposes and the customer does not have.
+                    items: &id001
+                      type: object
+                      required:
+                      - path
+                      - module
+                      - action
+                      properties:
+                        path:
+                          type: string
+                          description: The setting, as the module and the path inside it.
+                        module:
+                          type: string
+                        action:
+                          type: string
+                          enum:
+                          - add
+                          - unchanged
+                          - overwrite
+                          - undecided
+                          - tenant_only
+                        preset_value:
+                          nullable: true
+                        tenant_value:
+                          nullable: true
+                        note:
+                          type: string
+                  unchanged:
+                    type: array
+                    description: The settings the customer already has, with the same value.
+                    items: *id001
+                  overwrites:
+                    type: array
+                    description: The settings the customer has with a different value. The customer's
+                      value wins.
+                    items: *id001
+                  undecided:
+                    type: array
+                    description: The settings the preset cannot decide. They carry the `REQUIRES_RULE_PACK`
+                      sentinel and only a verified rule pack fills them.
+                    items: *id001
+                  tenant_only:
+                    type: array
+                    description: The settings the customer has and the preset says nothing about.
+                    items: *id001
+                  modules_to_enable:
+                    type: array
+                    items:
+                      type: string
+                  modules_left_alone:
+                    type: array
+                    items:
+                      type: string
+                  exclusions:
+                    type: array
+                    description: What the preset does not decide, and why.
+                    items:
+                      type: object
+                      additionalProperties: true
+                  provenance:
+                    type: array
+                    description: Where each configured value came from.
+                    items:
+                      type: object
+                      required:
+                      - path
+                      - module
+                      - state
+                      - origin
+                      properties:
+                        path:
+                          type: string
+                        module:
+                          type: string
+                        state:
+                          type: string
+                          enum:
+                          - preset_default
+                          - tenant_override
+                          - tenant_set
+                          - not_set
+                          - unresolved_rule_pack
+                        origin:
+                          type: string
+                          enum:
+                          - recorded
+                          - derived
+                          description: '`recorded` when the customer recorded the provenance, `derived`
+                            when the server compared the value with the preset.'
+                        preset_value:
+                          nullable: true
+                        tenant_value:
+                          nullable: true
+                  generated_at:
+                    type: string
+                    format: date-time
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /onboarding/readiness:
+    get:
+      operationId: onboardingGetReadiness
+      tags:
+      - onboarding
+      security:
+      - bearerAuth: []
+      summary: Report the readiness of this configuration
+      description: 'Reports what is configured, what is missing, what is inconsistent and what is merely
+        recommended. Every finding names what has to change and where the customer goes to change it.
+        The check reads: it changes nothing, and it creates no record. `preset_id` judges the setup against
+        that preset; without it, the preset the deployment has chosen is used.'
+      x-lifecycle: planned
+      parameters:
+      - name: preset_id
+        in: query
+        required: false
+        description: The preset to judge the setup against.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: The readiness report.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - configured
+                - missing
+                - inconsistent
+                - recommended
+                - findings
+                - generated_at
+                properties:
+                  preset_id:
+                    type: string
+                    nullable: true
+                  preset_version:
+                    type: string
+                    nullable: true
+                  configured:
+                    type: array
+                    description: What is in place.
+                    items: &id002
+                      type: object
+                      required:
+                      - rule_id
+                      - category
+                      - severity
+                      - message
+                      - fix_target
+                      properties:
+                        rule_id:
+                          type: string
+                        category:
+                          type: string
+                          enum:
+                          - configured
+                          - missing
+                          - inconsistent
+                          - recommended
+                        severity:
+                          type: string
+                          enum:
+                          - blocking
+                          - warning
+                          - info
+                        message:
+                          type: string
+                        fix_target:
+                          type: string
+                        entity:
+                          type: string
+                          nullable: true
+                        module:
+                          type: string
+                          nullable: true
+                        auto_fixable:
+                          type: boolean
+                  missing:
+                    type: array
+                    description: What is not there yet.
+                    items: *id002
+                  inconsistent:
+                    type: array
+                    description: What is there and contradicts something else.
+                    items: *id002
+                  recommended:
+                    type: array
+                    description: What the preset suggests and the customer has not adopted.
+                    items: *id002
+                  findings:
+                    type: array
+                    description: Every finding, in one list.
+                    items: *id002
+                  generated_at:
+                    type: string
+                    format: date-time
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /onboarding/launch:
+    post:
+      operationId: onboardingLaunch
+      tags:
+      - onboarding
+      security:
+      - bearerAuth: []
+      summary: Launch this deployment
+      description: 'Launches the deployment once the setup is complete. The call is idempotent: launching
+        a deployment that is already launched is a no op and reports `already_launched`. A deployment
+        with blocking configuration gaps is not launched and returns 409 `invalid_state_transition` with
+        the gaps in `details`. With `dry_run` the call reports what the launch would do without doing
+        it. The call needs an idempotency key, because a client may retry it after a timeout. A missing
+        or malformed idempotency key returns 422 `invalid_idempotency_key`; a request with the same key
+        that is still running returns 409 `request_in_flight`.'
+      x-lifecycle: planned
+      parameters:
+      - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OnboardingLaunchRequest'
+      responses:
+        '200':
+          description: The deployment was launched, or was already launched.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OnboardingLaunchResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /onboarding/config-gaps:
+    get:
+      operationId: onboardingListConfigGaps
+      tags:
+      - onboarding
+      security:
+      - bearerAuth: []
+      summary: List the configuration gaps
+      description: 'Returns the findings of the configuration assistant: everything that is missing, incomplete
+        or inconsistent in the configuration of this deployment. Every finding names the rule that produced
+        it, how serious it is, what it means and what has to change to close it. `severity` narrows the
+        list to the blocking findings or to the others.'
+      x-lifecycle: planned
+      parameters:
+      - name: severity
+        in: query
+        required: false
+        description: Only the findings of this severity.
+        schema:
+          type: string
+          enum:
+          - blocking
+          - warning
+          - info
+      - name: include_applied
+        in: query
+        required: false
+        description: Include the findings that have already been closed.
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: The configuration gaps.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ConfigGap'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /onboarding/config-gaps/{rule_id}/fix:
+    post:
+      operationId: onboardingFixConfigGap
+      tags:
+      - onboarding
+      security:
+      - bearerAuth: []
+      summary: Close one configuration gap
+      description: Applies the fix of one configuration rule. A rule that can be fixed without further
+        input is closed straight away; a rule that needs values takes them in `parameters` and returns
+        422 `validation_error` when they are missing or unusable. A rule that does not exist returns 404
+        `record_not_found`. With `dry_run` the call reports what the fix would change without changing
+        it. A fix that is already applied is a no op.
+      x-lifecycle: planned
+      parameters:
+      - name: rule_id
+        in: path
+        required: true
+        description: Identifier of the configuration rule that produced the gap.
+        schema:
+          type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfigGapFixRequest'
+      responses:
+        '200':
+          description: The fix was applied.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigGap'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /onboarding/documents/{document_id}:
+    put:
+      operationId: onboardingUpdateOnboardingdocuments
+      tags:
+      - onboarding
+      security:
+      - bearerAuth: []
+      summary: PUT /onboarding/documents/{document_id}
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /onboarding/tasks:
+    post:
+      operationId: onboardingCreateOnboardingtasks
+      tags:
+      - onboarding
+      security:
+      - bearerAuth: []
+      summary: POST /onboarding/tasks
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /onboarding/tasks/{task_id}:
+    put:
+      operationId: onboardingUpdateOnboardingtasks
+      tags:
+      - onboarding
+      security:
+      - bearerAuth: []
+      summary: PUT /onboarding/tasks/{task_id}
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /onboarding/{employee_id}/checklist:
+    post:
+      operationId: onboardingCreateOnboardingchecklist
+      tags:
+      - onboarding
+      security:
+      - bearerAuth: []
+      summary: POST /onboarding/{employee_id}/checklist
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /onboarding/{employee_id}/documents:
+    get:
+      operationId: onboardingListOnboardingdocuments
+      tags:
+      - onboarding
+      security:
+      - bearerAuth: []
+      summary: GET /onboarding/{employee_id}/documents
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: onboardingCreateOnboardingdocuments
+      tags:
+      - onboarding
+      security:
+      - bearerAuth: []
+      summary: POST /onboarding/{employee_id}/documents
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /onboarding/{employee_id}/summary:
+    get:
+      operationId: onboardingGetOnboardingsummary
+      tags:
+      - onboarding
+      security:
+      - bearerAuth: []
+      summary: GET /onboarding/{employee_id}/summary
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /onboarding/{employee_id}/tasks:
+    get:
+      operationId: onboardingListOnboardingtasks
+      tags:
+      - onboarding
+      security:
+      - bearerAuth: []
+      summary: GET /onboarding/{employee_id}/tasks
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'

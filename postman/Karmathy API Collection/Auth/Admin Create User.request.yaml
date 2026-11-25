@@ -1,0 +1,15 @@
+$kind: http-request
+description: Create a user with an explicit role (admins only)
+url: http://localhost:8000/auth/users
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Admin Create User.resources/examples
+order: 11000

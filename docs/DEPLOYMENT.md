@@ -1,0 +1,209 @@
+# Karmathy — Deployment
+
+Live environment (Render free tier + Oracle Autonomous Database).
+
+## Live URLs
+
+| Thing | URL |
+|---|---|
+| Frontend | https://karmathy-frontend.onrender.com |
+| Backend | https://karmathy-backend.onrender.com |
+| API docs | https://karmathy-backend.onrender.com/docs |
+| Health | https://karmathy-backend.onrender.com/health |
+| DB health | https://karmathy-backend.onrender.com/health/db |
+| Wallet diagnostic | https://karmathy-backend.onrender.com/health/wallet |
+
+The first administrator is created from an environment-supplied secret. There is
+no default password anywhere in this repository.
+
+```bash
+cd backend
+ADMIN_INITIAL_PASSWORD="$(python -c 'import secrets; print(secrets.token_urlsafe(24))')" \
+  python -m scripts.seed_admin
+unset ADMIN_INITIAL_PASSWORD
+```
+
+The account is created in a `must_change_password` state: it can sign in and
+set its own password, and nothing else, until it does. Store the generated
+value in your password manager and remove it from the environment.
+
+## Render resources
+
+| Service | ID | Type |
+|---|---|---|
+| `karmathy-backend` | `srv-dba9ak8m7kps73fvig10` | Docker web service (free) |
+| `karmathy-frontend` | `srv-dba9alfbtjjs73e9ut60` | Static site (free) |
+
+Owner/workspace ID: `tea-damgatqjnfac738ko530`. Region: `singapore`.
+
+Deploys are triggered automatically on push to `main` (`autoDeployTrigger: commit`).
+
+## Oracle Autonomous Database
+
+| Field | Value |
+|---|---|
+| Display name | `karmkathy_adb` |
+| DB name | `KARMKATHYADB` |
+| OCID | `ocid1.autonomousdatabase.oc1.ap-hyderabad-1.anuhsljrmdg6o7aalr7hdkkiyrgjgyyj5jaxhtx56mtn3oj4slgby4deliqq` |
+| Host | `adb.ap-hyderabad-1.oraclecloud.com:1522` |
+| TNS alias | `karmkathyadb_high` |
+| Schema | `ADMIN` (single-schema for now; a dedicated app user is a future improvement) |
+| mTLS | **required** (`is-mtls-connection-required: True`) |
+
+## Background jobs
+
+The job queue is durable in the database, but nothing executes a queued job unless this deployment
+says so. `JOB_WORKER_ENABLED` is **`false` by default**, and a deployment that leaves it false will
+accept a large import with `202` and never apply it. Set it on the backend service:
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `JOB_WORKER_ENABLED` | `false` | Run the worker in the web process |
+| `JOB_WORKER_POLL_SECONDS` | `2.0` | How long an idle worker waits between passes |
+| `JOB_WORKER_LEASE_SECONDS` | `300` | The lease a claimed job holds; the worker heartbeats at a third of it |
+| `JOB_WORKER_SHUTDOWN_SECONDS` | `15.0` | How long shutdown waits for the job in flight |
+
+The worker starts after the startup migration finishes, so it never queries a table the migration
+has not created. One instance is the deployment model, so one worker is enough: the claim is a
+conditional update, so a second worker would be safe but would not add throughput.
+
+**Switching it on for the first time dead-letters the backlog.** Jobs enqueued before migration
+`0024_job_input_payload` have no stored payload. A hash is one-way, so the parameters cannot be
+recovered; the worker refuses them with `job_input_invalid` rather than guessing, and they appear in
+`/admin/jobs` as `dead`. That is the honest outcome — the file has to be committed again.
+
+**Production has it on.** The backend service carries `JOB_WORKER_ENABLED=true` since deploy
+`dep-dbff6so473hc73cv05ag` (2026-10-26 06:32 UTC), which is the deployment that first executed
+queued jobs. Nothing was dead-lettered at the switch, because no job was queued at the time.
+
+Five of the eight job types have no work behind them and refuse with `job_not_implemented`:
+`forecast_run`, `payroll_process`, `document_render`, `webhook_deliver`, `erasure_run`. Nothing in
+the product enqueues them, so a refusal there means a job was inserted by hand or by a future
+feature. A cancelled import is `job_cancelled`, which is also permanent: the confirmation token
+refuses every later attempt, so the job is dead-lettered rather than retried into the same refusal.
+
+**The result of a finished job is stored beside its hash** (`0025_job_result_payload`), because a
+hash cannot be read back. A queued import's report is served at
+`GET /import-export/import/{entity}/progress/{job_id}`, and the same column is what a future monitor
+would show. Jobs that finished before `0025` have a hash and no result; the progress endpoint says
+`result_stored: false` rather than showing an empty success. `result_json` holds business data, so
+it belongs to the same retention decision as the uploads (`IM-10`, not yet scheduled).
+
+## Secrets (never committed)
+
+| Secret | Local file | Render |
+|---|---|---|
+| Render API key | `~/.render/api_key` | — |
+| ADB admin password | `~/.karmathy/adb_password` | env `ORACLE_PASSWORD` |
+| ADB wallet password | `~/.karmathy/wallet_password` | env `ORACLE_WALLET_PASSWORD` |
+| App secret key | — | env `SECRET_KEY` (generated by Render) |
+
+Wallet files live in `backend/wallet/` (git-ignored).
+
+## Deploy / re-deploy
+
+```bash
+python3 scripts/render_deploy.py --dry-run   # preview
+python3 scripts/render_deploy.py             # create/reuse services, set env + secrets, deploy
+```
+
+The script is idempotent: it reuses services by name and re-applies env vars and
+secret files before triggering a deploy.
+
+## Seeding
+
+Run from a machine that can reach ADB (the app also creates tables on startup):
+
+```bash
+cd backend
+export ORACLE_DSN=karmkathyadb_high ORACLE_USER=admin \
+       ORACLE_WALLET_DIR="$PWD/wallet" \
+       ORACLE_PASSWORD="$(cat ~/.karmathy/adb_password)" \
+       ORACLE_WALLET_PASSWORD="$(cat ~/.karmathy/wallet_password)" \
+       SECRET_KEY=localtest
+python -m scripts.seed_admin
+```
+
+Or from the Render dashboard Shell for `karmathy-backend`:
+`python -m scripts.seed_admin`
+
+Verify connectivity at any time:
+
+```bash
+python scripts/test_adb_connection.py
+```
+
+## The Oracle VM path (secondary)
+
+`.github/workflows/deploy.yml` also runs on every push to `main` and, when the VM secrets
+are set, pulls the commit on the Oracle VM and runs `docker compose up -d --build`.
+That path builds **two** images from `docker-compose.yml`:
+
+| Service | Built from | Serves |
+|---|---|---|
+| `backend` | `backend/Dockerfile` | the API on `:8000`, migrations run as the release step |
+| `frontend` | `frontend/Dockerfile` | the built `dist/` on `:80`, and proxies `/api/` to `backend:8000` |
+
+The frontend image is a multi-stage build: `npm ci && npm run build`, then `nginx:alpine`
+serving `/usr/share/nginx/html`. It does **not** run the Vite dev server. There is no
+host nginx and no separate reverse-proxy container — the frontend container is the edge,
+so the browser calls `/api/v1/...` on the same origin and needs no `VITE_API_URL`.
+
+Render remains the deployment of record; the VM path exists as a fallback and is not the
+URL the pilot uses.
+
+## Gotchas learned the hard way
+
+1. **PyPI package is `oracledb`, not `python-oracledb`** (`python-oracledb` 404s).
+   Requirements pins `oracledb==26.0.1`; it ships cp311 manylinux wheels.
+2. **The wallet password is required.** If the wallet was downloaded with a
+   password, `ewallet.pem` holds an *encrypted* private key. Without
+   `wallet_password` the client presents no cert and ADB rejects with
+   `ORA-12506` (listener refused) — which looks like a network/ACL problem but
+   isn't.
+3. **Render secret files store `content` verbatim as file bytes.** Send plain
+   text; sending base64 writes base64 into the file.
+4. **Python-oracledb thin mode only needs 3 text files:**
+   `tnsnames.ora`, `sqlnet.ora`, `ewallet.pem`. The binary wallet files
+   (`cwallet.sso`, `ewallet.p12`, `*.jks`) are for thick mode/JDBC and can't be
+   stored as text secret files.
+5. **Secret files are only applied at service creation** — use
+   `PUT /services/{id}/secret-files` to update them (the deploy script does).
+6. **No `index=True` on primary keys.** Oracle already indexes a PK constraint,
+   so an explicit index fails with `ORA-01408`. Fine on SQLite, fatal on Oracle.
+7. **Integer PKs need `Identity()`.** Oracle has no implicit auto-increment, so
+   inserts fail with `ORA-01400: cannot insert NULL into ...ID`.
+8. **Dependency pins must be consistent:** `fastapi 0.111.0` needs
+   `python-multipart>=0.0.7`; `pydantic-settings 2.3.0` needs `pydantic>=2.7`.
+9. **The administrator password reset is a release step, so it runs on every
+   deploy.** `python -m scripts.reset_admin_password` is a no-op while
+   `ADMIN_RESET_PASSWORD` is unset. If it *is* set, every deploy rewrites the
+   SuperAdmin password, puts the account back into `must_change_password` and
+   writes a reset row into the audit trail — and the deploy still reports
+   itself healthy. In a production environment the script therefore refuses
+   unless `ADMIN_RESET_ACKNOWLEDGE` is set to
+   `reset-the-production-admin-password`; if the account is not already
+   awaiting a password change it also needs `ADMIN_RESET_ALLOW_ACTIVE=1`,
+   because that is the case where the reset would overwrite a credential that
+   is working. The check **fails closed**: an unset `ENVIRONMENT` is treated
+   as production. A refusal writes nothing — no password change, no audit
+   row, no file.
+10. **Remove the reset variables from the environment as soon as the reset
+    has been used.** `ADMIN_RESET_PASSWORD`, `ADMIN_RESET_ACKNOWLEDGE` and
+    `ADMIN_RESET_ALLOW_ACTIVE` left in place are a live administrator
+    credential that every subsequent deploy will apply without anybody
+    asking. The script never prints the password, never reads it from a
+    request and never writes it to a file; the audit row it writes names the
+    deployment and the actor (`operator-reset-script`), because a release
+    step has no session behind it.
+
+## Known limitations (free tier)
+
+- **Ephemeral disk.** `STORAGE_BACKEND=local` means offer letters/onboarding
+  documents are lost on redeploy. Switch to `oci` (Oracle Object Storage) for
+  durability.
+- **Spin-down.** Free web services sleep when idle; first request is slow
+  (cold start).
+- **Single schema.** App tables currently live in `ADMIN`.
+- **Dynamic egress IPs.** Render free tier has no static outbound IP, so ADB
+  IP allow-lists aren't usable — access is via mTLS only.

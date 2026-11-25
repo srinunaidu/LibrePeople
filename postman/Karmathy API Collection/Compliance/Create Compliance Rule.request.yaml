@@ -1,0 +1,15 @@
+$kind: http-request
+description: Create a compliance rule
+url: http://localhost:8000/compliance/compliance-rules
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Create Compliance Rule.resources/examples
+order: 2000

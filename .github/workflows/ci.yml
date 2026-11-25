@@ -1,0 +1,286 @@
+name: CI
+
+# The gate for every change. It runs on pull requests and on every push to
+# main, before the deployment workflow is allowed to deploy.
+#
+# The previous workflow deployed on a push to main and ran no tests, no
+# type-check and no security scan, so a regression could reach production
+# without anything noticing. This one is the gate.
+
+on:
+  push:
+    branches: [main, 'release/**']
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend — tests, migrations, secrets
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # ortools 9.15 ships no 3.14/3.15 wheels: fail fast on the wrong runtime.
+      - name: Assert Python 3.11
+        run: |
+          python --version
+          python -c "import sys; assert sys.version_info[:2] == (3, 11), f'CI requires Python 3.11, got {sys.version}'"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest httpx jsonschema pyyaml pip-audit
+
+      - name: Secret scan
+        working-directory: .
+        run: |
+          python ci/secret_scan.py --self-test
+          python ci/secret_scan.py
+
+      - name: Every third-party import is declared
+        working-directory: .
+        run: python ci/check_requirements.py
+
+      - name: Backend test suites
+        working-directory: .
+        run: bash ci/run_backend_tests.sh
+
+      - name: Dependency audit
+        run: |
+          pip-audit -r requirements.txt --strict || {
+            echo "::warning::pip-audit reported advisories in the pinned set."
+            pip-audit -r requirements.txt || true
+          }
+
+  contracts:
+    name: Contracts — merge, drift, schemas
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # ortools 9.15 ships no 3.14/3.15 wheels: fail fast on the wrong runtime.
+      - name: Assert Python 3.11
+        run: |
+          python --version
+          python -c "import sys; assert sys.version_info[:2] == (3, 11), f'CI requires Python 3.11, got {sys.version}'"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+          pip install jsonschema pyyaml httpx
+
+      - name: The merged OpenAPI document is up to date
+        run: python scripts/merge_openapi.py --check
+
+      - name: Export the local application OpenAPI (no remote, no drift)
+        run: |
+          cd backend
+          SECRET_KEY=local-test-secret-key-not-for-production-0123456789 DATABASE_URL="sqlite:///./_drift_probe.db" python -c "from app.main import app; import json; spec=app.openapi(); open('/tmp/local-openapi.json','w').write(json.dumps(spec)); print(f\"local spec: {len(spec.get('paths', {}))} paths\")"
+          rm -f ./_drift_probe.db ../_drift_probe.db
+
+      - name: The contract does not promise endpoints the application does not serve
+        run: python scripts/check_openapi_drift.py --spec /tmp/local-openapi.json
+
+      - name: The rule schemas are valid and the events parse
+        run: |
+          python - <<'PY'
+          import json, pathlib, sys
+          import jsonschema, yaml
+
+          for path in sorted(pathlib.Path("contracts/rules").glob("*.schema.json")):
+              schema = json.loads(path.read_text())
+              jsonschema.Draft202012Validator.check_schema(schema)
+              print(f"  schema ok: {path}")
+
+          envelopes = set()
+          for path in sorted(pathlib.Path("contracts/events").glob("*.yaml")):
+              doc = yaml.safe_load(path.read_text())
+              assert "envelope" in doc, f"{path} has no envelope"
+              assert "events" in doc, f"{path} has no events"
+              envelopes.add(json.dumps(doc["envelope"], sort_keys=True))
+              for name, event in doc["events"].items():
+                  jsonschema.Draft202012Validator.check_schema(event["payload"])
+              print(f"  events ok: {path} ({len(doc['events'])} events)")
+
+          assert len(envelopes) == 1, "the event envelope differs between files"
+          print("CONTRACTS OK")
+          PY
+
+  frontend:
+    name: Frontend — typecheck, build, routes
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # Every CI job asserts the Python runtime: the backend container and the
+      # solver wheels only support 3.11.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Assert Python 3.11
+        run: |
+          python --version
+          python -c "import sys; assert sys.version_info[:2] == (3, 11), f'CI requires Python 3.11, got {sys.version}'"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Route check
+        run: npm run check:routes
+
+      # Both checks have caught real defects (183 dead classes in the class
+      # check; dead API paths in the other). They belong in the gate, not in a
+      # developer's memory.
+      - name: API path check
+        run: npm run check:api-paths
+
+      - name: Build
+        run: npm run build
+
+      - name: Class integrity check
+        run: npm run check:classes
+
+      - name: Design alignment check
+        run: npm run check:design
+
+      - name: Token sync check
+        run: npm run check:tokens
+
+      # Unit tests run after all static checks and the build, so a red suite
+      # blocks the gate the same way a red typecheck does.
+      - name: Unit tests
+        run: npm run test:unit
+
+      - name: Dependency audit
+        run: npm audit --audit-level=high || echo "::warning::npm audit reported findings."
+
+  journeys:
+    name: Journeys — Playwright, axe, responsive
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # ortools 9.15 ships no 3.14/3.15 wheels: fail fast on the wrong runtime.
+      - name: Assert Python 3.11
+        run: |
+          python --version
+          python -c "import sys; assert sys.version_info[:2] == (3, 11), f'CI requires Python 3.11, got {sys.version}'"
+
+      # The journeys start the real backend against a throwaway SQLite file;
+      # the webServer in `frontend/playwright.config.ts` runs it with
+      # `KARMA_PYTHON`, which is `python` here and `.venv/bin/python` locally.
+      - name: Install backend dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Install Chromium
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Journeys (accessibility included)
+        working-directory: frontend
+        env:
+          KARMA_PYTHON: python
+        run: npm run e2e
+
+      - name: Keep the failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/test-results
+          retention-days: 7
+
+  load-smoke:
+    name: Load Smoke — staging ramp profile
+    runs-on: ubuntu-latest
+    # Only run on release/* branches (release candidates) or when manually triggered
+    if: startsWith(github.ref, 'refs/heads/release/') || github.event_name == 'workflow_dispatch'
+    needs: [backend, contracts, frontend]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # ortools 9.15 ships no 3.14/3.15 wheels: fail fast on the wrong runtime.
+      - name: Assert Python 3.11
+        run: |
+          python --version
+          python -c "import sys; assert sys.version_info[:2] == (3, 11), f'CI requires Python 3.11, got {sys.version}'"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+          pip install locust==2.15.1
+
+      - name: Start staging environment
+        run: |
+          # The staging environment needs Oracle wallet and credentials
+          # This is a placeholder - in practice the staging env would be
+          # pre-provisioned or started by a separate workflow
+          echo "Staging environment must be running at http://127.0.0.1:8011/api/v1"
+          echo "This job assumes scripts/staging/run.sh has been run separately"
+          echo "STAGING_API_URL=http://127.0.0.1:8011/api/v1" >> $GITHUB_ENV
+
+      - name: Run load smoke harness
+        env:
+          STAGING_API_URL: ${{ env.STAGING_API_URL }}
+          LOAD_USERNAME: admin
+          LOAD_PASSWORD: E2e!Bootstrap#2026
+        run: |
+          bash ci/load_smoke.sh
+
+      - name: Upload load smoke result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: load-smoke-result
+          path: agents/PROGRESS.md
+          retention-days: 30

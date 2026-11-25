@@ -1,0 +1,9 @@
+$kind: http-request
+description: Get audit log
+url: http://localhost:8000/reports/audit
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/Audit.resources/examples
+order: 6000

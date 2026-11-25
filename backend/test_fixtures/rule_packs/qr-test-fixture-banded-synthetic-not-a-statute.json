@@ -1,0 +1,253 @@
+{
+  "pack_id": "test-fixture-banded",
+  "name": "TEST FIXTURE - banded rate table, synthetic values, no statute - NOT FOR PRODUCTION",
+  "jurisdiction": {
+    "country": "QR",
+    "region": "TEST",
+    "display_name": "Synthetic Test Jurisdiction, banded form (not a real country)"
+  },
+  "version": "1.0.0-test",
+  "status": "verified",
+  "effective_from": "2020-01-01",
+  "effective_to": null,
+  "tz": "UTC",
+  "source": {
+    "document_title": "TEST FIXTURE - no statute, no published document, no gazette",
+    "publisher": "Karmathy test fixtures",
+    "document_reference": "TEST-FIXTURE-BANDED-001",
+    "url": "https://example.invalid/test-fixture-banded-pack",
+    "retrieved_on": "2026-10-22",
+    "notes": "THIS IS A TEST FIXTURE, NOT A RULE PACK FOR A REAL JURISDICTION. Every number in it is invented for the test suite that reads it. The country code QR is a user-assigned code that no country uses, so this file can never enable a real jurisdiction. It lives outside rule_packs/ so that the product never loads it. A real pack is written and verified by a named human against a cited source; this one is neither."
+  },
+  "verification": {
+    "verified_by_name": "TEST FIXTURE (automated - not a human verification)",
+    "verified_by_role": "Test fixture",
+    "verified_on": "2026-10-22",
+    "source_document_reference": "TEST-FIXTURE-BANDED-001",
+    "golden_case_set_id": "gc-test-fixture-banded-1"
+  },
+  "rate_tables": {
+    "tax_bands": {
+      "description": "SYNTHETIC TEST FIXTURE - a banded tax table. The engine reads a band's value as the lower bound of the band, its max_value as the upper bound and its rate as the percentage rate that applies inside it.",
+      "effective_from": "2020-01-01",
+      "kind": "banded",
+      "entries": [
+        {
+          "code": "FIXTURE_BAND_0",
+          "label": "Fixture first band",
+          "value": 0,
+          "max_value": 1000,
+          "rate": 0,
+          "unit": "currency_amount",
+          "notes": "SYNTHETIC TEST FIXTURE - invented for the tests"
+        },
+        {
+          "code": "FIXTURE_BAND_1",
+          "label": "Fixture second band",
+          "value": 1000,
+          "max_value": 5000,
+          "rate": 10,
+          "unit": "currency_amount",
+          "notes": "SYNTHETIC TEST FIXTURE - invented for the tests"
+        },
+        {
+          "code": "FIXTURE_BAND_2",
+          "label": "Fixture top band",
+          "value": 5000,
+          "rate": 20,
+          "unit": "currency_amount",
+          "notes": "SYNTHETIC TEST FIXTURE - invented for the tests"
+        }
+      ]
+    },
+    "social_insurance_employee": {
+      "description": "SYNTHETIC TEST FIXTURE employee contribution, a flat rate map. Not a real rate.",
+      "effective_from": "2020-01-01",
+      "values": {
+        "fixture_employee": {
+          "value": 1.0,
+          "unit": "percent",
+          "label": "Fixture employee contribution (synthetic)",
+          "notes": "SYNTHETIC TEST FIXTURE - invented for the tests"
+        }
+      }
+    },
+    "social_insurance_employer": {
+      "description": "SYNTHETIC TEST FIXTURE employer contribution, a flat rate map. Not a real rate.",
+      "effective_from": "2020-01-01",
+      "values": {
+        "fixture_employer": {
+          "value": 2.0,
+          "unit": "percent",
+          "label": "Fixture employer contribution (synthetic)",
+          "notes": "SYNTHETIC TEST FIXTURE - invented for the tests"
+        }
+      }
+    }
+  },
+  "thresholds": {
+    "weekly_max_hours": 48,
+    "daily_min_rest_hours": 11,
+    "max_consecutive_work_days": 6,
+    "daily_overtime_threshold_hours": 8,
+    "weekly_overtime_threshold_hours": 40,
+    "overtime_premium_multiplier": 1.5,
+    "overtime_daily_cap_hours": 2,
+    "minimum_wage_amount": null,
+    "minimum_wage_unit": null
+  },
+  "overtime": {
+    "daily_threshold_hours": 8,
+    "weekly_threshold_hours": 40,
+    "premium_multiplier": 1.5,
+    "daily_cap_hours": 2,
+    "rules": [
+      {
+        "rule_id": "OT_FIXTURE_BANDED",
+        "description": "SYNTHETIC TEST FIXTURE overtime rule.",
+        "severity": "block",
+        "applies_when": "Hours worked exceed the fixture threshold"
+      }
+    ]
+  },
+  "leave_types": [
+    {
+      "code": "fixture-annual",
+      "name": "Fixture annual leave (synthetic)",
+      "entitlement_days": 20,
+      "accrual": {
+        "frequency": "per_month",
+        "tenure_tiers": []
+      },
+      "carry_over_limit_days": 0,
+      "expiry_month": 3,
+      "encashable": false,
+      "entitlement_source": "SYNTHETIC TEST FIXTURE - no statute",
+      "rule_ids": []
+    }
+  ],
+  "working_time_limits": {
+    "max_weekly_hours": 48,
+    "min_daily_rest_hours": 11,
+    "max_consecutive_days": 6,
+    "max_night_work_hours": 8,
+    "min_rest_between_shifts_hours": 11,
+    "rules": []
+  },
+  "break_rules": [],
+  "mandatory_payslip_fields": [
+    "gross_pay",
+    "net_pay",
+    "total_deductions",
+    "employee_contributions",
+    "employer_contributions"
+  ],
+  "mandatory_payslip_notes": [
+    "SYNTHETIC TEST FIXTURE - this payslip is a configurable calculation, not a statutory document."
+  ],
+  "pay_frequency_rules": {
+    "allowed_frequencies": ["monthly", "semimonthly", "biweekly", "weekly"],
+    "pay_day_rule": "SYNTHETIC TEST FIXTURE - the last day of the period.",
+    "cut_off_days_before_pay_day": 3,
+    "pay_date_rule_id": "PAY_FIXTURE_LAST_DAY"
+  },
+  "reporting_obligations": [
+    {
+      "report_id": "FIXTURE_REPORT_BANDED",
+      "name": "Fixture report (synthetic)",
+      "frequency": "monthly",
+      "due_within_days": 15,
+      "template_ref": "SYNTHETIC_FIXTURE_TEMPLATE",
+      "authority": "Synthetic Fixture Authority",
+      "description": "SYNTHETIC TEST FIXTURE - there is no authority and no report."
+    }
+  ],
+  "public_holiday_rules": {
+    "source": "SYNTHETIC TEST FIXTURE - not a holiday calendar",
+    "region_dependent": false,
+    "holiday_count_by_year": {
+      "2026": 1
+    }
+  },
+  "signing": {
+    "algorithm": "ed25519",
+    "key_id": "test-fixture-banded-key",
+    "signature": "U1lOVEhFVElEX1RPU1RfRklYVFVSRV9TSUdOQVRVUkVfTk9UX1JFQUw=",
+    "signed_at": "2026-10-22T00:00:00Z",
+    "signed_by": "Karmathy Test Fixture Generator"
+  },
+  "golden_cases": [
+    {
+      "case_id": "gc-test-fixture-banded-inside-first-band",
+      "description": "SYNTHETIC TEST FIXTURE: a monthly payslip whose whole taxable amount falls inside the first band, which is taxed at nothing.",
+      "input": {
+        "base_salary": "800.00",
+        "pay_frequency": "monthly",
+        "hours_worked": 0,
+        "overtime_hours": 0,
+        "overtime_hourly_rate": 0,
+        "leave_days": 0,
+        "tax_withholding_override": null,
+        "benefit_deductions": "0.00",
+        "other_earnings": "0.00",
+        "other_deductions": "0.00"
+      },
+      "expected": {
+        "gross": "800.00",
+        "total_deductions": "8.00",
+        "net": "792.00",
+        "employee_contributions": "8.00",
+        "employer_contributions": "16.00",
+        "pay_floor_check": "pass"
+      }
+    },
+    {
+      "case_id": "gc-test-fixture-banded-across-two-bands",
+      "description": "SYNTHETIC TEST FIXTURE: a monthly payslip that crosses the first band and is taxed at the rate of the second band on the part that falls inside it.",
+      "input": {
+        "base_salary": "1200.00",
+        "pay_frequency": "monthly",
+        "hours_worked": 0,
+        "overtime_hours": 0,
+        "overtime_hourly_rate": 0,
+        "leave_days": 0,
+        "tax_withholding_override": null,
+        "benefit_deductions": "0.00",
+        "other_earnings": "0.00",
+        "other_deductions": "0.00"
+      },
+      "expected": {
+        "gross": "1200.00",
+        "total_deductions": "32.00",
+        "net": "1168.00",
+        "employee_contributions": "12.00",
+        "employer_contributions": "24.00",
+        "pay_floor_check": "pass"
+      }
+    },
+    {
+      "case_id": "gc-test-fixture-banded-across-three-bands",
+      "description": "SYNTHETIC TEST FIXTURE: a monthly payslip that crosses every band, so the open ended top band is exercised as well.",
+      "input": {
+        "base_salary": "20000.00",
+        "pay_frequency": "monthly",
+        "hours_worked": 0,
+        "overtime_hours": 0,
+        "overtime_hourly_rate": 0,
+        "leave_days": 0,
+        "tax_withholding_override": null,
+        "benefit_deductions": "0.00",
+        "other_earnings": "0.00",
+        "other_deductions": "0.00"
+      },
+      "expected": {
+        "gross": "20000.00",
+        "total_deductions": "3600.00",
+        "net": "16400.00",
+        "employee_contributions": "200.00",
+        "employer_contributions": "400.00",
+        "pay_floor_check": "pass"
+      }
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "entity": "departments",
+  "total_rows": 2,
+  "create": 2,
+  "update": 0,
+  "unchanged": 0,
+  "reject": 0,
+  "rows": [
+    {"row": 2, "status": "create"},
+    {"row": 3, "status": "create"}
+  ]
+}

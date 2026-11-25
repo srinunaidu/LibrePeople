@@ -1,0 +1,9 @@
+$kind: http-request
+description: List client integrations
+url: http://localhost:8000/onboarding-portal/clients/{client_id}/integrations
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/List Client Integrations.resources/examples
+order: 5000

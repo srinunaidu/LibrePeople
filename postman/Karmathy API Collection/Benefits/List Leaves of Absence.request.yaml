@@ -1,0 +1,9 @@
+$kind: http-request
+description: List leaves of absence
+url: http://localhost:8000/benefits/leaves-of-absence
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/List Leaves of Absence.resources/examples
+order: 5000

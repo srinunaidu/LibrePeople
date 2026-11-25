@@ -1,0 +1,15 @@
+$kind: http-request
+description: Update a client integration
+url: http://localhost:8000/onboarding-portal/clients/{client_id}/integrations/{integration_id}
+method: PUT
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Update Client Integration.resources/examples
+order: 7000

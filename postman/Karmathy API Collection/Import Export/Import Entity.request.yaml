@@ -1,0 +1,15 @@
+$kind: http-request
+description: Import an entity
+url: http://localhost:8000/import-export/import/{entity}
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Import Entity.resources/examples
+order: 5000

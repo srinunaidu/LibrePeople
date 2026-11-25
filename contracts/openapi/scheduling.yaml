@@ -1,0 +1,1024 @@
+tags:
+- name: scheduling
+  description: 'Shift planning of this deployment: the shift templates, the roster, the solver that produces
+    a candidate roster, the versions of a published roster, the coverage against the demand and the shift
+    swaps. A candidate roster is not live until it is published, and publishing re-checks every hard constraint.'
+paths:
+  /scheduling/shift-templates:
+    get:
+      operationId: schedulingListShiftTemplates
+      tags:
+      - scheduling
+      security:
+      - bearerAuth: []
+      summary: List the shift templates
+      description: Lists the shift templates of this deployment. The list is paged; `page` and `page_size`
+        control the window. `location_id` narrows it to one location. A template that a published roster
+        already uses cannot be deleted, only superseded with a new version.
+      parameters:
+      - $ref: '#/components/parameters/pageParam'
+      - $ref: '#/components/parameters/pageSizeParam'
+      - name: location_id
+        in: query
+        required: false
+        description: Only the templates of this location.
+        schema:
+          type: string
+      - name: search
+        in: query
+        required: false
+        description: Case insensitive match on the name of the template.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: A page of shift templates.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedShiftTemplates'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+    post:
+      operationId: schedulingCreateShiftTemplate
+      tags:
+      - scheduling
+      security:
+      - bearerAuth: []
+      summary: Create a shift template
+      description: Creates a shift template. A shift that ends earlier than it starts crosses midnight
+        and is accepted, but only when `crosses_midnight` is set. A name that is already taken returns
+        409 `duplicate_natural_key`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShiftTemplateCreate'
+      responses:
+        '201':
+          description: The shift template was created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShiftTemplate'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /scheduling/roster:
+    get:
+      operationId: schedulingGetRoster
+      tags:
+      - scheduling
+      security:
+      - bearerAuth: []
+      summary: Read the roster
+      description: Returns the shifts of a location for a date range, from the published roster when there
+        is one and from the draft version otherwise. `version_id` selects a specific version; without
+        it the published version is used. The result is paged; `page` and `page_size` control the window.
+      parameters:
+      - $ref: '#/components/parameters/pageParam'
+      - $ref: '#/components/parameters/pageSizeParam'
+      - name: location_id
+        in: query
+        required: true
+        description: The location the roster is read for.
+        schema:
+          type: string
+      - name: from
+        in: query
+        required: true
+        description: First day of the range.
+        schema:
+          type: string
+          format: date
+      - name: to
+        in: query
+        required: true
+        description: Last day of the range.
+        schema:
+          type: string
+          format: date
+      - name: version_id
+        in: query
+        required: false
+        description: A specific roster version. Defaults to the published one.
+        schema:
+          type: string
+      - name: employee_id
+        in: query
+        required: false
+        description: Only the shifts of this employee.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: A page of roster entries.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedRosterEntries'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+    post:
+      operationId: schedulingCreateSchedulingroster
+      tags:
+      - scheduling
+      security:
+      - bearerAuth: []
+      summary: POST /scheduling/roster
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /scheduling/roster/generate:
+    post:
+      operationId: schedulingGenerateRoster
+      tags:
+      - scheduling
+      security:
+      - bearerAuth: []
+      summary: Produce a candidate roster
+      description: 'Runs the solver over the demand, the constraints and the weights and returns a candidate
+        roster, the slots it could not fill and the metadata of the run. The candidate is a draft: it
+        changes nothing until the version is published. A request whose demand and constraints contradict
+        each other returns 422 `validation_error`; a request the solver cannot satisfy at all returns
+        422 `solver_infeasible`; a run that hits the time limit returns 503 `solver_timeout` with the
+        list of the unmet slots.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RosterGenerateRequest'
+      responses:
+        '200':
+          description: The candidate roster and the solver metadata.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RosterGenerateResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /scheduling/roster/publish:
+    post:
+      operationId: schedulingPublishRoster
+      tags:
+      - scheduling
+      security:
+      - bearerAuth: []
+      summary: Publish a roster version
+      description: 'Publishes a candidate roster and makes it live. Every hard constraint is re-checked
+        at this point, not only at generation time: a candidate that has gone stale, because a leave was
+        approved or an employee left in the meantime, is refused with 409 `swap_violates_constraints`
+        or 409 `roster_already_published`. The call is idempotent: the same idempotency key with the same
+        payload returns the first result, the same key with another payload returns 409 `idempotency_key_reuse`,
+        and a request with the same key that is still running returns 409 `request_in_flight`. A missing
+        or malformed idempotency key returns 422 `invalid_idempotency_key`.'
+      x-lifecycle: planned
+      parameters:
+      - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RosterPublishRequest'
+      responses:
+        '200':
+          description: The version was published.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RosterVersion'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /scheduling/rosters/generate:
+    post:
+      operationId: schedulingGenerateDraftRoster
+      tags:
+      - scheduling
+      security:
+      - bearerAuth: []
+      summary: Generate a draft roster via the solver
+      description: 'Runs the solver and creates a draft roster version. Returns the draft ID, assignments,
+        unfilled slots, weight breakdown, and solver metadata. The draft is not live until published.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RosterGenerateRequest'
+      responses:
+        '201':
+          description: The draft roster was created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RosterGenerateResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /scheduling/availability:
+    get:
+      operationId: schedulingGetAvailability
+      tags:
+      - scheduling
+      security:
+      - bearerAuth: []
+      summary: Per-employee availability with leave subtracted
+      description: Returns, per employee over a date window, the days they are
+        available and the days approved leave blocks, each blocked day carrying
+        the leave request and leave type that closed it. Pending and rejected
+        leave block nothing. `employee_id` narrows the response to one employee
+        under the employee-object visibility rule; a manager reads their
+        reporting line, an associate reads themselves. Without dates the window
+        is the two weeks from today.
+      parameters:
+      - name: start_date
+        in: query
+        required: false
+        description: First day of the window. Defaults to today.
+        schema:
+          type: string
+          format: date
+      - name: end_date
+        in: query
+        required: false
+        description: Last day of the window. Defaults to two weeks from today.
+        schema:
+          type: string
+          format: date
+      - name: employee_id
+        in: query
+        required: false
+        description: Only this employee. Subject to the visibility rule.
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Availability for the window.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvailabilityResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /scheduling/rosters/draft/{draft_id}:
+    get:
+      operationId: schedulingGetDraftRoster
+      tags:
+      - scheduling
+      security:
+      - bearerAuth: []
+      summary: Get a draft roster for review
+      description: Returns the full solver output for a draft roster including assignments, unfilled slots,
+        weight breakdown, and constraint information for manager review before publishing.
+      parameters:
+      - name: draft_id
+        in: path
+        required: true
+        description: Draft roster identifier.
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: The draft roster with full solver output.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RosterDraftOut'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /scheduling/rosters/draft/{draft_id}/adjust:
+    post:
+      operationId: schedulingAdjustDraftRoster
+      tags:
+      - scheduling
+      security:
+      - bearerAuth: []
+      summary: Adjust a draft roster
+      description: 'Applies a manual assignment change to a draft and re-validates all hard constraints.
+        Returns the updated assignments, any violations, and whether the change is valid.'
+      parameters:
+      - name: draft_id
+        in: path
+        required: true
+        description: Draft roster identifier.
+        schema:
+          type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdjustmentAction'
+      responses:
+        '200':
+          description: The adjustment was applied.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdjustmentResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /scheduling/rosters/publish:
+    post:
+      operationId: schedulingPublishDraftRoster
+      tags:
+      - scheduling
+      security:
+      - bearerAuth: []
+      summary: Publish a draft roster
+      description: 'Publishes a draft roster as an immutable version. Re-validates all hard constraints
+        before publishing. Emits shift.published event. Idempotent with Idempotency-Key header.'
+      parameters:
+      - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RosterPublishRequest'
+      responses:
+        '200':
+          description: The version was published.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RosterVersion'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /scheduling/rosters/versions:
+    get:
+      operationId: schedulingListRosterVersions
+      tags:
+      - scheduling
+      security:
+      - bearerAuth: []
+      summary: List roster versions
+      description: Lists all roster versions with filters for location, status, and date range.
+        Results are paged and ordered newest first.
+      parameters:
+      - $ref: '#/components/parameters/pageParam'
+      - $ref: '#/components/parameters/pageSizeParam'
+      - name: location_code
+        in: query
+        required: false
+        description: Only versions for this location.
+        schema:
+          type: string
+      - name: status
+        in: query
+        required: false
+        description: Only versions with this status.
+        schema:
+          type: string
+          enum:
+          - draft
+          - published
+          - superseded
+      - name: period_start
+        in: query
+        required: false
+        description: Only versions with period_start >= this date.
+        schema:
+          type: string
+          format: date
+      - name: period_end
+        in: query
+        required: false
+        description: Only versions with period_end <= this date.
+        schema:
+          type: string
+          format: date
+      responses:
+        '200':
+          description: A page of roster versions.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedRosterVersions'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /scheduling/rosters/versions/{version_id}:
+    get:
+      operationId: schedulingGetRosterVersion
+      tags:
+      - scheduling
+      security:
+      - bearerAuth: []
+      summary: Get a roster version with full details
+      description: Returns a roster version with all entries and solver data (problem, result, assignments,
+        unfilled slots, weight breakdown).
+      parameters:
+      - name: version_id
+        in: path
+        required: true
+        description: Roster version identifier.
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: The roster version with full details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RosterVersionDetailOut'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /scheduling/rosters/versions/{version_id}/compare:
+    get:
+      operationId: schedulingCompareRosterVersions
+      tags:
+      - scheduling
+      security:
+      - bearerAuth: []
+      summary: Compare two roster versions
+      description: Returns a diff between two roster versions showing added, removed, and changed entries
+        with a summary of changes.
+      parameters:
+      - name: version_id
+        in: path
+        required: true
+        description: The version to compare.
+        schema:
+          type: integer
+      - name: base_version_id
+        in: query
+        required: true
+        description: The version to compare against.
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: The version comparison diff.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersionCompareResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /scheduling/rosters/versions/{version_id}/draft:
+    post:
+      operationId: schedulingCreateDraftFromVersion
+      tags:
+      - scheduling
+      security:
+      - bearerAuth: []
+      summary: Create a new draft from a published version
+      description: 'Creates a new draft roster copying the problem from a published version. Optionally
+        updates the period dates. This enables rolling forward a published roster to a new period.'
+      parameters:
+      - name: version_id
+        in: path
+        required: true
+        description: The published version to base the draft on.
+        schema:
+          type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDraftFromVersionRequest'
+      responses:
+        '201':
+          description: The new draft was created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateDraftFromVersionResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /scheduling/roster/versions:
+    get:
+      operationId: schedulingListRosterVersionsLegacy
+      tags:
+      - scheduling
+      security:
+      - bearerAuth: []
+      summary: List the roster versions
+      description: Lists the versions of the roster of a location, newest first. The list is paged; `page`
+        and `page_size` control the window. A published version is immutable; a new version is created
+        by publishing a new candidate.
+      x-lifecycle: planned
+      parameters:
+      - $ref: '#/components/parameters/pageParam'
+      - $ref: '#/components/parameters/pageSizeParam'
+      - name: location_id
+        in: query
+        required: false
+        description: Only the versions of this location.
+        schema:
+          type: string
+      - name: status
+        in: query
+        required: false
+        description: Only the versions in this state.
+        schema:
+          type: string
+          enum:
+          - draft
+          - published
+          - superseded
+      responses:
+        '200':
+          description: A page of roster versions.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedRosterVersions'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /scheduling/coverage:
+    get:
+      operationId: schedulingGetCoverage
+      tags:
+      - scheduling
+      security:
+      - bearerAuth: []
+      summary: Read the coverage against the demand
+      description: Returns how much of the demand of a location and a period the roster covers, and the
+        gaps that remain. Coverage is computed against the published roster, or against the draft when
+        `version_id` names one.
+      x-lifecycle: planned
+      parameters:
+      - name: location_id
+        in: query
+        required: true
+        description: The location the coverage is computed for.
+        schema:
+          type: string
+      - name: from
+        in: query
+        required: true
+        description: First day of the range.
+        schema:
+          type: string
+          format: date
+      - name: to
+        in: query
+        required: true
+        description: Last day of the range.
+        schema:
+          type: string
+          format: date
+      - name: version_id
+        in: query
+        required: false
+        description: A specific roster version. Defaults to the published one.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: The coverage of the period.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoverageResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /scheduling/swaps:
+    post:
+      operationId: schedulingCreateSwap
+      tags:
+      - scheduling
+      security:
+      - bearerAuth: []
+      summary: Ask for a shift to be handed over
+      description: 'Files a request to hand a shift of the published roster to another employee. The request
+        is checked against the hard constraints before it is filed: a swap that would break one returns
+        409 `swap_violates_constraints` with the list of the broken constraints. The shift stays with
+        its current owner until the swap is approved.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SwapRequest'
+      responses:
+        '201':
+          description: The swap request was filed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Swap'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+    get:
+      operationId: schedulingListSchedulingswaps
+      tags:
+      - scheduling
+      security:
+      - bearerAuth: []
+      summary: GET /scheduling/swaps
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /scheduling/swaps/{swap_id}/approve:
+    post:
+      operationId: schedulingApproveSwap
+      tags:
+      - scheduling
+      security:
+      - bearerAuth: []
+      summary: Approve a shift swap
+      description: 'Approves a pending shift swap and moves the shift to the other employee. The hard
+        constraints are checked again here: a swap that has become invalid returns 409 `swap_violates_constraints`.
+        A swap that is not pending returns 409 `invalid_state_transition`. A published roster version
+        that is already locked by a payroll cut off cannot be changed and returns 409 `roster_already_published`.'
+      parameters:
+      - name: swap_id
+        in: path
+        required: true
+        description: Identifier of the swap request.
+        schema:
+          type: string
+      - name: comment
+        in: query
+        required: false
+        description: Note stored with the decision.
+        schema:
+          type: string
+          maxLength: 500
+      responses:
+        '200':
+          description: The swap was approved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Swap'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /scheduling/roster/{entry_id}:
+    get:
+      operationId: schedulingGetSchedulingroster
+      tags:
+      - scheduling
+      security:
+      - bearerAuth: []
+      summary: GET /scheduling/roster/{entry_id}
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    put:
+      operationId: schedulingUpdateSchedulingroster
+      tags:
+      - scheduling
+      security:
+      - bearerAuth: []
+      summary: PUT /scheduling/roster/{entry_id}
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /scheduling/shift-templates/{template_id}:
+    put:
+      operationId: schedulingUpdateSchedulingshifttemplates
+      tags:
+      - scheduling
+      security:
+      - bearerAuth: []
+      summary: PUT /scheduling/shift-templates/{template_id}
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /scheduling/swaps/{swap_id}/reject:
+    post:
+      operationId: schedulingCreateSchedulingswapsreject
+      tags:
+      - scheduling
+      security:
+      - bearerAuth: []
+      summary: POST /scheduling/swaps/{swap_id}/reject
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /scheduling/rosters/{version_id}/attendance:
+    get:
+      operationId: schedulingGetRosterAttendance
+      tags:
+      - scheduling
+      security:
+      - bearerAuth: []
+      summary: Get attendance for a published roster version
+      description: Returns all roster entries with their linked time entries (if any), plus a summary of matched/missing/extra entries.
+      parameters:
+      - name: version_id
+        in: path
+        required: true
+        description: Published roster version identifier.
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Attendance data for the roster version.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RosterAttendanceResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /scheduling/rosters/{version_id}/attendance/auto-create:
+    post:
+      operationId: schedulingAutoCreateAttendance
+      tags:
+      - scheduling
+      security:
+      - bearerAuth: []
+      summary: Auto-create time entries from roster (kiosk mode)
+      description: Creates clock-in/clock-out records for all roster entries in the version based on their scheduled start/end times. Skips entries that already have a time entry for the same employee/date.
+      parameters:
+      - name: version_id
+        in: path
+        required: true
+        description: Published roster version identifier.
+        schema:
+          type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AutoCreateAttendanceRequest'
+      responses:
+        '201':
+          description: Time entries were created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AutoCreateAttendanceResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /scheduling/rosters/{version_id}/attendance/deviations:
+    get:
+      operationId: schedulingGetRosterDeviations
+      tags:
+      - scheduling
+      security:
+      - bearerAuth: []
+      summary: Get deviations (working time violations) for a published roster version
+      description: Compares actual time entries against scheduled roster entries and returns early/late arrivals/departures, missing entries, and extra entries.
+      parameters:
+      - name: version_id
+        in: path
+        required: true
+        description: Published roster version identifier.
+        schema:
+          type: integer
+      - name: grace_minutes
+        in: query
+        required: false
+        description: "Grace period in minutes (default: 5)."
+        schema:
+          type: integer
+          default: 5
+      responses:
+        '200':
+          description: Deviations for the roster version.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviationsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'

@@ -1,0 +1,9 @@
+$kind: http-request
+description: Get import columns for an entity
+url: http://localhost:8000/import-export/columns/{entity}
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/Get Import Columns.resources/examples
+order: 7000

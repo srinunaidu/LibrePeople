@@ -1,0 +1,15 @@
+$kind: http-request
+description: Update an application
+url: http://localhost:8000/applications/{application_id}
+method: PUT
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Update Application.resources/examples
+order: 4000

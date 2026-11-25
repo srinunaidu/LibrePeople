@@ -1,0 +1,15 @@
+$kind: http-request
+description: Update a time entry
+url: http://localhost:8000/time/entries/{entry_id}
+method: PUT
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Update Time Entry.resources/examples
+order: 6000

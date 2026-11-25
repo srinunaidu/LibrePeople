@@ -1,0 +1,1223 @@
+# Contract fragment: imports
+#
+# Part of the Karmathy OpenAPI contract. This file is NOT a standalone
+# OpenAPI document: it contributes `paths` (and the domain tag) to the
+# merged document produced by `scripts/merge_openapi.py`.
+#
+# Paths are relative to the API base path `/api/v1`.
+# One deployment = one customer. There is no tenant parameter here.
+#
+# `x-lifecycle` says whether the contract already promises the endpoint:
+#   released - promised, the drift checker fails CI when the running
+#              application does not serve it.
+#   planned  - declared but not shipped yet; reported as "contract ahead of
+#              code" and not a failure.
+
+# The body every entity-based import operation returns.
+#
+# It is defined here, in this fragment, because it describes the
+# entity-based flow, which this fragment owns. A shared component would
+# need a change request to the Release Manager, and the flow is not
+# shared with another domain yet. The YAML anchor means the schema is
+# written once and expands wherever it is used.
+x-import-entity-result: &importEntityResult
+  type: object
+  description: >-
+    The outcome of an import. The counts say what happened: how many rows
+    were created, updated, left unchanged and rejected, and how many rows
+    the file held in total. `rows` holds the per-row result for the first
+    two hundred rows; the whole set is available as a CSV through
+    `GET /import-export/import/{entity}/row-errors`.
+  required:
+    - entity
+    - total_rows
+    - create
+    - update
+    - unchanged
+    - reject
+  properties:
+    entity:
+      type: string
+    total_rows:
+      type: integer
+      minimum: 0
+    create:
+      type: integer
+      minimum: 0
+      description: Rows the import created.
+    update:
+      type: integer
+      minimum: 0
+      description: Rows the import updated.
+    unchanged:
+      type: integer
+      minimum: 0
+      description: >-
+        Rows the import found already in place, with the same values. A
+        second import of the same file reports every row here.
+    reject:
+      type: integer
+      minimum: 0
+      description: Rows the import refused. A rejected row is never written.
+    accepted:
+      type: integer
+      minimum: 0
+      description: create + update + unchanged.
+    created:
+      type: integer
+      minimum: 0
+      description: The same number as `create`. The older name, kept.
+    updated:
+      type: integer
+      minimum: 0
+      description: The same number as `update`. The older name, kept.
+    rejected:
+      type: integer
+      minimum: 0
+      description: The same number as `reject`. The older name, kept.
+    skipped:
+      type: integer
+      minimum: 0
+      description: >-
+        Always zero. An import no longer skips rows: a row whose key
+        already exists is updated or left alone, never silently dropped.
+        The older name, kept.
+    missing_columns:
+      type: array
+      items:
+        type: string
+    unknown_headers:
+      type: array
+      items:
+        type: string
+    accepted_headers:
+      type: array
+      items:
+        type: string
+    aliases_used:
+      type: object
+      additionalProperties:
+        type: string
+      description: >-
+        The headers that were written in an alternative spelling, and the
+        column each one resolved to.
+    file_hash:
+      type: string
+      description: Hash of the uploaded bytes.
+    result_hash:
+      type: string
+      description: >-
+        Hash of the outcome. The confirmation token is bound to it, and the
+        commit recomputes it: an outcome that has changed is refused.
+    confirmation_token:
+      type: string
+      description: >-
+        The token the commit has to present. It is good for fifteen
+        minutes and may be used once.
+    expires_at:
+      type: string
+      format: date-time
+      description: When the confirmation token stops being usable.
+    committed:
+      type: boolean
+      description: Present on a commit. True when the rows were applied.
+    state:
+      type: string
+      description: >-
+        Present when the import was queued rather than applied. `queued`
+        means that a background job will apply it, and that the job's
+        status is the import's status.
+      enum: [queued]
+    job:
+      type: object
+      description: >-
+        The background job that will apply the import. It is the import
+        the operator previewed: one record, one status.
+      required: [id, type, state]
+      properties:
+        id:
+          type: integer
+          description: The job's identifier.
+        type:
+          type: string
+          description: The kind of job. `csv_import` for an import.
+        state:
+          type: string
+          description: >-
+            The job's state: `queued`, `running`, `succeeded`, `failed` or
+            `dead`.
+        attempts:
+          type: integer
+          minimum: 0
+        max_attempts:
+          type: integer
+          minimum: 1
+    note:
+      type: string
+      description: Present on a dry run. Says that nothing was written.
+    warnings:
+      type: array
+      items:
+        type: string
+    rows:
+      type: array
+      description: The per-row result, for the first two hundred rows.
+      items:
+        type: object
+        required: [row, status]
+        properties:
+          row:
+            type: integer
+            minimum: 1
+            description: >-
+              The record number in the file, with the header as record 1.
+          status:
+            type: string
+            enum: [create, update, unchanged, reject]
+          errors:
+            type: array
+            items:
+              type: object
+              required: [row, code, message]
+              properties:
+                row:
+                  type: integer
+                  minimum: 1
+                column:
+                  type: string
+                  nullable: true
+                code:
+                  type: string
+                  description: >-
+                    A stable machine-readable code, for example
+                    `missing_required` or `reference_not_found`. The
+                    message never contains a personal value.
+                message:
+                  type: string
+
+# The progress of an import that is being applied by a background job.
+#
+# Declared here, beside the result it belongs to, for the same reason: the
+# entity-based flow owns the background half of that flow, and a shared
+# component would need a change request to the Release Manager.
+x-import-progress: &importProgress
+  type: object
+  description: >-
+    How far a queued import has got, and its report when it has finished.
+    The state is the job's own state; the counts come from the progress the
+    handler records after every batch and from the dry-run record, so they
+    cannot disagree with the job. A failed job reports zero rows applied:
+    the import is one transaction, so a failed one rolled back and the rows
+    it had reached are not in the database.
+  required:
+    - entity
+    - job
+    - state
+    - rows_total
+    - rows_applied
+    - rows_rejected
+    - rows_pending
+    - percent
+  properties:
+    entity:
+      type: string
+    job:
+      type: object
+      description: The background job that is applying the import.
+      required: [id, type, state]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+        state:
+          type: string
+          enum: [queued, running, succeeded, failed, dead]
+        attempts:
+          type: integer
+          minimum: 0
+        max_attempts:
+          type: integer
+          minimum: 1
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+        started_at:
+          type: string
+          format: date-time
+          nullable: true
+        finished_at:
+          type: string
+          format: date-time
+          nullable: true
+    state:
+      type: string
+      description: The job's state, repeated at the top level for convenience.
+      enum: [queued, running, succeeded, failed, dead]
+    import_status:
+      type: string
+      nullable: true
+      description: >-
+        The dry-run record's status: `pending`, `committed`, `expired`,
+        `failed` or `cancelled`. Null when the record is no longer readable.
+      enum: [pending, committed, expired, failed, cancelled]
+    committed:
+      type: boolean
+      description: True when the import's rows are in the database.
+    rows_total:
+      type: integer
+      minimum: 0
+      description: The rows the file holds, header excluded.
+    rows_accepted:
+      type: integer
+      minimum: 0
+      description: rows_total minus the rows the dry run rejected.
+    rows_applied:
+      type: integer
+      minimum: 0
+      description: >-
+        The rows in the database now. Zero while the import is running
+        (it is one transaction) and zero after a failure (it was rolled
+        back).
+    rows_rejected:
+      type: integer
+      minimum: 0
+      description: The rows the dry run refused. A rejected row is never written.
+    rows_pending:
+      type: integer
+      minimum: 0
+      description: rows_accepted minus rows_applied.
+    rows_applied_before_failure:
+      type: integer
+      minimum: 0
+      description: >-
+        How far a failed job had got before it rolled back. Reported
+        separately so that it is never mistaken for rows that exist.
+    batches_done:
+      type: integer
+      minimum: 0
+    batches_total:
+      type: integer
+      minimum: 0
+    batch_size:
+      type: integer
+      minimum: 1
+      description: The rows in one batch.
+    percent:
+      type: integer
+      minimum: 0
+      maximum: 100
+    updated_at:
+      type: string
+      format: date-time
+      nullable: true
+    result:
+      type: object
+      nullable: true
+      description: >-
+        The report, when the job has finished. It is the same shape the
+        synchronous commit returns, plus `rows`: the per-row result for the
+        first two hundred rows, with the failed rows named.
+    result_stored:
+      type: boolean
+      description: >-
+        False when the job finished before results were stored
+        (`0025_job_result_payload`). The result cannot be reconstructed.
+    failure:
+      type: object
+      nullable: true
+      description: Why the job failed or was dead-lettered.
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+    note:
+      type: string
+      description: One sentence an operator can act on.
+
+# The answer to a cancellation.
+x-import-cancel: &importCancel
+  type: object
+  description: >-
+    The import is cancelled. The counts are the dry run's, because nothing
+    was applied: the import is one transaction, so the rows it had reached
+    are taken back with it.
+  required:
+    - entity
+    - cancelled
+    - import_status
+    - committed
+  properties:
+    entity:
+      type: string
+    total_rows:
+      type: integer
+      minimum: 0
+    create:
+      type: integer
+      minimum: 0
+    update:
+      type: integer
+      minimum: 0
+    unchanged:
+      type: integer
+      minimum: 0
+    reject:
+      type: integer
+      minimum: 0
+    accepted:
+      type: integer
+      minimum: 0
+    cancelled:
+      type: boolean
+      description: Always true. A refusal answers 409 instead.
+    import_status:
+      type: string
+      enum: [cancelled]
+    committed:
+      type: boolean
+      description: Always false. A committed import cannot be cancelled.
+    note:
+      type: string
+
+tags:
+  - name: imports
+    description: >-
+      Bulk import of this deployment. Two flows are described here. The
+      entity-based flow is what the application serves today: the file
+      names an entity, the importer validates it against that entity's
+      contract, and the operator reads the counts and the row errors before
+      committing. The upload-based flow is the planned, job-backed
+      import, in which the file is uploaded first and the work happens in
+      the background. The exact columns each entity expects are in
+      `docs/IMPORT_TEMPLATES.md` and at `GET /import-export/columns/{entity}`.
+
+paths:
+  # ---------------------------------------------------------------------
+  # The entity-based flow. This is what the application serves.
+  # ---------------------------------------------------------------------
+
+  /import-export/entities:
+    get:
+      operationId: importsListEntities
+      tags: [imports]
+      security: [{bearerAuth: []}]
+      summary: List the entities that can be imported
+      description: >-
+        The entities the importer accepts. Every one of them has a
+        template and a column contract.
+      x-lifecycle: released
+      responses:
+        '200':
+          description: The entities.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [entities]
+                properties:
+                  entities:
+                    type: array
+                    items:
+                      type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+
+  /import-export/template/{entity}:
+    get:
+      operationId: importsTemplateEntity
+      tags: [imports]
+      security: [{bearerAuth: []}]
+      summary: Download the CSV template for an entity
+      description: >-
+        Returns the header row and one example row. The example row is
+        generated from the entity's contract, so it always satisfies the
+        rules the importer applies. The template's header row is accepted
+        by the importer unchanged.
+      x-lifecycle: released
+      parameters:
+        - name: entity
+          in: path
+          required: true
+          description: The entity to import.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The template, as a CSV.
+          content:
+            text/csv:
+              schema:
+                type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+
+  /import-export/columns/{entity}:
+    get:
+      operationId: importsColumnsEntity
+      tags: [imports]
+      security: [{bearerAuth: []}]
+      summary: Read the column contract of an entity
+      description: >-
+        Returns every column the entity accepts: its name, its type,
+        whether it is required and what its alternatives are, the values
+        it allows, what it points at, and whether it holds personal data.
+        A column that is not on this list is rejected with 422.
+      x-lifecycle: released
+      parameters:
+        - name: entity
+          in: path
+          required: true
+          description: The entity to import.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The contract.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [entity, columns]
+                properties:
+                  entity:
+                    type: string
+                  label:
+                    type: string
+                  natural_key:
+                    type: array
+                    items:
+                      type: string
+                  columns:
+                    type: array
+                    items:
+                      type: object
+                      required: [name, kind]
+                      properties:
+                        name:
+                          type: string
+                        kind:
+                          type: string
+                        required:
+                          type: boolean
+                        alternatives:
+                          type: array
+                          items:
+                            type: string
+                        enum:
+                          type: array
+                          items:
+                            type: string
+                        reference:
+                          type: string
+                          nullable: true
+                        reference_by:
+                          type: string
+                        sensitive:
+                          type: boolean
+                        description:
+                          type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+
+  /import-export/export/{entity}:
+    get:
+      operationId: importsExportEntity
+      tags: [imports]
+      security: [{bearerAuth: []}]
+      summary: Export an entity as CSV
+      description: >-
+        Returns the entity's rows as CSV, with the columns the importer
+        accepts. An export can be edited and imported back without
+        changing a single header.
+      x-lifecycle: released
+      parameters:
+        - name: entity
+          in: path
+          required: true
+          description: The entity to export.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The export, as a CSV.
+          content:
+            text/csv:
+              schema:
+                type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+
+  /import-export/import/{entity}:
+    post:
+      operationId: importsImportEntity
+      tags: [imports]
+      security: [{bearerAuth: []}]
+      summary: Import a CSV, or validate it without writing anything
+      description: >-
+        The request is `multipart/form-data`: the `file` part carries the
+        bytes.
+
+        With `dry_run=true` the file is validated in full and nothing is
+        written to the entity's table. The response carries the counts of
+        the rows that would be created, updated, left unchanged and
+        rejected, the row-level results, and a `confirmation_token`.
+
+        Without `dry_run` the dry run and the commit happen back to back.
+        It is not a shortcut around validation: the validation still runs,
+        and only the rows that passed are applied.
+
+        A file whose header contains a column the entity does not accept
+        is refused with 422 and the refusal names the unknown column and
+        lists every accepted one. A file that is larger than the size
+        limit is refused with 413. A file with more rows than the row
+        limit is refused with 422.
+      x-lifecycle: released
+      parameters:
+        - name: entity
+          in: path
+          required: true
+          description: The entity to import.
+          schema:
+            type: string
+        - name: dry_run
+          in: query
+          required: false
+          description: Validate only. Nothing is written.
+          schema:
+            type: boolean
+            default: false
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: The counts and the row-level results.
+          content:
+            application/json:
+              schema:
+                *importEntityResult
+        '202':
+          description: >-
+            The file is large, so the import was queued as a background
+            job. The job's status is the import's status, and the counts
+            are the ones the dry run produced.
+          content:
+            application/json:
+              schema:
+                *importEntityResult
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/ErrorResponse'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+
+  /import-export/import/{entity}/dry-run:
+    post:
+      operationId: importsDryRunEntity
+      tags: [imports]
+      security: [{bearerAuth: []}]
+      summary: Validate a CSV without writing anything
+      description: >-
+        Validates the uploaded file and reports what would happen, without
+        changing a single row. The response holds the counts of the rows
+        that would be created, updated, left unchanged and rejected, the
+        per-row results, and a `confirmation_token` that is bound to the
+        hash of the outcome.
+
+        A row that fails validation is counted as rejected and listed with
+        its reasons; it does not fail the whole dry run. A row whose
+        reason quotes a personal value does not exist: the validator never
+        puts one in a message.
+      x-lifecycle: released
+      parameters:
+        - name: entity
+          in: path
+          required: true
+          description: The entity to import.
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: The counts and the row-level results.
+          content:
+            application/json:
+              schema:
+                *importEntityResult
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '413':
+          $ref: '#/components/responses/ErrorResponse'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+
+  /import-export/import/{entity}/commit:
+    post:
+      operationId: importsCommitEntity
+      tags: [imports]
+      security: [{bearerAuth: []}]
+      summary: Apply a validated import
+      description: >-
+        Applies the rows of a dry run. The request must present the
+        `confirmation_token` the dry run handed out. The server re-reads
+        the uploaded file and re-validates it; if the outcome is no longer
+        the one the operator was shown — because the data changed
+        underneath them — the commit is refused with 409 and nothing is
+        written.
+
+        The whole import is one transaction. Either every row the preview
+        showed is applied, or none of them is.
+
+        The token is good for fifteen minutes and may be used once. A
+        token that has expired, has already been used, or belongs to
+        another user is refused.
+      x-lifecycle: released
+      parameters:
+        - name: entity
+          in: path
+          required: true
+          description: The entity to import.
+          schema:
+            type: string
+        - name: confirmation_token
+          in: query
+          required: true
+          description: The token the dry run handed out.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The counts of what was applied.
+          content:
+            application/json:
+              schema:
+                *importEntityResult
+        '202':
+          description: >-
+            The file is large, so the import was queued as a background
+            job. The job's status is the import's status, and the counts
+            are the ones the dry run produced. The job applies this very
+            import, in one transaction, so the file is applied entirely or
+            not at all.
+          content:
+            application/json:
+              schema:
+                *importEntityResult
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+
+  /import-export/import/{entity}/cancel:
+    post:
+      operationId: importsCancelEntity
+      tags: [imports]
+      security: [{bearerAuth: []}]
+      summary: Cancel an import that has not been committed
+      description: >-
+        Stops an import that has not finished. The import is one
+        transaction, so cancellation is always safe: the rows it had written
+        are taken back with it and nothing is left behind. A queued import
+        is stopped by its job at the next batch boundary; a preview that was
+        never committed simply stops being usable.
+
+        A committed import cannot be cancelled, and the answer says so
+        (409 `import_not_cancellable`) rather than reporting an unknown
+        token. Cancelling twice is idempotent: the second answer is the
+        same, and no second audit row is written because nothing changed.
+
+        The cancellation is audited, in the same transaction as the status
+        change.
+      x-lifecycle: released
+      parameters:
+        - name: entity
+          in: path
+          required: true
+          description: The entity that was imported.
+          schema:
+            type: string
+        - name: confirmation_token
+          in: query
+          required: true
+          description: The token the dry run handed out.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The import is cancelled; nothing was written.
+          content:
+            application/json:
+              schema:
+                *importCancel
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /import-export/import/{entity}/progress/{job_id}:
+    get:
+      operationId: importsProgressEntity
+      tags: [imports]
+      security: [{bearerAuth: []}]
+      summary: The progress of an import that is being applied by a job
+      description: >-
+        A file over the row threshold is answered `202` with the job's
+        identifier. This operation answers what happened to it: the job's
+        state, the rows the file holds, the rows applied and rejected, how
+        many batches that is, and — when the job has finished — the same
+        report the synchronous commit returns, including the rows that
+        failed.
+
+        The state is the job's own state, so it cannot disagree with the
+        job. A failed job reports zero rows applied: the import is one
+        transaction, so a failed one rolled back and the rows it had
+        reached are not in the database. The number reached before the
+        failure is reported separately, as `rows_applied_before_failure`.
+
+        Only the operator who queued the import is served. Another
+        operator's job is answered `404` rather than `403`, because a job
+        identifier is a small integer and a `403` would confirm that the
+        job exists.
+      x-lifecycle: released
+      parameters:
+        - name: entity
+          in: path
+          required: true
+          description: The entity that was imported.
+          schema:
+            type: string
+        - name: job_id
+          in: path
+          required: true
+          description: The job the `202` answered with.
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: The job's state, its counts and its report when finished.
+          content:
+            application/json:
+              schema:
+                *importProgress
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /import-export/import/{entity}/row-errors:
+    get:
+      operationId: importsRowErrorsEntity
+      tags: [imports]
+      security: [{bearerAuth: []}]
+      summary: Download the row errors of a dry run
+      description: >-
+        Returns a CSV with one row per error: the record number, the
+        column, the error code and the reason. The file is re-derived from
+        the stored upload, so the errors are the errors of exactly the
+        bytes that were uploaded. It holds no personal value.
+      x-lifecycle: released
+      parameters:
+        - name: entity
+          in: path
+          required: true
+          description: The entity that was imported.
+          schema:
+            type: string
+        - name: confirmation_token
+          in: query
+          required: true
+          description: The token the dry run handed out.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The row errors, as a CSV.
+          content:
+            text/csv:
+              schema:
+                type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+
+  # ---------------------------------------------------------------------
+  # The upload-based flow. This is the planned, job-backed import. It is
+  # not served yet, which is why every operation here is `planned`.
+  # ---------------------------------------------------------------------
+
+  /imports/uploads:
+    post:
+      operationId: importsCreateUpload
+      tags: [imports]
+      security: [{bearerAuth: []}]
+      summary: Upload an import file
+      description: >-
+        Uploads the file to import and returns the identifier of the
+        upload. The request is `multipart/form-data`: the `file` part
+        carries the bytes, the other parts carry the metadata. The file is
+        only stored at this point: nothing is validated against the entity
+        and nothing is written. An upload that is not used expires. A file
+        that is too large returns 422 `validation_error`.
+      x-lifecycle: planned
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ImportUploadRequest'
+      responses:
+        '201':
+          description: The file was uploaded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportUpload'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+
+  /imports/uploads/{upload_id}:
+    get:
+      operationId: importsGetUpload
+      tags: [imports]
+      security: [{bearerAuth: []}]
+      summary: Read the state of an upload
+      description: >-
+        Returns the state of one upload: whether it has been dry run, what
+        the dry run counted, and when the upload expires. An upload that
+        does not exist, or one that has expired, returns 404.
+      x-lifecycle: planned
+      parameters:
+        - name: upload_id
+          in: path
+          required: true
+          description: Identifier of the upload.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The upload.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportUpload'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+
+  /imports/uploads/{upload_id}/dry-run:
+    post:
+      operationId: importsDryRunUpload
+      tags: [imports]
+      security: [{bearerAuth: []}]
+      summary: Validate an upload without writing anything
+      description: >-
+        Validates the uploaded file and reports what would happen, without
+        changing a single row. The response holds the counts of the rows
+        that would be created, updated, left unchanged and rejected, the
+        `result_hash` that covers those counts and the rejected rows, and
+        a downloadable CSV with one line per rejected row. The dry run also
+        hands out a `confirmation_token` that is bound to the result hash:
+        the commit has to present both. A file with headers that are not in
+        the alias table returns 422 `import_header_unknown` with the
+        unknown and the expected headers; a row that fails validation is
+        counted as rejected and listed in the CSV, it does not fail the
+        whole dry run.
+      x-lifecycle: planned
+      parameters:
+        - name: upload_id
+          in: path
+          required: true
+          description: Identifier of the upload.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The counts, the result hash and the row error report.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportDryRunResult'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+
+  /imports/uploads/{upload_id}/commit:
+    post:
+      operationId: importsCommitUpload
+      tags: [imports]
+      security: [{bearerAuth: []}]
+      summary: Apply an import
+      description: >-
+        Applies the rows of a dry run. The request must present the
+        `confirmation_token` of the dry run together with the
+        `result_hash` it is bound to; a token that does not match returns
+        422 `import_confirm_token_invalid` and nothing is written. The
+        file is re-validated against the current state of the data, so a
+        row that became invalid in the meantime is rejected rather than
+        applied. The call is idempotent: the same idempotency key with the
+        same payload returns the first result, the same key with another
+        payload returns 409 `idempotency_key_reuse`, and a request with the
+        same key that is still running returns 409 `request_in_flight`. A
+        missing or malformed idempotency key returns 422
+        `invalid_idempotency_key`. The work is done by a background job;
+        the response carries the job.
+      x-lifecycle: planned
+      parameters:
+        - name: upload_id
+          in: path
+          required: true
+          description: Identifier of the upload.
+          schema:
+            type: string
+        - $ref: '#/components/parameters/idempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportCommitRequest'
+      responses:
+        '202':
+          description: The import was accepted and a job was started.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+
+  /imports/templates:
+    get:
+      operationId: importsListTemplates
+      tags: [imports]
+      security: [{bearerAuth: []}]
+      summary: List the expected columns per entity
+      description: >-
+        Returns the exact columns each import entity expects, the type of
+        every column, whether it is required and the values it accepts.
+        This is the list a client builds its file from: a column that is
+        not on it is rejected with 422 `import_header_unknown`. The
+        templates are versioned; the version of the template an upload was
+        validated against is reported on the upload.
+      x-lifecycle: planned
+      parameters:
+        - name: entity
+          in: query
+          required: false
+          description: Only the template of this entity.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The templates.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ImportTemplate'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+
+  /imports/{import_id}:
+    get:
+      operationId: importsGetImport
+      tags: [imports]
+      security: [{bearerAuth: []}]
+      summary: Read one import
+      description: >-
+        Returns the record of one import: the entity, the state, the
+        counts, the result hash of the dry run and, when the import was
+        applied, the job that applied it and who committed it. An import
+        that does not exist returns 404.
+      x-lifecycle: planned
+      parameters:
+        - name: import_id
+          in: path
+          required: true
+          description: Identifier of the import.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The import record.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportSummary'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'

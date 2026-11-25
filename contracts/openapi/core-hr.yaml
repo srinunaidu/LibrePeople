@@ -1,0 +1,573 @@
+tags:
+- name: core-hr
+  description: core-hr domain endpoints.
+paths:
+  /core-hr/cases:
+    get:
+      operationId: coreHrListCorehrcases
+      tags:
+      - core-hr
+      security:
+      - bearerAuth: []
+      summary: GET /core-hr/cases
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: coreHrCreateCorehrcases
+      tags:
+      - core-hr
+      security:
+      - bearerAuth: []
+      summary: POST /core-hr/cases
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /core-hr/cases/{case_id}:
+    put:
+      operationId: coreHrUpdateCorehrcases
+      tags:
+      - core-hr
+      security:
+      - bearerAuth: []
+      summary: PUT /core-hr/cases/{case_id}
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /core-hr/cases/{case_id}/comments:
+    get:
+      operationId: coreHrListCorehrcasescomments
+      tags:
+      - core-hr
+      security:
+      - bearerAuth: []
+      summary: GET /core-hr/cases/{case_id}/comments
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: coreHrCreateCorehrcasescomments
+      tags:
+      - core-hr
+      security:
+      - bearerAuth: []
+      summary: POST /core-hr/cases/{case_id}/comments
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /core-hr/cost-centers:
+    get:
+      operationId: coreHrListCorehrcostcenters
+      tags:
+      - core-hr
+      security:
+      - bearerAuth: []
+      summary: GET /core-hr/cost-centers
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      parameters:
+      - name: include_inactive
+        in: query
+        required: false
+        description: Include archived rows, so a maintenance list can see and restore one.
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: coreHrCreateCorehrcostcenters
+      tags:
+      - core-hr
+      security:
+      - bearerAuth: []
+      summary: POST /core-hr/cost-centers
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /core-hr/cost-centers/{cost_center_id}:
+    get:
+      operationId: coreHrGetCostCenter
+      tags:
+      - core-hr
+      security:
+      - bearerAuth: []
+      summary: Read one cost centre
+      description: >-
+        Returns one cost centre by its id.
+      x-lifecycle: released
+      parameters:
+      - name: cost_center_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: The record.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    patch:
+      operationId: coreHrUpdateCostCenter
+      tags:
+      - core-hr
+      security:
+      - bearerAuth: []
+      summary: Edit a cost centre
+      description: >-
+        Changes the fields the client sends and nothing else. A department
+        that does not exist is refused with 422 reference_not_found, and a
+        code another cost centre owns with 409 duplicate_natural_key.
+      x-lifecycle: released
+      parameters:
+      - name: cost_center_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                name:
+                  type: string
+                department_id:
+                  type: integer
+                  nullable: true
+                is_active:
+                  type: boolean
+      responses:
+        '200':
+          description: The record after the edit.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      operationId: coreHrDeleteCostCenter
+      tags:
+      - core-hr
+      security:
+      - bearerAuth: []
+      summary: Delete a cost centre
+      description: >-
+        Deletes the cost centre. Nothing else in the schema points at it, so
+        the deletion is immediate and audited.
+      x-lifecycle: released
+      parameters:
+      - name: cost_center_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '204':
+          description: The record was deleted.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /core-hr/employee-documents:
+    get:
+      operationId: coreHrListCorehremployeedocuments
+      tags:
+      - core-hr
+      security:
+      - bearerAuth: []
+      summary: GET /core-hr/employee-documents
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: coreHrCreateCorehremployeedocuments
+      tags:
+      - core-hr
+      security:
+      - bearerAuth: []
+      summary: POST /core-hr/employee-documents
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /core-hr/locations:
+    get:
+      operationId: coreHrListCorehrlocations
+      tags:
+      - core-hr
+      security:
+      - bearerAuth: []
+      summary: GET /core-hr/locations
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      parameters:
+      - name: include_inactive
+        in: query
+        required: false
+        description: Include archived rows, so a maintenance list can see and restore one.
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: coreHrCreateCorehrlocations
+      tags:
+      - core-hr
+      security:
+      - bearerAuth: []
+      summary: POST /core-hr/locations
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /core-hr/locations/{location_id}:
+    get:
+      operationId: coreHrGetLocation
+      tags:
+      - core-hr
+      security:
+      - bearerAuth: []
+      summary: Read one work location
+      description: >-
+        Returns one work site by its id.
+      x-lifecycle: released
+      parameters:
+      - name: location_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: The record.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    patch:
+      operationId: coreHrUpdateLocation
+      tags:
+      - core-hr
+      security:
+      - bearerAuth: []
+      summary: Edit a work location
+      description: >-
+        Changes the fields the client sends and nothing else, including
+        archiving and restoring it. A code another location already owns is
+        refused with 409 duplicate_natural_key.
+      x-lifecycle: released
+      parameters:
+      - name: location_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                code:
+                  type: string
+                address:
+                  type: string
+                  nullable: true
+                city:
+                  type: string
+                  nullable: true
+                country:
+                  type: string
+                  nullable: true
+                timezone:
+                  type: string
+                is_active:
+                  type: boolean
+      responses:
+        '200':
+          description: The record after the edit.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      operationId: coreHrDeleteLocation
+      tags:
+      - core-hr
+      security:
+      - bearerAuth: []
+      summary: Delete a work location nothing sits at
+      description: >-
+        Deletes the work site. It is refused with 409 reference_in_use while
+        a position still names it as its site, and nothing is written when
+        it is refused; archiving with is_active false is then the allowed
+        operation.
+      x-lifecycle: released
+      parameters:
+      - name: location_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '204':
+          description: The record was deleted.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /core-hr/positions:
+    get:
+      operationId: coreHrListCorehrpositions
+      tags:
+      - core-hr
+      security:
+      - bearerAuth: []
+      summary: GET /core-hr/positions
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      parameters:
+      - name: include_inactive
+        in: query
+        required: false
+        description: Include archived rows, so a maintenance list can see and restore one.
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: coreHrCreateCorehrpositions
+      tags:
+      - core-hr
+      security:
+      - bearerAuth: []
+      summary: POST /core-hr/positions
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /core-hr/positions/{position_id}:
+    get:
+      operationId: coreHrGetPosition
+      tags:
+      - core-hr
+      security:
+      - bearerAuth: []
+      summary: Read one position
+      description: >-
+        Returns one position by its id.
+      x-lifecycle: released
+      parameters:
+      - name: position_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: The record.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    patch:
+      operationId: coreHrUpdatePosition
+      tags:
+      - core-hr
+      security:
+      - bearerAuth: []
+      summary: Edit a position
+      description: >-
+        Changes the fields the client sends and nothing else. A job,
+        department or location that does not exist is refused with 422
+        reference_not_found, a position that reports to itself as a 422
+        payload error, an fte outside 0 to 1 the same way, and a code
+        another position owns with 409 duplicate_natural_key.
+      x-lifecycle: released
+      parameters:
+      - name: position_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                title:
+                  type: string
+                job_id:
+                  type: integer
+                department_id:
+                  type: integer
+                location_id:
+                  type: integer
+                  nullable: true
+                reports_to_position_id:
+                  type: integer
+                  nullable: true
+                fte:
+                  type: number
+                is_active:
+                  type: boolean
+      responses:
+        '200':
+          description: The record after the edit.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      operationId: coreHrDeletePosition
+      tags:
+      - core-hr
+      security:
+      - bearerAuth: []
+      summary: Delete a position nothing reports to
+      description: >-
+        Deletes the position. It is refused with 409 reference_in_use while
+        another position reports to it or a succession plan names it;
+        archiving with is_active then the allowed operation.
+      x-lifecycle: released
+      parameters:
+      - name: position_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '204':
+          description: The record was deleted.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'

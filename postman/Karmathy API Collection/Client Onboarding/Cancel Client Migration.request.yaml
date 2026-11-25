@@ -1,0 +1,9 @@
+$kind: http-request
+description: Cancel a client migration
+url: http://localhost:8000/onboarding-portal/clients/{client_id}/migrations/{job_id}/cancel
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/Cancel Client Migration.resources/examples
+order: 11000

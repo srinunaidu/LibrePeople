@@ -1,0 +1,91 @@
+# Contract fragment: the public door
+#
+# Part of the Karmathy OpenAPI contract. This file is NOT a standalone
+# OpenAPI document: it contributes `paths` (and the domain tag) to the
+# merged document produced by `scripts/merge_openapi.py`.
+#
+# Paths are relative to the API base path `/api/v1`.
+# One deployment = one customer. There is no tenant parameter here.
+#
+# `x-lifecycle` on a path item or an operation says whether the contract
+# already promises the endpoint to clients:
+#   released - promised. The drift checker fails CI when the running
+#              application does not serve it.
+#   planned  - declared by the contract but not shipped yet. The drift
+#              checker reports it as "contract ahead of code" and does not
+#              fail. Promoting an operation to `released` is the act of
+#              making the promise.
+
+tags:
+  - name: public
+    description: >-
+      The unauthenticated door of the marketing site. It carries no tenant
+      parameter and no employee reference, it accepts a closed set of
+      fields, and it is rate limited because it is the one operation in the
+      product that anybody on the internet may call.
+
+paths:
+  /public/contact:
+    post:
+      operationId: publicContact
+      tags: [public]
+      security: []
+      summary: Send a message to the company
+      description: >-
+        Receives a message from the public contact form and opens a case in
+        the intake state, which the HR case queue picks up. The form is on
+        the marketing site and has no token, which is why it cannot use the
+        case queue's own endpoint.
+
+        The request carries three fields and nothing else: a name, an
+        address and a message. A request that carries an employee id, a
+        tenant id, a case category or a comment is refused with 422
+        `validation_error` rather than quietly stored, so the public door
+        cannot be used to write into the queue's data.
+
+        The endpoint is unauthenticated and it writes to the database, so
+        the rate limit is the control and not an enhancement: repeated
+        messages from one address are refused with 429 `rate_limited`, and
+        the `Retry-After` header says when to come back. A body over the
+        size limit is refused with 413 `payload_too_large`.
+
+        The response is a receipt and nothing else. The address and the
+        message are stored on the case and reach neither the audit trail
+        nor the log.
+      x-lifecycle: planned
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublicContact'
+      responses:
+        '201':
+          description: The message was received.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicContactAccepted'
+        '413':
+          description: The body was larger than the intake accepts.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          description: Too many messages from this address.
+          headers:
+            Retry-After:
+              description: The number of seconds to wait before trying again.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'

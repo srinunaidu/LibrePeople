@@ -1,0 +1,9 @@
+$kind: http-request
+description: List onboarding clients
+url: http://localhost:8000/onboarding-portal/clients
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/List Clients.resources/examples
+order: 1000

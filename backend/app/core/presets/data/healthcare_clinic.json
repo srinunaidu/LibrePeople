@@ -1,0 +1,847 @@
+{
+  "preset_id": "healthcare_clinic",
+  "name": "Healthcare Clinic",
+  "business_type": "healthcare_clinic",
+  "version": "1.0.0",
+  "status": "published",
+  "description": "A clinic whose roster is driven by appointments rather than by a shop floor, and whose people are expected to be there when a patient arrives. This preset suggests the modules a clinic deployment usually needs, the structure a clinic is usually built from, the clinic sessions that cover the working day, the leave types a clinic employer usually offers, and the views a practice manager and a clinical lead read. It decides none of the things that depend on where the business is: leave entitlement, tax, contributions, break length, the professional registration rules and the pay period all come from a verified rule pack, and the currency is a placeholder the customer confirms.",
+  "modules": [
+    {
+      "key": "workforce",
+      "enabled_by_default": true,
+      "requires": [],
+      "description": "Employee records, the departments of the clinic and the jobs people are employed in."
+    },
+    {
+      "key": "time_tracking",
+      "enabled_by_default": true,
+      "requires": [
+        "workforce"
+      ],
+      "description": "The hours the clinical and administrative staff are on site."
+    },
+    {
+      "key": "time",
+      "enabled_by_default": true,
+      "requires": [
+        "time_tracking"
+      ],
+      "description": "The working-time model of the clinic: the week, the clock-in tolerance and the breaks."
+    },
+    {
+      "key": "scheduling",
+      "enabled_by_default": true,
+      "requires": [
+        "workforce"
+      ],
+      "description": "The clinic sessions and the roster that covers them."
+    },
+    {
+      "key": "leave",
+      "enabled_by_default": true,
+      "requires": [
+        "workforce"
+      ],
+      "description": "The leave a clinic offers and the cover that has to be found for it."
+    },
+    {
+      "key": "payroll",
+      "enabled_by_default": false,
+      "requires": [
+        "workforce"
+      ],
+      "description": "The pay run. It stays switched off until a verified rule pack is attached."
+    },
+    {
+      "key": "recruiting",
+      "enabled_by_default": true,
+      "requires": [
+        "workforce"
+      ],
+      "description": "Clinical and administrative staff are hired against registrations and fixed terms."
+    },
+    {
+      "key": "reporting",
+      "enabled_by_default": true,
+      "requires": [
+        "workforce"
+      ],
+      "description": "The staffing, attendance and absence figures a practice manager reports on."
+    },
+    {
+      "key": "ess",
+      "enabled_by_default": true,
+      "requires": [
+        "workforce"
+      ],
+      "description": "The clinical and administrative staff see their own roster and book their own hours."
+    },
+    {
+      "key": "imports",
+      "enabled_by_default": true,
+      "requires": [
+        "workforce"
+      ],
+      "description": "A clinic's staff list arrives as a file."
+    },
+    {
+      "key": "learning",
+      "enabled_by_default": true,
+      "requires": [
+        "workforce"
+      ],
+      "description": "Clinical training, the mandatory courses and the record that a regulator asks for."
+    },
+    {
+      "key": "compliance",
+      "enabled_by_default": true,
+      "requires": [
+        "workforce"
+      ],
+      "description": "The rules the clinic is measured against, and the exceptions the practice manager has to close."
+    },
+    {
+      "key": "forecasting",
+      "enabled_by_default": false,
+      "requires": [
+        "time_tracking"
+      ],
+      "description": "How many staff a busy clinic week will need, once there is enough history to be worth forecasting."
+    }
+  ],
+  "configuration": {
+    "workforce": {
+      "description": "How the workforce records are kept: the optional fields the tenant holds on a person and the way the organisation is described. The fields a clinic keeps on a member of staff, including the role and the registration the clinic holds for them.",
+      "settings": {
+        "employment_types": [
+          "full_time",
+          "part_time",
+          "fixed_term",
+          "contractor",
+          "intern"
+        ],
+        "default_employment_type": "full_time",
+        "organisation_unit": "department",
+        "cost_centre_per_department": true,
+        "manager_relationship_required": true
+      }
+    },
+    "time_tracking": {
+      "description": "How the hours are recorded: A badge clock-in at the clinic entrance, with the site geofence switched on so that the hours are recorded on site. The break and rest rules the law sets are not here; they come from the attached rule pack.",
+      "clock_in_method": "badge",
+      "geofence_enabled": true,
+      "allow_employee_edits": false,
+      "geofence_radius_meters": 120
+    },
+    "time": {
+      "description": "The working-time model: the week starts on monday, a clock-in is accepted a short time either side of the shift, and the breaks are the ones the roster shows. The length of a statutory break, the daily working-time limit and the minimum rest between two shifts come from the rule pack.",
+      "week_starts_on": "monday",
+      "grace_period_minutes": 5,
+      "rounding_method": "nearest_5_minutes",
+      "auto_deduct_breaks": true,
+      "break_rules": [
+        {
+          "description": "The break the roster shows, for every site that has no rule of its own.",
+          "duration_minutes": "REQUIRES_RULE_PACK",
+          "auto_deduct": true,
+          "jurisdiction_specific": "REQUIRES_RULE_PACK"
+        }
+      ]
+    },
+    "scheduling": {
+      "description": "The clinic sessions a practice rosters: a morning clinic, an afternoon clinic, a late clinic and the administrative day. The roster is published a week at a time. The working-time limit, the minimum rest between shifts and the number of days in a row that may be worked come from the rule pack.",
+      "rostering_unit": "weekly",
+      "swap_requires_approval": true,
+      "shift_templates": [
+        {
+          "key": "morning-clinic",
+          "name": "Morning Clinic",
+          "description": "The sessions that run through the morning.",
+          "start_time": "08:00",
+          "end_time": "13:00",
+          "overnight": false,
+          "break_length_minutes": "REQUIRES_RULE_PACK",
+          "required_skills": [
+            "clinical"
+          ],
+          "minimum_rest_hours": "REQUIRES_RULE_PACK",
+          "max_consecutive_days": "REQUIRES_RULE_PACK",
+          "headcount": 5
+        },
+        {
+          "key": "afternoon-clinic",
+          "name": "Afternoon Clinic",
+          "description": "The sessions that run through the afternoon.",
+          "start_time": "13:00",
+          "end_time": "18:00",
+          "overnight": false,
+          "break_length_minutes": "REQUIRES_RULE_PACK",
+          "required_skills": [
+            "clinical"
+          ],
+          "minimum_rest_hours": "REQUIRES_RULE_PACK",
+          "max_consecutive_days": "REQUIRES_RULE_PACK",
+          "headcount": 5
+        },
+        {
+          "key": "late-clinic",
+          "name": "Late Clinic",
+          "description": "The evening sessions, and the close of the building.",
+          "start_time": "18:00",
+          "end_time": "22:00",
+          "overnight": false,
+          "break_length_minutes": "REQUIRES_RULE_PACK",
+          "required_skills": [
+            "clinical",
+            "closing"
+          ],
+          "minimum_rest_hours": "REQUIRES_RULE_PACK",
+          "max_consecutive_days": "REQUIRES_RULE_PACK",
+          "headcount": 3
+        },
+        {
+          "key": "admin-day",
+          "name": "Administration Day",
+          "description": "The administrative day, when the records and the rota are done.",
+          "start_time": "09:00",
+          "end_time": "17:00",
+          "overnight": false,
+          "break_length_minutes": "REQUIRES_RULE_PACK",
+          "required_skills": [
+            "administration"
+          ],
+          "minimum_rest_hours": "REQUIRES_RULE_PACK",
+          "max_consecutive_days": "REQUIRES_RULE_PACK",
+          "headcount": 3
+        }
+      ]
+    },
+    "leave": {
+      "description": "The leave a clinic offers and the approval it needs. The entitlement, the accrual rhythm, the carry-over and the right to be paid for unused leave are decided by the rule pack, not here.",
+      "approval_required": true,
+      "allow_negative_balance": false,
+      "leave_types": [
+        {
+          "key": "annual-leave",
+          "name": "Annual Leave",
+          "description": "The holiday the clinic's staff take.",
+          "entitlement_days": "REQUIRES_RULE_PACK",
+          "accrual": {
+            "frequency": "REQUIRES_RULE_PACK",
+            "tenure_tiers": [
+              {
+                "after_years": 0,
+                "days": "REQUIRES_RULE_PACK"
+              }
+            ],
+            "max_balance_days": "REQUIRES_RULE_PACK"
+          },
+          "carry_over_limit_days": "REQUIRES_RULE_PACK",
+          "expiry_rule": "REQUIRES_RULE_PACK",
+          "encashment_allowed": "REQUIRES_RULE_PACK"
+        },
+        {
+          "key": "sick-leave",
+          "name": "Sick Leave",
+          "description": "The absence that illness causes.",
+          "entitlement_days": "REQUIRES_RULE_PACK",
+          "accrual": {
+            "frequency": "REQUIRES_RULE_PACK",
+            "tenure_tiers": [
+              {
+                "after_years": 0,
+                "days": "REQUIRES_RULE_PACK"
+              }
+            ],
+            "max_balance_days": "REQUIRES_RULE_PACK"
+          },
+          "carry_over_limit_days": "REQUIRES_RULE_PACK",
+          "expiry_rule": "REQUIRES_RULE_PACK",
+          "encashment_allowed": "REQUIRES_RULE_PACK"
+        },
+        {
+          "key": "family-leave",
+          "name": "Family Leave",
+          "description": "The absence that a family matter causes.",
+          "entitlement_days": "REQUIRES_RULE_PACK",
+          "accrual": {
+            "frequency": "REQUIRES_RULE_PACK",
+            "tenure_tiers": [
+              {
+                "after_years": 0,
+                "days": "REQUIRES_RULE_PACK"
+              }
+            ],
+            "max_balance_days": "REQUIRES_RULE_PACK"
+          },
+          "carry_over_limit_days": "REQUIRES_RULE_PACK",
+          "expiry_rule": "REQUIRES_RULE_PACK",
+          "encashment_allowed": "REQUIRES_RULE_PACK"
+        },
+        {
+          "key": "study-leave",
+          "name": "Study Leave",
+          "description": "The absence that a course or an examination causes.",
+          "entitlement_days": "REQUIRES_RULE_PACK",
+          "accrual": {
+            "frequency": "REQUIRES_RULE_PACK",
+            "tenure_tiers": [
+              {
+                "after_years": 0,
+                "days": "REQUIRES_RULE_PACK"
+              }
+            ],
+            "max_balance_days": "REQUIRES_RULE_PACK"
+          },
+          "carry_over_limit_days": "REQUIRES_RULE_PACK",
+          "expiry_rule": "REQUIRES_RULE_PACK",
+          "encashment_allowed": "REQUIRES_RULE_PACK"
+        },
+        {
+          "key": "unpaid-leave",
+          "name": "Unpaid Leave",
+          "description": "The absence the staff take and are not paid for.",
+          "entitlement_days": "REQUIRES_RULE_PACK",
+          "accrual": {
+            "frequency": "REQUIRES_RULE_PACK",
+            "tenure_tiers": [
+              {
+                "after_years": 0,
+                "days": "REQUIRES_RULE_PACK"
+              }
+            ],
+            "max_balance_days": "REQUIRES_RULE_PACK"
+          },
+          "carry_over_limit_days": "REQUIRES_RULE_PACK",
+          "expiry_rule": "REQUIRES_RULE_PACK",
+          "encashment_allowed": "REQUIRES_RULE_PACK"
+        }
+      ]
+    },
+    "payroll": {
+      "description": "The pay run a clinic expects: monthly, with the components the jurisdiction may require. Every rate and amount is left to the rule pack, so payroll stays disabled until a verified pack is attached to the tenant.",
+      "pay_frequency": "monthly",
+      "pay_cycle_anchor_day": 1,
+      "currency": "USD",
+      "statutory_components": [
+        {
+          "code": "INCOME_TAX",
+          "label": "Income tax",
+          "category": "deduction",
+          "basis": "percentage_of_gross",
+          "rate": "REQUIRES_RULE_PACK",
+          "description": "The tax withheld from the employee's pay. The rate comes from the rule pack; the preset only names the component so the customer can see it."
+        },
+        {
+          "code": "SOCIAL_CONTRIBUTION",
+          "label": "Social contributions",
+          "category": "employer_contribution",
+          "basis": "percentage_of_gross",
+          "rate": "REQUIRES_RULE_PACK",
+          "description": "The employer contribution the jurisdiction requires. The rate comes from the rule pack; the preset only names the component."
+        }
+      ],
+      "statutory_leave_pay": {
+        "description": "Which of the leave types above the tenant expects to be paid and which it expects to be unpaid. The fraction of pay a statutory leave attracts is set by the rule pack, not here.",
+        "leave_pay_rate": "REQUIRES_RULE_PACK",
+        "protected_leave_types": [
+          "sick-leave",
+          "family-leave",
+          "study-leave"
+        ]
+      }
+    },
+    "recruiting": {
+      "description": "How a clinic hires: the standard offer letter, and the checks a candidate is asked to consent to. The consent scope, what a candidate must be told about the checks and the professional registration a role needs are set by the law and the regulator of the tenant's jurisdiction, so the scope is left to the rule pack.",
+      "default_offer_template_id": "default-offer",
+      "background_check_consent_scope": "REQUIRES_RULE_PACK",
+      "require_referral_code": false
+    },
+    "reporting": {
+      "description": "The staffing, attendance and absence figures a practice manager reports on, and the exports behind them.",
+      "settings": {
+        "default_period": "month",
+        "compare_with_previous_period": true,
+        "include_payroll_cost": false
+      }
+    },
+    "ess": {
+      "description": "The screens the clinic's staff use for themselves: the sessions they work, the hours they book and the leave they ask for.",
+      "settings": {
+        "self_service_roster": true,
+        "self_service_timesheet": true,
+        "self_service_leave_request": true
+      }
+    },
+    "imports": {
+      "description": "How the clinic brings its own records in: the templates, the dry run and the confirmation before anything is written.",
+      "settings": {
+        "dry_run_required": true,
+        "allowed_entities": [
+          "employees",
+          "departments",
+          "jobs",
+          "leave_balances",
+          "shift_templates"
+        ]
+      }
+    },
+    "learning": {
+      "description": "The clinical training the practice requires and the record that a regulator asks for.",
+      "settings": {
+        "expiry_warnings": true,
+        "certification_required_before_roster": true
+      }
+    },
+    "compliance": {
+      "description": "The rules the clinic is measured against, and the exceptions the practice manager has to close.",
+      "settings": {
+        "headcount_plan_tracking": true,
+        "violation_review_required": true
+      }
+    },
+    "forecasting": {
+      "description": "How the clinic works out the staffing a busy week will need, once there is enough history to be worth forecasting.",
+      "settings": {
+        "minimum_history_weeks": 12,
+        "default_horizon_days": 28
+      }
+    }
+  },
+  "organisation_templates": {
+    "description": "The structure a clinic is usually built from: the clinical service, the administrative support around it and the management of both. The customer may rename, move or refuse any of it.",
+    "departments": [
+      {
+        "key": "clinical",
+        "name": "Clinical Services",
+        "description": "The clinicians who see the patients.",
+        "parent_key": "clinic-operations"
+      },
+      {
+        "key": "nursing",
+        "name": "Nursing",
+        "description": "The nursing team and the treatment rooms.",
+        "parent_key": "clinical"
+      },
+      {
+        "key": "administration",
+        "name": "Administration",
+        "description": "Reception, records, appointments and the day-to-day running of the clinic."
+      },
+      {
+        "key": "clinic-operations",
+        "name": "Clinic Operations",
+        "description": "The practice manager and the clinical lead."
+      }
+    ],
+    "job_families": [
+      {
+        "key": "clinical-care",
+        "name": "Clinical Care",
+        "description": "The clinical work that sees and treats patients.",
+        "typical_job_titles": [
+          "General Practitioner",
+          "Physician Assistant",
+          "Nurse Practitioner"
+        ]
+      },
+      {
+        "key": "nursing-care",
+        "name": "Nursing Care",
+        "description": "The nursing work that runs the treatment room.",
+        "typical_job_titles": [
+          "Registered Nurse",
+          "Healthcare Assistant"
+        ]
+      },
+      {
+        "key": "practice-support",
+        "name": "Practice Support",
+        "description": "The administrative work that keeps the clinic running.",
+        "typical_job_titles": [
+          "Receptionist",
+          "Practice Manager",
+          "Medical Secretary"
+        ]
+      }
+    ],
+    "roles": [
+      {
+        "key": "practice-manager",
+        "name": "Practice Manager",
+        "description": "Runs the clinic: the roster, the staff and the compliance record.",
+        "job_family_key": "practice-support",
+        "department_key": "clinic-operations",
+        "grade": "Senior"
+      },
+      {
+        "key": "clinical-lead",
+        "name": "Clinical Lead",
+        "description": "Leads the clinical service and its standards.",
+        "job_family_key": "clinical-care",
+        "department_key": "clinical"
+      },
+      {
+        "key": "general-practitioner",
+        "name": "General Practitioner",
+        "description": "Sees the patients and keeps their record.",
+        "job_family_key": "clinical-care",
+        "department_key": "clinical"
+      },
+      {
+        "key": "registered-nurse",
+        "name": "Registered Nurse",
+        "description": "Runs the treatment room and the clinical sessions.",
+        "job_family_key": "nursing-care",
+        "department_key": "nursing"
+      },
+      {
+        "key": "receptionist",
+        "name": "Receptionist",
+        "description": "Books the appointments and greets the patients.",
+        "job_family_key": "practice-support",
+        "department_key": "administration"
+      }
+    ]
+  },
+  "dashboards": {
+    "description": "The views a practice manager and a clinical lead read: the clinic day, the staffing of the week and the exceptions that need a person.",
+    "dashboards": [
+      {
+        "key": "clinic-day",
+        "name": "Clinic Day",
+        "description": "Who is on the floor today and who is covering the sessions.",
+        "kpi_keys": [
+          "headcount-today",
+          "hours-worked-today",
+          "attendance-rate"
+        ]
+      },
+      {
+        "key": "staffing-week",
+        "name": "Staffing This Week",
+        "description": "The staffing planned against the staffing delivered.",
+        "kpi_keys": [
+          "scheduled-hours",
+          "worked-hours",
+          "absence-rate"
+        ]
+      },
+      {
+        "key": "cover",
+        "name": "Cover and Absence",
+        "description": "Who is away, and which sessions still need cover.",
+        "kpi_keys": [
+          "leave-taken",
+          "absence-rate"
+        ]
+      }
+    ],
+    "kpis": [
+      {
+        "key": "headcount-today",
+        "name": "Headcount today",
+        "description": "The people on the payroll and on site today.",
+        "unit": "count",
+        "source_module": "workforce"
+      },
+      {
+        "key": "hours-worked-today",
+        "name": "Hours worked today",
+        "description": "The hours recorded across the clinic today.",
+        "unit": "hours",
+        "source_module": "time_tracking"
+      },
+      {
+        "key": "attendance-rate",
+        "name": "Attendance rate",
+        "description": "The share of scheduled hours that were worked.",
+        "unit": "percentage",
+        "source_module": "time_tracking"
+      },
+      {
+        "key": "scheduled-hours",
+        "name": "Scheduled hours",
+        "description": "The hours the published roster asks for.",
+        "unit": "hours",
+        "source_module": "scheduling"
+      },
+      {
+        "key": "worked-hours",
+        "name": "Hours worked",
+        "description": "The hours actually recorded.",
+        "unit": "hours",
+        "source_module": "time_tracking"
+      },
+      {
+        "key": "absence-rate",
+        "name": "Absence rate",
+        "description": "The share of the workforce away on a day.",
+        "unit": "percentage",
+        "source_module": "leave"
+      },
+      {
+        "key": "leave-taken",
+        "name": "Leave taken",
+        "description": "The days of leave taken in the period.",
+        "unit": "days",
+        "source_module": "leave"
+      }
+    ],
+    "action_queues": [
+      {
+        "key": "missing-clock-ins",
+        "name": "Missing clock-ins",
+        "description": "Shifts that ended with nobody clocking out, so the clinic hours are unknown.",
+        "owner_role": "Manager",
+        "source_module": "time_tracking"
+      },
+      {
+        "key": "leave-waiting",
+        "name": "Leave waiting for a decision",
+        "description": "Leave requests that no manager has answered.",
+        "owner_role": "Manager",
+        "source_module": "leave"
+      },
+      {
+        "key": "compliance-exceptions",
+        "name": "Compliance exceptions",
+        "description": "The rules the clinic is measured against that still need closing.",
+        "owner_role": "HR",
+        "source_module": "compliance"
+      }
+    ]
+  },
+  "forecast_drivers": {
+    "description": "What a clinic can forecast once it has a history of sessions and attendance: the staffing its appointment book will need.",
+    "drivers": [
+      {
+        "key": "clinic-sessions",
+        "name": "Clinic sessions",
+        "description": "The sessions the clinic runs, which move the staffing with them.",
+        "source_module": "scheduling",
+        "direction": "increases"
+      },
+      {
+        "key": "appointment-volume",
+        "name": "Appointment volume",
+        "description": "How busy the appointment book is, which moves the clinical hours needed.",
+        "source_module": "forecasting",
+        "direction": "mixed"
+      },
+      {
+        "key": "staff-availability",
+        "name": "Staff availability",
+        "description": "Who is available to work, which moves the cover that can be found.",
+        "source_module": "leave",
+        "direction": "decreases"
+      }
+    ],
+    "required_data": [
+      {
+        "key": "recorded-hours",
+        "name": "Recorded hours",
+        "description": "Enough recorded hours to see the shape of a clinic week.",
+        "source_module": "time_tracking"
+      },
+      {
+        "key": "shift-patterns",
+        "name": "Shift patterns",
+        "description": "The clinic sessions the practice actually rosters.",
+        "source_module": "scheduling"
+      },
+      {
+        "key": "absence-history",
+        "name": "Absence history",
+        "description": "A history of who was away, so the forecast does not promise cover that will not exist.",
+        "source_module": "leave"
+      }
+    ]
+  },
+  "import_templates": [
+    {
+      "key": "employees",
+      "name": "Employee import",
+      "description": "The clinic's staff list, when it arrives as a file rather than being typed in one person at a time.",
+      "entity": "employees",
+      "endpoint": "/import-export/template/employees"
+    },
+    {
+      "key": "departments",
+      "name": "Department import",
+      "description": "The clinic structure, when the customer already has one.",
+      "entity": "departments",
+      "endpoint": "/import-export/template/departments"
+    },
+    {
+      "key": "jobs",
+      "name": "Job import",
+      "description": "The clinical and administrative jobs, when the customer already has a list.",
+      "entity": "jobs",
+      "endpoint": "/import-export/template/jobs"
+    },
+    {
+      "key": "leave-balances",
+      "name": "Leave balance import",
+      "description": "The balances carried over from the previous system.",
+      "entity": "leave_balances",
+      "endpoint": "/import-export/template/leave_balances"
+    },
+    {
+      "key": "shift-templates",
+      "name": "Shift template import",
+      "description": "The clinic sessions the practice already runs.",
+      "entity": "shift_templates",
+      "endpoint": "/import-export/template/shift_templates"
+    }
+  ],
+  "validations": [
+    {
+      "key": "healthcare-departments-configured",
+      "name": "Departments are configured",
+      "description": "The clinic structure exists, so a person can be given one.",
+      "severity": "warning",
+      "condition": {
+        "kind": "data_present",
+        "entity": "departments"
+      },
+      "message": "No department has been created yet, so nobody can be given one.",
+      "fix_target": "departments",
+      "module": "workforce"
+    },
+    {
+      "key": "healthcare-leave-types-configured",
+      "name": "Leave types are configured",
+      "description": "The clinic's staff can request leave.",
+      "severity": "warning",
+      "condition": {
+        "kind": "data_present",
+        "entity": "leave_types"
+      },
+      "message": "No leave type has been created yet, so the clinic's staff cannot request leave.",
+      "fix_target": "leave.leave_types",
+      "module": "leave"
+    },
+    {
+      "key": "healthcare-shift-templates-configured",
+      "name": "Clinic sessions are configured",
+      "description": "The roster has something to build from.",
+      "severity": "info",
+      "condition": {
+        "kind": "data_present",
+        "entity": "shift_templates"
+      },
+      "message": "No shift template has been created yet, so there is no roster to publish.",
+      "fix_target": "scheduling.shift_templates",
+      "module": "scheduling"
+    },
+    {
+      "key": "healthcare-modules-depend",
+      "name": "Every enabled module has what it needs",
+      "description": "The modules the clinic switched on can all work.",
+      "severity": "blocking",
+      "condition": {
+        "kind": "module_dependency_met",
+        "module": "scheduling"
+      },
+      "message": "The scheduling module is switched on but the module it needs is not.",
+      "fix_target": "onboarding.modules",
+      "module": "scheduling"
+    },
+    {
+      "key": "healthcare-no-rule-pack-waiting",
+      "name": "No setting is waiting for a rule pack",
+      "description": "Nothing the clinic has configured is half finished.",
+      "severity": "blocking",
+      "condition": {
+        "kind": "no_unresolved_sentinels"
+      },
+      "message": "A setting is still waiting for a verified rule pack, so it cannot be used yet.",
+      "fix_target": "onboarding.settings"
+    }
+  ],
+  "exclusions": [
+    {
+      "key": "statutory-leave-entitlement",
+      "name": "Statutory leave entitlement and accrual",
+      "description": "How many days of leave an employee is entitled to, how the entitlement accrues, how much may be carried into the next year and whether unused leave may be paid out.",
+      "reason": "These are set by the law of the tenant's jurisdiction and differ from one country to the next. A preset has no jurisdiction, so it names the slot and leaves the number to a verified rule pack.",
+      "category": "statutory",
+      "requires_review": true
+    },
+    {
+      "key": "tax-and-contributions",
+      "name": "Tax, contributions and the statutory pay components",
+      "description": "The deductions, allowances and employer contributions the jurisdiction requires, and the rates they are charged at.",
+      "reason": "A tax rate and a contribution percentage are the most tightly guarded numbers in the product. They live in a verified rule pack and nowhere else, and payroll stays disabled until one is attached to the tenant.",
+      "category": "statutory",
+      "requires_review": true
+    },
+    {
+      "key": "minimum-wage-and-pay-floor",
+      "name": "Minimum wage and pay floors",
+      "description": "The lowest pay the tenant may offer, and the floor that applies to a grade, a contract type or a working time.",
+      "reason": "The floor is set by the jurisdiction and changes with it. The tenant's own pay structure may sit above it, but the preset may not state it.",
+      "category": "statutory",
+      "requires_review": true
+    },
+    {
+      "key": "working-time-limits",
+      "name": "Working-time limits, break length and minimum rest",
+      "description": "The daily and weekly working-time limits, the length of a statutory break, whether the break is paid, the minimum rest between two shifts and the number of days in a row that may be worked.",
+      "reason": "Every one of these is a working-time rule of the jurisdiction. The preset leaves the slots open so that the rule pack fills them with the values that apply where the tenant actually is.",
+      "category": "jurisdiction",
+      "requires_review": true
+    },
+    {
+      "key": "notice-and-termination",
+      "name": "Notice periods and termination",
+      "description": "The notice an employee or an employer must give, and what happens to the contract when it ends.",
+      "reason": "Notice is a jurisdiction rule, and in some places it depends on the length of service and the reason for the ending. The tenant decides what it will do, and the rule pack tells it what it must do.",
+      "category": "jurisdiction",
+      "requires_review": true
+    },
+    {
+      "key": "background-check-consent",
+      "name": "Background check consent and disclosure",
+      "description": "Which checks a candidate may be offered, what the candidate must be told about them and what the candidate has to consent to.",
+      "reason": "Data-protection and employment law usually set both the scope and the wording. The preset leaves the scope to the rule pack so that the tenant never offers a check it is not allowed to offer.",
+      "category": "jurisdiction",
+      "requires_review": true
+    },
+    {
+      "key": "data-protection-and-retention",
+      "name": "Data protection and retention",
+      "description": "How long the tenant keeps each kind of record, which records it may keep at all, and what happens to them when a person asks for them to be erased.",
+      "reason": "The retention periods and the rights are a matter for the tenant's own policy and for the law that applies to it. The product supports the workflows; it does not decide the periods.",
+      "category": "jurisdiction",
+      "requires_review": true
+    },
+    {
+      "key": "pay-cycle-and-currency",
+      "name": "Pay frequency and currency",
+      "description": "The preset carries a monthly pay cycle and a placeholder currency. The tenant confirms both, and the jurisdiction may restrict either.",
+      "reason": "The pay period and the currency are the tenant's own commercial choices, but the law of the jurisdiction constrains them, so the tenant has to confirm them rather than inherit them.",
+      "category": "company_policy",
+      "requires_review": true
+    },
+    {
+      "key": "professional-registration",
+      "name": "Professional registration and scope of practice",
+      "description": "Which professional registration a role needs, who may be signed off, and what each role may do.",
+      "reason": "The registration a clinician needs and the limits of what they may do are set by the regulator of the jurisdiction, not by a preset. The product keeps the record; the rule pack and the tenant's own governance decide the requirement.",
+      "category": "jurisdiction",
+      "requires_review": true
+    },
+    {
+      "key": "patient-records-and-confidentiality",
+      "name": "Patient records and confidentiality",
+      "description": "What the personnel system may hold about a patient's care, and how long it may hold it.",
+      "reason": "The confidentiality of patient information is a matter for the jurisdiction's health data law and for the clinic's own information governance. The preset does not decide it.",
+      "category": "jurisdiction",
+      "requires_review": true
+    }
+  ],
+  "created_at": "2026-10-22T00:00:00Z",
+  "updated_at": "2026-10-22T00:00:00Z"
+}

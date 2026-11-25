@@ -1,0 +1,9 @@
+$kind: http-request
+description: Get an ESS profile
+url: http://localhost:8000/ess/profile/{employee_id}
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/Get ESS Profile.resources/examples
+order: 13000

@@ -1,0 +1,15 @@
+$kind: http-request
+description: Update an onboarding task
+url: http://localhost:8000/onboarding/tasks/{task_id}
+method: PUT
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Update Onboarding Task.resources/examples
+order: 6000

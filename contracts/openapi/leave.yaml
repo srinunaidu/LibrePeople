@@ -1,0 +1,640 @@
+tags:
+- name: leave
+  description: 'Leave of this deployment: the leave types, the balances, the ledger behind the balances,
+    the requests and their decisions, and the non working days of the locations. A request that overlaps
+    an existing one returns 409 `leave_overlaps_existing`; a request for more leave than the balance allows
+    returns 409 `leave_insufficient_balance`.'
+paths:
+  /leave/types:
+    get:
+      operationId: leaveListTypes
+      tags:
+      - leave
+      security:
+      - bearerAuth: []
+      summary: List the leave types
+      description: 'Lists the leave types configured for this deployment. The list is not paged: a deployment
+        has a small, bounded number of leave types.'
+      parameters:
+      - name: active
+        in: query
+        required: false
+        description: Only active or only inactive leave types.
+        schema:
+          type: boolean
+      responses:
+        '200':
+          description: The leave types.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LeaveType'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+    post:
+      operationId: leaveCreateLeavetypes
+      tags:
+      - leave
+      security:
+      - bearerAuth: []
+      summary: POST /leave/types
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /leave/balances:
+    get:
+      operationId: leaveGetBalances
+      tags:
+      - leave
+      security:
+      - bearerAuth: []
+      summary: Read the leave balances
+      description: Returns the leave balance of every employee, or of the employees selected by the filters,
+        for one leave type and one year. The balances are a projection of the ledger; the ledger itself
+        is at `GET /leave/balances/{employee_id}/ledger`. `employee_id` defaults to the caller. A year
+        outside the configured range returns 422 `validation_error`.
+      parameters:
+      - name: employee_id
+        in: query
+        required: false
+        description: The employee to report on. Defaults to the caller.
+        schema:
+          type: string
+      - name: leave_type_id
+        in: query
+        required: false
+        description: Only the balance of this leave type.
+        schema:
+          type: string
+      - name: year
+        in: query
+        required: false
+        description: The year the balance is reported for. Defaults to the current year.
+        schema:
+          type: integer
+          minimum: 2000
+          maximum: 2100
+      - name: department_id
+        in: query
+        required: false
+        description: Only the balances of the employees of this department.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: The leave balances.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LeaveBalance'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /leave/balances/{employee_id}/ledger:
+    get:
+      operationId: leaveGetBalanceLedger
+      tags:
+      - leave
+      security:
+      - bearerAuth: []
+      summary: Read the leave ledger of an employee
+      description: 'Returns the immutable movements of the leave balance of one employee: accruals, usages,
+        adjustments, carry forwards and expiries, oldest first. Every row carries the running balance
+        after the movement, so the balance can be recomputed from the ledger alone. Rows are never edited
+        or deleted; a correcting movement is appended.'
+      x-lifecycle: planned
+      parameters:
+      - name: employee_id
+        in: path
+        required: true
+        description: Identifier of the employee.
+        schema:
+          type: string
+      - name: leave_type_id
+        in: query
+        required: false
+        description: Only the movements of this leave type.
+        schema:
+          type: string
+      - name: year
+        in: query
+        required: false
+        description: Only the movements of this year.
+        schema:
+          type: integer
+          minimum: 2000
+          maximum: 2100
+      - name: from
+        in: query
+        required: false
+        description: Only movements effective on or after this date.
+        schema:
+          type: string
+          format: date
+      - name: to
+        in: query
+        required: false
+        description: Only movements effective on or before this date.
+        schema:
+          type: string
+          format: date
+      responses:
+        '200':
+          description: The ledger rows of the employee.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LeaveLedgerEntry'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /leave/reconciliation:
+    get:
+      operationId: leaveGetReconciliation
+      tags:
+      - leave
+      security:
+      - bearerAuth: []
+      summary: Reconcile the balances against the ledger
+      description: 'Reports every leave balance of this deployment against the ledger that should explain
+        it, and the difference between the two. The report is about people: it is limited to the roles
+        that may see leave and to the records the caller may see, and it carries the numbers that disagree
+        and nothing else — no reason, no description and no diagnosis. A balance with no ledger yet is
+        reported separately from one whose ledger and whose cache disagree.'
+      x-lifecycle: planned
+      parameters:
+      - name: year
+        in: query
+        required: false
+        description: Only the balances of this year.
+        schema:
+          type: integer
+          minimum: 2000
+          maximum: 2100
+      - name: employee_id
+        in: query
+        required: false
+        description: Only the balance of this employee.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: The reconciliation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveReconciliation'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /leave/payroll-input:
+    get:
+      operationId: leaveGetPayrollInput
+      tags:
+      - leave
+      security:
+      - bearerAuth: []
+      summary: Read the approved leave of a period, for the payroll lane
+      description: The approved leave of a period, quantified, in the shape the payroll lane consumes
+        it in. The quantity is the leave that falls inside the period, so leave that straddles two periods
+        is split between them and a pay run never takes the whole of it. Each entry names the employee,
+        the leave type, the quantity in days and the period the leave belongs to, and the leave request
+        it came from.
+      x-lifecycle: planned
+      parameters:
+      - name: period_start
+        in: query
+        required: true
+        description: The first day of the period.
+        schema:
+          type: string
+          format: date
+      - name: period_end
+        in: query
+        required: true
+        description: The last day of the period.
+        schema:
+          type: string
+          format: date
+      responses:
+        '200':
+          description: The approved leave of the period.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeavePayrollInput'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /leave/requests:
+    get:
+      operationId: leaveListRequests
+      tags:
+      - leave
+      security:
+      - bearerAuth: []
+      summary: List leave requests
+      description: 'Lists the leave requests of this deployment, newest first. The list is paged; `page`
+        and `page_size` control the window. Without `employee_id` the list holds the requests of every
+        employee the caller may see: an employee sees their own requests, a manager the requests of their
+        team. `status` narrows it to one decision state.'
+      parameters:
+      - $ref: '#/components/parameters/pageParam'
+      - $ref: '#/components/parameters/pageSizeParam'
+      - name: employee_id
+        in: query
+        required: false
+        description: Only the requests of this employee.
+        schema:
+          type: string
+      - name: leave_type_id
+        in: query
+        required: false
+        description: Only requests of this leave type.
+        schema:
+          type: string
+      - name: status
+        in: query
+        required: false
+        description: Only requests in this state.
+        schema:
+          type: string
+          enum:
+          - pending
+          - approved
+          - rejected
+          - cancelled
+      - name: from
+        in: query
+        required: false
+        description: Only requests that start on or after this date.
+        schema:
+          type: string
+          format: date
+      - name: to
+        in: query
+        required: false
+        description: Only requests that end on or before this date.
+        schema:
+          type: string
+          format: date
+      responses:
+        '200':
+          description: A page of leave requests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedLeaveRequests'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+    post:
+      operationId: leaveCreateRequest
+      tags:
+      - leave
+      security:
+      - bearerAuth: []
+      summary: Request leave
+      description: Files a leave request for the caller, or for an employee the caller is allowed to file
+        for. The quantity is derived from the leave calendar of the employee when it is not supplied.
+        A request that overlaps an existing pending or approved request returns 409 `leave_overlaps_existing`;
+        a request for more than the balance allows returns 409 `leave_insufficient_balance`; a request
+        for a leave type that is not active returns 422 `validation_error`. The balance is reserved when
+        the request is filed, not when it is approved.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeaveRequestCreate'
+      responses:
+        '201':
+          description: The request was filed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /leave/requests/{request_id}/cancel:
+    post:
+      operationId: leaveCancelRequest
+      tags:
+      - leave
+      security:
+      - bearerAuth: []
+      summary: Cancel a leave request
+      description: Cancels a pending leave request. A request that was already decided, or one whose period
+        a payroll cut off has already used, returns 409 `invalid_state_transition`. The reserved balance
+        is released when the request is cancelled.
+      parameters:
+      - name: request_id
+        in: path
+        required: true
+        description: Identifier of the leave request.
+        schema:
+          type: string
+      - name: reason
+        in: query
+        required: false
+        description: Note stored with the cancellation.
+        schema:
+          type: string
+          maxLength: 500
+      responses:
+        '200':
+          description: The request was cancelled.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /leave/requests/{request_id}/approve:
+    post:
+      operationId: leaveApproveRequest
+      tags:
+      - leave
+      security:
+      - bearerAuth: []
+      summary: Approve a leave request
+      description: 'Approves a pending leave request. The approver must be the manager of the employee
+        or an administrator, and may not approve their own request: that returns 403 `separation_of_duties`.
+        A request that is not pending returns 409 `invalid_state_transition`. On approval the reserved
+        leave is taken from the balance and written to the ledger.'
+      parameters:
+      - name: request_id
+        in: path
+        required: true
+        description: Identifier of the leave request.
+        schema:
+          type: string
+      - name: comment
+        in: query
+        required: false
+        description: Note stored with the decision.
+        schema:
+          type: string
+          maxLength: 500
+      responses:
+        '200':
+          description: The request was approved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /leave/requests/{request_id}/reject:
+    post:
+      operationId: leaveRejectRequest
+      tags:
+      - leave
+      security:
+      - bearerAuth: []
+      summary: Reject a leave request
+      description: Rejects a pending leave request. A request that is not pending returns 409 `invalid_state_transition`.
+        On rejection the reserved leave is released and a ledger movement is written.
+      parameters:
+      - name: request_id
+        in: path
+        required: true
+        description: Identifier of the leave request.
+        schema:
+          type: string
+      - name: comment
+        in: query
+        required: false
+        description: Note stored with the decision.
+        schema:
+          type: string
+          maxLength: 500
+      responses:
+        '200':
+          description: The request was rejected.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /leave/holidays:
+    get:
+      operationId: leaveListHolidays
+      tags:
+      - leave
+      security:
+      - bearerAuth: []
+      summary: List the non working days
+      description: 'Lists the non working days of this deployment. The list is paged; `page` and `page_size`
+        control the window. `location_id` narrows it to one location and `year` to one year. The dates
+        themselves are the customer''s own: the platform never ships statutory dates.'
+      x-lifecycle: planned
+      parameters:
+      - $ref: '#/components/parameters/pageParam'
+      - $ref: '#/components/parameters/pageSizeParam'
+      - name: location_id
+        in: query
+        required: false
+        description: Only the non working days of this location.
+        schema:
+          type: string
+      - name: year
+        in: query
+        required: false
+        description: Only the non working days of this year.
+        schema:
+          type: integer
+          minimum: 2000
+          maximum: 2100
+      responses:
+        '200':
+          description: A page of non working days.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedHolidays'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+    post:
+      operationId: leaveCreateHolidays
+      tags:
+      - leave
+      security:
+      - bearerAuth: []
+      summary: Add the non working days of a location and a year
+      description: 'Adds a set of non working days for one location and one year in a single transaction:
+        either all of them are stored or none is. A date that is already a non working day of that location
+        is left alone and counted as unchanged. A date outside the given year returns 422 `validation_error`.'
+      x-lifecycle: planned
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HolidayBulkCreate'
+      responses:
+        '201':
+          description: The non working days were added.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Holiday'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /leave/entitlements:
+    post:
+      operationId: leaveCreateLeaveentitlements
+      tags:
+      - leave
+      security:
+      - bearerAuth: []
+      summary: POST /leave/entitlements
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /leave/types/{leave_type_id}:
+    put:
+      operationId: leaveUpdateLeavetypes
+      tags:
+      - leave
+      security:
+      - bearerAuth: []
+      summary: PUT /leave/types/{leave_type_id}
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'

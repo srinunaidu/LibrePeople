@@ -1,0 +1,9 @@
+$kind: http-request
+description: Get a list of jobs
+url: http://localhost:8000/jobs
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/List Jobs.resources/examples
+order: 1000

@@ -1,0 +1,15 @@
+$kind: http-request
+description: Create a new employee
+url: http://localhost:8000/employees
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Create Employee.resources/examples
+order: 3000

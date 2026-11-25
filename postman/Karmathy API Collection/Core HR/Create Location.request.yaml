@@ -1,0 +1,15 @@
+$kind: http-request
+description: Create a location
+url: http://localhost:8000/core-hr/locations
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Create Location.resources/examples
+order: 8000

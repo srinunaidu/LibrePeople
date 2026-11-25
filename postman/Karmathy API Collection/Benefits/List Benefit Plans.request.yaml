@@ -1,0 +1,9 @@
+$kind: http-request
+description: List benefit plans
+url: http://localhost:8000/benefits/benefit-plans
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/List Benefit Plans.resources/examples
+order: 1000

@@ -1,0 +1,15 @@
+$kind: http-request
+description: Update an offer
+url: http://localhost:8000/offers/{offer_id}
+method: PUT
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Update Offer.resources/examples
+order: 7000

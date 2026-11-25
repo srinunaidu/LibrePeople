@@ -1,0 +1,9 @@
+$kind: http-request
+description: List continuous feedback
+url: http://localhost:8000/ess/continuous-feedback
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/List ESS Continuous Feedback.resources/examples
+order: 9000

@@ -1,0 +1,15 @@
+$kind: http-request
+description: Generate a roster draft
+url: http://localhost:8000/scheduling/roster/generate
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Generate Roster.resources/examples
+order: 5000

@@ -1,0 +1,9 @@
+$kind: http-request
+description: Get a roster draft
+url: http://localhost:8000/scheduling/rosters/draft/{draft_id}
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/Generate Roster Draft.resources/examples
+order: 4000

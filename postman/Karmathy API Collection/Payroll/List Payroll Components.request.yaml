@@ -1,0 +1,9 @@
+$kind: http-request
+description: List payroll components
+url: http://localhost:8000/payroll/components
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/List Payroll Components.resources/examples
+order: 1000

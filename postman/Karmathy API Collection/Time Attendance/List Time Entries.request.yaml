@@ -1,0 +1,9 @@
+$kind: http-request
+description: List time entries
+url: http://localhost:8000/time/entries
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/List Time Entries.resources/examples
+order: 1000

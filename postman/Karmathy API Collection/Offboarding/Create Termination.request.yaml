@@ -1,0 +1,15 @@
+$kind: http-request
+description: Create a termination
+url: http://localhost:8000/offboarding/terminations
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Create Termination.resources/examples
+order: 5000

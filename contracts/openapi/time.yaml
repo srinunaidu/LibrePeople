@@ -1,0 +1,541 @@
+tags:
+- name: time
+  description: 'Working time of this deployment: clock in and clock out, the recorded entries, the timesheets
+    that are submitted and approved, the manual corrections and the detected breaches of the working time
+    rules. A period that a payroll cut off has locked returns 409 `timesheet_locked` and no entry in it
+    can be changed.'
+paths:
+  /time/entries:
+    get:
+      operationId: timeListEntries
+      tags:
+      - time
+      security:
+      - bearerAuth: []
+      summary: List the recorded working periods
+      description: Lists the working periods of this deployment, newest first. The list is paged; `page`
+        and `page_size` control the window. `employee_id` narrows it to one employee, `from` and `to`
+        to a date range, and `source` to the way the entry was recorded. An employee outside the visibility
+        scope of the caller is not returned.
+      parameters:
+      - $ref: '#/components/parameters/pageParam'
+      - $ref: '#/components/parameters/pageSizeParam'
+      - name: employee_id
+        in: query
+        required: false
+        description: Only entries of this employee. Defaults to the entries of the caller.
+        schema:
+          type: string
+      - name: from
+        in: query
+        required: false
+        description: Only entries on or after this date.
+        schema:
+          type: string
+          format: date
+      - name: to
+        in: query
+        required: false
+        description: Only entries on or before this date.
+        schema:
+          type: string
+          format: date
+      - name: status
+        in: query
+        required: false
+        description: Only entries in this state.
+        schema:
+          type: string
+          enum:
+          - open
+          - complete
+          - approved
+          - rejected
+      - name: source
+        in: query
+        required: false
+        description: Only entries recorded this way.
+        schema:
+          type: string
+          enum:
+          - terminal
+          - mobile
+          - manual
+          - import
+          - correction
+      responses:
+        '200':
+          description: A page of working periods.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTimeEntries'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+    post:
+      operationId: timeCreateTimeentries
+      tags:
+      - time
+      security:
+      - bearerAuth: []
+      summary: POST /time/entries
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /time/clock-in:
+    post:
+      operationId: timeClockIn
+      tags:
+      - time
+      security:
+      - bearerAuth: []
+      summary: Start a working period
+      description: Starts a working period. Without `employee_id` the clock in is attributed to the caller;
+        a manager or an administrator may clock somebody else in, and doing so for an employee outside
+        the visibility scope of the caller returns 404. An employee that already has an open period returns
+        409 `conflict`.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClockInRequest'
+      responses:
+        '201':
+          description: The working period was started.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeEntry'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /time/clock-out:
+    post:
+      operationId: timeClockOut
+      tags:
+      - time
+      security:
+      - bearerAuth: []
+      summary: Close a working period
+      description: Closes the open working period of the caller, or of the employee named by `employee_id`
+        or `entry_id`. The period is closed at the server clock, not at a time sent by the client. An
+        entry that is already closed returns 409 `conflict`; an entry in a locked period returns 409 `timesheet_locked`.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClockOutRequest'
+      responses:
+        '200':
+          description: The working period was closed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeEntry'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /time/timesheets:
+    get:
+      operationId: timeListTimesheets
+      tags:
+      - time
+      security:
+      - bearerAuth: []
+      summary: List timesheets
+      description: Lists the timesheets of this deployment. The list is paged; `page` and `page_size`
+        control the window. `employee_id` narrows it to one employee, `period_start` and `period_end`
+        to a period, and `status` to the state of the timesheet. A timesheet is only listed for the employee
+        it belongs to and for the approvers of that employee.
+      parameters:
+      - $ref: '#/components/parameters/pageParam'
+      - $ref: '#/components/parameters/pageSizeParam'
+      - name: employee_id
+        in: query
+        required: false
+        description: Only timesheets of this employee.
+        schema:
+          type: string
+      - name: period_start
+        in: query
+        required: false
+        description: Only timesheets whose period starts on or after this date.
+        schema:
+          type: string
+          format: date
+      - name: period_end
+        in: query
+        required: false
+        description: Only timesheets whose period ends on or before this date.
+        schema:
+          type: string
+          format: date
+      - name: status
+        in: query
+        required: false
+        description: Only timesheets in this state.
+        schema:
+          type: string
+          enum:
+          - open
+          - submitted
+          - approved
+          - rejected
+          - locked
+      responses:
+        '200':
+          description: A page of timesheets.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTimesheets'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /time/timesheets/{timesheet_id}/submit:
+    post:
+      operationId: timeSubmitTimesheet
+      tags:
+      - time
+      security:
+      - bearerAuth: []
+      summary: Submit a timesheet for approval
+      description: Submits the timesheet of one period for approval. The timesheet must be open or rejected;
+        a timesheet that is already submitted or approved returns 409 `invalid_state_transition`. A timesheet
+        in a period that a payroll cut off has locked returns 409 `timesheet_locked`.
+      parameters:
+      - name: timesheet_id
+        in: path
+        required: true
+        description: Identifier of the timesheet.
+        schema:
+          type: string
+      - name: comment
+        in: query
+        required: false
+        description: Note stored with the submission.
+        schema:
+          type: string
+          maxLength: 500
+      responses:
+        '200':
+          description: The timesheet was submitted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Timesheet'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /time/timesheets/{timesheet_id}/approve:
+    post:
+      operationId: timeApproveTimesheet
+      tags:
+      - time
+      security:
+      - bearerAuth: []
+      summary: Approve a timesheet
+      description: 'Approves a submitted timesheet. The approver must be the manager of the employee or
+        an administrator, and may not approve their own timesheet: doing so returns 403 `separation_of_duties`.
+        A timesheet that is not submitted returns 409 `invalid_state_transition`, and a timesheet in a
+        locked period returns 409 `timesheet_locked`.'
+      parameters:
+      - name: timesheet_id
+        in: path
+        required: true
+        description: Identifier of the timesheet.
+        schema:
+          type: string
+      - name: comment
+        in: query
+        required: false
+        description: Note stored with the decision.
+        schema:
+          type: string
+          maxLength: 500
+      responses:
+        '200':
+          description: The timesheet was approved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Timesheet'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /time/entries/{entry_id}/corrections:
+    post:
+      operationId: timeCreateEntryCorrection
+      tags:
+      - time
+      security:
+      - bearerAuth: []
+      summary: Ask for a working period to be corrected
+      description: 'Records a manual correction of a working period. The correction is never applied directly:
+        the original entry keeps its values, the correction is recorded as a pending request and a manager
+        has to approve it. The reason is mandatory and is kept on the audit trail. A correction on an
+        entry in a locked period returns 409 `timesheet_locked`.'
+      x-lifecycle: planned
+      parameters:
+      - name: entry_id
+        in: path
+        required: true
+        description: Identifier of the working period.
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EntryCorrectionRequest'
+      responses:
+        '201':
+          description: The correction was recorded and is waiting for approval.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeEntry'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /time/working-time-violations:
+    get:
+      operationId: timeListWorkingTimeViolations
+      tags:
+      - time
+      security:
+      - bearerAuth: []
+      summary: List the detected working time violations
+      description: Lists the breaches of the configured working time rules, for example a missing break
+        or a daily maximum overrun. The list is paged; `page` and `page_size` control the window. `employee_id`
+        narrows it to one employee, `from` and `to` to a date range and `severity` to the seriousness
+        of the breach.
+      x-lifecycle: planned
+      parameters:
+      - $ref: '#/components/parameters/pageParam'
+      - $ref: '#/components/parameters/pageSizeParam'
+      - name: employee_id
+        in: query
+        required: false
+        description: Only violations of this employee.
+        schema:
+          type: string
+      - name: from
+        in: query
+        required: false
+        description: Only violations on or after this date.
+        schema:
+          type: string
+          format: date
+      - name: to
+        in: query
+        required: false
+        description: Only violations on or before this date.
+        schema:
+          type: string
+          format: date
+      - name: severity
+        in: query
+        required: false
+        description: Only violations of this severity.
+        schema:
+          type: string
+          enum:
+          - info
+          - warning
+          - critical
+      - name: resolved
+        in: query
+        required: false
+        description: Only resolved or only unresolved violations.
+        schema:
+          type: boolean
+      responses:
+        '200':
+          description: A page of violations.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedWorkingTimeViolations'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /time/entries/{entry_id}:
+    delete:
+      operationId: timeDeleteTimeentries
+      tags:
+      - time
+      security:
+      - bearerAuth: []
+      summary: DELETE /time/entries/{entry_id}
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    get:
+      operationId: timeGetTimeentries
+      tags:
+      - time
+      security:
+      - bearerAuth: []
+      summary: GET /time/entries/{entry_id}
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    put:
+      operationId: timeUpdateTimeentries
+      tags:
+      - time
+      security:
+      - bearerAuth: []
+      summary: PUT /time/entries/{entry_id}
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /time/timesheets/generate:
+    post:
+      operationId: timeCreateTimetimesheetsgenerate
+      tags:
+      - time
+      security:
+      - bearerAuth: []
+      summary: POST /time/timesheets/generate
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /time/timesheets/{timesheet_id}:
+    get:
+      operationId: timeGetTimetimesheets
+      tags:
+      - time
+      security:
+      - bearerAuth: []
+      summary: GET /time/timesheets/{timesheet_id}
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /time/today:
+    get:
+      operationId: timeGetTimetoday
+      tags:
+      - time
+      security:
+      - bearerAuth: []
+      summary: GET /time/today
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'

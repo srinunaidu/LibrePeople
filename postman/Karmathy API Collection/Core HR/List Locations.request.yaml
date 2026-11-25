@@ -1,0 +1,9 @@
+$kind: http-request
+description: List locations
+url: http://localhost:8000/core-hr/locations
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/List Locations.resources/examples
+order: 6000

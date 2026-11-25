@@ -1,0 +1,9 @@
+$kind: http-request
+description: List leave balances
+url: http://localhost:8000/leave/balances
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/Leave Balances.resources/examples
+order: 9000

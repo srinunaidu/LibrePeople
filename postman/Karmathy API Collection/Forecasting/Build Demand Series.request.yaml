@@ -1,0 +1,15 @@
+$kind: http-request
+description: Build a demand series
+url: http://localhost:8000/forecasting/demand/series
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Build Demand Series.resources/examples
+order: 7000

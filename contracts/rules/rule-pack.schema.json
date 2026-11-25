@@ -1,0 +1,1457 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.karmathy.io/rules/rule-pack.schema.json",
+  "title": "Karmathy Rule Pack",
+  "description": "A rule pack is a versioned, signed, jurisdiction-specific set of statutory rules. It is the ONLY artifact in Karmathy that may contain statutory values: tax rates, minimum wage, statutory leave entitlement, notice periods, working-time limits, overtime thresholds, mandatory payslip fields and filing obligations. A pack that is not `verified` is never used in a calculation: a pack whose status is `verified` is the only one that may be used in a production payroll calculation, and a verified pack must not contain placeholder values, nulls standing in for a required number, or sentinel text. Every pack must name the legal document it was derived from in `source`, must be signed in `signing`, and must ship at least one golden case so that the engine can be regression tested against the rule. A pack applies to a single jurisdiction, identified by `jurisdiction`, and is valid between `effective_from` and `effective_to`.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pack_id",
+    "name",
+    "jurisdiction",
+    "version",
+    "status",
+    "effective_from",
+    "tz",
+    "source",
+    "rate_tables",
+    "thresholds",
+    "overtime",
+    "leave_types",
+    "working_time_limits",
+    "break_rules",
+    "mandatory_payslip_fields",
+    "pay_frequency_rules",
+    "reporting_obligations",
+    "public_holiday_rules",
+    "signing",
+    "golden_cases"
+  ],
+  "properties": {
+    "pack_id": {
+      "title": "Pack identifier",
+      "description": "Stable slug that identifies the rule pack across the catalogue, the signing key registry and the API. It never changes once published: a corrected pack ships as a new version of the same pack_id.",
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 64,
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "examples": ["de-basic", "in-central"]
+    },
+    "name": {
+      "title": "Pack display name",
+      "description": "Short title shown in the rule pack catalogue, for example the name of the jurisdiction and the coverage of the pack.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "jurisdiction": {
+      "title": "Jurisdiction",
+      "description": "The jurisdiction this pack applies to. Exactly one pack may be attached to a tenant for a given jurisdiction and effective period, so the country and optional region identify the pack unambiguously.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "country",
+        "display_name"
+      ],
+      "properties": {
+        "country": {
+          "title": "Country code",
+          "description": "ISO 3166-1 alpha-2 code of the country whose law the pack encodes.",
+          "type": "string",
+          "pattern": "^[A-Z]{2}$",
+          "examples": ["DE", "IN", "GB"]
+        },
+        "region": {
+          "title": "Region or subdivision",
+          "description": "ISO 3166-2 or national subdivision code within the country, used where the law differs by state, province or territory. Omit when the pack covers the whole country.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 6,
+          "pattern": "^[A-Z0-9]{1,6}$"
+        },
+        "display_name": {
+          "title": "Jurisdiction display name",
+          "description": "Human readable name of the jurisdiction as it should be shown to an administrator, for example `India - Karnataka`.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        }
+      }
+    },
+    "version": {
+      "title": "Pack version",
+      "description": "Semantic version of the pack content. MAJOR is bumped when a rule changes in a way that alters a calculation, MINOR when rules are added, PATCH for wording and citation fixes. A tenant keeps using the version it was verified on until it explicitly migrates.",
+      "type": "string",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$",
+      "examples": ["1.0.0", "2.1.0", "1.0.0-rc.1"]
+    },
+    "status": {
+      "title": "Pack status",
+      "description": "Lifecycle state of the pack. `draft` is editable and unusable. `pending_verification` is frozen and waiting for a reviewer. `verified` is signed off against the cited source and is the only state that may drive a calculation. `superseded` is a previously verified pack that has been replaced and must not be applied to new periods.",
+      "type": "string",
+      "enum": [
+        "draft",
+        "pending_verification",
+        "verified",
+        "superseded"
+      ]
+    },
+    "supersedes": {
+      "title": "Superseded packs",
+      "description": "Pack identifiers of the packs this one replaces. The server refuses to attach two packs with overlapping effective periods for the same jurisdiction, so this list is what makes the replacement explicit.",
+      "type": "array",
+      "items": {
+        "title": "Superseded pack identifier",
+        "description": "Slug of the pack this one replaces.",
+        "type": "string",
+        "minLength": 2,
+        "maxLength": 64,
+        "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+      },
+      "uniqueItems": true
+    },
+    "effective_from": {
+      "title": "Effective from",
+      "description": "First date, inclusive, on which this pack may be applied. A pack may be attached to a tenant only for a period that starts on or after this date.",
+      "type": "string",
+      "format": "date",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "effective_to": {
+      "title": "Effective to",
+      "description": "Last date, inclusive, on which this pack may be applied, or null when the pack has no end date. It must be greater than or equal to `effective_from`; the server enforces that ordering.",
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "tz": {
+      "title": "Time zone",
+      "description": "IANA time zone identifier of the jurisdiction, used for cut-off times, pay day calculations, public holiday dates and the interpretation of local timestamps. It must be the zone the statute refers to, not the tenant's preferred display zone.",
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 64,
+      "pattern": "^(?:UTC|[A-Za-z][A-Za-z0-9_+-]*(?:/[A-Za-z0-9_+-]+)+)$",
+      "examples": ["Europe/Berlin", "Asia/Kolkata", "UTC"]
+    },
+    "source": {
+      "title": "Source",
+      "description": "The legal instrument the rules were derived from. A pack with no source cannot leave `draft`: the server refuses to move a pack to `pending_verification` unless the source names a document, its publisher and its reference.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "document_title",
+        "publisher",
+        "document_reference",
+        "url",
+        "retrieved_on"
+      ],
+      "properties": {
+        "document_title": {
+          "title": "Document title",
+          "description": "Full title of the legal instrument, for example the name of the Act, Ordinance, Code or notification the rules come from.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "publisher": {
+          "title": "Publisher",
+          "description": "The government department, ministry or regulator that published the document.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "document_reference": {
+          "title": "Document reference",
+          "description": "The citation of the instrument: Act number, rule number, notification number, gazette reference or section numbers. This is the value a reviewer checks against the source, so it must be specific enough to locate the provision.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "url": {
+          "title": "Source URL",
+          "description": "Link to the published document, or null when the instrument is only available in print or is not published online.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
+        },
+        "retrieved_on": {
+          "title": "Retrieved on",
+          "description": "Date the source document was last consulted. The server warns when this is more than a year before the pack's verification date, because the instrument may have been amended.",
+          "type": "string",
+          "format": "date",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "notes": {
+          "title": "Source notes",
+          "description": "Anything the reviewer needs to know about the source: amendments, translation, conflicting provisions, or the reason a provision was interpreted a particular way.",
+          "type": "string",
+          "maxLength": 4000
+        }
+      }
+    },
+    "verification": {
+      "title": "Verification",
+      "description": "The reviewer sign-off that made this pack trustworthy, or null while the pack is still a draft. It is required, complete, and non-null once the status is `verified`. A verification record is not a substitute for the pack being signed: both are needed.",
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "verified_by_name",
+        "verified_by_role",
+        "verified_on",
+        "source_document_reference",
+        "golden_case_set_id"
+      ],
+      "properties": {
+        "verified_by_name": {
+          "title": "Verified by",
+          "description": "Full name of the person who checked the rules against the cited source and against the golden cases.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "verified_by_role": {
+          "title": "Verifier role",
+          "description": "The verifier's role, for example `payroll compliance analyst` or `external counsel`. Recorded so that the weight of a verification can be judged later.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "verified_on": {
+          "title": "Verified on",
+          "description": "Date the verification was performed. The server requires it to be on or after the date the source was retrieved.",
+          "type": "string",
+          "format": "date",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "source_document_reference": {
+          "title": "Verified source reference",
+          "description": "The document reference the reviewer actually checked, which may be more specific than `source.document_reference`, for example the exact section and the amendment that applied on the effective date.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "golden_case_set_id": {
+          "title": "Golden case set identifier",
+          "description": "Identifier of the golden case set the pack was verified against. It must resolve to the cases shipped in `golden_cases` and must not be empty: a rule cannot be verified without at least one golden case.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "\\S"
+        }
+      }
+    },
+    "rate_tables": {
+      "title": "Rate tables",
+      "description": "Named tables of statutory rates, keyed by table name. Table names are the stable join key used by the payroll engine, for example a table of progressive tax bands or a table of social insurance contribution ceilings. This is one of only two places in the product where statutory numbers may live, the other being `thresholds`.",
+      "type": "object",
+      "propertyNames": {
+        "title": "Rate table name",
+        "description": "Key of a rate table, used by the calculation engine to find the table.",
+        "pattern": "^[a-z][a-z0-9_]*$"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/rate_table"
+      }
+    },
+    "thresholds": {
+      "title": "Thresholds",
+      "description": "Statutory numeric thresholds for the jurisdiction. Every value here is statutory and jurisdiction-specific: it is not a company policy and it may not be set by a tenant. A null value means the jurisdiction sets no such threshold, and it is never a stand-in for a value that was simply not filled in. The server rejects a verified pack that still contains a null in a field the jurisdiction does define.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "weekly_max_hours",
+        "daily_min_rest_hours",
+        "max_consecutive_work_days",
+        "daily_overtime_threshold_hours",
+        "weekly_overtime_threshold_hours",
+        "overtime_premium_multiplier",
+        "overtime_daily_cap_hours",
+        "minimum_wage_amount",
+        "minimum_wage_unit"
+      ],
+      "properties": {
+        "weekly_max_hours": {
+          "title": "Maximum weekly hours",
+          "description": "Statutory ceiling on hours an employee may work in a week, or null where the jurisdiction sets no ceiling. Statutory and jurisdiction-specific.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "daily_min_rest_hours": {
+          "title": "Minimum daily rest hours",
+          "description": "Statutory minimum uninterrupted rest between two work periods in a day, or null where the jurisdiction sets no minimum rest. Statutory and jurisdiction-specific.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "max_consecutive_work_days": {
+          "title": "Maximum consecutive work days",
+          "description": "Statutory maximum number of consecutive days an employee may be rostered to work, or null where the jurisdiction sets no such limit. Statutory and jurisdiction-specific.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "daily_overtime_threshold_hours": {
+          "title": "Daily overtime threshold",
+          "description": "Statutory number of hours worked in a day after which overtime is payable, or null where overtime is only triggered weekly. Statutory and jurisdiction-specific.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "weekly_overtime_threshold_hours": {
+          "title": "Weekly overtime threshold",
+          "description": "Statutory number of hours worked in a week after which overtime is payable, or null where the jurisdiction sets no weekly overtime threshold. Statutory and jurisdiction-specific.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "overtime_premium_multiplier": {
+          "title": "Overtime premium multiplier",
+          "description": "Statutory multiple applied to the normal rate to pay overtime, for example the factor applied to an hour of normal pay, or null where the jurisdiction has no premium. Statutory and jurisdiction-specific.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0
+        },
+        "overtime_daily_cap_hours": {
+          "title": "Daily overtime cap",
+          "description": "Statutory maximum number of overtime hours payable in a single day, or null where there is no cap. Statutory and jurisdiction-specific.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "minimum_wage_amount": {
+          "title": "Minimum wage amount",
+          "description": "Statutory minimum wage for the unit given in `minimum_wage_unit`, expressed in the currency of the jurisdiction, or null where the jurisdiction fixes no statutory minimum wage. Statutory and jurisdiction-specific.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "minimum_wage_unit": {
+          "title": "Minimum wage unit",
+          "description": "The period the minimum wage is expressed per, for example `per_hour`, `per_day`, `per_month` or `per_pay_period`, or null when there is no statutory minimum wage. A free string so that a jurisdiction with an unusual unit can still be expressed; the engine reads the unit, it does not assume one.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 64
+        }
+      }
+    },
+    "overtime": {
+      "title": "Overtime",
+      "description": "Statutory overtime rules for the jurisdiction. The thresholds are mirrored in `thresholds` so that a single field can be read without walking the whole pack; the values in the two places must agree and the server rejects a pack where they do not.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "daily_threshold_hours",
+        "weekly_threshold_hours",
+        "premium_multiplier",
+        "daily_cap_hours",
+        "rules"
+      ],
+      "properties": {
+        "daily_threshold_hours": {
+          "title": "Daily overtime threshold",
+          "description": "Hours worked in a day after which overtime is payable, or null when the jurisdiction has no daily overtime threshold. Statutory and jurisdiction-specific.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "weekly_threshold_hours": {
+          "title": "Weekly overtime threshold",
+          "description": "Hours worked in a week after which overtime is payable, or null when the jurisdiction has no weekly overtime threshold. Statutory and jurisdiction-specific.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "premium_multiplier": {
+          "title": "Overtime premium multiplier",
+          "description": "Statutory multiple applied to the normal rate when paying overtime, or null where the jurisdiction has no premium. Statutory and jurisdiction-specific.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0
+        },
+        "daily_cap_hours": {
+          "title": "Daily overtime cap",
+          "description": "Maximum overtime hours payable in one day, or null where there is no cap. Statutory and jurisdiction-specific.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "rules": {
+          "title": "Overtime compliance rules",
+          "description": "The individual overtime provisions of the jurisdiction, each of which can be reported as a blocking or advisory finding on a timesheet or a pay run.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/compliance_rule"
+          }
+        }
+      }
+    },
+    "leave_types": {
+      "title": "Leave types",
+      "description": "The statutory leave types the jurisdiction grants, with entitlement, accrual, carry-over and encashment. These are the authoritative values for the tenant; a preset may only name the leave types it wants and must leave the numbers to this pack.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/leave_type"
+      }
+    },
+    "working_time_limits": {
+      "title": "Working time limits",
+      "description": "Statutory limits on how much and how often an employee may work. Every limit is jurisdiction-specific; a null means the jurisdiction sets no such limit, not that the value was forgotten.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "max_weekly_hours",
+        "min_daily_rest_hours",
+        "max_consecutive_days",
+        "max_night_work_hours",
+        "min_rest_between_shifts_hours",
+        "rules"
+      ],
+      "properties": {
+        "max_weekly_hours": {
+          "title": "Maximum weekly hours",
+          "description": "Statutory ceiling on hours worked per week, or null where the jurisdiction sets no ceiling. Statutory and jurisdiction-specific.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "min_daily_rest_hours": {
+          "title": "Minimum daily rest hours",
+          "description": "Statutory minimum rest between two work periods in a day, or null where the jurisdiction sets no minimum rest. Statutory and jurisdiction-specific.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "max_consecutive_days": {
+          "title": "Maximum consecutive work days",
+          "description": "Statutory maximum number of consecutive days an employee may work, or null where the jurisdiction sets no limit. Statutory and jurisdiction-specific.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "max_night_work_hours": {
+          "title": "Maximum night work hours",
+          "description": "Statutory maximum number of night hours an employee may work, or null where the jurisdiction sets no night work limit. Statutory and jurisdiction-specific.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "min_rest_between_shifts_hours": {
+          "title": "Minimum rest between shifts",
+          "description": "Statutory minimum rest between the end of one shift and the start of the next, or null where the jurisdiction sets no such minimum. Statutory and jurisdiction-specific.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "rules": {
+          "title": "Working time compliance rules",
+          "description": "The individual working-time provisions of the jurisdiction, each of which can be reported as a blocking or advisory finding on a roster or a timesheet.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/compliance_rule"
+          }
+        }
+      }
+    },
+    "break_rules": {
+      "title": "Break rules",
+      "description": "Statutory break entitlements: how long a break must be, when it must be taken and whether it is paid. These are the values a preset's `time.break_rules` defer to.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/break_rule"
+      }
+    },
+    "mandatory_payslip_fields": {
+      "title": "Mandatory payslip fields",
+      "description": "Field names that a payslip produced in this jurisdiction MUST contain, for example `gross_pay`, `net_pay`, `employer_contributions` or `hours_worked`. The server refuses to generate a payslip that omits any of them and the payslip template is checked against this list on every pay run.",
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "title": "Mandatory payslip field",
+        "description": "Name of a field that the payslip must contain, in the canonical payslip field vocabulary.",
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 64,
+        "pattern": "^[a-z][a-z0-9_]*$"
+      }
+    },
+    "mandatory_payslip_notes": {
+      "title": "Mandatory payslip notes",
+      "description": "Optional list of literal statements that must appear on a payslip, for example a right-to-retain or right-to-query notice. The text is reproduced verbatim, so it must be written as the law requires it to be shown.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "title": "Mandatory payslip note",
+        "description": "One statement that must be printed on every payslip, reproduced verbatim.",
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 1000
+      }
+    },
+    "pay_frequency_rules": {
+      "title": "Pay frequency rules",
+      "description": "The pay cycle the jurisdiction permits and how the pay date is derived. The server refuses to enable payroll for a tenant whose preset frequency is not in `allowed_frequencies`.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "allowed_frequencies",
+        "pay_day_rule",
+        "cut_off_days_before_pay_day",
+        "pay_date_rule_id"
+      ],
+      "properties": {
+        "allowed_frequencies": {
+          "title": "Allowed pay frequencies",
+          "description": "The pay frequencies that are lawful in this jurisdiction. A tenant's preset must choose one of these, or payroll enablement is refused.",
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "title": "Allowed pay frequency",
+            "description": "One of the pay frequencies that are lawful in this jurisdiction.",
+            "type": "string",
+            "enum": [
+              "weekly",
+              "biweekly",
+              "semimonthly",
+              "monthly"
+            ]
+          }
+        },
+        "pay_day_rule": {
+          "title": "Pay day rule",
+          "description": "Plain English statement of how the pay date is determined, for example the last working day of the month or a fixed day, and how public holidays shift it.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "cut_off_days_before_pay_day": {
+          "title": "Cut-off days before pay day",
+          "description": "Number of days before the pay day on which timesheets and changes must be submitted for the period to be paid on time.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 31
+        },
+        "pay_date_rule_id": {
+          "title": "Pay date rule identifier",
+          "description": "Stable identifier of the pay-date computation rule the engine implements, for example a named rule for the last working day of the month. It is referenced by the calculation engine and by the audit trail.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Z0-9][A-Z0-9_]{0,63}$"
+        }
+      }
+    },
+    "reporting_obligations": {
+      "title": "Reporting obligations",
+      "description": "The statutory returns the employer in this jurisdiction must file, with their frequency, deadline and authority. The server uses this list to drive the compliance calendar and to warn before a deadline is missed.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/reporting_obligation"
+      }
+    },
+    "public_holiday_rules": {
+      "title": "Public holiday rules",
+      "description": "How public holidays are determined in this jurisdiction, and whether the holiday calendar differs by region.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "region_dependent",
+        "holiday_count_by_year"
+      ],
+      "properties": {
+        "source": {
+          "title": "Public holiday source",
+          "description": "The authority and instrument that publishes the public holiday list, and the date the list for each year was last retrieved.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "region_dependent": {
+          "title": "Region dependent",
+          "description": "Whether the public holiday list differs by region within the jurisdiction. When true, the holiday calendar for a location is resolved from the region's own list rather than from the national one.",
+          "type": "boolean"
+        },
+        "holiday_count_by_year": {
+          "title": "Holiday count by year",
+          "description": "Number of public holidays in each year, keyed by four digit year. The engine uses it to sanity check the holiday calendar that is loaded for a year; the calendar itself is held as tenant data, not in the pack.",
+          "type": "object",
+          "propertyNames": {
+            "title": "Year",
+            "description": "Four digit calendar year the holiday count belongs to.",
+            "pattern": "^\\d{4}$"
+          },
+          "additionalProperties": {
+            "title": "Holiday count",
+            "description": "Number of public holidays in that year.",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 366
+          }
+        }
+      }
+    },
+    "signing": {
+      "title": "Signing",
+      "description": "The signature over the pack. A pack MUST be signed to be usable: the server rejects an unsigned pack before it may drive a calculation, and it rejects a pack whose signature does not verify against the registered public key for `key_id`. The signature covers the canonical JSON serialisation of the pack with this block removed.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "algorithm",
+        "key_id",
+        "signature",
+        "signed_at",
+        "signed_by"
+      ],
+      "properties": {
+        "algorithm": {
+          "title": "Signature algorithm",
+          "description": "The signature algorithm. Ed25519 is the only accepted algorithm; a pack signed with anything else is rejected.",
+          "type": "string",
+          "enum": [
+            "ed25519"
+          ]
+        },
+        "key_id": {
+          "title": "Key identifier",
+          "description": "Identifier of the signing key in the trust registry. The server looks the key up here to verify the signature and to prove the pack was signed by a known key.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        },
+        "signature": {
+          "title": "Signature",
+          "description": "The base64 encoded signature bytes. It must be the signature over the canonical form of the pack as described in the signing block description.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024,
+          "pattern": "^[A-Za-z0-9+/]+={0,2}$"
+        },
+        "signed_at": {
+          "title": "Signed at",
+          "description": "UTC timestamp, RFC 3339 with an explicit offset, at which the pack was signed. A signature timestamped before the source was retrieved is rejected, because the sign-off cannot have covered the cited document.",
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(Z|[+-]\\d{2}:\\d{2})$"
+        },
+        "signed_by": {
+          "title": "Signed by",
+          "description": "Identity of the signer, for example the release pipeline or the compliance lead who authorised the pack.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        }
+      }
+    },
+    "golden_cases": {
+      "title": "Golden cases",
+      "description": "Worked examples that pin the expected output of the rules in this pack. A rule cannot be verified without at least one golden case, and the server refuses to move a pack to `verified` while `golden_cases` is empty. Each case states an input and the expected result; the regression suite replays every case of every verified pack on every engine change. TEST-ONLY placeholder convention (P5 skeleton only): a case whose description carries `TEST-ONLY placeholder` and whose expected map carries `placeholder: true` with zero amounts pins structure only and must not drive a calculation; the engine takes the placeholder branch deterministically and the pack stays `pending_verification` until a verifier replaces every placeholder with transcribed values.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/golden_case"
+      }
+    }
+  },
+  "allOf": [
+    {
+      "title": "Verified pack requirements",
+      "description": "A pack may only be marked `verified` when it names the reviewer, cites the source the reviewer checked, names the golden case set it was verified against and ships at least one golden case. The same conditions must hold for the pack to drive a production payroll calculation.",
+      "if": {
+        "title": "When the pack status is verified",
+        "description": "Selector for the verified-state requirements.",
+        "properties": {
+          "status": {
+            "title": "Status under test",
+            "description": "The pack status being tested by this conditional.",
+            "const": "verified"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "title": "What a verified pack must carry",
+        "description": "The verification record must be present, must be an object rather than null, must carry all of its fields, and must name a non-empty golden case set. At least one golden case must be shipped.",
+        "required": [
+          "verification"
+        ],
+        "properties": {
+          "verification": {
+            "title": "Verification record",
+            "description": "The verification record of a verified pack. It must be an object, never null, and it must carry every field listed in its required list.",
+            "type": "object",
+            "required": [
+              "verified_by_name",
+              "verified_by_role",
+              "verified_on",
+              "source_document_reference",
+              "golden_case_set_id"
+            ],
+            "properties": {
+              "golden_case_set_id": {
+                "title": "Golden case set identifier",
+                "description": "Must name a non-empty golden case set that resolves to the cases shipped in this pack.",
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              }
+            }
+          },
+          "golden_cases": {
+            "title": "Golden cases",
+            "description": "A verified pack must ship at least one golden case: a rule cannot be verified without one.",
+            "minItems": 1
+          }
+        }
+      }
+    },
+    {
+      "title": "Superseded pack end date",
+      "description": "A pack that has been replaced must state the date on which it stopped applying, so that historical periods are still resolved to the pack that was in force at the time.",
+      "if": {
+        "title": "When the pack status is superseded",
+        "description": "Selector for the superseded-state requirements.",
+        "properties": {
+          "status": {
+            "title": "Status under test",
+            "description": "The pack status being tested by this conditional.",
+            "const": "superseded"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "title": "What a superseded pack must carry",
+        "description": "The pack must carry a non-null end date.",
+        "required": [
+          "effective_to"
+        ],
+        "properties": {
+          "effective_to": {
+            "title": "Effective to",
+            "description": "The date on which the superseded pack stopped applying. It must be an ISO date, never null.",
+            "type": "string",
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "json_value": {
+      "title": "Arbitrary JSON value",
+      "description": "Any JSON value. Used only where the contract genuinely cannot constrain the shape, for example inside a golden case input or expected result.",
+      "anyOf": [
+        {
+          "title": "Null value",
+          "description": "An explicit null, used where a value is present but unset.",
+          "type": "null"
+        },
+        {
+          "title": "Boolean value",
+          "description": "A true or false value.",
+          "type": "boolean"
+        },
+        {
+          "title": "Numeric value",
+          "description": "A number, integral or fractional.",
+          "type": "number"
+        },
+        {
+          "title": "String value",
+          "description": "A text value.",
+          "type": "string"
+        },
+        {
+          "title": "Array value",
+          "description": "An ordered list whose members are themselves arbitrary JSON values.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/json_value"
+          }
+        },
+        {
+          "title": "Object value",
+          "description": "A map whose members are themselves arbitrary JSON values.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/json_value"
+          }
+        }
+      ]
+    },
+    "compliance_rule": {
+      "title": "Compliance rule",
+      "description": "A single statutory provision, expressed so that the engine can evaluate it and report on it. `severity` decides whether a breach blocks the action: a `block` rule stops the timesheet, the roster or the pay run, a `flag` rule produces a warning that a human may override with a recorded reason.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rule_id",
+        "description",
+        "severity",
+        "applies_when"
+      ],
+      "properties": {
+        "rule_id": {
+          "title": "Rule identifier",
+          "description": "Stable identifier of the rule, referenced from leave types, break rules and audit findings. It must be unique inside the pack.",
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[A-Z0-9][A-Z0-9_]{1,63}$"
+        },
+        "description": {
+          "title": "Rule description",
+          "description": "Plain English statement of the rule and the consequence of breaching it, as an administrator would read it.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "severity": {
+          "title": "Severity",
+          "description": "Whether a breach blocks the operation or is advisory.",
+          "type": "string",
+          "enum": [
+            "block",
+            "flag"
+          ]
+        },
+        "applies_when": {
+          "title": "Applies when",
+          "description": "The condition under which the rule is evaluated, written as a human readable predicate over the payroll or timesheet facts, for example when the employee is classified as a night worker or when the weekly hours exceed the threshold.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        }
+      }
+    },
+    "rate_entry": {
+      "title": "Rate table entry",
+      "description": "One row of a rate table, used when the table is a list of bands or schedules. The table says which of the two it is, in its `kind`, and the two rows are not the same shape. A row of a band table states three numbers: `value`, the lower bound of the band; `max_value`, its upper bound; and `rate`, the percentage rate that applies inside the band. Every band of a banded table states all three: the schema refuses a banded table that leaves the rate out of one of its bands, so the pack is rejected when it is loaded rather than when a pay run needs the figure. A row of a schedule table states a value and a unit and carries no rate of its own. The bounds are expressed in the stated `unit`; the rate is a percentage whatever that unit is, so a bound is never read as a rate and a rate is never read as a bound. The engine divides the taxable amount between the bands by their bounds and taxes each part at the rate of the band it falls in.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "label",
+        "value",
+        "unit"
+      ],
+      "properties": {
+        "code": {
+          "title": "Entry code",
+          "description": "Stable code of the entry within the table, used as the lookup key by the calculation engine.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+        },
+        "label": {
+          "title": "Entry label",
+          "description": "Human readable label of the band or rate, as it should be shown in a breakdown.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "value": {
+          "title": "Value",
+          "description": "The statutory value of the entry in the stated unit. For a band table this is the lower bound of the band: the amount at which the band starts. The engine reads it as a bound and never as a rate; the rate of the band is the band's own `rate`.",
+          "type": "number"
+        },
+        "max_value": {
+          "title": "Maximum value",
+          "description": "Upper bound of the band, omitted for an open ended top band. The bound is exclusive: the band covers the amount from `value` up to, but not including, `max_value`.",
+          "type": "number"
+        },
+        "rate": {
+          "title": "Band rate",
+          "description": "The percentage rate that applies inside this band, expressed in percent, so 5 means 5 %. It is the only number in the row that is a rate, and it is a percentage whatever the unit of the bounds is. Every band of a banded table states it, and the schema refuses a banded table whose bands leave it out; the engine refuses a pack whose band table leaves the rate out rather than guess one, because a wrong pay figure is worse than a refusal. A row of a schedule table states no rate of its own.",
+          "type": "number"
+        },
+        "unit": {
+          "title": "Unit",
+          "description": "The unit the bounds of the entry are expressed in. A free string so that any jurisdiction can be expressed; the common units are `currency_amount`, `per_hour`, `per_day`, `per_month` and `per_year`. The rate of the band is always a percentage and is not expressed in this unit.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "notes": {
+          "title": "Entry notes",
+          "description": "Anything the reader needs to understand the band, for example the condition under which it applies or a citation of the provision.",
+          "type": "string",
+          "maxLength": 1000
+        }
+      }
+    },
+    "rate_value": {
+      "title": "Rate table value",
+      "description": "One value of a rate table that is expressed as a keyed map rather than as a list of entries. The map key is the code the engine looks up.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value",
+        "unit"
+      ],
+      "properties": {
+        "value": {
+          "title": "Value",
+          "description": "The statutory value for this key in the stated unit.",
+          "type": "number"
+        },
+        "unit": {
+          "title": "Unit",
+          "description": "The unit the value is expressed in. A free string; the common units are `percent`, `currency_amount`, `per_hour`, `per_day`, `per_month` and `per_year`.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "label": {
+          "title": "Label",
+          "description": "Human readable label of the entry, when the key alone is not self explanatory.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "notes": {
+          "title": "Notes",
+          "description": "Anything the reader needs to understand the entry, for example a citation of the provision it comes from.",
+          "type": "string",
+          "maxLength": 1000
+        }
+      }
+    },
+    "rate_table": {
+      "title": "Rate table",
+      "description": "A named table of statutory rates. It is written either as a list of `entries` or as a keyed map of `values`, never both, so that the engine always reads one shape. A table written as a list of rows also says what shape those rows have, in `kind`: `banded` for a progressive table whose rows are bands, and `schedule` for a table whose rows are scheduled values that carry no rate of their own. The two forms are read differently and are never read as one another: a banded table (`entries`) states, for every band, the amount at which the band starts, the amount at which it ends and the rate that applies inside it; a flat map (`values`) states, for every code, a single percentage rate that applies to the whole base. The table applies from `effective_from`; a table that changed mid-year is expressed as two tables with different effective dates.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "description",
+        "effective_from"
+      ],
+      "properties": {
+        "description": {
+          "title": "Table description",
+          "description": "What the table contains and how it is applied, for example the progressive bands applied to taxable monthly pay.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "effective_from": {
+          "title": "Effective from",
+          "description": "First date on which this table applies. A rate change mid-year is expressed as a new table.",
+          "type": "string",
+          "format": "date",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "in_scope": {
+          "title": "Table in scope",
+          "description": "Whether the calculation engine may emit lines from this table. Only an explicit true makes a table in scope; when absent or false the engine emits no line from it. A table in scope still has to belong to a verified pack before any line is emitted.",
+          "type": "boolean"
+        },
+        "kind": {
+          "title": "Table kind",
+          "description": "The shape of the rows of a table that is written as a list of `entries`. `banded` for a progressive table whose rows are bands: each band states the amount at which it starts, the amount at which it ends and the rate that applies inside it, and a banded table has to state that rate on every one of its bands. `schedule` for a table whose rows are scheduled values: each row states a value and a unit and carries no rate of its own, so the schema asks it for none. A table written as a keyed map has no rows and declares no kind.",
+          "type": "string",
+          "enum": [
+            "banded",
+            "schedule"
+          ]
+        },
+        "entries": {
+          "title": "Table entries",
+          "description": "The rows of the table, in ascending order of value. Use this form for banded or scheduled rates, and say which of the two it is in `kind`. The engine reads `value` as the lower bound of the band, `max_value` as its upper bound and `rate` as the percentage rate that applies inside the band, and it divides the taxable amount between the bands by those bounds.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/rate_entry"
+          }
+        },
+        "values": {
+          "title": "Table values",
+          "description": "The values of the table as a map from code to value. Use this form for a flat lookup such as a set of ceilings by category. The map is deliberately open: its keys are the codes the engine looks up. The engine reads `value` as a percentage rate that applies to the whole base, whatever the code means.",
+          "type": "object",
+          "type": "object",
+          "propertyNames": {
+            "title": "Rate code",
+            "description": "Key of the value in the table, as the engine looks it up.",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/rate_value"
+          }
+        }
+      },
+      "oneOf": [
+        {
+          "title": "Entries form",
+          "description": "The table is a list of rows and says what shape those rows have.",
+          "required": [
+            "entries",
+            "kind"
+          ],
+          "not": {
+            "title": "Not a keyed map as well",
+            "description": "A table is written in one form or the other, never in both.",
+            "required": [
+              "values"
+            ]
+          }
+        },
+        {
+          "title": "Keyed map form",
+          "description": "The table is a map of code to value. A map has no rows, so it declares no kind.",
+          "required": [
+            "values"
+          ],
+          "not": {
+            "title": "Neither rows nor a kind",
+            "description": "A map is not a list of rows, and a table in the map form declares no kind.",
+            "anyOf": [
+              {
+                "required": [
+                  "entries"
+                ]
+              },
+              {
+                "required": [
+                  "kind"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "allOf": [
+        {
+          "title": "A banded table states a rate on every band",
+          "description": "A banded table's rows are bands. A band states the amount at which it starts, the amount at which it ends and the rate that applies inside it, and a band that leaves the rate out cannot be calculated. The schema refuses such a pack when it is loaded, rather than leaving the gap to be discovered when a pay run needs the figure.",
+          "if": {
+            "title": "When the table declares itself banded",
+            "description": "Selector for the banded-table requirements.",
+            "properties": {
+              "kind": {
+                "title": "Kind under test",
+                "description": "The kind of the table being tested by this conditional.",
+                "const": "banded"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "title": "What a banded table must carry",
+            "description": "The table has to be a list of rows, and every one of its bands has to state the rate that applies inside it.",
+            "required": [
+              "entries"
+            ],
+            "properties": {
+              "entries": {
+                "title": "Bands of a banded table",
+                "description": "Every band of a banded table states the rate that applies inside it.",
+                "items": {
+                  "title": "A band of a banded table",
+                  "description": "A band of a banded table. It states the rate that applies inside it, and the schema refuses a banded table whose bands leave the rate out.",
+                  "required": [
+                    "rate"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "title": "A schedule table's rows carry no rate",
+          "description": "A schedule table's rows are scheduled values: each row states a value and a unit and no rate of its own, so the schema does not ask a schedule table for a rate.",
+          "if": {
+            "title": "When the table declares itself a schedule",
+            "description": "Selector for the schedule-table requirements.",
+            "properties": {
+              "kind": {
+                "title": "Kind under test",
+                "description": "The kind of the table being tested by this conditional.",
+                "const": "schedule"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "title": "What a schedule table must carry",
+            "description": "The table has to be a list of rows, and its rows are not asked for a rate.",
+            "required": [
+              "entries"
+            ]
+          }
+        }
+      ]
+    },
+    "tenure_tier": {
+      "title": "Tenure tier",
+      "description": "A length-of-service band that grants a different leave entitlement. Tiers are evaluated in ascending order of `after_years` and the first band whose threshold the employee has reached applies.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "after_years",
+        "days"
+      ],
+      "properties": {
+        "after_years": {
+          "title": "Years of service threshold",
+          "description": "Length of service, in whole years, at which the tier starts. Zero means the tier applies from day one.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 60
+        },
+        "days": {
+          "title": "Entitlement days",
+          "description": "Days of leave the tier grants per year. This is a statutory number.",
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "accrual": {
+      "title": "Accrual",
+      "description": "How the entitlement is earned over the leave year. This is the statutory accrual rule for the jurisdiction and it overrides anything a preset or a tenant says.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "frequency",
+        "tenure_tiers"
+      ],
+      "properties": {
+        "frequency": {
+          "title": "Accrual frequency",
+          "description": "How often leave accrues. `front_loaded` means the whole entitlement is credited at the start of the leave year.",
+          "type": "string",
+          "enum": [
+            "per_pay_period",
+            "per_month",
+            "per_year",
+            "front_loaded"
+          ]
+        },
+        "tenure_tiers": {
+          "title": "Tenure tiers",
+          "description": "Length-of-service bands with their own entitlement. May be empty when the entitlement does not vary with tenure.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/tenure_tier"
+          }
+        }
+      }
+    },
+    "leave_type": {
+      "title": "Leave type",
+      "description": "A statutory leave type and the entitlement it grants. The `code` is the join key a preset must use for the same leave type.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "name",
+        "entitlement_days",
+        "accrual",
+        "carry_over_limit_days",
+        "expiry_month",
+        "encashable",
+        "entitlement_source"
+      ],
+      "properties": {
+        "code": {
+          "title": "Leave type code",
+          "description": "Stable slug of the leave type, used to join the pack with the tenant's leave configuration.",
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "name": {
+          "title": "Leave type name",
+          "description": "Statutory name of the leave, for example the name the law itself uses.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "entitlement_days": {
+          "title": "Entitlement days",
+          "description": "Days of leave granted per leave year under this type. This is a statutory number and it must be present.",
+          "type": "number",
+          "minimum": 0
+        },
+        "accrual": {
+          "title": "Accrual",
+          "description": "How the entitlement is earned over the leave year.",
+          "$ref": "#/$defs/accrual"
+        },
+        "carry_over_limit_days": {
+          "title": "Carry-over limit",
+          "description": "Days of unused leave that may be carried into the next leave year. Zero means that no leave may be carried over.",
+          "type": "number",
+          "minimum": 0
+        },
+        "expiry_month": {
+          "title": "Expiry month",
+          "description": "Month, 1 to 12, in which unused leave expires.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 12
+        },
+        "encashable": {
+          "title": "Encashable",
+          "description": "Whether the employee has a right to have unused leave paid out. A statutory right, not a company policy.",
+          "type": "boolean"
+        },
+        "entitlement_source": {
+          "title": "Entitlement source",
+          "description": "Text citing the provision the entitlement comes from, for example the section and schedule of the instrument named in `source`. A reviewer reads this to confirm the entitlement was taken from the law and not from another pack.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "rule_ids": {
+          "title": "Related rule identifiers",
+          "description": "Identifiers of the compliance rules that apply to this leave type, for example a rule that caps consecutive sick days.",
+          "type": "array",
+          "items": {
+            "title": "Related rule identifier",
+            "description": "Identifier of a compliance rule that applies to this leave type.",
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 64,
+            "pattern": "^[A-Z0-9][A-Z0-9_]{1,63}$"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "break_rule": {
+      "title": "Break rule",
+      "description": "A statutory break entitlement: how many hours must be worked before a break must be taken, how long that break is and whether it is paid.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "after_hours",
+        "duration_minutes",
+        "paid",
+        "rule_id",
+        "description"
+      ],
+      "properties": {
+        "after_hours": {
+          "title": "After hours",
+          "description": "Hours of continuous work after which the break must be taken, or null where the entitlement does not depend on how long the employee has worked.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "duration_minutes": {
+          "title": "Duration",
+          "description": "Length of the break in minutes, or null where the law does not fix a length.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 240
+        },
+        "paid": {
+          "title": "Paid",
+          "description": "Whether the break is paid time.",
+          "type": "boolean"
+        },
+        "rule_id": {
+          "title": "Rule identifier",
+          "description": "Identifier of the compliance rule that this break entitlement implements.",
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[A-Z0-9][A-Z0-9_]{1,63}$"
+        },
+        "description": {
+          "title": "Description",
+          "description": "Plain English statement of the break entitlement and how it is enforced in the product.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        }
+      }
+    },
+    "reporting_obligation": {
+      "title": "Reporting obligation",
+      "description": "A statutory return the employer must file, with the authority that receives it and the deadline it is due by.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "report_id",
+        "name",
+        "frequency",
+        "due_within_days",
+        "template_ref",
+        "authority",
+        "description"
+      ],
+      "properties": {
+        "report_id": {
+          "title": "Report identifier",
+          "description": "Stable identifier of the obligation, used to key the compliance calendar and to deduplicate obligations across pack versions.",
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[A-Z0-9][A-Z0-9_]{1,63}$"
+        },
+        "name": {
+          "title": "Report name",
+          "description": "Name of the return as the authority calls it.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "frequency": {
+          "title": "Frequency",
+          "description": "How often the return must be filed.",
+          "type": "string",
+          "enum": [
+            "daily",
+            "weekly",
+            "monthly",
+            "quarterly",
+            "semi_annual",
+            "annual",
+            "event_driven"
+          ]
+        },
+        "due_within_days": {
+          "title": "Due within days",
+          "description": "Number of days after the end of the reporting period within which the return must be filed.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 366
+        },
+        "template_ref": {
+          "title": "Template reference",
+          "description": "Reference to the statutory template or schema the return must follow, or null when the authority accepts a free-form return.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "authority": {
+          "title": "Authority",
+          "description": "The government body or agency the return is filed with.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "description": {
+          "title": "Description",
+          "description": "What the return covers, which data the product must collect for it and any note the administrator needs.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        }
+      }
+    },
+    "golden_case": {
+      "title": "Golden case",
+      "description": "A worked example that pins the expected behaviour of the rules. `input` and `expected` are deliberately open maps: the shape of the facts and of the result is defined by the rule the case exercises, not by this contract. The case is replayed by the regression suite and a mismatch fails the build.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "case_id",
+        "description",
+        "input",
+        "expected"
+      ],
+      "properties": {
+        "case_id": {
+          "title": "Case identifier",
+          "description": "Identifier of the case within the pack. It must be unique inside the pack and is referenced by the verification record's golden case set.",
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "description": {
+          "title": "Case description",
+          "description": "What the case exercises and why it was chosen, for example a worker on the lowest pay band working the maximum permitted hours.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "input": {
+          "title": "Case input",
+          "description": "The facts fed to the engine. Open map: the keys are the facts the exercised rule reads and the values are arbitrary JSON.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/json_value"
+          }
+        },
+        "expected": {
+          "title": "Expected result",
+          "description": "The result the engine must produce for the given input. Open map: the keys are the outputs the exercised rule produces and the values are arbitrary JSON.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/json_value"
+          }
+        }
+      }
+    }
+  }
+}

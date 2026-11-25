@@ -1,0 +1,9 @@
+$kind: http-request
+description: List talent pools
+url: http://localhost:8000/learning/talent-pools
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/List Talent Pools.resources/examples
+order: 5000

@@ -1,0 +1,9 @@
+$kind: http-request
+description: Approve a payroll run
+url: http://localhost:8000/payroll/runs/{run_id}/approve
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/Approve Payroll Run.resources/examples
+order: 13000

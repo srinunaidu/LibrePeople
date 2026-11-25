@@ -1,0 +1,15 @@
+$kind: http-request
+description: Disable MFA for the current account
+url: http://localhost:8000/auth/mfa/disable
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/MFA Disable.resources/examples
+order: 8000

@@ -1,0 +1,9 @@
+$kind: http-request
+description: Get attendance report
+url: http://localhost:8000/reports/attendance
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/Attendance.resources/examples
+order: 4000

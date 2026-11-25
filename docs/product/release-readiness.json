@@ -1,0 +1,121 @@
+{
+ "base_commit": "af0e2289e5f83b05b5953457cdc884ae5356cdb6",
+ "branch": "feature/librepeople-production",
+ "coverage": {
+  "assigned": 122,
+  "csv_ids_missing_from_phase_gates": 0,
+  "extra_ids_outside_csv": 0,
+  "global_unique_ids": 136,
+  "phases": {
+   "A0": 4,
+   "A1": 5,
+   "A10": 10,
+   "A11": 2,
+   "A2": 5,
+   "A3": 18,
+   "A4": 18,
+   "A5": 27,
+   "A6": 9,
+   "A7": 13,
+   "A8": 9,
+   "A9": 2
+  },
+  "surplus": 14,
+  "total": 136
+ },
+ "defects_surplus": {
+  "count": 14,
+  "decision": "product-owner decisions required before start",
+  "ids": [
+   "LP-ADM-005",
+   "LP-DATA-002",
+   "LP-EXP-001",
+   "LP-EXP-002",
+   "LP-EXP-003",
+   "LP-NOT-001",
+   "LP-NOT-002",
+   "LP-NOT-003",
+   "LP-DOC-001",
+   "LP-DOC-002",
+   "LP-DOC-003",
+   "LP-SVC-001",
+   "LP-SVC-002",
+   "LP-SVC-003"
+  ],
+  "source_file": "docs/product/phase-gates.md"
+ },
+ "generated": "2026-11-22",
+ "no_prod_claims": true,
+ "no_prod_claims_statement": "Nothing in this dashboard claims production readiness, a production deployment, customer data handling, or a verified production payroll run. All values are read-only observations.",
+ "payroll": {
+  "fy2627_skeleton_pack": "backend/rule_packs/in-standard-fy2627-skeleton.json",
+  "fy2627_skeleton_status": "pending_verification",
+  "fy2526_pack": "backend/rule_packs/in-standard.json",
+  "fy2526_pack_mirror": "rule_packs/in-standard.json",
+  "fy2526_pack_status": "verified",
+  "refusal_code": "rule_pack_not_verified",
+  "refusal_http": 409,
+  "refusal_raise_sites": [
+   "backend/app/api/v1/endpoints/payroll.py:536,544",
+   "backend/app/api/v1/endpoints/filings.py:55",
+   "backend/app/api/v1/endpoints/reports.py:476,487,638"
+  ]
+ },
+ "scope": "docs-only dashboard; no app code changed",
+ "security": {
+  "tool": "ci/secret_scan.py",
+  "findings": 0,
+  "exit_code": 0,
+  "status": "CLEAN",
+  "observed": "2026-11-22 (UTC)",
+  "detail": "secret_scan: no secrets found.",
+  "breakdown": {
+   "password_assignments": 0,
+   "secret_key_assignments": 0,
+   "frontend_token_lines": 0
+  }
+ },
+ "status": "NOT READY",
+ "status_banner": "NOT READY FOR PRODUCTION RELEASE",
+ "tests": {
+  "backend_suites_defined": 52,
+  "backend_suites_executed_here": 0,
+  "backend_suites_verdict": "NOT-RUN",
+  "level_b_areas": 20,
+  "level_b_executed": 0,
+  "level_b_planned": 20,
+  "level_b_verdict": "NOT-RUN",
+  "migration_version_files": 44,
+  "rules_suites_verdict": "NOT-RUN",
+  "secret_scan_exit": 0,
+  "secret_scan_findings": 0,
+  "secret_scan_detail": "secret_scan: no secrets found.",
+  "traceability_not_started": 0,
+  "traceability_tested": 78,
+  "traceability_implemented": 38,
+  "traceability_blocked": 17,
+  "traceability_in_progress": 3,
+  "traceability_verified": 0
+ },
+ "traceability": {
+  "source_file": "docs/product/requirements-traceability.csv",
+  "total_rows": 136,
+  "tested": 78,
+  "implemented": 38,
+  "blocked": 17,
+  "in_progress": 3,
+  "verified": 0,
+  "not_started": 0,
+  "distinct_status_values_present": [
+   "TESTED",
+   "IMPLEMENTED",
+   "BLOCKED",
+   "IN PROGRESS"
+  ]
+ },
+ "worktree": "/Users/srinivas/LLM/Workforce/librepeople-prod",
+ "not_ready_reasons": [
+  "FY26-27 skeleton pack pending_verification (engine refuses IN pay on/after 2026-04-01)",
+  "17 BLOCKED traceability rows (BLOCKED > 0)"
+ ]
+}

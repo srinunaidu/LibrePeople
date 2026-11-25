@@ -1,0 +1,15 @@
+$kind: http-request
+description: Create a forecast run
+url: http://localhost:8000/forecasting/runs
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Create Forecast Run.resources/examples
+order: 2000

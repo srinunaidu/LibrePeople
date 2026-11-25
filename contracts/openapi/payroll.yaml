@@ -1,0 +1,679 @@
+tags:
+- name: payroll
+  description: 'Payroll of this deployment: the pay components and profiles, the pay runs from draft to
+    finalised, the reconciliation of a run, the payslips and the payment file. A run may only be calculated
+    when the rule pack of its jurisdiction is `verified`; otherwise the calculation is refused with 409
+    `rule_pack_not_verified` and nothing is computed and nothing is written. The statutory values themselves
+    belong to the customer''s rule packs; the platform does not ship them.'
+paths:
+  /payroll/pay-components:
+    get:
+      operationId: payrollListPayComponents
+      tags:
+      - payroll
+      security:
+      - bearerAuth: []
+      summary: List the pay components
+      description: 'Lists the pay components of this deployment: the earnings, the deductions and the
+        employer contributions that a pay profile is built from. The calculation formula of a component
+        is owned by the customer; the platform does not publish statutory values.'
+      x-lifecycle: planned
+      parameters:
+      - name: category
+        in: query
+        required: false
+        description: Only the components of this category.
+        schema:
+          type: string
+          enum:
+          - earning
+          - deduction
+          - employer_contribution
+      - name: search
+        in: query
+        required: false
+        description: Case insensitive match on the code and the name.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: The pay components.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PayComponent'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /payroll/pay-profiles:
+    get:
+      operationId: payrollListPayProfiles
+      tags:
+      - payroll
+      security:
+      - bearerAuth: []
+      summary: List the pay profiles
+      description: Lists the pay profiles of this deployment. A profile is the named set of components
+        a pay run uses, together with the currency and the pay frequency of the run.
+      parameters:
+      - name: active
+        in: query
+        required: false
+        description: Only active or only inactive profiles.
+        schema:
+          type: boolean
+      responses:
+        '200':
+          description: The pay profiles.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PayProfile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+    post:
+      operationId: payrollCreatePayrollpayprofiles
+      tags:
+      - payroll
+      security:
+      - bearerAuth: []
+      summary: POST /payroll/pay-profiles
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /payroll/runs:
+    get:
+      operationId: payrollListRuns
+      tags:
+      - payroll
+      security:
+      - bearerAuth: []
+      summary: List the pay runs
+      description: Lists the pay runs of this deployment, newest first. The list is paged; `page` and
+        `page_size` control the window. `status` and `period_id` narrow it down. Only runs the caller
+        may see are returned.
+      parameters:
+      - $ref: '#/components/parameters/pageParam'
+      - $ref: '#/components/parameters/pageSizeParam'
+      - name: status
+        in: query
+        required: false
+        description: Only the runs in this state.
+        schema:
+          type: string
+          enum:
+          - draft
+          - calculated
+          - approved
+          - finalised
+      - name: period_id
+        in: query
+        required: false
+        description: Only the runs of this pay period.
+        schema:
+          type: string
+      - name: jurisdiction
+        in: query
+        required: false
+        description: Only the runs of this jurisdiction.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: A page of pay runs.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPayRuns'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+    post:
+      operationId: payrollCreateRun
+      tags:
+      - payroll
+      security:
+      - bearerAuth: []
+      summary: Create a draft pay run
+      description: 'Creates a pay run in the `draft` state for one pay period and one jurisdiction. Nothing
+        is calculated here. The jurisdiction is required: it names the rule pack the run may be calculated
+        from. A jurisdiction whose pack is not `verified` is accepted, because the block belongs to the
+        calculation step, not to the creation step. A second run for the same period and jurisdiction
+        returns 409 `duplicate_natural_key`.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayRunCreate'
+      responses:
+        '201':
+          description: The draft run was created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayRun'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /payroll/runs/{run_id}/process:
+    post:
+      operationId: payrollProcessRun
+      tags:
+      - payroll
+      security:
+      - bearerAuth: []
+      summary: Process a pay run
+      description: 'Calculates the run from the rule pack of its jurisdiction and persists the payslips.
+
+        The calculation is refused unless a rule pack that is `verified` and in force on the pay date
+        of the period exists for the run''s jurisdiction: the response is 409 `rule_pack_not_verified`
+        with the details `{jurisdiction, pay_date, pack_status, missing}`. `pack_status` is what was found
+        (`absent`, `draft`, `pending_verification`, `superseded`) and `missing` says what the operator
+        has to do and who has to do it. Nothing is computed and nothing is written: no payslip, no change
+        to the run, and no audit row that claims the run was calculated. The one row that is written records
+        the refusal, because that row is the evidence.
+
+        A payslip is calculated from the approved time and leave of the period and from nothing else:
+        time entries that are not approved are counted as exceptions and excluded, overtime is paid
+        from approved hours at the employee''s derived hourly rate, and only unpaid leave types reduce
+        pay. The rows that fed the calculation are recorded on the payslip as `inputs_json`, including
+        the entries that were excluded.'
+      x-lifecycle: released
+      parameters:
+      - name: run_id
+        in: path
+        required: true
+        description: Identifier of the pay run.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: The run was calculated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayRun'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /payroll/runs/{run_id}/calculate:
+    post:
+      operationId: payrollCalculateRun
+      tags:
+      - payroll
+      security:
+      - bearerAuth: []
+      summary: Calculate a pay run
+      description: 'Computes the run. With `dry_run` true (the default) the run is computed and nothing
+        is written; with `dry_run` false the result is persisted and the run moves to `calculated`.
+
+        The calculation is refused for a jurisdiction whose rule pack is not `verified`: the response
+        is 409 `rule_pack_not_verified` with the details `{jurisdiction, pay_date, pack_status, missing}`,
+        where `pack_status` is what was found (`absent`, `draft`, `pending_verification`, `superseded`)
+        and `missing` says what the operator has to do and who has to do it. Nothing is computed and nothing
+        is written: no payslip, no change to the run, and no audit row that claims the run was calculated.
+        A run that is already `approved` or `finalised` returns 409 `invalid_state_transition`, and a
+        run that was changed since it was read returns 409 `concurrent_update`.'
+      x-lifecycle: planned
+      parameters:
+      - name: run_id
+        in: path
+        required: true
+        description: Identifier of the pay run.
+        schema:
+          type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayRunCalculateRequest'
+      responses:
+        '200':
+          description: The run was calculated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayRun'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /payroll/runs/{run_id}/approve:
+    post:
+      operationId: payrollApproveRun
+      tags:
+      - payroll
+      security:
+      - bearerAuth: []
+      summary: Approve a pay run
+      description: 'Approves a calculated run and moves it to `approved`. The approver must hold the payroll
+        approval role and may not approve a run they prepared themselves: that returns 403 `separation_of_duties`.
+        A run that is not calculated returns 409 `invalid_state_transition`.'
+      parameters:
+      - name: run_id
+        in: path
+        required: true
+        description: Identifier of the pay run.
+        schema:
+          type: string
+      - name: comment
+        in: query
+        required: false
+        description: Note stored with the approval.
+        schema:
+          type: string
+          maxLength: 500
+      responses:
+        '200':
+          description: The run was approved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayRun'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /payroll/runs/{run_id}/finalise:
+    post:
+      operationId: payrollFinaliseRun
+      tags:
+      - payroll
+      security:
+      - bearerAuth: []
+      summary: Finalise a pay run
+      description: 'Finalises an approved run. From this moment the run and its payslips are immutable:
+        any later attempt to change them returns 409 `pay_run_already_finalised`. Finalising without an
+        approval returns 409 `invalid_state_transition`. The payslips are issued and the payment file
+        becomes available.'
+      x-lifecycle: planned
+      parameters:
+      - name: run_id
+        in: path
+        required: true
+        description: Identifier of the pay run.
+        schema:
+          type: string
+      - name: comment
+        in: query
+        required: false
+        description: Note stored with the finalisation.
+        schema:
+          type: string
+          maxLength: 500
+      responses:
+        '200':
+          description: The run was finalised.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayRun'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /payroll/runs/{run_id}/reconciliation:
+    get:
+      operationId: payrollGetReconciliation
+      tags:
+      - payroll
+      security:
+      - bearerAuth: []
+      summary: Read the reconciliation of a pay run
+      description: 'Returns the reconciliation of a run: the totals against the source data, the breakdown
+        per component, the variances that need a human look and the checks that were run. The reconciliation
+        is available for a calculated run; for a draft run it is empty.'
+      x-lifecycle: planned
+      parameters:
+      - name: run_id
+        in: path
+        required: true
+        description: Identifier of the pay run.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: The reconciliation report.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReconciliationReport'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /payroll/payslips:
+    get:
+      operationId: payrollListPayslips
+      tags:
+      - payroll
+      security:
+      - bearerAuth: []
+      summary: List the payslips
+      description: Lists the payslips of this deployment. The list is paged; `page` and `page_size` control
+        the window. `run_id` and `employee_id` narrow it down. An employee sees only their own payslips.
+        The amounts of a run that is not finalised are provisional.
+      parameters:
+      - $ref: '#/components/parameters/pageParam'
+      - $ref: '#/components/parameters/pageSizeParam'
+      - name: run_id
+        in: query
+        required: false
+        description: Only the payslips of this run.
+        schema:
+          type: string
+      - name: employee_id
+        in: query
+        required: false
+        description: Only the payslips of this employee.
+        schema:
+          type: string
+      - name: period_id
+        in: query
+        required: false
+        description: Only the payslips of this pay period.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: A page of payslips.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPayslips'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+    post:
+      operationId: payrollCreatePayrollpayslips
+      tags:
+      - payroll
+      security:
+      - bearerAuth: []
+      summary: POST /payroll/payslips
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /payroll/payslips/{slip_id}:
+    get:
+      operationId: payrollGetPayslip
+      tags:
+      - payroll
+      security:
+      - bearerAuth: []
+      summary: Read one payslip
+      description: Returns one payslip with its lines. The payslip of an employee outside the visibility
+        scope of the caller returns 404, never 403. The amounts of a run that is not finalised are provisional
+        and are marked as such by the state of the run.
+      x-lifecycle: planned
+      parameters:
+      - name: slip_id
+        in: path
+        required: true
+        description: Identifier of the payslip.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: The payslip.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payslip'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /payroll/runs/{run_id}/payment-file:
+    get:
+      operationId: payrollGetPaymentFile
+      tags:
+      - payroll
+      security:
+      - bearerAuth: []
+      summary: Export the payment file of a pay run
+      description: 'Returns the description of the payment file of a finalised run. The file itself is
+        fetched from the short lived download URL; the bytes are never inlined in this response. A run
+        that is not finalised has no payment file and returns 409 `invalid_state_transition`. Exports
+        are rate limited: too many exports in a period returns 429 `export_quota_exceeded`.'
+      x-lifecycle: planned
+      parameters:
+      - name: run_id
+        in: path
+        required: true
+        description: Identifier of the pay run.
+        schema:
+          type: string
+      - name: format
+        in: query
+        required: false
+        description: The file format. Defaults to the format of the run.
+        schema:
+          type: string
+          enum:
+          - csv
+          - camt053
+          - sepa
+          - ach
+      responses:
+        '200':
+          description: The payment file description and its download URL.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentFile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /payroll/components:
+    get:
+      operationId: payrollListPayrollcomponents
+      tags:
+      - payroll
+      security:
+      - bearerAuth: []
+      summary: GET /payroll/components
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: payrollCreatePayrollcomponents
+      tags:
+      - payroll
+      security:
+      - bearerAuth: []
+      summary: POST /payroll/components
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /payroll/pay-profiles/{employee_id}:
+    get:
+      operationId: payrollGetPayrollpayprofiles
+      tags:
+      - payroll
+      security:
+      - bearerAuth: []
+      summary: GET /payroll/pay-profiles/{employee_id}
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /payroll/periods:
+    get:
+      operationId: payrollListPayrollperiods
+      tags:
+      - payroll
+      security:
+      - bearerAuth: []
+      summary: GET /payroll/periods
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: payrollCreatePayrollperiods
+      tags:
+      - payroll
+      security:
+      - bearerAuth: []
+      summary: POST /payroll/periods
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /payroll/runs/{run_id}/finalize:
+    post:
+      operationId: payrollCreatePayrollrunsfinalize
+      tags:
+      - payroll
+      security:
+      - bearerAuth: []
+      summary: POST /payroll/runs/{run_id}/finalize
+      description: Served by the application; declared by SUP-02 triage as planned pending owning-lane
+        review.
+      x-lifecycle: planned
+      responses:
+        '200':
+          description: OK.
+        '401':
+          $ref: '#/components/responses/Unauthorized'

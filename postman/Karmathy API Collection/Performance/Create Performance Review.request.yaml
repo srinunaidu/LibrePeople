@@ -1,0 +1,15 @@
+$kind: http-request
+description: Create a performance review
+url: http://localhost:8000/performance/reviews
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Create Performance Review.resources/examples
+order: 4000

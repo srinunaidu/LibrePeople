@@ -1,0 +1,9 @@
+$kind: http-request
+description: List terminations
+url: http://localhost:8000/offboarding/terminations
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/List Terminations.resources/examples
+order: 4000

@@ -1,0 +1,9 @@
+$kind: http-request
+description: List webhook deliveries
+url: http://localhost:8000/platform/webhooks/{webhook_id}/deliveries
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/List Webhook Deliveries.resources/examples
+order: 12000

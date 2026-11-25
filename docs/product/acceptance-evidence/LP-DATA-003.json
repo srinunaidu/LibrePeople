@@ -1,0 +1,58 @@
+{
+  "id": "LP-DATA-003",
+  "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
+  "timestamp_utc": "2026-11-22T08:42:33+00:00",
+  "status_before": "TESTED",
+  "mapping": {
+    "backend_suites": [
+      "data_quality_test_suite",
+      "migration_test_suite",
+      "retention_test_suite"
+    ],
+    "perm_suites": [
+      "cross_tenant_test_suite",
+      "security_test_suite"
+    ],
+    "ui_ref_non_empty": true
+  },
+  "suites": {
+    "data_quality_test_suite": {
+      "exit": 0,
+      "summary": "44 passed, 0 failed"
+    },
+    "migration_test_suite": {
+      "exit": 0,
+      "summary": "67 passed, 0 failed"
+    },
+    "retention_test_suite": {
+      "exit": 0,
+      "summary": "11 passed, 0 failed"
+    },
+    "cross_tenant_test_suite": {
+      "exit": 0,
+      "summary": "31 passed, 0 failed"
+    },
+    "security_test_suite": {
+      "exit": 0,
+      "summary": "2073 passed, 0 failed"
+    },
+    "lp_phase2_access_test_suite": {
+      "exit": 0,
+      "summary": "86 passed, 0 failed"
+    },
+    "frontend:check:routes": {
+      "exit": 0,
+      "summary": "\u2713 Route integrity OK \u2014 all internal links resolve to 243 registered routes."
+    },
+    "frontend:check:api-paths": {
+      "exit": 0,
+      "summary": "\u2713 API path integrity OK \u2014 no request repeats the /api/v1 prefix."
+    },
+    "frontend:area": {
+      "exit": 0,
+      "summary": "no row-specific unit file; route/api-path checks apply"
+    }
+  },
+  "fail_reasons": [],
+  "verdict": "PASS"
+}

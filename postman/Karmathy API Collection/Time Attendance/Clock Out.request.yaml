@@ -1,0 +1,15 @@
+$kind: http-request
+description: Clock out
+url: http://localhost:8000/time/clock-out
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Clock Out.resources/examples
+order: 4000

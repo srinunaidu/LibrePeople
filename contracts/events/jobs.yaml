@@ -1,0 +1,261 @@
+# Background job domain events.
+# Queue lifecycle for every background job the platform runs, emitted by the job runner.
+#
+# Subscribers used in this file: `audit` (the audit trail) and `monitoring` (metrics,
+# dashboards and alerting). The job runner is the only producer of these events, so a
+# job's whole lifecycle is reconstructable from them.
+
+envelope:
+  type: object
+  additionalProperties: false
+  required: [event_id, event_type, event_version, occurred_at, producer, tenant, data, request_id]
+  properties:
+    event_id:
+      type: string
+      format: uuid
+      description: "Unique identifier of this single emission, as a UUID. It is unique per emission and is carried unchanged on any redelivery of the same event, so a consumer can make consumption idempotent: an event_id it has already processed is a duplicate, not a new fact."
+    event_type:
+      type: string
+      pattern: '^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$'
+      description: "Dotted lowercase event name such as `shift.published`. It mirrors the `type` field of the event definition in the same file. Consumers route on this value and never on the human-readable description."
+    event_version:
+      type: integer
+      minimum: 1
+      description: "Version of this event type's payload schema. It starts at 1 for every event type and is incremented only when a payload change is breaking. A consumer that does not recognise a version MUST reject the event into its own dead-letter path rather than guess at the payload."
+    occurred_at:
+      type: string
+      format: date-time
+      description: "RFC 3339 / ISO 8601 timestamp with an explicit timezone offset, always expressed in UTC, for example 2026-01-31T09:15:00Z. It is the instant the domain fact happened, which is not necessarily the instant the event was written to the queue."
+    producer:
+      type: string
+      description: "Name of the service or module that emitted the event, taken from the `publisher` field of the event definition in the file that declares it, so a consumer can tell which domain owns the contract. It is fixed by configuration and never taken from request input."
+    tenant:
+      type: object
+      description: "Tenant coordinates of the event. This product is deployed one customer per deployment with a separate Oracle HCM schema per customer, so a tenant is identified by the customer-specific Oracle schema plus the deployment it runs on. There is no shared multi-tenant store to route between."
+      additionalProperties: false
+      required: [schema, deployment]
+      properties:
+        schema:
+          type: string
+          description: "Name of the customer-specific Oracle schema that owns the data the event is about, and therefore the customer the event belongs to. Never null."
+        deployment:
+          type: string
+          description: "Identifier of the deployment instance that produced the event, for example a production or UAT deployment id. It separates events from one environment of a customer from events of the same customer in another environment."
+    data:
+      type: object
+      description: "Event-specific payload. Its schema is the `payload` block of the event definition named by `event_type` in the same file. The payload carries only the fields that schema declares, and it never carries a personal name, a salary figure, a bank detail, a national identifier or a health datum."
+    request_id:
+      type: ["string", "null"]
+      description: "Correlates the event with the HTTP request or background job that caused it, using the same request id that appears in the shared error envelope and the `X-Request-ID` response header. It is null for scheduled or otherwise system-initiated events."
+    causation_id:
+      type: ["string", "null"]
+      description: "Identifier of the cause of this event: the `event_id` of the event that triggered it, or the `request_id` of the request that did. It is null when the event has no traceable cause, for example the first event of a chain."
+
+events:
+  job.queued:
+    description: "A unit of background work was accepted onto the queue. The input_hash is the fingerprint of the job's inputs: a job whose input_hash has already succeeded is a no-op, and the runner reports that through the idempotent_noop flag on job.succeeded rather than repeating the effect."
+    type: job.queued
+    publisher: jobs
+    subscribers: [audit, monitoring]
+    payload:
+      type: object
+      additionalProperties: false
+      required: [job_id, job_type, input_hash, attempt, max_attempts, queued_at, priority]
+      properties:
+        job_id:
+          type: string
+          description: "Identifier of the job. It correlates every event of the job's lifecycle, from queueing to its terminal state."
+        job_type:
+          type: string
+          enum: [csv_import, forecast_run, roster_solve, payroll_process, document_render, webhook_deliver, retention_run, erasure_run]
+          description: "Kind of work the job does. The set is closed, so a consumer can exhaustively switch on it and reject a type it does not know."
+        input_hash:
+          type: string
+          pattern: '^[0-9a-f]{64}$'
+          description: "Lowercase hex digest of the job's inputs, the same digest the runner's idempotency check is based on. Equal hashes mean equal inputs, so a repeated job with the same hash must not repeat its effect."
+        attempt:
+          type: integer
+          minimum: 1
+          description: "Attempt number this queueing starts. It is 1 for the first attempt and is incremented by the runner for each retry."
+        max_attempts:
+          type: integer
+          minimum: 1
+          description: "Total number of attempts allowed before the job moves to the dead-letter state and a job.dead event is emitted."
+        queued_at:
+          type: string
+          format: date-time
+          description: "RFC 3339 timestamp with timezone, in UTC, at which the job was accepted onto the queue."
+        priority:
+          type: integer
+          description: "Scheduling priority of the job, where a higher value runs sooner. The scale belongs to the queue and is not comparable across deployments."
+
+  job.started:
+    description: "A worker took the job off the queue and is running it. The lease deadline is when the worker's hold on the job expires; if the worker dies without extending it, the job is considered abandoned and may be reclaimed by another worker, which produces another job.started with a later attempt."
+    type: job.started
+    publisher: jobs
+    subscribers: [audit, monitoring]
+    payload:
+      type: object
+      additionalProperties: false
+      required: [job_id, job_type, attempt, worker_id, started_at, lease_expires_at]
+      properties:
+        job_id:
+          type: string
+          description: "Identifier of the job that started."
+        job_type:
+          type: string
+          enum: [csv_import, forecast_run, roster_solve, payroll_process, document_render, webhook_deliver, retention_run, erasure_run]
+          description: "Kind of work the job is doing. It is the same value as on the job.queued event for this job."
+        attempt:
+          type: integer
+          minimum: 1
+          description: "Attempt number that is now running, counting from 1 for the first attempt."
+        worker_id:
+          type: string
+          description: "Identifier of the worker process that picked the job up. It is an operational identifier used to find the worker in the logs, not a personal datum."
+        started_at:
+          type: string
+          format: date-time
+          description: "RFC 3339 timestamp with timezone, in UTC, at which the worker began the attempt."
+        lease_expires_at:
+          type: string
+          format: date-time
+          description: "RFC 3339 timestamp with timezone, in UTC, at which the worker's lease on the job expires if it is not extended. Past this instant another worker may take the job over."
+
+  job.succeeded:
+    description: "The job finished successfully. The idempotent_noop flag is true when the job's input_hash had already succeeded, meaning this run deliberately did nothing because the work was already done; the job still reports a terminal, successful outcome so the caller is not left waiting."
+    type: job.succeeded
+    publisher: jobs
+    subscribers: [audit, monitoring]
+    payload:
+      type: object
+      additionalProperties: false
+      required: [job_id, job_type, attempt, result_hash, duration_seconds, finished_at, idempotent_noop]
+      properties:
+        job_id:
+          type: string
+          description: "Identifier of the job that succeeded."
+        job_type:
+          type: string
+          enum: [csv_import, forecast_run, roster_solve, payroll_process, document_render, webhook_deliver, retention_run, erasure_run]
+          description: "Kind of work the job did."
+        attempt:
+          type: integer
+          minimum: 1
+          description: "Attempt number that succeeded, counting from 1 for the first attempt."
+        result_hash:
+          type: string
+          pattern: '^[0-9a-f]{64}$'
+          description: "Lowercase hex digest of the job's result set. A repeat run of the same input_hash produces the same digest, which is how the runner decides that the work is already done."
+        duration_seconds:
+          type: number
+          minimum: 0
+          description: "Wall-clock duration of the attempt in seconds."
+        finished_at:
+          type: string
+          format: date-time
+          description: "RFC 3339 timestamp with timezone, in UTC, at which the attempt finished."
+        idempotent_noop:
+          type: boolean
+          description: "True when the job's input_hash had already succeeded, so this run performed no work and its effect was already applied. A consumer that counts effects must not count a noop a second time."
+
+  job.failed:
+    description: "The job raised on this attempt. The error_code is a code from the shared list in `contracts/errors.md`, the same vocabulary the HTTP error envelope uses. The will_retry flag says whether the runner will make another attempt and backoff_seconds is the delay before it; when the attempts are exhausted the job moves on to the dead-letter state and a job.dead event is emitted."
+    type: job.failed
+    publisher: jobs
+    subscribers: [audit, monitoring, notifications]
+    payload:
+      type: object
+      additionalProperties: false
+      required: [job_id, job_type, attempt, error_code, error_message, failed_at, will_retry, backoff_seconds]
+      properties:
+        job_id:
+          type: string
+          description: "Identifier of the job that failed."
+        job_type:
+          type: string
+          enum: [csv_import, forecast_run, roster_solve, payroll_process, document_render, webhook_deliver, retention_run, erasure_run]
+          description: "Kind of work the job was doing when it failed."
+        attempt:
+          type: integer
+          minimum: 1
+          description: "Attempt number that failed, counting from 1 for the first attempt."
+        error_code:
+          type: string
+          pattern: '^[a-z][a-z0-9_]*$'
+          description: "Machine-readable error code taken from the shared code list in `contracts/errors.md`, for example `job_execution_failed`, `dependency_unavailable` or `lease_lost`. The code is the contract; the message is not."
+        error_message:
+          type: string
+          description: "Human-readable, display-safe description of the failure. It never contains a stack trace, a SQL statement, a host name or personal data, and it may be reworded at any time."
+        failed_at:
+          type: string
+          format: date-time
+          description: "RFC 3339 timestamp with timezone, in UTC, at which the attempt failed."
+        will_retry:
+          type: boolean
+          description: "True when the runner will make another attempt, that is when this attempt is below max_attempts. When it is false the job is dead-lettered and a job.dead event follows."
+        backoff_seconds:
+          type: ["integer", "null"]
+          description: "Delay in seconds before the next attempt. It is null when no further attempt will be made."
+
+  job.dead:
+    description: "The job exhausted its attempts and was moved to the dead-letter state. A dead job is never silently discarded: it stays on the job record and is visible in the dead-letter view until an operator re-drives it or it is otherwise resolved, and every other event of its lifecycle is still in the stream. The error_code is a code from the shared list in `contracts/errors.md`."
+    type: job.dead
+    publisher: jobs
+    subscribers: [audit, monitoring, notifications]
+    payload:
+      type: object
+      additionalProperties: false
+      required: [job_id, job_type, attempts, error_code, error_message, dead_at]
+      properties:
+        job_id:
+          type: string
+          description: "Identifier of the job that was dead-lettered. It correlates with every earlier event of the same job."
+        job_type:
+          type: string
+          enum: [csv_import, forecast_run, roster_solve, payroll_process, document_render, webhook_deliver, retention_run, erasure_run]
+          description: "Kind of work the job was doing when it was dead-lettered."
+        attempts:
+          type: integer
+          minimum: 1
+          description: "Total number of attempts that were made before the job was dead-lettered. It is at least the max_attempts of the job."
+        error_code:
+          type: string
+          pattern: '^[a-z][a-z0-9_]*$'
+          description: "Machine-readable error code taken from the shared code list in `contracts/errors.md`, for example `job_execution_failed` or `internal_error`. The code is the contract; the message is not."
+        error_message:
+          type: string
+          description: "Human-readable, display-safe description of the last failure, shown in the dead-letter view. It never contains a stack trace, a SQL statement, a host name or personal data."
+        dead_at:
+          type: string
+          format: date-time
+          description: "RFC 3339 timestamp with timezone, in UTC, at which the job was moved to the dead-letter state."
+
+  job.retried:
+    description: "The job was put back on the queue for another attempt, either automatically by the runner's backoff or manually by an operator re-driving it from the dead-letter view. The triggered_by field says which of the two happened, so an operator-driven retry is distinguishable from an automatic one."
+    type: job.retried
+    publisher: jobs
+    subscribers: [audit, monitoring]
+    payload:
+      type: object
+      additionalProperties: false
+      required: [job_id, job_type, attempt, triggered_by, retried_at]
+      properties:
+        job_id:
+          type: string
+          description: "Identifier of the job that was retried."
+        job_type:
+          type: string
+          enum: [csv_import, forecast_run, roster_solve, payroll_process, document_render, webhook_deliver, retention_run, erasure_run]
+          description: "Kind of work the job does. It is the same value as on the job.queued event for this job."
+        attempt:
+          type: integer
+          minimum: 1
+          description: "Attempt number the job is being retried as, that is the attempt about to run."
+        triggered_by:
+          type: string
+          description: "Identifier of the actor or mechanism that caused the retry, for example an operator account id or the scheduler. It is an operational reference, never a personal name, and it distinguishes an operator-driven retry from an automatic one."
+        retried_at:
+          type: string
+          format: date-time
+          description: "RFC 3339 timestamp with timezone, in UTC, at which the job was put back on the queue."

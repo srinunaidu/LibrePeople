@@ -1,0 +1,9 @@
+$kind: http-request
+description: List certifications
+url: http://localhost:8000/learning/certifications
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/List Certifications.resources/examples
+order: 3000

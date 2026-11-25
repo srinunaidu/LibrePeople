@@ -1,0 +1,9 @@
+$kind: http-request
+description: Complete a termination
+url: http://localhost:8000/offboarding/terminations/{termination_id}/complete
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/Complete Termination.resources/examples
+order: 8000

@@ -1,0 +1,8 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`display parity — IN-INR 2dp pin (stored == CSV == PDF == money/moneyIn) > Reports.tsx labour-cost override removed: monthly_cost/total pin 2dp (snapshot) 1`] = `
+{
+  "monthlyCost": "₹1,23,456.70",
+  "total": "₹23,87,654.50",
+}
+`;

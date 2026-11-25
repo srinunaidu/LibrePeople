@@ -1,0 +1,9 @@
+$kind: http-request
+description: Get an import template
+url: http://localhost:8000/import-export/template/{entity}
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/Get Import Template.resources/examples
+order: 6000

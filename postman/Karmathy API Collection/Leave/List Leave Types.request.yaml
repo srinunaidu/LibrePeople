@@ -1,0 +1,9 @@
+$kind: http-request
+description: List leave types
+url: http://localhost:8000/leave/types
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/List Leave Types.resources/examples
+order: 1000

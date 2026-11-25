@@ -1,0 +1,15 @@
+$kind: http-request
+description: Clock in
+url: http://localhost:8000/time/clock-in
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Clock In.resources/examples
+order: 3000

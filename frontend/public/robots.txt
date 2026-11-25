@@ -1,0 +1,34 @@
+# Karmathy — Human Capital Management platform
+# The authenticated application is not intended for search indexing;
+# only the public marketing pages should appear in search results.
+User-agent: *
+Disallow: /dashboard
+Disallow: /recruiting
+Disallow: /onboarding
+Disallow: /time
+Disallow: /scheduling
+Disallow: /leave
+Disallow: /offboarding
+Disallow: /reports
+Disallow: /platform/payroll
+Disallow: /platform/performance
+Disallow: /platform/benefits
+Disallow: /platform/learning
+Disallow: /platform/compliance
+Disallow: /platform/integrations
+Disallow: /platform/importexport
+Disallow: /platform/users
+Disallow: /forecasting
+Disallow: /data-quality
+Disallow: /admin
+Disallow: /client-onboarding
+Disallow: /project-status
+Disallow: /design
+Disallow: /design-gallery
+Disallow: /theme
+Disallow: /login
+Disallow: /change-password
+
+Allow: /
+
+Sitemap: https://karmathy-frontend.onrender.com/sitemap.xml

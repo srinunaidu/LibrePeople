@@ -1,0 +1,9 @@
+$kind: http-request
+description: Get scheduling availability
+url: http://localhost:8000/scheduling/availability
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/Availability.resources/examples
+order: 1000

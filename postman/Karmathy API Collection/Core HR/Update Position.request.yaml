@@ -1,0 +1,15 @@
+$kind: http-request
+description: Update a position
+url: http://localhost:8000/core-hr/positions/{position_id}
+method: PATCH
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Update Position.resources/examples
+order: 13000

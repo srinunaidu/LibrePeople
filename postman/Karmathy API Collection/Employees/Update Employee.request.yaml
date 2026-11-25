@@ -1,0 +1,15 @@
+$kind: http-request
+description: Update an existing employee
+url: http://localhost:8000/employees/{employee_id}
+method: PUT
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Update Employee.resources/examples
+order: 4000

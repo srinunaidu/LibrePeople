@@ -1,0 +1,15 @@
+$kind: http-request
+description: Update an offboarding task
+url: http://localhost:8000/offboarding/tasks/{task_id}
+method: PUT
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Update Offboarding Task.resources/examples
+order: 3000

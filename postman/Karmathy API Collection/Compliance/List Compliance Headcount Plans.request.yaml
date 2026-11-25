@@ -1,0 +1,9 @@
+$kind: http-request
+description: List headcount plans
+url: http://localhost:8000/compliance/headcount-plans
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/List Compliance Headcount Plans.resources/examples
+order: 6000

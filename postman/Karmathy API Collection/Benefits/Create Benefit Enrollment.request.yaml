@@ -1,0 +1,15 @@
+$kind: http-request
+description: Create a benefit enrollment
+url: http://localhost:8000/benefits/benefit-enrollments
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Create Benefit Enrollment.resources/examples
+order: 4000

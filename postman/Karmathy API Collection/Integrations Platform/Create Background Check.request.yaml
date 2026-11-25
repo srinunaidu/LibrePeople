@@ -1,0 +1,15 @@
+$kind: http-request
+description: Create a background check
+url: http://localhost:8000/platform/background-checks
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Create Background Check.resources/examples
+order: 2000

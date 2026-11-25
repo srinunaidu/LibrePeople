@@ -1,0 +1,9 @@
+$kind: http-request
+description: List offboarding tasks
+url: http://localhost:8000/offboarding/tasks
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/List Offboarding Tasks.resources/examples
+order: 1000

@@ -1,0 +1,15 @@
+$kind: http-request
+description: Update a location
+url: http://localhost:8000/core-hr/locations/{location_id}
+method: PATCH
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Update Location.resources/examples
+order: 9000

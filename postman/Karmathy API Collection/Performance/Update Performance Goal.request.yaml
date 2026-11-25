@@ -1,0 +1,15 @@
+$kind: http-request
+description: Update a performance goal
+url: http://localhost:8000/performance/goals/{goal_id}
+method: PUT
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+body:
+  type: text
+  content: |-
+    {
+      "example": "payload"
+    }
+examples: ./.resources/Update Performance Goal.resources/examples
+order: 9000

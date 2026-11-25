@@ -1,0 +1,12 @@
+{
+  "entity": "shift_templates",
+  "total_rows": 2,
+  "create": 0,
+  "update": 0,
+  "unchanged": 0,
+  "reject": 2,
+  "rows": [
+    {"row": 2, "status": "reject", "errors": [{"column": "start_time", "code": "invalid_time"}]},
+    {"row": 3, "status": "reject", "errors": [{"column": "code", "code": "missing_required"}]}
+  ]
+}

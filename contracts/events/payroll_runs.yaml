@@ -1,0 +1,218 @@
+# Payroll domain events.
+# Pay-run lifecycle, run failures and payslip generation, emitted by the payroll module.
+#
+# Subscribers used in this file: `audit` (the audit trail), `webhooks` (outbound webhook
+# delivery), `reporting` (read models and extracts) and `notifications` (user messages).
+
+envelope:
+  type: object
+  additionalProperties: false
+  required: [event_id, event_type, event_version, occurred_at, producer, tenant, data, request_id]
+  properties:
+    event_id:
+      type: string
+      format: uuid
+      description: "Unique identifier of this single emission, as a UUID. It is unique per emission and is carried unchanged on any redelivery of the same event, so a consumer can make consumption idempotent: an event_id it has already processed is a duplicate, not a new fact."
+    event_type:
+      type: string
+      pattern: '^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$'
+      description: "Dotted lowercase event name such as `shift.published`. It mirrors the `type` field of the event definition in the same file. Consumers route on this value and never on the human-readable description."
+    event_version:
+      type: integer
+      minimum: 1
+      description: "Version of this event type's payload schema. It starts at 1 for every event type and is incremented only when a payload change is breaking. A consumer that does not recognise a version MUST reject the event into its own dead-letter path rather than guess at the payload."
+    occurred_at:
+      type: string
+      format: date-time
+      description: "RFC 3339 / ISO 8601 timestamp with an explicit timezone offset, always expressed in UTC, for example 2026-01-31T09:15:00Z. It is the instant the domain fact happened, which is not necessarily the instant the event was written to the queue."
+    producer:
+      type: string
+      description: "Name of the service or module that emitted the event, taken from the `publisher` field of the event definition in the file that declares it, so a consumer can tell which domain owns the contract. It is fixed by configuration and never taken from request input."
+    tenant:
+      type: object
+      description: "Tenant coordinates of the event. This product is deployed one customer per deployment with a separate Oracle HCM schema per customer, so a tenant is identified by the customer-specific Oracle schema plus the deployment it runs on. There is no shared multi-tenant store to route between."
+      additionalProperties: false
+      required: [schema, deployment]
+      properties:
+        schema:
+          type: string
+          description: "Name of the customer-specific Oracle schema that owns the data the event is about, and therefore the customer the event belongs to. Never null."
+        deployment:
+          type: string
+          description: "Identifier of the deployment instance that produced the event, for example a production or UAT deployment id. It separates events from one environment of a customer from events of the same customer in another environment."
+    data:
+      type: object
+      description: "Event-specific payload. Its schema is the `payload` block of the event definition named by `event_type` in the same file. The payload carries only the fields that schema declares, and it never carries a personal name, a salary figure, a bank detail, a national identifier or a health datum."
+    request_id:
+      type: ["string", "null"]
+      description: "Correlates the event with the HTTP request or background job that caused it, using the same request id that appears in the shared error envelope and the `X-Request-ID` response header. It is null for scheduled or otherwise system-initiated events."
+    causation_id:
+      type: ["string", "null"]
+      description: "Identifier of the cause of this event: the `event_id` of the event that triggered it, or the `request_id` of the request that did. It is null when the event has no traceable cause, for example the first event of a chain."
+
+events:
+  payroll_run.started:
+    description: "A payroll calculation started. The run has been accepted for calculation and the rule pack that will be applied is identified in the payload. A calculation is refused when the required rule pack is missing or is not `verified`; the refusal is reported with `rule_pack_missing` or `rule_pack_not_verified` from the shared error list in `contracts/errors.md`, and no payroll_run.started event is emitted for a refused run."
+    type: payroll_run.started
+    publisher: payroll
+    subscribers: [audit, webhooks, reporting]
+    payload:
+      type: object
+      additionalProperties: false
+      required: [pay_run_id, period_start, period_end, pay_date, employee_count, dry_run, jurisdiction, rule_pack_id, rule_pack_version, rule_pack_status]
+      properties:
+        pay_run_id:
+          type: string
+          description: "Identifier of the pay run being calculated. It is the correlation id for every later event of the same run."
+        period_start:
+          type: string
+          format: date
+          description: "First day of the period being paid, as an ISO 8601 date, as recorded on the pay run."
+        period_end:
+          type: string
+          format: date
+          description: "Last day of the period being paid, as an ISO 8601 date, as recorded on the pay run."
+        pay_date:
+          type: string
+          format: date
+          description: "Date the run pays on, as stored on the pay run. It is a business date held in the data, not a statutory constant, and is not derived by the producer."
+        employee_count:
+          type: integer
+          minimum: 0
+          description: "Number of employees included in the run. It is a count only; the event names no employee and carries no pay detail."
+        dry_run:
+          type: boolean
+          description: "True when the run is a simulation that produces no payslips and no accounting postings. A dry run still evaluates every rule, so it is the usual way to check a run before it is approved."
+        jurisdiction:
+          type: string
+          description: "Jurisdiction the run is calculated under, as configured for the deployment. It is an identifier that selects the rule pack, not a statutory reference and not a value derived at calculation time."
+        rule_pack_id:
+          type: ["string", "null"]
+          description: "Identifier of the rule pack attached to the run. It is null when no pack is attached, in which case rule_pack_version and rule_pack_status are null as well."
+        rule_pack_version:
+          type: ["string", "null"]
+          description: "Version of the attached rule pack, matching the signed pack that was loaded for this run. It is null when no pack is attached."
+        rule_pack_status:
+          type: ["string", "null"]
+          enum: [draft, pending_verification, verified, superseded, null]
+          description: "Lifecycle status of the attached rule pack. It is null when no pack is attached to the run. Only the `verified` status permits a calculation: a run whose pack is in any other status is refused with `rule_pack_not_verified`."
+
+  payroll_run.completed:
+    description: "The payroll run reached a terminal state. A dry run completes with status `dry_run`; a calculated run completes as `approved` or `finalised`; a run that could not be calculated completes with status `failed` and is accompanied by a payroll_run.failed event carrying the error code. Totals are aggregate amounts for the run and never identify an individual."
+    type: payroll_run.completed
+    publisher: payroll
+    subscribers: [audit, webhooks, reporting, notifications]
+    payload:
+      type: object
+      additionalProperties: false
+      required: [pay_run_id, status, employee_count, totals, reconciliation_id, duration_seconds]
+      properties:
+        pay_run_id:
+          type: string
+          description: "Identifier of the pay run that completed. It matches the pay_run_id of the payroll_run.started event for the same run."
+        status:
+          type: string
+          enum: [dry_run, approved, finalised, failed]
+          description: "Terminal status of the run. `dry_run` the run was a simulation, `approved` the run was calculated and is awaiting sign-off, `finalised` the run was signed off and is immutable, `failed` the run could not be calculated."
+        employee_count:
+          type: integer
+          minimum: 0
+          description: "Number of employees the run covered."
+        totals:
+          type: object
+          additionalProperties: false
+          required: [currency, gross, deductions, employer_contributions, net]
+          description: "Aggregate amounts for the whole run. Every amount is a decimal string, not a JSON number, so that no floating-point drift can alter a money value; there is no thousands separator and no currency symbol in the value."
+          properties:
+            currency:
+              type: string
+              pattern: '^[A-Z]{3}$'
+              description: "ISO 4217 currency code that every amount in this object is expressed in."
+            gross:
+              type: string
+              pattern: '^-?[0-9]+(\.[0-9]+)?$'
+              description: "Sum of gross pay for the run, as a decimal string. No floating-point drift in money, so the value is never a JSON number."
+            deductions:
+              type: string
+              pattern: '^-?[0-9]+(\.[0-9]+)?$'
+              description: "Sum of employee deductions for the run, as a decimal string. No floating-point drift in money, so the value is never a JSON number."
+            employer_contributions:
+              type: string
+              pattern: '^-?[0-9]+(\.[0-9]+)?$'
+              description: "Sum of employer contributions for the run, as a decimal string. No floating-point drift in money, so the value is never a JSON number."
+            net:
+              type: string
+              pattern: '^-?[0-9]+(\.[0-9]+)?$'
+              description: "Sum of net pay for the run, as a decimal string. No floating-point drift in money, so the value is never a JSON number."
+        reconciliation_id:
+          type: ["string", "null"]
+          description: "Identifier of the reconciliation record the totals were tied to, when the deployment runs reconciliation. It is null when no reconciliation was performed or when the run failed before reconciliation could run."
+        duration_seconds:
+          type: number
+          minimum: 0
+          description: "Wall-clock duration of the run in seconds, from start to completion."
+
+  payroll_run.failed:
+    description: "The payroll run could not be completed. The error_code uses the shared error-code vocabulary in `contracts/errors.md`, the same list the HTTP error envelope uses, so a consumer can branch on the code and never on the message. The error_message is safe to display: no stack trace, no SQL, no host names and no personal data."
+    type: payroll_run.failed
+    publisher: payroll
+    subscribers: [audit, webhooks, notifications]
+    payload:
+      type: object
+      additionalProperties: false
+      required: [pay_run_id, error_code, error_message, failed_at, attempt]
+      properties:
+        pay_run_id:
+          type: string
+          description: "Identifier of the pay run that failed. It matches the pay_run_id of the payroll_run.started event for the same run."
+        error_code:
+          type: string
+          pattern: '^[a-z][a-z0-9_]*$'
+          description: "Machine-readable error code taken from the shared code list in `contracts/errors.md`, for example `rule_pack_not_verified`, `rule_pack_missing` or `job_execution_failed`. This mirrors the shared error envelope vocabulary: the code is the contract, the message is not."
+        error_message:
+          type: string
+          description: "Human-readable, display-safe description of the failure. It never contains a stack trace, a SQL statement, a host name, a file path outside the application root, or personal data. It may be reworded at any time, so consumers must not parse it."
+        failed_at:
+          type: string
+          format: date-time
+          description: "RFC 3339 timestamp with timezone, in UTC, at which the run failed."
+        attempt:
+          type: integer
+          minimum: 1
+          description: "Number of the attempt that failed, counting from 1 for the first attempt."
+
+  payslip.generated:
+    description: "A payslip document was produced for one employee. The list of mandatory fields on the document comes from the rule pack that was applied, not from code in the application, so a change to what a payslip must carry is delivered as a rule pack change rather than as a deployment. The event names the document and says whether every mandatory field was present; it carries no amount, no name, no bank detail and no national identifier."
+    type: payslip.generated
+    publisher: payroll
+    subscribers: [audit, webhooks, notifications]
+    payload:
+      type: object
+      additionalProperties: false
+      required: [payslip_id, pay_run_id, employee_id, document_id, generated_at, rule_pack_id, rule_pack_version, mandatory_fields_present]
+      properties:
+        payslip_id:
+          type: string
+          description: "Identifier of the payslip record. It is the correlation id between the pay run and the stored payslip."
+        pay_run_id:
+          type: string
+          description: "Identifier of the pay run the payslip belongs to."
+        employee_id:
+          type: string
+          description: "Identifier of the employee the payslip is for. A reference id only: no name, no amount and no other personal datum travels in this event."
+        document_id:
+          type: string
+          description: "Identifier of the generated document in object storage. The document itself is fetched through the authorised document service, never from the event payload."
+        generated_at:
+          type: string
+          format: date-time
+          description: "RFC 3339 timestamp with timezone, in UTC, at which the document was rendered."
+        rule_pack_id:
+          type: string
+          description: "Identifier of the rule pack that was applied to produce this payslip. It identifies the pack whose mandatory-field list was used."
+        rule_pack_version:
+          type: string
+          description: "Version of the rule pack that was applied, matching the signed pack that produced the document."
+        mandatory_fields_present:
+          type: boolean
+          description: "True when every field the rule pack marks mandatory was present in the generated document. It is computed against the rule pack's mandatory-field list, which is data and not code, so a false value means the document is not complete and must not be handed to the employee."

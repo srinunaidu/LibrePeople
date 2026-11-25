@@ -1,0 +1,9 @@
+$kind: http-request
+description: List client migrations
+url: http://localhost:8000/onboarding-portal/clients/{client_id}/migrations
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/List Client Migrations.resources/examples
+order: 8000

@@ -1,0 +1,9 @@
+$kind: http-request
+description: List compensation bands
+url: http://localhost:8000/performance/compensation-bands
+method: GET
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{access_token}}
+examples: ./.resources/List Compensation Bands.resources/examples
+order: 1000

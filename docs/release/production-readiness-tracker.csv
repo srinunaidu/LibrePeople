@@ -1,0 +1,12 @@
+metric,value
+HEAD,ab9b392
+branch,feature/librepeople-production
+status,NOT READY (payroll pending + BLOCKED>0)
+VERIFIED,122
+IMPLEMENTED,0
+BLOCKED,3
+DEFERRED,8
+IN PROGRESS,3
+blockers,"LP-DOC-003 + LP-NFR-012 + LP-NFR-013"
+in_progress,"LP-NFR-009 + LP-NFR-010 + LP-NFR-011"
+evidence_latest,"NFR-014 PASS (harness full pass HEAD 65a1af2; VERIFIED in 2ac4050) + hardenings b4cf23f/2e3c001/4742091/fdc5419 + throttling 19706bd + SBOM 969d403/59c3823 + runbook 0b8a402 + perf-smoke b46d24b (PROPOSED) + decision-papers ab9b392 (recommendations only) + closure-index (122 VERIFIED mapped)"
