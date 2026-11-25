@@ -38,3 +38,75 @@ Rollback rehearsal (step 6) not reached — nothing to roll back (empty DB). Cle
 ## Explicitly NOT PROVEN
 
 Oracle parity; production data volumes; any RPO/RTO commitment (no backup rehearsal ran — scratch DB only); TLS; multi-instance; seed/login/health on PG; the 110-table / constraint / tenant-discriminator checks.
+
+---
+
+## Addendum 2026-11-25 — enum fix applied, chain BLOCKED at second (non-enum) defect
+
+Branch `agent/ops/pg-proof`, base `f669924`. Exclusive paths only:
+`backend/migrations/versions/0012_leave_ledger.py`,
+`backend/pg_enum_checkfirst_test_suite.py` (new), this report. No other app
+code touched. No push.
+
+### Fix (gate A)
+
+`0012_leave_ledger`: the `entry_type` column's `sa.Enum(..., name=
+"leaveledgerentrytype")` now declares `create_type=False`, and `upgrade()`
+calls a new `_ensure_entry_type(bind)` first, which issues a standalone
+`sa.Enum(...).create(bind, checkfirst=True)` with values read from `COLUMNS`.
+A repo-wide grep confirms `0012` is the only migration version using
+`sa.Enum`/`postgresql.ENUM`/`create_type`/`CREATE TYPE` — no same-pattern
+recurrences exist. Behavior-neutral on SQLite/Oracle (enum compiles to
+VARCHAR, no `CREATE TYPE`); required on PG. Table/column semantics unchanged.
+
+New suite `backend/pg_enum_checkfirst_test_suite.py`: (a) static AST scan of
+all `migrations/versions/*.py` — fails on any named enum without
+`create_type=False` unless used only as the receiver of
+`.create(checkfirst=True)`; (b) PG-gated `upgrade head` on a scratch DB when
+`ALEMBIC_DATABASE_URL`/`PG_PROOF_URL` is a reachable postgresql URL, else
+SKIP (never fails for missing PG). Red-to-green proven: pre-fix file fails
+the scan at `0012_leave_ledger.py:102`; post-fix passes.
+
+### Re-run (scratch PG 16.16, port 55433, fresh `initdb`, `upgrade head`)
+
+`0012` is FIXED on PG — log shows `created leave_ledger` + all five indexes,
+no `DuplicateObject`, chain proceeds `0012 -> 0013 -> ... -> 0016`. Then a
+SECOND, DIFFERENT defect stops the chain at `0016_attendance_roster_link`
+(`CREATE TABLE working_time_violations`); per scope rules it was NOT fixed.
+
+Verbatim error:
+
+```text
+sqlalchemy.exc.ProgrammingError: (psycopg2.errors.DatatypeMismatch) column "resolved" is of type boolean but default expression is of type integer
+HINT:  You will need to rewrite or cast the expression.
+[SQL:
+CREATE TABLE working_time_violations (
+	...
+	resolved BOOLEAN DEFAULT 0,
+	...
+)
+]
+```
+
+Cause (diagnosis only, no fix applied): `0016` declares
+`sa.Column("resolved", sa.Boolean(), nullable=True, server_default=sa.text("0"))`
+— an integer-literal default on a boolean column. SQLite accepts it; PG
+rejects it. Not the enum pattern, so out of scope for this agent; the chain
+cannot reach head/0047 until the Architect fixes it. Steps after the blocker
+(seed+login smoke, backup/restore rehearsal, downgrade/upgrade, spot-checks)
+not executed.
+
+### Regression (SQLite, behavior-neutrality)
+
+`leave_test_suite.py`: 100 passed, 0 failed. `security_test_suite.py`: 2162
+passed, 0 failed. `migration_test_suite.py`: 67 passed, 0 failed.
+`pg_enum_checkfirst_test_suite.py` (no PG in env): 1 passed, 0 failed,
+1 skipped.
+
+### Verdict
+
+Gate A enum collision: FIXED and regression-gated. Full PG proof: still
+BLOCKED — now at `0016_attendance_roster_link` boolean-default
+`DatatypeMismatch` (verbatim above). Cleanup: `pg_ctl stop` exit 0,
+`rm -rf /tmp/lp-pgdata /tmp/lp-venv` + logs; `pg_isready` no response,
+no postgres/uvicorn residue.

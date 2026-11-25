@@ -109,6 +109,17 @@ COLUMNS = (
             "ENCASHMENT",
             name="leaveledgerentrytype",
             length=11,
+            # PG prospectus: create_type=False so that op.create_table /
+            # op.add_column never emit an unconditional CREATE TYPE. The
+            # 0001 baseline (metadata.create_all over the frozen tables)
+            # already creates this native enum on PostgreSQL even though the
+            # owning leave_ledger table is not in the frozen set, so an
+            # unconditional CREATE TYPE here collides with
+            # 'type "leaveledgerentrytype" already exists' (gate A FAIL,
+            # 2026-11-25). The type is created idempotently by
+            # _ensure_entry_type() below instead. No-op on SQLite/Oracle,
+            # where the enum compiles to VARCHAR and no CREATE TYPE exists.
+            create_type=False,
         ),
         nullable=False,
     ),
@@ -306,10 +317,32 @@ def _backfill(bind) -> int:
     return written
 
 
+def _ensure_entry_type(bind) -> None:
+    """Create the ``leaveledgerentrytype`` native enum exactly once.
+
+    On PostgreSQL the 0001 baseline already creates this type (via
+    ``metadata.create_all`` over the frozen tables, which creates enum types
+    even for tables outside the frozen set), so creating it here with
+    ``checkfirst=True`` is a no-op when it exists and creates it when a
+    database reaches this revision without it (e.g. a legacy database whose
+    baseline ran before the enum's model existed). On SQLite/Oracle this is
+    a no-op: the enum is not native there. Values are read from COLUMNS so
+    the list lives in exactly one place.
+    """
+    column_type = next(c.type for c in COLUMNS if c.name == "entry_type")
+    sa.Enum(
+        *column_type.enums,
+        name=column_type.name,
+        length=column_type.length,
+    ).create(bind, checkfirst=True)
+
+
 def upgrade() -> None:
     bind = op.get_bind()
     inspector = sa.inspect(bind)
     catalog = catalog_names(bind)
+
+    _ensure_entry_type(bind)
 
     live = catalog.table(TABLE)
     if live is None:
