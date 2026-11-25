@@ -2,6 +2,11 @@ fastapi==0.111.0
 uvicorn[standard]==0.29.0
 sqlalchemy==2.0.29
 oracledb==26.0.1
+# Postgres driver for the Neon DATABASE_URL used by the Render testing
+# deploy. Without it the default `postgresql://` dialect cannot import its
+# DBAPI and `preDeployCommand` (scripts.migrate) fails at engine import
+# (deploy dep-dc3hph49v7es73875p8g, 2026-11-25: ModuleNotFoundError psycopg2).
+psycopg2-binary==2.9.13
 pydantic-settings==2.3.0
 pydantic==2.7.4
 python-jose[cryptography]==3.3.0
