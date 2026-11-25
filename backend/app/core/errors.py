@@ -40,7 +40,7 @@ from fastapi.responses import JSONResponse
 
 from app.core.observability import get_logger, get_request_id
 
-log = get_logger("karmathy.errors")
+log = get_logger("librepeople.errors")
 
 
 def _cors_headers(request) -> dict[str, str]:

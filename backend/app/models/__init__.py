@@ -1,4 +1,4 @@
-"""Karmathy HCM models package."""
+"""LibrePeople HCM models package."""
 
 from .user import User
 from .department import Department

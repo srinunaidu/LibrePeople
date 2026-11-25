@@ -15,7 +15,7 @@ from app.models.base import Base
 
 
 class Client(Base):
-    """A tenant (client organization) being onboarded onto Karmathy.
+    """A tenant (client organization) being onboarded onto LibrePeople.
 
     Lifecycle (FSM)``status``::
 

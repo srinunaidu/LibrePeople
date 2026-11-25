@@ -6,7 +6,7 @@ import logging
 from datetime import date, datetime, timedelta, time as dtime
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-logger = logging.getLogger("karmathy.solver")
+logger = logging.getLogger("librepeople.solver")
 
 try:
     from ortools.sat.python import cp_model  # type: ignore

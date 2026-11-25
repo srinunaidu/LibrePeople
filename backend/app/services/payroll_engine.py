@@ -34,7 +34,7 @@ pay period**, which is the semantics the existing product has always used.
 This is stated explicitly because the alternative reading (an annual salary
 divided by 12) would silently change every employee's net pay by 12x. The unit
 was never recorded on the column, so changing it here would be a business
-decision, not a bug fix. If Karmathy later decides to store annual salary,
+decision, not a bug fix. If LibrePeople later decides to store annual salary,
 that needs a schema change plus a migration of existing profiles — see
 OPEN QUESTIONS in docs/ENTERPRISE_AUDIT.md.
 """

@@ -36,7 +36,7 @@ from app.models.core_hr import (
     EmployeeDocument,
 )
 
-log = get_logger("karmathy.retention.documents")
+log = get_logger("librepeople.retention.documents")
 
 
 def mark_expired_documents(db: Session, today: date | None = None) -> int:

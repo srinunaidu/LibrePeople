@@ -70,7 +70,7 @@ def render_offer_letter(
     start_date: date,
     offer_date: date,
     offer_number: str,
-    company_name: str = "Karmathy",
+    company_name: str = "LibrePeople",
     pay_frequency: str | None = None,
 ) -> bytes:
     """Return a simple, professional offer letter as PDF bytes."""

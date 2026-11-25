@@ -8,7 +8,7 @@ class Settings(BaseSettings):
         "env_file_encoding": "utf-8",
         "extra": "ignore",
     }
-    PROJECT_NAME: str = "Karmathy"
+    PROJECT_NAME: str = "LibrePeople"
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
 
@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     #: Tenant default currency (ISO 4217). Used to backfill pay runs and
     #: payslips written before the currency column existed, and as the
     #: default when a client omits currency on a create request.
-    DEFAULT_CURRENCY: str = "USD"
+    DEFAULT_CURRENCY: str = "INR"
     ORACLE_WALLET_PASSWORD: str | None = None
     ORACLE_DSN: str | None = None
     ORACLE_USER: str | None = None
@@ -78,7 +78,7 @@ class Settings(BaseSettings):
     # pass the password policy. Without it the application starts with zero
     # users (fail-closed) — no default credential exists in any environment.
     ADMIN_INITIAL_USERNAME: str = "admin"
-    ADMIN_INITIAL_EMAIL: str = "admin@karmathy.example"
+    ADMIN_INITIAL_EMAIL: str = "admin@librepeople.example"
     ADMIN_INITIAL_PASSWORD: str | None = None
 
     # Synthetic development seed data (seed/dev/). Off by default: sample
@@ -239,7 +239,7 @@ class Settings(BaseSettings):
                 raise RuntimeError(message)
             import logging
 
-            logging.getLogger("karmathy.config").warning(
+            logging.getLogger("librepeople.config").warning(
                 "%s This is not enforced outside production.", message
             )
         if self.PASSWORD_MIN_LENGTH < 12:

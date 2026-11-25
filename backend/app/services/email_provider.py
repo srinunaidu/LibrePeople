@@ -35,7 +35,7 @@ import smtplib
 from email.message import EmailMessage
 from typing import Protocol
 
-log = logging.getLogger("karmathy.email")
+log = logging.getLogger("librepeople.email")
 
 
 class EmailProvider(Protocol):

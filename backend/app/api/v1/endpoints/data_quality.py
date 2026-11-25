@@ -17,7 +17,7 @@ from app.models.user import User
 from app.services import data_quality as dq
 
 router = APIRouter()
-log = get_logger("karmathy.data_quality")
+log = get_logger("librepeople.data_quality")
 
 SEVERITIES = ("critical", "warning", "info")
 

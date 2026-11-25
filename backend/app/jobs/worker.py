@@ -54,7 +54,7 @@ from app.models.job_queue import JobQueue, JobType
 # Importing the handlers populates the registry through their decorators.
 import app.jobs.handlers  # noqa: F401,E402
 
-log = logging.getLogger("karmathy.jobs.worker")
+log = logging.getLogger("librepeople.jobs.worker")
 
 #: The longest error message stored on a job. The column is Text, but an
 #: operator reads this in a table; a stack trace pasted into it helps nobody.
