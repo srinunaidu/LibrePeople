@@ -85,8 +85,11 @@ class User(Base):
     # must present a valid TOTP code (or a single-use recovery code) before
     # performing privileged operations.
     mfa_enabled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    # SHA-256 hash of the TOTP secret (never the plaintext secret).
-    mfa_secret_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    # The encrypted TOTP secret envelope (``ENCv1:<key_id>:<fernet token>``,
+    # ~150-160 chars) — never the plaintext secret. Sized as TEXT on
+    # purpose: VARCHAR(64) truncated the envelope on PostgreSQL (see
+    # migration 0048_mfa_secret_envelope).
+    mfa_secret_hash: Mapped[str | None] = mapped_column(Text, nullable=True)
     # When MFA was enrolled.
     mfa_enrolled_at: Mapped[DateTime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     # bcrypt hashes of single-use recovery codes, as a JSON array. Consumed
