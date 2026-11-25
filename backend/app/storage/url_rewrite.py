@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from typing import Iterator
 
-from sqlalchemy import Connection, Engine, MetaData, String, Table, Text, func, inspect, select
+from sqlalchemy import Connection, Engine, MetaData, String, Table, Text, cast, func, inspect, select
 
 #: The unauthenticated prefix values were stored under.
 OLD_PREFIX = "/files/"
@@ -42,7 +42,7 @@ def _rewrite_prefix(conn: Connection, old_prefix: str, new_prefix: str) -> list[
         statement = (
             table.update()
             .values({column: func.replace(column, old_prefix, new_prefix)})
-            .where(column.like(f"{old_prefix}%"))
+            .where(cast(column, Text).like(f"{old_prefix}%"))
         )
         if conn.execute(statement).rowcount:
             changed.append(f"{table.name}.{column.name}")
@@ -76,7 +76,7 @@ def count_legacy_files_urls(bind) -> list[dict]:
             count = conn.execute(
                 select(func.count())
                 .select_from(table)
-                .where(column.like(f"{OLD_PREFIX}%"))
+                .where(cast(column, Text).like(f"{OLD_PREFIX}%"))
             ).one()[0]
             if count:
                 reports.append(

@@ -403,3 +403,39 @@ checks, seed+login smoke, backup/restore rehearsal, downgrade/upcycle.
 Cleanup: `pg_ctl stop` exit 0; `rm -rf /tmp/lp-pgdata /tmp/lp-venv` + dumps
 + logs + scratch DBs; `pg_isready` no response, no postgres/uvicorn
 residue, no stray files.
+
+## Addendum 2026-11-25 — url_rewrite.py bare-LIKE on enum fixed (PG callers)
+
+Branch `agent/ops/pg-proof`, base `7aaf3c4`. Exclusive paths only:
+`backend/app/storage/url_rewrite.py` (two LIKE predicates only),
+`backend/url_rewrite_cast_test_suite.py` (new), this report. No migrations,
+other app code, rule packs, frontend. No push. Synthetic data only.
+
+### Fix (last PG item — bare `LIKE` on enum in app helper)
+
+`app/storage/url_rewrite.py:45` (`rewrite_prefix`) and `:79`
+(`count_legacy_files_urls`) issued bare `column.like(...)`. On PG a
+reflected native-enum column (e.g. `leave_ledger.entry_type`) is a
+`String` subclass, so PG renders `<enumtype> ~~ unknown` and raises
+`UndefinedFunction` for any PG caller (`scripts/verify_files_urls.py`).
+Both predicates now use portable `cast(column, Text).like(...)` — same
+spelling as the `lp_files_url_rewrite` migration fix, never PG-only
+`::`; `func.replace` SET clause and everything else untouched.
+
+### Regression (SQLite, behavior-neutrality)
+
+New `url_rewrite_cast_test_suite.py` (runs everywhere, no PG): AST scan
+fails on any `.like()`/`.ilike()` without a `cast()` receiver in
+`url_rewrite.py`; SQLite test asserts identical rewrite results (2
+legacy rows, exact post-rewrite values, legacy empty, idempotent
+re-run). Red to green: pre-fix scan flags lines 45 + 79, behavior test
+passes both before and after (CAST is a no-op on SQLite). Post-fix: 2
+passed, 0 failed. `lp_phase2_files_test_suite.py`: 8 passed, 0 failed.
+`security_test_suite.py`: 2162 passed, 0 failed.
+
+### Verdict
+
+App-helper enum-`LIKE`: FIXED and regression-gated. No PG re-run: chain
+already green, migration unaffected, fix is SQLite-proven identical plus
+code review (portable CAST, no dialect-only syntax); PG smoke skipped as
+not cheap/required. Full PG proof: still PASSES (prior addendum).
