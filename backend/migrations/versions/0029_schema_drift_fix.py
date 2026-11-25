@@ -243,7 +243,11 @@ def upgrade() -> None:
                 "balance_applied",
                 sa.Boolean(),
                 nullable=False,
-                server_default=sa.text("0"),
+                # PG-strictness: sa.text("0") emits DEFAULT 0, rejected by
+                # PostgreSQL for boolean columns; sa.false() renders
+                # DEFAULT false on PG and 0 on SQLite — behavior-neutral
+                # on SQLite, matching the model's default=False.
+                server_default=sa.false(),
             ),
         },
     )

@@ -110,3 +110,84 @@ BLOCKED — now at `0016_attendance_roster_link` boolean-default
 `DatatypeMismatch` (verbatim above). Cleanup: `pg_ctl stop` exit 0,
 `rm -rf /tmp/lp-pgdata /tmp/lp-venv` + logs; `pg_isready` no response,
 no postgres/uvicorn residue.
+
+---
+
+## Addendum 2026-11-25 — 0016 boolean-default fix applied, chain BLOCKED at third (non-boolean) defect
+
+Branch `agent/ops/pg-proof`, base `d4b9efe`. Exclusive paths only:
+`backend/migrations/versions/0016_attendance_roster_link.py`,
+`0017_forecast_costs.py`, `0029_schema_drift_fix.py` (same-pattern
+recurrences only), `backend/pg_enum_checkfirst_test_suite.py` (extended),
+this report. No app logic, rule packs, frontend, or other migration
+semantics touched. No push.
+
+### Fix (gate B — Boolean `server_default` PG-strictness)
+
+`0016` declared `sa.Column("resolved", sa.Boolean(), server_default=
+sa.text("0"))` — `DEFAULT 0`, rejected by PG for boolean columns. Model
+`WorkingTimeViolation.resolved` (`backend/app/models/time_attendance.py:95`)
+is `default=False`, so the fix is `server_default=sa.false()` (renders
+`DEFAULT false` on PG, `0` on SQLite — behavior-neutral on SQLite).
+
+Repo-wide grep of all `server_default` in `migrations/versions` found the
+same pattern recurring twice, fixed identically: `0017_forecast_costs`
+`excludes_statutory` (`sa.text("1")` → `sa.true()`, model
+`default=True`); `0029_schema_drift_fix` `balance_applied`
+(`sa.text("0")` → `sa.false()`, model `default=False`). All other
+`server_default="0"`/`text("1")` hits are Integer/Numeric/String columns
+(valid on PG) — untouched. Already-correct `sa.true()`/`sa.false()`
+spellings (`0035`, `0036`, `0037`, `0039`, `0003`) untouched.
+
+Regression: new static AST scan `test_no_boolean_int_server_default` in
+`pg_enum_checkfirst_test_suite.py` fails on any Boolean column with an
+int-like default (`0`/`1`/`"0"`/`"1"`/`text("0")`/`text("1")`); runs
+everywhere. Post-fix suite (no PG in env): 2 passed, 0 failed, 1 skipped.
+
+### Re-run (scratch PG 16.16, port 55433, fresh `initdb`, `upgrade head`)
+
+`0016` and `0017` are FIXED on PG — log shows `created table
+working_time_violations`, `created table forecast_costs`, chain proceeds
+`0016 -> 0017 -> ... -> 0022`. Then a THIRD, DIFFERENT defect stops the
+chain at `0022_audit_hash_chain` (`install_append_only`); per scope rules
+it was NOT fixed (different class + lives in app logic
+`backend/app/core/audit_chain.py`, outside exclusive paths).
+
+Verbatim error:
+
+```text
+psycopg2.errors.SyntaxError: syntax error at or near "NOT"
+LINE 1: CREATE TRIGGER IF NOT EXISTS audit_logs_no_update BEFORE UPD...
+[SQL: CREATE TRIGGER IF NOT EXISTS audit_logs_no_update BEFORE UPDATE ON audit_logs BEGIN SELECT RAISE(ABORT, 'audit_logs is append-only'); END]
+...
+sqlalchemy.exc.ProgrammingError: (psycopg2.errors.SyntaxError) syntax error at or near "NOT"
+```
+
+Cause (diagnosis only, no fix applied): `install_append_only`
+(`backend/app/core/audit_chain.py:498`, called from
+`0022_audit_hash_chain.py:121`) emits SQLite trigger syntax
+(`CREATE TRIGGER IF NOT EXISTS ... BEGIN SELECT RAISE(ABORT, ...)`),
+invalid on PostgreSQL (no `IF NOT EXISTS` on `CREATE TRIGGER`, no
+`RAISE(ABORT)` body — needs a `RETURNS trigger` function +
+`EXECUTE FUNCTION`). Valid on SQLite; broken on PG. Not the
+Boolean-default pattern, requires app-logic change — out of scope.
+`0029`'s `balance_applied` fix is therefore scan-gated but NOT yet
+PG-proven (chain dies at `0022` before reaching it). Steps after the
+blocker (seed+login smoke, backup/restore, downgrade/upgrade,
+spot-checks) not executed.
+
+### Regression (SQLite, behavior-neutrality)
+
+`leave_test_suite.py`: 100 passed, 0 failed. `security_test_suite.py`:
+2162 passed, 0 failed. `time_corrections_test_suite.py`: 63 passed,
+0 failed. `pg_enum_checkfirst_test_suite.py` (no PG in env): 2 passed,
+0 failed, 1 skipped.
+
+### Verdict
+
+Gate B Boolean defaults (`0016`, `0017`): FIXED on PG and regression-gated
+(`0029` same-fix applied, PG proof pending). Full PG proof: still
+BLOCKED — now at `0022_audit_hash_chain` SQLite-trigger-syntax
+`SyntaxError` (verbatim above). Cleanup: `pg_ctl stop` exit 0,
+`rm -rf /tmp/lp-pgdata /tmp/lp-venv` + logs; `pg_isready` no response,
+no postgres/uvicorn residue.

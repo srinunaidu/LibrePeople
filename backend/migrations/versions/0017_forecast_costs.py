@@ -44,7 +44,11 @@ def upgrade() -> None:
             sa.Column("end_date", sa.Date(), nullable=True),
             sa.Column("hourly_costs", sa.Text(), nullable=False),
             sa.Column("input_hash", sa.String(64), nullable=False),
-            sa.Column("excludes_statutory", sa.Boolean(), nullable=False, server_default=sa.text("1")),
+            # PG-strictness: Boolean defaults must be TRUE/FALSE, not 0/1
+            # (PostgreSQL rejects DEFAULT 1 for a boolean column).
+            # sa.true() renders DEFAULT true on PG and 1 on SQLite —
+            # behavior-neutral on SQLite, matching the model's default=True.
+            sa.Column("excludes_statutory", sa.Boolean(), nullable=False, server_default=sa.true()),
             sa.Column(
                 "created_by",
                 sa.Integer(),

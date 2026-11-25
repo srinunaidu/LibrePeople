@@ -124,6 +124,88 @@ def test_no_unconditional_enum_create_type() -> None:
     )
 
 
+def _bool_cols_with_int_default(path: Path) -> list[str]:
+    """Boolean columns whose server_default is an int-like literal.
+
+    PostgreSQL rejects ``DEFAULT 0``/``DEFAULT 1`` for a boolean column
+    (``column is of type boolean but default expression is of type
+    integer``) while SQLite silently coerces it, so the defect only
+    surfaces on the PG proof. The approved spellings are ``sa.false()`` /
+    ``sa.true()`` (or ``sa.text("false")`` / ``sa.text("true")``), which
+    render ``DEFAULT false`` / ``DEFAULT true`` on PG and stay
+    behavior-neutral on SQLite.
+    """
+    tree = ast.parse(path.read_text(), filename=str(path))
+    bad: list[str] = []
+
+    def _is_int_like(node: ast.AST) -> bool:
+        if isinstance(node, ast.Constant):
+            return node.value in (0, 1, "0", "1")
+        if isinstance(node, ast.Call):
+            func = node.func
+            name = ""
+            if isinstance(func, ast.Attribute):
+                name = func.attr
+            elif isinstance(func, ast.Name):
+                name = func.id
+            if name == "text" and len(node.args) == 1:
+                arg = node.args[0]
+                return isinstance(arg, ast.Constant) and arg.value in (
+                    0,
+                    1,
+                    "0",
+                    "1",
+                )
+        return False
+
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        name = ""
+        if isinstance(func, ast.Attribute):
+            name = func.attr
+        elif isinstance(func, ast.Name):
+            name = func.id
+        if name != "Column":
+            continue
+        has_bool = any(
+            (isinstance(a, ast.Attribute) and a.attr == "Boolean")
+            or (isinstance(a, ast.Name) and a.id == "Boolean")
+            or (
+                isinstance(a, ast.Call)
+                and (
+                    (isinstance(a.func, ast.Attribute) and a.func.attr == "Boolean")
+                    or (isinstance(a.func, ast.Name) and a.func.id == "Boolean")
+                )
+            )
+            for a in node.args
+        )
+        if not has_bool:
+            continue
+        for kw in node.keywords:
+            if kw.arg == "server_default" and _is_int_like(kw.value):
+                try:
+                    rendered = ast.unparse(kw.value)
+                except Exception:
+                    rendered = "<default>"
+                bad.append(f"{path.name}:{node.lineno} ({rendered})")
+    return bad
+
+
+def test_no_boolean_int_server_default() -> None:
+    """No Boolean column defaults to an integer literal in versions/*."""
+    versions = BACKEND_DIR / "migrations" / "versions"
+    offenders: list[str] = []
+    for path in sorted(versions.glob("*.py")):
+        offenders.extend(_bool_cols_with_int_default(path))
+    check(
+        "no Boolean server_default with integer/string-int default in migrations/versions",
+        not offenders,
+        f"int-like boolean default at: {', '.join(offenders)}" if offenders else "",
+    )
+
+
 def _pg_url() -> str | None:
     return os.environ.get("ALEMBIC_DATABASE_URL") or os.environ.get("PG_PROOF_URL")
 
@@ -175,6 +257,7 @@ def test_pg_upgrade_head_when_available() -> None:
 def main() -> int:
     print("pg enum checkfirst suite")
     test_no_unconditional_enum_create_type()
+    test_no_boolean_int_server_default()
     test_pg_upgrade_head_when_available()
     print(
         f"\n{RESULTS['pass']} passed, {RESULTS['fail']} failed, "
