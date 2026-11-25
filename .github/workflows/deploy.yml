@@ -1,19 +1,29 @@
-name: Deploy Karmathy to Oracle Cloud
+name: Deploy LibrePeople to Oracle Cloud
 
+# Manual-approval gate: this workflow NEVER runs automatically on push.
+# It starts only when an operator runs it by hand (workflow_dispatch) from
+# the chosen ref, and the `production` environment below must have
+# "Required reviewers" protection enabled in the repository settings, so a
+# second person approves before the SSH step executes. No hostnames are
+# invented here: the target host, user, key, repository URL and all secrets
+# come entirely from repository secrets / variables.
 on:
-  workflow_run:
-    workflows: ["CI"]
-    branches: [main]
-    types:
-      - completed
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Git ref to deploy (branch, tag, or SHA)"
+        required: false
+        default: "main"
 
 jobs:
   deploy:
-    if: github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
+    environment: production
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -25,10 +35,19 @@ jobs:
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
           script: |
-            cd Karmathy || git clone https://github.com/srinunaidu/Karmathy.git && cd Karmathy
-            git pull origin main
-            echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" > .env
-            echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
+            set -e
+            if [ ! -d LibrePeople/.git ]; then
+              git clone "${{ secrets.DEPLOY_REPO_URL }}" LibrePeople
+            fi
+            cd LibrePeople
+            git fetch origin
+            git checkout "${{ inputs.ref }}"
+            # Fast-forward when the ref is a branch; a tag/SHA stays detached.
+            git pull --ff-only || true
+            printf 'DATABASE_URL=%s\n' "${{ secrets.DATABASE_URL }}" > .env
+            printf 'SECRET_KEY=%s\n' "${{ secrets.SECRET_KEY }}" >> .env
+            printf 'FIELD_ENCRYPTION_KEYS=%s\n' "${{ secrets.FIELD_ENCRYPTION_KEYS }}" >> .env
+            printf 'FIELD_ENCRYPTION_ACTIVE_KEY_ID=%s\n' "${{ secrets.FIELD_ENCRYPTION_ACTIVE_KEY_ID }}" >> .env
             # The frontend container is the edge and binds :80. A host nginx
             # from an older cloud-init would hold that port and the deploy
             # would fail with "address already in use".

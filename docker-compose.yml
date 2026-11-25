@@ -3,16 +3,16 @@ version: "3.8"
 services:
   db:
     image: postgres:16-alpine
-    container_name: karmathy-db
+    container_name: librepeople-db
     restart: unless-stopped
     environment:
-      - POSTGRES_USER=${POSTGRES_USER:-karmathy}
+      - POSTGRES_USER=${POSTGRES_USER:-librepeople}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-change-me}
-      - POSTGRES_DB=${POSTGRES_DB:-karmathy}
+      - POSTGRES_DB=${POSTGRES_DB:-librepeople}
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-karmathy}"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-librepeople}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -20,7 +20,7 @@ services:
 
   backend:
     build: ./backend
-    container_name: karmathy-backend
+    container_name: librepeople-backend
     restart: unless-stopped
     ports:
       - "8000:8000"
@@ -39,7 +39,7 @@ services:
 
   frontend:
     build: ./frontend
-    container_name: karmathy-frontend
+    container_name: librepeople-frontend
     restart: unless-stopped
     ports:
       - "80:80"
@@ -48,7 +48,7 @@ services:
 
 networks:
   default:
-    name: karmathy-net
+    name: librepeople-net
 
 volumes:
   pgdata:

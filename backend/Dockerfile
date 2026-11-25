@@ -39,6 +39,16 @@ ENV MIGRATE_ON_STARTUP=false
 ENV PORT=8000
 EXPOSE 8000
 
+# Drop privileges: run the server as an unprivileged account. Everything above
+# (pip install into site-packages) needs root at build time; nothing at runtime
+# does — uvicorn binds $PORT (8000, no privilege needed) and migrations talk
+# to the database over TCP. debian-slim ships useradd/groupadd, so no apt and
+# no new packages are required. HOME points at /app (owned below) so no
+# library tries to write to a root-owned home directory.
+RUN groupadd -r appuser && useradd -r -g appuser appuser && chown -R appuser:appuser /app
+ENV HOME=/app
+USER appuser
+
 # Public liveness probe. /health is unauthenticated by design (platform
 # health check), so the container check needs no credentials. Python is
 # used instead of curl/wget because python:3.11-slim ships neither.
