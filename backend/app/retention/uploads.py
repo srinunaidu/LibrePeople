@@ -36,7 +36,7 @@ from app.core.observability import get_logger
 from app.imports.config import settings
 from app.models.imports import ImportDryRun, ImportStatus
 
-log = get_logger("karmathy.retention")
+log = get_logger("librepeople.retention")
 
 
 def retention_days() -> int:

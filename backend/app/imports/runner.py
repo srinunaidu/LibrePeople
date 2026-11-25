@@ -50,7 +50,7 @@ from app.imports.validation import ImportBounds
 from app.models.imports import ImportDryRun, ImportStatus
 from app.retention.uploads import expiry_from_now, purge_expired_uploads
 
-log = get_logger("karmathy.imports")
+log = get_logger("librepeople.imports")
 
 
 class ImportNotFound(Exception):

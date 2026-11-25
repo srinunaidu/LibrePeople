@@ -34,7 +34,7 @@ from abc import ABC, abstractmethod
 from app.core.config import settings
 from app.core.observability import get_logger
 
-log = get_logger("karmathy.storage")
+log = get_logger("librepeople.storage")
 
 #: The metadata key the checksum travels under.
 CHECKSUM_METADATA_KEY = "sha256"

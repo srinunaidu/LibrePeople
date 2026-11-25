@@ -50,7 +50,7 @@ def generate_totp_secret() -> str:
     return pyotp.random_base32()
 
 
-def totp_provisioning_uri(username: str, secret: str, issuer: str = "Karmathy") -> str:
+def totp_provisioning_uri(username: str, secret: str, issuer: str = "LibrePeople") -> str:
     """Build the otpauth:// provisioning URI for an authenticator app."""
     return pyotp.TOTP(secret).provisioning_uri(name=username, issuer_name=issuer)
 

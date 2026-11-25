@@ -61,7 +61,7 @@ from sqlalchemy import inspect
 
 from app.core.observability import get_logger
 
-log = get_logger("karmathy.migrations")
+log = get_logger("librepeople.migrations")
 
 #: The revision representing the inherited, pre-Alembic schema.
 BASELINE_REVISION = "0001_baseline"

@@ -49,7 +49,7 @@ from app.core.database import Base
 from app.core.errors import ApiError, ErrorCategory, conflict, concurrency_conflict
 from app.core.observability import get_logger
 
-log = get_logger("karmathy.idempotency")
+log = get_logger("librepeople.idempotency")
 
 
 class IdempotencyRecord(Base):

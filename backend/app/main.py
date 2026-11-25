@@ -185,7 +185,7 @@ def on_startup():
             run_pending_migrations()
         except Exception as exc:  # noqa: BLE001
             print(f"[startup] MIGRATION FAILED: {exc}")
-            logging.getLogger("karmathy.startup").exception(
+            logging.getLogger("librepeople.startup").exception(
                 "database migration failed at startup"
             )
         finally:
@@ -313,7 +313,7 @@ def on_shutdown():
 
 @app.get("/")
 def root():
-    return {"msg": "Karmathy Workforce Management API", "version": settings.VERSION}
+    return {"msg": "LibrePeople Workforce Management API", "version": settings.VERSION}
 
 
 def _document_path(path: str) -> Path | None:
@@ -407,7 +407,7 @@ def health_db(_: User = Depends(require_diagnostic_access)):
 
     from sqlalchemy import text
 
-    log = logging.getLogger("karmathy.health")
+    log = logging.getLogger("librepeople.health")
     # Oracle requires FROM DUAL for a bare `SELECT 1`; SQLite rejects the DUAL
     # table. Probe the dialect rather than hard-coding either dialect's syntax,
     # because a wrong probe makes this endpoint report an outage on a healthy
@@ -457,8 +457,8 @@ def health_schema(_: User = Depends(require_diagnostic_access)):
 
     from app.core.observability import get_logger
 
-    log = logging.getLogger("karmathy.health")
-    structured = get_logger("karmathy.health")
+    log = logging.getLogger("librepeople.health")
+    structured = get_logger("librepeople.health")
     try:
         from app.core.schema_drift import schema_drift_report
 
@@ -505,7 +505,7 @@ def health_storage(_: User = Depends(require_diagnostic_access)):
 
     from app.storage import get_storage
 
-    log = logging.getLogger("karmathy.health")
+    log = logging.getLogger("librepeople.health")
     storage = get_storage()
     info = {"backend": type(storage).__name__}
     key = "_diag/storage-probe.txt"

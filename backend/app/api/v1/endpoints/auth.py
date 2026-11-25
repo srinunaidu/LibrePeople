@@ -1212,7 +1212,7 @@ def impersonate(
     # Also log as impersonate_begin for break-glass-style trail consumers.
     import logging as _logging
 
-    _logging.getLogger("karmathy.auth").info(
+    _logging.getLogger("librepeople.auth").info(
         "impersonate actor=%s (%s) -> target=%s (%s)",
         actor.username,
         actor.id,

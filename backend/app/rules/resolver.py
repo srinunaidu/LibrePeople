@@ -53,7 +53,7 @@ from typing import Iterable, Optional
 from app.core.observability import get_logger
 from app.rules.loader import RulePack, RulePackLoadError, load_rule_pack
 
-log = get_logger("karmathy.rules.resolver")
+log = get_logger("librepeople.rules.resolver")
 
 #: The environment variable that names the rule-pack directory.
 PACK_DIR_ENV = "RULE_PACK_DIR"
