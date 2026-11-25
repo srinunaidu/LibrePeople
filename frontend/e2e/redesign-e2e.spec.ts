@@ -66,8 +66,10 @@ test.describe("redesign — unified sidebar & responsive", () => {
     }
 
     // Brand header — the brand mark links home (to /dashboard); its
-    // accessible name is the brand, not the word "home".
-    const brandLink = sidebar.getByRole("link", { name: /karmathy/i }).first()
+    // accessible name is the brand, not the word "home". Product identity
+    // was rebranded Karmathy -> LibrePeople (66b751d); the rail renders the
+    // tenant name with a "LibrePeople" fallback, never "Karmathy".
+    const brandLink = sidebar.getByRole("link", { name: /librepeople/i }).first()
     await expect(brandLink).toBeVisible()
     await expect(brandLink).toHaveAttribute("href", /\/dashboard\/?$/)
 
