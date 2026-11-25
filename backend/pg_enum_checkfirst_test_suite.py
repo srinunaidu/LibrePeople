@@ -27,6 +27,15 @@ Two tests:
    ``UndefinedFunction``; ``CAST(<col> AS TEXT)`` is portable and identical
    on SQLite. Runs everywhere, no PG needed.
 
+4. Static scan (gate A: 0044 version-stamp width) — (a) every revision /
+    down_revision id in migrations/versions fits within the widened
+    alembic_version.version_num length from env.py (Alembic auto-creates
+    VARCHAR(32) but ids reach 33 chars, e.g.
+    0044_forecasting_tenant_isolation — PG enforces the length and the stamp
+    UPDATE fails with StringDataRightTruncation while SQLite ignores it);
+    (b) env.py contains the create-if-missing wide version-table ensure
+    logic. Runs everywhere, no PG needed.
+
 Run:  python pg_enum_checkfirst_test_suite.py
 """
 import ast
@@ -293,6 +302,101 @@ def test_append_only_trigger_branches_on_dialect() -> None:
     )
 
 
+def _revision_ids_in_file(path: Path) -> list[str]:
+    """revision/down_revision string ids declared in one migration file.
+
+    Resolves module-level ``NAME = "..."`` constants first so files like
+    0018/0019 (``down_revision = DOWN_REVISION``) are covered; non-string
+    values (``None``) contribute no id.
+    """
+    tree = ast.parse(path.read_text(), filename=str(path))
+    consts: dict[str, str] = {}
+    for node in tree.body:
+        if (
+            isinstance(node, ast.Assign)
+            and len(node.targets) == 1
+            and isinstance(node.targets[0], ast.Name)
+            and isinstance(node.value, ast.Constant)
+            and isinstance(node.value.value, str)
+        ):
+            consts[node.targets[0].id] = node.value.value
+
+    def _resolve(node: ast.AST) -> list[str]:
+        if isinstance(node, ast.Constant):
+            return [node.value] if isinstance(node.value, str) else []
+        if isinstance(node, ast.Name):
+            return [consts[node.id]] if node.id in consts else []
+        if isinstance(node, (ast.Tuple, ast.List)):
+            ids: list[str] = []
+            for elt in node.elts:
+                ids.extend(_resolve(elt))
+            return ids
+        return []
+
+    ids: list[str] = []
+    for node in tree.body:
+        if (
+            isinstance(node, ast.Assign)
+            and len(node.targets) == 1
+            and isinstance(node.targets[0], ast.Name)
+            and node.targets[0].id in ("revision", "down_revision")
+        ):
+            ids.extend(_resolve(node.value))
+    return ids
+
+
+def _wide_version_length() -> int:
+    """Widened version_num length declared by migrations/env.py."""
+    import re
+
+    source = (BACKEND_DIR / "migrations" / "env.py").read_text()
+    match = re.search(r"WIDE_VERSION_NUM_LENGTH\s*=\s*(\d+)", source)
+    if not match:
+        raise AssertionError("env.py declares no WIDE_VERSION_NUM_LENGTH")
+    return int(match.group(1))
+
+
+def test_revision_ids_fit_wide_version_table() -> None:
+    """Every revision id fits the widened alembic_version.version_num."""
+    try:
+        width = _wide_version_length()
+    except AssertionError as exc:
+        check("revision ids fit widened version_num", False, str(exc))
+        return
+    offenders: list[str] = []
+    for path in sorted((BACKEND_DIR / "migrations" / "versions").glob("*.py")):
+        for rev_id in _revision_ids_in_file(path):
+            if len(rev_id) > width:
+                offenders.append(f"{path.name}:{rev_id} (len {len(rev_id)} > {width})")
+    check(
+        f"all revision/down_revision ids fit version_num({width})",
+        not offenders,
+        "; ".join(offenders),
+    )
+
+
+def test_env_ensures_wide_version_table() -> None:
+    """env.py pre-creates alembic_version wide, create-if-missing only."""
+    source = (BACKEND_DIR / "migrations" / "env.py").read_text()
+    problems: list[str] = []
+    for marker in (
+        "alembic_version",
+        "WIDE_VERSION_NUM_LENGTH",
+        "has_table",
+        "checkfirst",
+        "connection.commit()",
+    ):
+        if marker not in source:
+            problems.append(f"missing marker: {marker}")
+    if "String(WIDE_VERSION_NUM_LENGTH)" not in source and "String(255)" not in source:
+        problems.append("no wide String version_num column")
+    check(
+        "env.py ensures wide version table (create-if-missing, never alter)",
+        not problems,
+        "; ".join(problems),
+    )
+
+
 def _pg_url() -> str | None:
     return os.environ.get("ALEMBIC_DATABASE_URL") or os.environ.get("PG_PROOF_URL")
 
@@ -347,6 +451,8 @@ def main() -> int:
     test_no_boolean_int_server_default()
     test_no_bare_like_without_cast()
     test_append_only_trigger_branches_on_dialect()
+    test_revision_ids_fit_wide_version_table()
+    test_env_ensures_wide_version_table()
     test_pg_upgrade_head_when_available()
     print(
         f"\n{RESULTS['pass']} passed, {RESULTS['fail']} failed, "

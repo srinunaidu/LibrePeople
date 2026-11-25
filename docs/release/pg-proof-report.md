@@ -345,3 +345,61 @@ regression-gated. Full PG proof: still BLOCKED — now at
 (verbatim above). Cleanup: `pg_ctl stop` exit 0,
 `rm -rf /tmp/lp-pgdata /tmp/lp-venv` + logs; `pg_isready` no response,
 no postgres/uvicorn residue.
+
+## Addendum 2026-11-25 — 0044 version-stamp width fix applied, FULL PG PROOF PASSES
+
+Branch `agent/ops/pg-proof`, base `0c4d7fa`. Exclusive paths only:
+`backend/migrations/env.py` (version-table handling only),
+`backend/pg_enum_checkfirst_test_suite.py` (extended), this report. No
+revision id renamed, no app logic, migrations, rule packs, frontend touched.
+No push. Synthetic data only.
+
+### Fix (gate A — `alembic_version.version_num` truncation at 0044)
+
+Alembic auto-creates `alembic_version(version_num VARCHAR(32))`
+(`alembic/ddl/impl.py:169`, `Column("version_num", String(32))`) via
+`create(checkfirst=True)`, so a pre-existing table is reused untouched. Repo
+ids reach 33 chars (`0044_forecasting_tenant_isolation`, `0047_...`);
+SQLite ignores `VARCHAR` length, PG rejects the stamp with
+`StringDataRightTruncation`. `env.py` now calls `_ensure_wide_version_table`
+before `context.configure`: create-if-missing with generic `String(255)`
+(`WIDE_VERSION_NUM_LENGTH`; plain VARCHAR on every dialect, no PG-only
+syntax), existing tables never altered, ids never renamed. A
+`connection.commit()` follows the ensure — the inspection auto-begins a
+transaction, and Alembic treats an in-transaction connection as externally
+managed (`_in_external_transaction`) and never commits the run itself
+(caught on SQLite: schema persisted via pysqlite DDL auto-commit but the
+final stamp silently rolled back; on PG the whole run would roll back).
+
+Regression: two static tests — every `revision`/`down_revision` id in
+`versions/*.py` fits `WIDE_VERSION_NUM_LENGTH` (constants resolved, so
+0018/0019 covered); `env.py` contains the ensure markers incl.
+`connection.commit()`. Runs everywhere. Red to green: width 32 flags 0044
+(own revision + 0045's down_revision) and 0047; width 255 clean. Post-fix
+suite (no PG in env): 6 passed, 0 failed, 1 skipped.
+
+### Re-run (scratch PG 16.16, port 55433, fresh `initdb`, full proof, no new defect)
+
+`upgrade head` exit 0 (~3.4 s): `0043 -> 0044 -> ... -> 0047`, stamp
+`0047_expense_category_tenant_code` (33 chars), `version_num varchar(255)`.
+Schema: 110 tables, 136 FKs, 43 `tenant_id` columns. Seed smoke:
+`seed_admin` created SuperAdmin `pgproof`; uvicorn login 200 (JWT) and
+`/me` 200, server stopped. Backup/restore: `pg_dump -Fc` 0.49 s (364005
+bytes), drop/recreate/`pg_restore` 0.62 s exit 0; post-restore 110 tables,
+5 rows, version 0047, seed user present — counts match. Downgrade -1 →
+`0046_assets`; `upgrade head` → 0047, 110 tables.
+
+### Regression (SQLite, behavior-neutrality)
+
+`migration_test_suite.py`: 67 passed, 0 failed. `leave_test_suite.py`:
+100 passed, 0 failed. Fresh-SQLite smoke: wide table created + stamped
+0047; pre-existing narrow table left byte-identical, chain still advances.
+
+### Verdict
+
+Gate A version-stamp (0044/0047 33-char ids): FIXED on PG and
+regression-gated. Full PG proof: PASSES — upgrade head (0047), schema
+checks, seed+login smoke, backup/restore rehearsal, downgrade/upcycle.
+Cleanup: `pg_ctl stop` exit 0; `rm -rf /tmp/lp-pgdata /tmp/lp-venv` + dumps
++ logs + scratch DBs; `pg_isready` no response, no postgres/uvicorn
+residue, no stray files.
