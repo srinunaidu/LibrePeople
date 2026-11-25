@@ -64,6 +64,19 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] },
       testMatch: /responsive\.spec\.ts/,
     },
+    {
+      // Firefox cross-browser project (added for the Firefox E2E report).
+      // Mirrors `desktop` on Desktop Firefox; run with
+      // `--project=firefox-desktop` (+ `--project=firefox-responsive`).
+      name: "firefox-desktop",
+      use: { ...devices["Desktop Firefox"] },
+      testIgnore: /responsive\.spec\.ts/,
+    },
+    {
+      name: "firefox-responsive",
+      use: { ...devices["Desktop Firefox"] },
+      testMatch: /responsive\.spec\.ts/,
+    },
   ],
   webServer: [
     {
