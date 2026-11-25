@@ -485,7 +485,26 @@ def install_append_only(bind) -> None:
     for table in _APPEND_ONLY_TABLES:
         for operation in ("UPDATE", "DELETE"):
             trigger = f"{table}_no_{operation.lower()}"
-            if dialect == "oracle":
+            if dialect == "postgresql":
+                function = f"{trigger}_fn"
+                bind.execute(
+                    text(
+                        f"CREATE OR REPLACE FUNCTION {function}() "
+                        f"RETURNS trigger AS $$ BEGIN RAISE EXCEPTION "
+                        f"'{table} is append-only'; END; $$ LANGUAGE plpgsql"
+                    )
+                )
+                bind.execute(
+                    text(f"DROP TRIGGER IF EXISTS {trigger} ON {table}")
+                )
+                bind.execute(
+                    text(
+                        f"CREATE TRIGGER {trigger} "
+                        f"BEFORE {operation} ON {table} "
+                        f"FOR EACH ROW EXECUTE FUNCTION {function}()"
+                    )
+                )
+            elif dialect == "oracle":
                 bind.execute(
                     text(
                         f"CREATE OR REPLACE TRIGGER {trigger} "
@@ -511,7 +530,14 @@ def remove_append_only(bind) -> None:
     for table in _APPEND_ONLY_TABLES:
         for operation in ("UPDATE", "DELETE"):
             trigger = f"{table}_no_{operation.lower()}"
-            if dialect == "oracle":
+            if dialect == "postgresql":
+                bind.execute(
+                    text(f"DROP TRIGGER IF EXISTS {trigger} ON {table}")
+                )
+                bind.execute(
+                    text(f"DROP FUNCTION IF EXISTS {trigger}_fn()")
+                )
+            elif dialect == "oracle":
                 try:
                     bind.execute(text(f"DROP TRIGGER {trigger}"))
                 except Exception:  # noqa: BLE001 - absent on a partial upgrade

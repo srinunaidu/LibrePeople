@@ -191,3 +191,81 @@ BLOCKED — now at `0022_audit_hash_chain` SQLite-trigger-syntax
 `SyntaxError` (verbatim above). Cleanup: `pg_ctl stop` exit 0,
 `rm -rf /tmp/lp-pgdata /tmp/lp-venv` + logs; `pg_isready` no response,
 no postgres/uvicorn residue.
+
+---
+
+## Addendum 2026-11-25 — 0022 trigger-syntax fix applied, chain BLOCKED at fourth (non-trigger) defect
+
+Branch `agent/ops/pg-proof`, base `7e1d9c2`. Exclusive paths only:
+`backend/app/core/audit_chain.py` (`install_append_only` + same-file
+downgrade recurrence `remove_append_only`), `backend/
+pg_enum_checkfirst_test_suite.py` (extended), this report. Migration
+`0022` itself untouched. No other app logic, migrations, rule packs,
+frontend. No push. Synthetic data only.
+
+### Fix (gate A — append-only trigger PG syntax)
+
+`install_append_only` (`audit_chain.py:482`, called from
+`0022_audit_hash_chain.py:121`) emitted SQLite-only DDL on every
+non-Oracle dialect: `CREATE TRIGGER IF NOT EXISTS ... BEGIN SELECT
+RAISE(ABORT, ...)` — invalid on PG (no `IF NOT EXISTS` on
+`CREATE TRIGGER`, no `RAISE(ABORT)` body). Now dialect-aware:
+SQLite/Oracle branches byte-identical; `postgresql` branch emits
+`CREATE OR REPLACE FUNCTION <trigger>_fn() RETURNS trigger ...
+RAISE EXCEPTION ... LANGUAGE plpgsql` + `DROP TRIGGER IF EXISTS` +
+`CREATE TRIGGER ... BEFORE <op> ... FOR EACH ROW EXECUTE FUNCTION`.
+Downgrade `remove_append_only` kept consistent (same-file recurrence):
+PG drops the trigger then `DROP FUNCTION IF EXISTS <trigger>_fn()`.
+
+Repo-wide grep for other migration-reachable SQLite-only DDL emitters
+(`RAISE(ABORT`, `sqlite_master`, `CREATE TRIGGER`, backtick quoting)
+across `app/core` + `migrations`: the ONLY emitter is
+`install_append_only`; the one other `sqlite_master` hit is a test
+helper (`app/api/v1/endpoints/test_assets.py:529`), not migration DDL —
+untouched. No same-pattern recurrences remain.
+
+Regression: new static check
+`test_append_only_trigger_branches_on_dialect` in
+`pg_enum_checkfirst_test_suite.py` requires the PG markers
+(`CREATE OR REPLACE FUNCTION`, `RAISE EXCEPTION`, `EXECUTE FUNCTION`,
+`DROP TRIGGER IF EXISTS`, `DROP FUNCTION IF EXISTS`) while the SQLite
+spellings stay present. SQLite suites: `audit_test_suite.py` 29
+passed / 0 failed; `audit_chain_test_suite.py` 58 passed / 0 failed;
+`pg_enum_checkfirst_test_suite.py` (no PG in env) 3 passed / 0 failed /
+1 skipped.
+
+### Re-run (scratch PG 16.16, port 55433, fresh `initdb`, `upgrade head`)
+
+`0022` is FIXED on PG — log shows `[0022_audit_hash_chain] created
+audit_chain_head`, `chained 0 existing entries`, `seeded the head`,
+`append-only triggers installed on audit_logs`, chain proceeds
+`0022 -> 0023 -> ... -> 0033`. Then a FOURTH, DIFFERENT defect stops
+the chain at `lp_files_url_rewrite`; per scope rules it was NOT fixed.
+
+Verbatim error:
+
+```text
+psycopg2.errors.UndefinedFunction: operator does not exist: leaveledgerentrytype ~~ unknown
+LINE 3: WHERE leave_ledger.entry_type LIKE '/files/%'
+HINT:  No operator matches the given name and argument types. You might need to add explicit type casts.
+sqlalchemy.exc.ProgrammingError: (psycopg2.errors.UndefinedFunction) operator does not exist: leaveledgerentrytype ~~ unknown
+```
+
+Cause (diagnosis only, no fix applied): `lp_files_url_rewrite`
+calls `count_legacy_files_urls` (`app/storage/url_rewrite.py`), which
+issues `LIKE` against the native PG enum column
+`leave_ledger.entry_type`. PG defines no `~~` operator for a custom
+enum vs `unknown`; SQLite/Oracle compare it as text. Requires an
+app-logic/migration change (cast or text comparison) — out of scope.
+Single-transaction PG DDL rolled the scratch DB back to empty
+(`pg_tables` = 0, no `alembic_version`); steps after the blocker
+(seed+login smoke, backup/restore, downgrade/upgrade, spot-checks)
+not executed.
+
+### Verdict
+
+Gate A trigger syntax (`0022`): FIXED on PG and regression-gated.
+Full PG proof: still BLOCKED — now at `lp_files_url_rewrite`
+enum-`LIKE` `UndefinedFunction` (verbatim above). Cleanup:
+`pg_ctl stop` exit 0, `rm -rf /tmp/lp-pgdata /tmp/lp-venv` + logs;
+`pg_isready` no response, no postgres/uvicorn residue.

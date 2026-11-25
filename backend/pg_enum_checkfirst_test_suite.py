@@ -206,6 +206,39 @@ def test_no_boolean_int_server_default() -> None:
     )
 
 
+def test_append_only_trigger_branches_on_dialect() -> None:
+    """install/remove_append_only have a PostgreSQL branch (gate A: 0022)."""
+    path = BACKEND_DIR / "app" / "core" / "audit_chain.py"
+    try:
+        source = path.read_text()
+    except OSError as exc:
+        check("append-only trigger helper branches on dialect", False, str(exc))
+        return
+    problems: list[str] = []
+    if '"postgresql"' not in source and "'postgresql'" not in source:
+        problems.append("no postgresql dialect branch")
+    for marker in (
+        "RAISE EXCEPTION",
+        "EXECUTE FUNCTION",
+        "DROP TRIGGER IF EXISTS",
+        "DROP FUNCTION IF EXISTS",
+        "CREATE OR REPLACE FUNCTION",
+    ):
+        if marker not in source:
+            problems.append(f"missing PG marker: {marker}")
+    if "RAISE(ABORT" not in source:
+        problems.append("sqlite RAISE(ABORT) path altered")
+    if "CREATE TRIGGER IF NOT EXISTS" not in source:
+        problems.append("sqlite CREATE TRIGGER IF NOT EXISTS path altered")
+    if "CREATE TRIGGER IF NOT EXISTS audit_logs_no_update BEFORE UPDATE" in source:
+        pass  # sqlite path byte-identical guard lives in the audit suites
+    check(
+        "append-only trigger helper branches on dialect (sqlite + pg)",
+        not problems,
+        "; ".join(problems),
+    )
+
+
 def _pg_url() -> str | None:
     return os.environ.get("ALEMBIC_DATABASE_URL") or os.environ.get("PG_PROOF_URL")
 
@@ -258,6 +291,7 @@ def main() -> int:
     print("pg enum checkfirst suite")
     test_no_unconditional_enum_create_type()
     test_no_boolean_int_server_default()
+    test_append_only_trigger_branches_on_dialect()
     test_pg_upgrade_head_when_available()
     print(
         f"\n{RESULTS['pass']} passed, {RESULTS['fail']} failed, "
