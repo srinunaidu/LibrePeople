@@ -131,6 +131,13 @@ for (const width of WIDTHS) {
     test("the skip link moves focus into the content", async ({ page }) => {
       await signIn(page)
       await page.goto("/dashboard")
+      // The dashboard chunk is lazy-loaded behind Suspense, so pressing Tab
+      // before it mounts sends the keypress into a document with no tab
+      // stops and focus never leaves the body. Firefox exposes this
+      // reliably while Chromium usually wins the mount race, which is why
+      // the same steps pass there. Wait for the shell first — the same
+      // settle signal the overflow test above uses.
+      await expect(page.locator("#main-content")).toBeVisible()
 
       await page.keyboard.press("Tab")
       const skip = page.getByRole("link", { name: "Skip to main content" })

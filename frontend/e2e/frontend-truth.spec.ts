@@ -65,10 +65,12 @@ test.describe("screens tell the truth about the server's answer", () => {
 
     await page.getByRole("tab", { name: "Platform" }).click()
     await expect(page).toHaveURL(/\/platform\/integrations$/)
-    await expect(page.getByRole("tab", { name: "Platform" })).toHaveAttribute(
-      "aria-selected",
-      "true"
-    )
+    // No tab assertion here on purpose: this address renders IntegrationsHub,
+    // which has no tablist, so "Platform selected" can only pass before React
+    // commits the navigation — a race Firefox consistently loses. The click
+    // selecting the right tab is proven by the URL itself (each tab navigates
+    // to its own address), and tab-selection mechanics are covered above by
+    // the "Core HR" selected assertion on /platform.
     await expect(page.getByRole("heading", { name: "Webhooks", exact: true })).toBeVisible()
 
     // And the address is shareable: a reload lands on the same tab.
