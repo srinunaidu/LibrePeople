@@ -5,7 +5,7 @@ import { PageHero, PageBody } from "@/components/marketing/PageHero"
 const RESOURCES: { title: string; desc: string; to: string; icon: string; accent: string }[] = [
   { title: "API Documentation", desc: "Full REST API reference with all endpoints, schemas, and examples.", to: "/docs", icon: "▤", accent: "icon-tile-brand" },
   { title: "ROI Calculator", desc: "What does spreadsheet HR cost you? Estimate savings in 30 seconds.", to: "/pricing", icon: "₵", accent: "icon-tile-teal" },
-  { title: "Migration Checklist", desc: "5 steps from spreadsheet to Karmathy — download as PDF.", to: "/security", icon: "✓", accent: "icon-tile-green" },
+  { title: "Migration Checklist", desc: "5 steps from spreadsheet to LibrePeople — download as PDF.", to: "/security", icon: "✓", accent: "icon-tile-green" },
   { title: "Platform Modules", desc: "Overview of all 14 HCM modules.", to: "/platform", icon: "⬢", accent: "icon-tile-violet" },
   { title: "Security & Trust", desc: "Data isolation, audit trail, RBAC, encryption and compliance posture.", to: "/security", icon: "⛓", accent: "icon-tile-amber" },
   { title: "FAQ", desc: "Migration, payroll, integrations, data ownership and more.", to: "/faq", icon: "◎", accent: "icon-tile-slate" },
@@ -17,7 +17,7 @@ export default function Resources() {
       <PageHero
         kicker="Resources"
         title="Documentation, guides and references"
-        intro="Documentation, guides, and API references to help you get the most out of Karmathy."
+        intro="Documentation, guides, and API references to help you get the most out of LibrePeople."
       />
 
       <PageBody>

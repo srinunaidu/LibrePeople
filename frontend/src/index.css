@@ -870,7 +870,7 @@
     color: var(--fg-muted);
   }
 
-  /* ---- The Thread — Karmathy design phase T ------------------------------------------ */
+  /* ---- The Thread — LibrePeople design phase T ------------------------------------------ */
   .thread-svg-line {
     /* The thread draws once on load; reduced-motion users get the final state. */
     stroke: var(--brand-600);

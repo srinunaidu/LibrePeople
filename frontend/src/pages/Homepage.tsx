@@ -235,7 +235,7 @@ export default function Homepage() {
       {/* ══ BENTO FEATURES ═══════════════════════════════════════════════ */}
       <section className="max-w-container mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
         <div className="max-w-2xl mk-reveal">
-          <p className="mk-kicker">Why Karmathy</p>
+          <p className="mk-kicker">Why LibrePeople</p>
           <h2 className="mt-2 mk-h2 text-white">The complete HCM platform — without the enterprise freight</h2>
           <p className="mt-4 text-body text-fg-muted">
             Six outcomes buyers ask for. Each one maps to a real module you can try today — not a roadmap promise.

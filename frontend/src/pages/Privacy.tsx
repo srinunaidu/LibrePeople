@@ -8,7 +8,7 @@ const SECTIONS: { h: string; p: string }[] = [
   },
   {
     h: "How we use data",
-    p: "Data is used solely to provide and improve the Karmathy service, process payroll, manage leave, and generate reports for your organization.",
+    p: "Data is used solely to provide and improve the LibrePeople service, process payroll, manage leave, and generate reports for your organization.",
   },
   {
     h: "Data security",
@@ -22,7 +22,7 @@ export default function Privacy() {
       <PageHero
         kicker="Legal · Privacy"
         title="Privacy Policy"
-        intro="Karmathy is committed to protecting the privacy of your personal data. This policy describes how we collect, use, and safeguard your information."
+        intro="LibrePeople is committed to protecting the privacy of your personal data. This policy describes how we collect, use, and safeguard your information."
       />
 
       <PageBody narrow>

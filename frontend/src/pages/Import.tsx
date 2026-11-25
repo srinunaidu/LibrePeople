@@ -392,7 +392,7 @@ export default function ImportPage() {
       <div className="p-8">
         <PageHeader compact
           title="CSV Import"
-          description="Upload CSV files to import data into Karmathy. All imports require a dry run first."
+          description="Upload CSV files to import data into LibrePeople. All imports require a dry run first."
         />
 
         <div className="max-w-3xl space-y-6">

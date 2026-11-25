@@ -44,7 +44,7 @@ export default function FAQ() {
     <PublicLayout>
       {/* Hero */}
       <PageHero
-        kicker="Karmathy FAQ"
+        kicker="LibrePeople FAQ"
         align="center"
         title="Frequently asked questions"
         intro="Straight answers — including the trade-offs. If you don't see your question, talk to us."

@@ -54,7 +54,7 @@ export default function Compare() {
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             {Object.entries(COMPETITORS).map(([k, v]) => (
               <Link key={k} to={`/compare/${k}`} className="mk-ghost !py-2 !px-4 text-sm">
-                Karmathy vs {v.label}
+                LibrePeople vs {v.label}
               </Link>
             ))}
           </div>
@@ -67,7 +67,7 @@ export default function Compare() {
     return (
       <PublicLayout>
         <section className="max-w-container mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-6">
-          <h1 className="mk-h1 font-bold text-fg">Karmathy vs {label}</h1>
+          <h1 className="mk-h1 font-bold text-fg">LibrePeople vs {label}</h1>
           <p className="text-body text-fg-muted mt-3 max-w-2xl">
             A detailed, module-by-module comparison for {label} is being prepared with design partners.
           </p>
@@ -106,7 +106,7 @@ export default function Compare() {
       {/* Hero */}
       <PageHero
         kicker="Comparison"
-        title={<>Karmathy <span className="mk-gradient-blue">vs {label}</span></>}
+        title={<>LibrePeople <span className="mk-gradient-blue">vs {label}</span></>}
         intro="Two modern HR platforms — but only one covers the full lifecycle without add-ons and partners."
       />
 
@@ -131,7 +131,7 @@ export default function Compare() {
               <thead>
                 <tr>
                   <th>Module</th>
-                  <th>Karmathy</th>
+                  <th>LibrePeople</th>
                   <th>{label}</th>
                   <th>Notes</th>
                 </tr>
@@ -167,7 +167,7 @@ export default function Compare() {
               <strong>Export from {label}</strong> — download employees, time-off balances and documents via CSV or API.
             </li>
             <li>
-              <strong>Import into Karmathy</strong> — use the CSV import wizard (or the bulk API) for all entities; validation catches missing fields before cutover.
+              <strong>Import into LibrePeople</strong> — use the CSV import wizard (or the bulk API) for all entities; validation catches missing fields before cutover.
             </li>
             <li>
               <strong>Cutover plan</strong> — run both systems in parallel for one pay cycle, reconcile, then switch. Most teams complete migration in under 2 weeks.
@@ -197,7 +197,7 @@ export default function Compare() {
       {/* CTA */}
       <section className="max-w-container mx-auto px-4 sm:px-6 lg:px-8 pb-12">
         <div className="mk-card mk-card-flat p-6 md:p-8 text-center mk-reveal">
-          <h2 className="mk-h2 font-semibold text-fg">See Karmathy in action</h2>
+          <h2 className="mk-h2 font-semibold text-fg">See LibrePeople in action</h2>
           <p className="text-body-sm text-fg-muted mt-2">A 20-minute walkthrough tailored to your team.</p>
           <Link to="/contact" className="mk-cta mt-4">
             Request a demo →

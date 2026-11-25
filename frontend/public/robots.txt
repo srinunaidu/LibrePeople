@@ -1,4 +1,4 @@
-# Karmathy — Human Capital Management platform
+# LibrePeople — Human Capital Management platform
 # The authenticated application is not intended for search indexing;
 # only the public marketing pages should appear in search results.
 User-agent: *

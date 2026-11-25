@@ -32,7 +32,7 @@ type Preset = {
 const PRESETS: Preset[] = [
   {
     id: "default",
-    name: "Karmathy Default",
+    name: "LibrePeople Default",
     tagline: "Blue · clean · balanced",
     vars: {
       "--brand-600": "#2563eb", "--brand-700": "#1d4ed8", "--brand-100": "#dbeafe", "--brand-soft": "#eff6ff",

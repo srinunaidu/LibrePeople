@@ -345,7 +345,7 @@ export function WorkspaceRail() {
   const navigate = useNavigate()
   const tenantNav = useTenantNav()
   const { tenant } = useTenant()
-  const brandName = tenant?.name || "Karmathy"
+  const brandName = tenant?.name || "LibrePeople"
   const [adminOpen, setAdminOpen] = useState(false)
   // Admin routes are global, never tenant-prefixed — use bare path
   const navTo = (p: string) => (p.startsWith("/admin") ? p : tenantNav.to(p))

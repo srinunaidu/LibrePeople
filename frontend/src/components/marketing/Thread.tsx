@@ -1,7 +1,7 @@
 import { THREAD_STAGES, type ThreadStage } from "@/lib/designSystem"
 
 /**
- * The Thread — Karmathy's signature design element (Phase T).
+ * The Thread — LibrePeople's signature design element (Phase T).
  *
  * One continuous line of lifecycle nodes. The hero variant draws the full
  * thread across the page on load; the compact variant marks the module the

@@ -20,7 +20,7 @@ export default function Industries() {
       <div className="max-w-4xl">
         <h1 className="mk-h1 text-fg mb-2">Industries</h1>
         <p className="text-body text-fg-muted mb-8">
-          Karmathy adapts to the unique workforce needs of every industry.
+          LibrePeople adapts to the unique workforce needs of every industry.
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {INDUSTRIES.map((ind) => (
