@@ -102,7 +102,13 @@ def upgrade() -> None:
                 nullable=True,
                 server_default=sa.text("CURRENT_TIMESTAMP"),
             ),
-            sa.Column("resolved", sa.Boolean(), nullable=True, server_default=sa.text("0")),
+            # PG-strictness: Boolean defaults must be TRUE/FALSE, not 0/1.
+            # sa.text("0") emits DEFAULT 0, which PostgreSQL rejects for a
+            # boolean column ("column is of type boolean but default
+            # expression is of type integer"). sa.false() renders DEFAULT
+            # false on PG and 0 on SQLite — behavior-neutral on SQLite,
+            # matching the model's default=False (unresolved).
+            sa.Column("resolved", sa.Boolean(), nullable=True, server_default=sa.false()),
             sa.CheckConstraint(
                 "kind IN ('early_arrival','late_arrival','early_departure',"
                 "'late_departure','missing_entry','extra_entry')",

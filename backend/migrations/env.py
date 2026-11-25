@@ -91,6 +91,50 @@ def _database_url() -> str:
     )
 
 
+#: Width of the pre-created ``alembic_version.version_num`` column. Alembic
+#: auto-creates ``alembic_version(version_num VARCHAR(32))`` (see
+#: ``alembic/ddl/impl.py``: ``Column("version_num", String(32))``), but repo
+#: revision ids reach 33 characters (``0044_forecasting_tenant_isolation``,
+#: also ``0047_expense_category_tenant_code``). SQLite ignores VARCHAR
+#: lengths so the stamp fits; PostgreSQL enforces it and the stamp UPDATE
+#: fails with ``StringDataRightTruncation``. 255 is generic ``String`` (plain
+#: VARCHAR/VARCHAR2 on every dialect — no PG-only syntax), so this is
+#: behavior-neutral on SQLite and Oracle.
+WIDE_VERSION_NUM_LENGTH = 255
+
+
+def _ensure_wide_version_table(connection) -> None:
+    """Create ``alembic_version`` with a wide ``version_num`` if missing.
+
+    Alembic's ``MigrationContext._ensure_version_table`` issues
+    ``create(checkfirst=True)``, so a pre-existing table is reused untouched:
+    existing deployments (already stamped with the narrow table) are never
+    altered. Only a database with no version table at all gets the wide one,
+    which Alembic then reuses instead of auto-creating ``VARCHAR(32)``.
+    Revision ids are never renamed (existing SQLite stamps must keep
+    matching), so widening the column is the only safe fix.
+    """
+    from sqlalchemy import (
+        Column,
+        MetaData,
+        PrimaryKeyConstraint,
+        String,
+        Table,
+    )
+    from sqlalchemy import inspect as sa_inspect
+
+    if sa_inspect(connection).has_table("alembic_version"):
+        return
+    Table(
+        "alembic_version",
+        MetaData(),
+        Column("version_num", String(WIDE_VERSION_NUM_LENGTH), nullable=False),
+        # Same primary-key name Alembic itself uses
+        # (``f"{version_table}_pkc"`` in ``alembic/ddl/impl.py``).
+        PrimaryKeyConstraint("version_num", name="alembic_version_pkc"),
+    ).create(connection)
+
+
 def run_migrations_offline() -> None:
     """Emit SQL to stdout without connecting."""
     context.configure(
@@ -122,6 +166,19 @@ def run_migrations_online() -> None:
         connectable = engine
 
     with connectable.connect() as connection:
+        # Pre-create the version table wide (create-if-missing only; existing
+        # tables are left untouched) so Alembic reuses it instead of
+        # auto-creating VARCHAR(32). See _ensure_wide_version_table. The
+        # explicit commit returns the connection to a non-transactional
+        # state: the inspection above auto-begins a transaction, and Alembic
+        # treats an already-in-transaction connection as externally managed
+        # (MigrationContext._in_external_transaction) and then never commits
+        # the migration run itself — on SQLite the final version stamp is
+        # silently rolled back while the DDL persists (psqlite implicitly
+        # commits DDL), and on PostgreSQL the whole run would roll back.
+        _ensure_wide_version_table(connection)
+        if connection.in_transaction():
+            connection.commit()
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
