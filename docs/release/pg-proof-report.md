@@ -269,3 +269,79 @@ Full PG proof: still BLOCKED — now at `lp_files_url_rewrite`
 enum-`LIKE` `UndefinedFunction` (verbatim above). Cleanup:
 `pg_ctl stop` exit 0, `rm -rf /tmp/lp-pgdata /tmp/lp-venv` + logs;
 `pg_isready` no response, no postgres/uvicorn residue.
+
+---
+
+## Addendum 2026-11-25 — lp_files_url_rewrite enum-LIKE fix applied, chain BLOCKED at fifth (non-LIKE) defect
+
+Branch `agent/ops/pg-proof`, base `4020b2e`. Exclusive paths only:
+`backend/migrations/versions/lp_files_url_rewrite.py`,
+`backend/pg_enum_checkfirst_test_suite.py` (extended), this report.
+`app/storage/url_rewrite.py` read-only-checked, NOT edited (see follow-up
+below). No other app code, migrations, rule packs, frontend. No push.
+Synthetic data only.
+
+### Fix (gate A — native-enum `LIKE` in `lp_files_url_rewrite`)
+
+On PG a reflected native-enum column (e.g. `leave_ledger.entry_type`) is a
+`String` subclass, so the shared helper's bare `column.like(...)` rendered
+`<enumtype> ~~ unknown` → `UndefinedFunction`. The migration no longer
+calls the app helpers' SQL emitters: it imports ONLY `OLD_PREFIX` /
+`NEW_PREFIX` and emits its own SQL with portable `CAST(<col> AS TEXT)` in
+every `LIKE` predicate (never the PG-only `::` operator — SQLite behavior
+identical). A per-column count runs first, so an enum column (count always
+0) never reaches the `func.replace(<enum-col>, ...)` UPDATE PG could not
+resolve. Same rows rewritten; idempotent; downgrade mirrors.
+
+Follow-up required (out of scope, NOT fixed): `app/storage/url_rewrite.py:45`
+and `:79` still issue bare `column.like(...)` — any PG caller of
+`rewrite_prefix`/`count_legacy_files_urls` (e.g. `scripts/verify_files_urls.py`)
+hits the same `UndefinedFunction`. Needs a separate app-logic follow-up.
+
+Regression: new static scan `test_no_bare_like_without_cast` in
+`pg_enum_checkfirst_test_suite.py` fails on any `.like()`/`.ilike()`
+without a `cast()` receiver across `versions/*.py` (string-literal SQL such
+as `0030`'s Oracle-only `REGEXP_LIKE` untouched); runs everywhere. Red to
+green: bare `column.like(...)` flagged, `cast(column, Text).like(...)`
+clean; post-fix suite (no PG in env): 4 passed, 0 failed, 1 skipped.
+
+### Re-run (scratch PG 16.16, port 55433, fresh `initdb`, `upgrade head`, twice)
+
+`lp_files_url_rewrite` is FIXED on PG — log shows
+`0033 -> lp_files_url_rewrite -> 0034_pg_foundations` with
+`[lp_files_url_rewrite] no stored /files/ URLs found; nothing to rewrite`,
+no `UndefinedFunction`, chain proceeds `0034 -> ... -> 0043`. Then a FIFTH,
+DIFFERENT defect stops the chain at `0044_forecasting_tenant_isolation`;
+per scope rules it was NOT fixed.
+
+Verbatim error:
+
+```text
+psycopg2.errors.StringDataRightTruncation: value too long for type character varying(32)
+sqlalchemy.exc.DataError: (psycopg2.errors.StringDataRightTruncation) value too long for type character varying(32)
+[SQL: UPDATE alembic_version SET version_num='0044_forecasting_tenant_isolation' WHERE alembic_version.version_num = '0043_integrity_expand']
+```
+
+Cause (diagnosis only, no fix applied): Alembic's `alembic_version.version_num`
+is `VARCHAR(32)`; the revision id `0044_forecasting_tenant_isolation` is 33
+characters. SQLite does not enforce `VARCHAR` length; PG rejects the stamp.
+Different class (version stamping, not enum-`LIKE`) and different migration
+(`0044`, outside exclusive paths) — out of scope. Single-transaction PG DDL
+rolled the scratch DB back to empty (`pg_tables` = 0, no `alembic_version`,
+verified via `psql`); steps after the blocker (seed+login smoke,
+backup/restore, downgrade/upgrade, spot-checks) not executed.
+
+### Regression (SQLite, behavior-neutrality)
+
+`leave_test_suite.py`: 100 passed, 0 failed. `security_test_suite.py`: 2162
+passed, 0 failed. `pg_enum_checkfirst_test_suite.py` (no PG in env):
+4 passed, 0 failed, 1 skipped.
+
+### Verdict
+
+Gate A enum-`LIKE` (`lp_files_url_rewrite`): FIXED on PG and
+regression-gated. Full PG proof: still BLOCKED — now at
+`0044_forecasting_tenant_isolation` version-id `StringDataRightTruncation`
+(verbatim above). Cleanup: `pg_ctl stop` exit 0,
+`rm -rf /tmp/lp-pgdata /tmp/lp-venv` + logs; `pg_isready` no response,
+no postgres/uvicorn residue.

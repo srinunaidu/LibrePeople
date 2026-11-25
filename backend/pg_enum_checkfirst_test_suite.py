@@ -13,13 +13,19 @@ migration declares ``create_type=False`` and is created idempotently with
 ``.create(bind, checkfirst=True)``.
 
 Two tests:
-
 1. **Static scan** — parses every file in ``migrations/versions`` and fails
    if any ``sa.Enum``/``postgresql.ENUM`` with a ``name=`` (i.e. a real PG
    native type) lacks ``create_type=False``. Runs everywhere, no PG needed.
 2. **PG-gated chain** — upgrades a scratch PostgreSQL database to head.
    Runs only when ``ALEMBIC_DATABASE_URL`` (or ``PG_PROOF_URL``) points at a
    reachable PostgreSQL; otherwise SKIPS with a reason and never fails.
+3. **Static scan (gate A: lp_files_url_rewrite enum-LIKE)** — parses every
+   file in ``migrations/versions`` and fails on any bare ``.like(...)`` /
+   ``.ilike(...)`` whose receiver is not a ``cast(...)`` call. On PG a
+   reflected native-enum column is a ``String`` subclass, so a bare
+   ``<enum-col> LIKE`` renders ``<enumtype> ~~ unknown`` and PG raises
+   ``UndefinedFunction``; ``CAST(<col> AS TEXT)`` is portable and identical
+   on SQLite. Runs everywhere, no PG needed.
 
 Run:  python pg_enum_checkfirst_test_suite.py
 """
@@ -206,6 +212,54 @@ def test_no_boolean_int_server_default() -> None:
     )
 
 
+def _bare_like_without_cast(path: Path) -> list[str]:
+    """``.like()``/``.ilike()`` calls in one file not wrapped in ``cast()``.
+
+    On PostgreSQL a reflected native-enum column is a ``String`` subclass,
+    so ``<enum-col>.like(...)`` renders ``<enumtype> ~~ unknown`` and PG
+    raises ``UndefinedFunction`` (SQLite compares it as text). The approved
+    spelling is ``cast(column, Text).like(...)`` — portable ``CAST()``,
+    never the PG-only ``::`` operator — which is behavior-neutral on
+    SQLite. String-literal SQL (e.g. an Oracle-only ``REGEXP_LIKE`` check
+    constraint) is not a method call and is never flagged.
+    """
+    tree = ast.parse(path.read_text(), filename=str(path))
+    bad: list[str] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        if not (
+            isinstance(func, ast.Attribute) and func.attr in ("like", "ilike")
+        ):
+            continue
+        receiver = func.value
+        if isinstance(receiver, ast.Call):
+            recv_func = receiver.func
+            recv_name = ""
+            if isinstance(recv_func, ast.Attribute):
+                recv_name = recv_func.attr
+            elif isinstance(recv_func, ast.Name):
+                recv_name = recv_func.id
+            if recv_name == "cast":
+                continue
+        bad.append(f"{path.name}:{node.lineno}")
+    return bad
+
+
+def test_no_bare_like_without_cast() -> None:
+    """No bare ``.like()``/``.ilike()`` without ``cast()`` in versions/*."""
+    versions = BACKEND_DIR / "migrations" / "versions"
+    offenders: list[str] = []
+    for path in sorted(versions.glob("*.py")):
+        offenders.extend(_bare_like_without_cast(path))
+    check(
+        "no bare .like()/.ilike() without cast() in migrations/versions",
+        not offenders,
+        f"bare LIKE without CAST at: {', '.join(offenders)}" if offenders else "",
+    )
+
+
 def test_append_only_trigger_branches_on_dialect() -> None:
     """install/remove_append_only have a PostgreSQL branch (gate A: 0022)."""
     path = BACKEND_DIR / "app" / "core" / "audit_chain.py"
@@ -291,6 +345,7 @@ def main() -> int:
     print("pg enum checkfirst suite")
     test_no_unconditional_enum_create_type()
     test_no_boolean_int_server_default()
+    test_no_bare_like_without_cast()
     test_append_only_trigger_branches_on_dialect()
     test_pg_upgrade_head_when_available()
     print(
