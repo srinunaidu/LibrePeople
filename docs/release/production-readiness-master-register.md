@@ -1,9 +1,9 @@
 # Production Readiness Master Register (§14 gates)
 
-- HEAD: `cdd93f8` (merge agent/ops/pg-proof), branch `main` (base `5289fb6`).
-- Status roll-up: **NOT READY** — payroll/compliance verifier sign-off outstanding; docker/PG/browsers absent so several gates are NOT TESTED.
+- HEAD: `de4e073` (register; merge `cdd93f8` of pg-proof, base `5289fb6`).
+- Status roll-up: **NOT READY** — payroll/verifier sign-off outstanding; docker/browsers absent so deployment/browser/perf gates NOT TESTED; PG + backup PASS (scratch scope).
 - Rule: a gate marked BLOCKED or NOT TESTED is never upgraded. Only the validator may change status.
-- Standing evidence (this programme, carried, not re-run here): suites **2162 / 37 / 30 / 29 / 251 / 80**, verify **EXIT 0**, secret scan **clean**, sqlite round-trip **exit 0**; **docker / PostgreSQL / browsers absent** in this environment.
+- Standing evidence (carried programme evidence, not re-run here — see gate rows for commit refs): suites **2162 / 37 / 30 / 29 / 251 / 80**, verify **EXIT 0**, secret scan **clean**, sqlite round-trip **exit 0**; **docker / browsers absent** in this environment; PG via scratch proof in `docs/release/pg-proof-report.md` (merge `cdd93f8`).
 
 | §14 gate | Owner | Evidence (commit / SHA / counts) | Acceptance criteria | Status | Next action |
 |---|---|---|---|---|---|
