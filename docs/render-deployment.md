@@ -4,6 +4,84 @@ Dated, append-only record of Render testing-deploy observations.
 (Karmathy-era history lives in `docs/DEPLOYMENT.md`; this file starts
 with the LibrePeople `librepeople-backend` service.)
 
+## 2026-11-25 — env flip + redeploy dep-dc3inbou01pc73eor9k0 LIVE: seed ran, HR/ESS provisioned, smoke green
+
+- Branch: `agent/ops/render-bootstrap` from `072c86c`.
+- Env change (Render API, redacted): `PUT
+  /services/srv-dc3g9q4ipgvc738jo7ug/env-vars/MIGRATE_ON_STARTUP`
+  `{"value":"true"}` → 200. Only that var touched. The edit alone did
+  **not** redeploy (dashboard env edits via API don't restart the
+  service), so triggered `POST /services/.../deploys`
+  `{"clearCache":"do_not_clear"}` → `dep-dc3inbou01pc73eor9k0`
+  (`build_in_progress`), `live` 18:42:22Z, commit `072c86c` — not stale.
+- Startup logs (verbatim): `[migrate] Database is now at
+  0048_mfa_secret_envelope` (18:41:31Z, no-op) and `[startup] Seeded
+  initial SuperAdmin 'admin'. The account must change its password at
+  first sign-in.` (18:42:23Z). No `already-exists` (fresh DB).
+- Bootstrap flow (all secrets env-only, none logged): admin login 200 →
+  `POST /password` rotation 200 (fresh pair) → MFA enroll+confirm 200 →
+  created `hr.synthetic` (HR, id 2, 201) and `ess.synthetic`
+  (Associate, id 3, 201). Note: `.test` emails rejected by validator;
+  `@example.com` used.
+
+### Smoke table
+
+| Check | Result |
+|---|---|
+| `GET /health` → 200 | pass, 0.2 s |
+| `GET /health/db` (admin token) | 200, 0.5 s — `current_revision == head_revision == 0048_mfa_secret_envelope`, `up_to_date: true` |
+| Login seeded admin (post-rotation) | 200 + JWT, 2.0 s |
+| `GET /api/v1/employees` (admin token) | 200, 0.3 s |
+| Login `ess.synthetic` | 200 + JWT, 1.8 s |
+| `GET /api/v1/employees` (ess token) | 200, 0.2 s |
+| `GET /api/v1/auth/users` (ess token) | 403 (correctly refused) |
+| Frontend `/` | 200, 0.4 s |
+
+### Gaps / costs
+
+- Cost: $0 (free tier; one rebuild).
+- `ADMIN_INITIAL_PASSWORD`: **left set** — portals need provisioning next;
+  rotation only after Admin/ESS accounts verified working.
+- Still open: R2 vars absent; `JOB_WORKER_ENABLED` value uninspected; no
+  custom domains (default `*.onrender.com` TLS).
+
+## 2026-11-25 — deploy dep-dc3ihvs9v7es7388mhe0 LIVE @ 072c86c BUT seed still off (dashboard env overrides render.yaml)
+
+- Branch: `agent/ops/render-bootstrap` from `072c86c` (origin/main).
+  Deploy `dep-dc3ihvs9v7es7388mhe0`, created `18:29:19Z`, `live`
+  `18:30:56Z`. Commit built: `072c86c` — matches. **Not stale.**
+- Startup logs (verbatim): `[startup] MIGRATE_ON_STARTUP is disabled;
+  skipping migrations.` (18:30:51Z) then worker start, startup complete.
+  No seed line; no `Seeded initial SuperAdmin` / `already-exists`.
+  Migration no-op confirmed instead via CMD:
+  `[migrate] Database is now at 0048_mfa_secret_envelope` (18:30:02Z).
+- Root cause: Render dashboard env still holds `MIGRATE_ON_STARTUP=false`
+  (verified via API); dashboard-set values override `render.yaml`, so the
+  `71c11e9` blueprint change did not take effect. **Lead action: flip the
+  variable in the dashboard (or Blueprint-sync) — that edit redeploys by
+  itself.** Untouched here (no dashboard writes, no redeploy from this agent).
+- Authenticated smoke blocked again: no users exist (nothing has ever
+  seeded this DB). HR-admin account creation therefore pending bootstrap.
+
+### Smoke table
+
+| Check | Result |
+|---|---|
+| `GET /health` → 200 | pass, 0.2 s |
+| Migration `current == head` incl. `0048` | pass via logs (CMD no-op at 0048); `GET /health/db` 401-gated |
+| `POST /api/v1/auth/login` | 401 (zero users; generic no-enumeration response) |
+| `GET /api/v1/employees` (no token) | 401 (auth-gated) |
+| Frontend `/` | 200, 0.5 s |
+| Synthetic HR-admin account | pending bootstrap (needs SuperAdmin token) |
+
+### Gaps / costs
+
+- Cost: $0 (free tier).
+- `ADMIN_INITIAL_PASSWORD`: **left set** — portals need provisioning next;
+  rotation happens only after Admin/ESS accounts are verified working.
+- Still open: R2 vars absent; `JOB_WORKER_ENABLED` value uninspected; no
+  custom domains (default `*.onrender.com` TLS).
+
 ## 2026-11-26 — admin recovery via Neon least-privilege role + E2E provisioning complete
 
 - Branch: `agent/ops/admin-recovery` from `072c86c`. No code/migration changes.
