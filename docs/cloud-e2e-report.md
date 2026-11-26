@@ -330,3 +330,46 @@ no fabricated ids. Login budget respected (no 429/lockout signals).
 SuperAdmin workspace list (no such synthetic); exit-interview detail UI;
 hard deletes; file bytes; payslip maths; responsive sweep. No new
 product defects filed this round.
+
+---
+
+## Round 7 — responsive sweep on live 5945b9e (2026-11-26)
+
+Branch `agent/qa/cloud-responsive` from main `5945b9e`. Deployed frontend
+verified live on `5945b9e` before testing (Render deploys API). New spec
+`frontend/e2e/cloud/cloud-responsive.spec.ts` (3 tests, 2 logins total —
+one associate, one HR — viewport looped in-test, no state files).
+
+**Full cloud suite: 35 passed / 0 failed / 0 skipped, cloud-chromium
+only** (32 carried + 3 responsive).
+
+| Width | login | dashboard (assoc+HR) | people | leave | expenses | ess | nav pattern |
+|---|---|---|---|---|---|---|---|
+| 360 | fit | fit | fit | fit | fit | fit | sidebar hidden, drawer trigger visible, bottom tab bar present |
+| 768 | fit | fit | fit | fit | fit | fit | sidebar hidden, drawer trigger visible |
+| 1024 | fit | fit | fit | fit | fit | fit | sidebar visible, drawer trigger hidden |
+| 1440 | fit | fit | fit | fit | fit | fit | sidebar visible, drawer trigger hidden |
+
+"Fit" = `scrollWidth <= innerWidth + 1px`, zero failures at every
+width × page. Primaries hold at 360px: Sign in, drawer trigger, New
+claim (both roles), Add employee (HR) — all visible + enabled. No tap-
+target overlaps in scrolling content.
+
+### Scanner fix, not a product defect (spec-only, committed)
+
+First run flagged one 360px overlap: directory row button vs the `Time`
+bottom-nav item (827px²). Diagnosis (live geometry, no extra
+assertions): the bottom nav is `position: fixed` (`MobileBottomNav`,
+`mobile-bottom-nav.tsx:23`, `z-[1100] lg:hidden`) and `main` reserves
+`pb-20` (`Layout.tsx:170`), so rows scroll clear — flagging scrolled-
+under fixed chrome would fail every scrollable page. The scan now
+excludes `position: fixed` subtrees (designed chrome); genuine
+scrolling-content overlaps still fail. Re-ran once per the flake rule:
+green, no transients observed.
+
+### NOT TESTED remainder (carried over)
+
+SuperAdmin workspace list; exit-interview detail UI; hard deletes; file
+bytes; payslip maths. No new product defects filed this round.
+Login budget respected (2 spec logins + 1 diagnostic login, all
+successful; zero 429/lockout signals).
