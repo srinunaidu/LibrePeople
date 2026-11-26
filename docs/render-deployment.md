@@ -4,6 +4,20 @@ Dated, append-only record of Render testing-deploy observations.
 (Karmathy-era history lives in `docs/DEPLOYMENT.md`; this file starts
 with the LibrePeople `librepeople-backend` service.)
 
+## 2026-11-26 — credential rotation: new admin + ESS passwords, custody updated
+
+- Branch: `agent/ops/password-rotation` from `76df99b`. No code changes.
+- Rotated via API as admin: own password via `POST /password` (200);
+  `ess.synthetic` (id 3) via `POST /users/{id}/password` (200, account
+  left must-change per endpoint design — login unaffected).
+- Verification: fresh admin login 200; fresh `ess.synthetic` login 200
+  (1 attempt each; no lockout signals). `BOOTSTRAP_ADMIN_PASSWORD` PUT
+  200 to the new admin password; all 14 `E2E_*` vars untouched;
+  `ADMIN_INITIAL_PASSWORD` still absent.
+- Custody unchanged: Render env remains the documented secret store;
+  values live only here and in this report to the owner (never
+  committed, never logged elsewhere). In-memory secrets shredded.
+
 ## 2026-11-26 — bootstrap secret rotated: ADMIN_INITIAL_PASSWORD deleted, app independent
 
 - Branch: `agent/ops/secret-rotation` from `eb86f87`.

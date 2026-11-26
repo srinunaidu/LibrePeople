@@ -403,8 +403,18 @@ def test_api_unknown_run_422():
     check("GET list unknown run answered 404", resp.status_code == 404, str(resp.status_code))
 
 
+def _registered_paths():
+    # app.routes is not authoritative here: the installed FastAPI (0.162,
+    # vs the pinned 0.111) keeps included routers lazy (`_IncludedRouter`)
+    # until the OpenAPI schema is built, so raw route introspection misses
+    # registered paths. The built schema reflects what the app actually
+    # serves — every functional test below already proves these endpoints
+    # answer — so read the registry from there.
+    return set(app.openapi()["paths"])
+
+
 def test_route_registration():
-    paths = {r.path for r in app.routes if hasattr(r, "path")}
+    paths = _registered_paths()
     base = "/api/v1/forecasting/runs/{run_id}/cost-forecast"
     for suffix in ("", "/{version}"):
         check(f"route registered {suffix}", (base + suffix) in paths, str(base + suffix))

@@ -272,8 +272,13 @@ check("IN 2026-10-01 resolves pack None (no fallback to FY25-26)",
       r_oct26.pack is None and not r_oct26.is_verified,
       f"pack={r_oct26.pack} status={r_oct26.pack_status}")
 r_us = resolve_rule_pack("US", date(2026, 10, 1))
-check("US 2026-10-01 still resolves verified (other lane untouched)",
-      r_us.is_verified and r_us.pack is not None, f"status={r_us.pack_status}")
+# The US pack was intentionally removed (India-first): commit b14261a
+# "Remove out-of-scope US rule pack"; the shipped verified allowlist is
+# in-standard.json only. The US lane is therefore expected to be absent,
+# not verified — same expectation as payroll_test_suite.py adopted there.
+check("US 2026-10-01 resolves absent (us-pack removed, IN-only)",
+      r_us.pack is None and not r_us.is_verified and r_us.pack_status == "absent",
+      f"status={r_us.pack_status}")
 
 print("=" * 68)
 print("STAGE 5-3 — the trace is content-bound and money is Decimal HALF_UP")

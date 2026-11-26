@@ -61,6 +61,11 @@ def run_reset(
             # reset to proceed has to say where it is running. Individual
             # calls override this.
             "ENVIRONMENT": "development",
+            # The app config also fails closed on CORS in production, so
+            # production-mode runs need a dummy origin the way they need a
+            # dummy SECRET_KEY. This does not weaken anything: the value is
+            # a test-only origin and the fail-closed logic is untouched.
+            "BACKEND_CORS_ORIGINS": "https://app.example.com",
         }
     )
     env.update(env_extra)
@@ -346,6 +351,14 @@ def main() -> int:
 
         # --- 4. production, acknowledged, account in normal use, allowed --
         files_before = _files_in_backend()
+        # Rows written before the production guard section (e.g. the setup
+        # reset above, whose deployment label falls back to this machine's
+        # hostname) must not be mistaken for this reset's row.
+        _s = SessionLocal()
+        try:
+            audit_ids_before = {r.id for r in _s.query(AuditLog.id).all()}
+        finally:
+            _s.close()
         result = run_reset(
             {
                 "ENVIRONMENT": "production",
@@ -385,7 +398,12 @@ def main() -> int:
             f"rows={len(audit_rows)}",
         )
         if audit_rows:
-            latest = audit_rows[-1]
+            # Only rows written by this section's reset count. The expected
+            # label comes from the RENDER_SERVICE_NAME the suite passed in
+            # its own environment — never from the machine hostname — so
+            # this assertion is hostname-agnostic by construction.
+            new_rows = [r for r in audit_rows if r.id not in audit_ids_before]
+            latest = new_rows[-1] if new_rows else audit_rows[-1]
             check(
                 "the audit row names the actor",
                 latest.actor_name == "operator-reset-script",
