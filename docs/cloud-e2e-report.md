@@ -217,3 +217,31 @@ Failure screenshots + traces under `frontend/test-results/` (gitignored);
 console-error arrays name the 403 URLs per role; probe logs show per-role
 `auth/me` (`HR×2`, `PayrollViewer×2`, `Manager`, `Associate`) with
 `must_change_password: false` for all six.
+
+---
+
+## Round 4 — expenses on live 530a49f (2026-11-26)
+
+Branch `agent/qa/cloud-expenses` from main `530a49f` (expenses UI slice).
+Deploy gate passed, no 15-min wait needed: frontend
+`dep-dc3qcmlbedkc73cnk00g` live, backend `dep-dc3qcmlbedkc73cnjvfg` live
+(verified via Render API), `GET /expenses` 200 before testing.
+
+New spec `frontend/e2e/cloud/cloud-expenses.spec.ts` (3 tests). Result:
+**2 passed / 0 failed / 1 skipped; full pack 27 passed / 1 skipped / 0
+failed, browser cloud-chromium only.**
+
+| Test | Result | Evidence |
+|---|---|---|
+| associate files + receipt + submits | SKIP (NOT TESTED) | `GET /employees/` as Associate returns `items: []` — `e2e_employee` has no linked employee record and no API links users to employees, so `_ensure_owner` (`expenses.py:148-153`) would 403 any filing. Owner provisioning needed (set `User.employee_id`); not a product defect, no fix attempted |
+| HR approves L1 → final → marks paid | PASS | UI: Submit→L1→final→paid with notices `Claim submitted. / L1 approval recorded. / Final approval recorded. / Claim marked paid.` and header `Approved · payment PAID`; API: claim persists `APPROVED`/`PAID`, receipt row persists with server `download_url` |
+| associate cannot approve | PASS | Zero `Approve (L1) / Approve (final) / Mark paid` buttons on the claim detail (`showApproveActions` is Manager+); no console errors, no failed requests |
+
+Setup validated by probe: category create 201, claim create 201 (DRAFT), submit/L1/final/mark-paid all 200, receipt upload 201 (multipart). New tenant rows are namespaced (`CEXP-*`, `CLOUDEXP-*`); receipts are small synthetic text files; nothing real uploaded, no prod data touched. Login budget respected (no 429/lockout signals).
+
+### NOT TESTED remainder (carried over + new)
+
+Associate filing flow (provisioning gap above — the one round-4 gap);
+SuperAdmin workspace list (no such synthetic); exit-interview detail UI;
+hard deletes; file bytes; payslip maths; responsive sweep. No new product
+defects filed this round.
