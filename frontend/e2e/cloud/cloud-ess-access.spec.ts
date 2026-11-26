@@ -124,12 +124,16 @@ test.describe("cloud ESS: self-service serves, admin surface refuses", () => {
     )
     watch(page)
     await signIn(page, EMPLOYEE_USER, password!)
-    // ProtectedRoute gates /admin/* to SuperAdmin/HR: the employee must be
-    // kept out — bounced to login or the dashboard — never the admin screen.
-    await page.goto(`${APP}/admin/users`)
-    await expect(page).not.toHaveURL(/\/admin\/users$/, { timeout: 30_000 })
-    await page.goto(`${APP}/admin/backup`)
-    await expect(page).not.toHaveURL(/\/admin\/backup$/, { timeout: 30_000 })
+    // ProtectedRoute gates /admin/* to SuperAdmin/HR by rendering an
+    // in-place 403 card at the same URL (ProtectedRoute.tsx) — so denial is
+    // proven by the forbidden content, not by a redirect.
+    for (const path of ["/admin/users", "/admin/backup"]) {
+      await page.goto(`${APP}${path}`)
+      await expect(
+        page.getByRole("heading", { name: "403 — Forbidden" }),
+        `employee is refused ${path}`
+      ).toBeVisible({ timeout: 30_000 })
+    }
   })
 
   test("the employee's admin writes are refused (403/404)", async ({

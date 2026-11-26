@@ -76,9 +76,13 @@ async function signIn(page: Page, username: string, password: string) {
 }
 
 async function signOut(page: Page) {
-  // The product's sign-out ends the browser session: clearing it and asking
-  // for a protected route must bounce back to /login, never the dashboard.
-  await page.context().clearCookies()
+  // The session token lives in localStorage ("karmathy_token"), so clearing
+  // cookies never signs out. The real sign-out is the TopBar user menu ->
+  // "Sign out" (AuthContext.logout clears the token and the user).
+  await page.locator('button[aria-haspopup="menu"]').first().click()
+  await page.getByRole("menuitem", { name: "Sign out", exact: true }).click()
+  await expect(page).toHaveURL(/\/login/, { timeout: 30_000 })
+  // The session is really gone: a protected route bounces back to /login.
   await page.goto(`${APP}/dashboard`)
   await expect(page).toHaveURL(/\/login/, { timeout: 30_000 })
 }
