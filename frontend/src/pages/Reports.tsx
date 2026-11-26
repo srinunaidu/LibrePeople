@@ -13,6 +13,7 @@ import {
   TableSkeleton, RetryableAlert} from "@/components/ui"
 import { IconChart, IconRefresh, IconShield, IconUsers, IconWallet } from "@/components/icons"
 import api, { errorMessage } from "@/lib/api"
+import { SavedViewsSection, SchedulesSection } from "@/pages/reports/ReportPersonalization"
 import { useAuth } from "@/context/AuthContext"
 import { useTenant } from "@/context/TenantContext"
 import { formatCurrency, formatDateTime, type LocaleOptions } from "@/lib/format"
@@ -473,6 +474,18 @@ export default function Reports() {
       {/* Workforce movement (LP-REP-003): filter bar + export for org roles. */}
       <div className="mb-5">
         <MovementSection teamOnly={false} />
+      </div>
+
+      {/* Saved views + scheduled reports (reporting-personalization): the
+          personal layer over the read-only reports above. REPORTS_ROLES
+          only — the same gate as the org stats (reports.py:20-45); a
+          Manager never reaches these routes (403) and an Associate gets
+          the role card instead. */}
+      <div className="mb-5">
+        <SavedViewsSection />
+      </div>
+      <div className="mb-5">
+        <SchedulesSection />
       </div>
 
       {/* /reports/audit is ADMIN_ROLES (reports.py:63): a PayrollViewer
