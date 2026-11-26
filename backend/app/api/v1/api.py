@@ -18,6 +18,7 @@ from app.api.v1.endpoints import (
     filings,
     client_onboarding,
     core_hr,
+    er_cases,
     payroll,
     performance,
     benefits,
@@ -65,6 +66,7 @@ api_router.include_router(
     client_onboarding.router, prefix="/onboarding-portal", tags=["client-onboarding"]
 )
 api_router.include_router(core_hr.router, prefix="/core-hr", tags=["core-hr"])
+api_router.include_router(er_cases.router, prefix="/er-cases", tags=["er-cases"])
 # The public door. It is mounted on its own so that it is visibly separate
 # from the case queue it feeds.
 api_router.include_router(core_hr.public_router, prefix="/public", tags=["public"])
