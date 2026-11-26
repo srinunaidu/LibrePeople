@@ -1581,6 +1581,24 @@ ROLE_MATRIX = {
     "GET /api/v1/reports/leavers": ("SuperAdmin, HR, Manager, PayrollViewer"),
     "GET /api/v1/reports/attrition": ("SuperAdmin, HR, Manager, PayrollViewer"),
     "GET /api/v1/reports/payroll-summary": ("SuperAdmin, HR, PayrollViewer"),
+    # Reporting personalization (Parts E/F): views and schedules over the
+    # read-only reports above require REPORTS_ROLES; the tick trigger is
+    # administrative. Publishing is an HR/SuperAdmin act enforced in the
+    # endpoints; the route gate admits REPORTS_ROLES.
+    "GET /api/v1/report-views": ("SuperAdmin, HR, PayrollViewer"),
+    "GET /api/v1/report-views/{view_id}": ("SuperAdmin, HR, PayrollViewer"),
+    "POST /api/v1/report-views": ("SuperAdmin, HR, PayrollViewer"),
+    "PATCH /api/v1/report-views/{view_id}": ("SuperAdmin, HR, PayrollViewer"),
+    "DELETE /api/v1/report-views/{view_id}": ("SuperAdmin, HR, PayrollViewer"),
+    "GET /api/v1/report-schedules": ("SuperAdmin, HR, PayrollViewer"),
+    "GET /api/v1/report-schedules/runs": ("SuperAdmin, HR, PayrollViewer"),
+    "GET /api/v1/report-schedules/runs/{run_id}/download": ("SuperAdmin, HR, PayrollViewer"),
+    "GET /api/v1/report-schedules/{schedule_id}": ("SuperAdmin, HR, PayrollViewer"),
+    "POST /api/v1/report-schedules": ("SuperAdmin, HR, PayrollViewer"),
+    "PATCH /api/v1/report-schedules/{schedule_id}": ("SuperAdmin, HR, PayrollViewer"),
+    "DELETE /api/v1/report-schedules/{schedule_id}": ("SuperAdmin, HR, PayrollViewer"),
+    "POST /api/v1/report-schedules/{schedule_id}/run-now": ("SuperAdmin, HR, PayrollViewer"),
+    "POST /api/v1/report-schedules/tick": ("SuperAdmin, HR"),
     # Time corrections + period locks: the workforce raises and reads its
     # own corrections; managers decide; locks are administrative.
     "POST /api/v1/time/corrections": ("SuperAdmin, HR, Manager, Associate"),

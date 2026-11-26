@@ -44,6 +44,10 @@ class JobType(str, Enum):
     RETENTION_RUN = "retention_run"
     ERASURE_RUN = "erasure_run"
     LEAVE_ACCRUAL = "leave_accrual"
+    #: Scheduled report delivery (reporting-personalization Part F). The
+    #: payload carries ``schedule_id``; the handler runs as the schedule
+    #: owner and notifies explicit recipients. No new queue, no cron.
+    REPORT_RUN = "report_run"
 
 
 class JobQueue(Base):
