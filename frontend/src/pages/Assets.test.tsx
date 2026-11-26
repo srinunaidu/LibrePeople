@@ -3,8 +3,13 @@ import { errorMessage } from "@/lib/api"
 import {
   ackable,
   actionsForStatus,
+  buildAssetEditPayload,
+  buildAssetListParams,
   canManageAssets,
+  canViewClearance,
+  clearanceStatusText,
   conditionToStatus,
+  isRetireReady,
   openAssignmentFor,
   ASSET_STATUS_LABELS,
   type AssignmentRow,
@@ -108,6 +113,112 @@ describe("Assets — single open assignment per asset", () => {
 
   test("an asset with no open spell has no holder", () => {
     expect(openAssignmentFor(rows, 99)).toBeUndefined()
+  })
+})
+
+describe("Assets — register filters wire to GET /assets params (AC1)", () => {
+  test("empty filters are omitted entirely", () => {
+    expect(buildAssetListParams("", "")).toEqual({})
+  })
+
+  test("selecting assigned sends status=assigned", () => {
+    expect(buildAssetListParams("assigned", "")).toEqual({ status: "assigned" })
+  })
+
+  test("status and category combine", () => {
+    expect(buildAssetListParams("in_stock", "IT")).toEqual({ status: "in_stock", category: "IT" })
+  })
+
+  test("whitespace-only filters are omitted", () => {
+    expect(buildAssetListParams("  ", " ")).toEqual({})
+  })
+})
+
+describe("Assets — metadata edit payload never carries status (AC2)", () => {
+  test("tag/name/category/description/serial pass through, trimmed", () => {
+    expect(
+      buildAssetEditPayload({
+        tag: " AST-0001 ",
+        name: " MacBook ",
+        category: " IT ",
+        description: " dev laptop ",
+        serial_number: " SN1 ",
+      })
+    ).toEqual({
+      tag: "AST-0001",
+      name: "MacBook",
+      category: "IT",
+      description: "dev laptop",
+      serial_number: "SN1",
+    })
+  })
+
+  test("a status smuggled onto the input is dropped", () => {
+    const payload = buildAssetEditPayload({
+      tag: "AST-0001",
+      name: "MacBook",
+      category: "IT",
+      status: "retired",
+    })
+    expect(payload).not.toHaveProperty("status")
+    expect(payload).toEqual({ tag: "AST-0001", name: "MacBook", category: "IT" })
+  })
+
+  test("empty description/serial are omitted, never nulled", () => {
+    const payload = buildAssetEditPayload({
+      tag: "AST-0001",
+      name: "MacBook",
+      category: "IT",
+      description: "  ",
+      serial_number: "",
+    })
+    expect(payload).not.toHaveProperty("description")
+    expect(payload).not.toHaveProperty("serial_number")
+  })
+})
+
+describe("Assets — clearance visibility and rendering (AC4)", () => {
+  test("HR, Manager and SuperAdmin may view clearance; Associate may not", () => {
+    expect(canViewClearance("SuperAdmin")).toBe(true)
+    expect(canViewClearance("HR")).toBe(true)
+    expect(canViewClearance("Manager")).toBe(true)
+    expect(canViewClearance("Associate")).toBe(false)
+    expect(canViewClearance(undefined)).toBe(false)
+  })
+
+  test("a clear projection renders as clear", () => {
+    expect(
+      clearanceStatusText({ employee_id: 7, clear: true, outstanding_count: 0, outstanding: [] })
+    ).toBe("clear")
+  })
+
+  test("outstanding custody renders the count", () => {
+    expect(
+      clearanceStatusText({
+        employee_id: 7,
+        clear: false,
+        outstanding_count: 2,
+        outstanding: [
+          { assignment_id: 1, asset_id: 10, tag: "AST-0001", name: "MacBook" },
+          { assignment_id: 2, asset_id: 11, tag: "AST-0002", name: "Phone" },
+        ],
+      })
+    ).toBe("2 outstanding")
+  })
+})
+
+describe("Assets — retire requires reason plus explicit confirm (AC5)", () => {
+  test("blank reason is never ready, even when confirmed", () => {
+    expect(isRetireReady("", true)).toBe(false)
+    expect(isRetireReady("   ", true)).toBe(false)
+  })
+
+  test("a reason without the confirm checkbox is not ready", () => {
+    expect(isRetireReady("end of life", false)).toBe(false)
+  })
+
+  test("reason plus confirm is ready", () => {
+    expect(isRetireReady("end of life", true)).toBe(true)
   })
 })
 

@@ -87,6 +87,82 @@ export function openAssignmentFor(
   return assignments.find((a) => a.asset_id === assetId && a.status === "open")
 }
 
+/** Managers (and HR/Admin) may view asset clearance; Associates may not. */
+export function canViewClearance(role?: string | null): boolean {
+  return role === "SuperAdmin" || role === "HR" || role === "Manager"
+}
+
+/** Query params for GET /assets — empty filters are omitted entirely. */
+export function buildAssetListParams(
+  statusFilter: string,
+  categoryFilter: string
+): Record<string, string> {
+  const params: Record<string, string> = {}
+  const s = (statusFilter || "").trim()
+  const c = (categoryFilter || "").trim()
+  if (s) params.status = s
+  if (c) params.category = c
+  return params
+}
+
+export interface AssetEditInput {
+  tag: string
+  name: string
+  category: string
+  description?: string | null
+  serial_number?: string | null
+  /** Anything carrying a status must not leak it into the PATCH payload. */
+  status?: string | null
+  [key: string]: unknown
+}
+
+/**
+ * Metadata PATCH payload: tag/name/category/description/serial only.
+ * Status is never editable — even if present on the input it is dropped.
+ * Empty-string description/serial are omitted (no null writes).
+ */
+export function buildAssetEditPayload(input: AssetEditInput): Record<string, string> {
+  const payload: Record<string, string> = {}
+  const tag = (input.tag ?? "").toString().trim()
+  const name = (input.name ?? "").toString().trim()
+  const category = (input.category ?? "").toString().trim()
+  if (tag) payload.tag = tag
+  if (name) payload.name = name
+  if (category) payload.category = category
+  const desc = input.description == null ? "" : input.description.toString().trim()
+  if (desc) payload.description = desc
+  const serial = input.serial_number == null ? "" : input.serial_number.toString().trim()
+  if (serial) payload.serial_number = serial
+  return payload
+}
+
+/** Retirement is final: a reason plus an explicit confirm are required. */
+export function isRetireReady(reason: string, confirmed: boolean): boolean {
+  return (reason || "").trim().length > 0 && confirmed === true
+}
+
+export interface AssetClearanceItem {
+  assignment_id: number
+  asset_id: number
+  tag: string
+  name: string
+  assigned_at?: string | null
+  acknowledged_at?: string | null
+}
+
+export interface AssetClearance {
+  employee_id: number
+  clear: boolean
+  outstanding_count: number
+  outstanding: AssetClearanceItem[]
+}
+
+/** Human rendering of a clearance projection: "clear" or "N outstanding". */
+export function clearanceStatusText(c: AssetClearance): string {
+  if (c.clear || c.outstanding_count === 0) return "clear"
+  return `${c.outstanding_count} outstanding`
+}
+
 export const ASSET_STATUS_LABELS: Record<string, string> = {
   in_stock: "In stock",
   assigned: "Assigned",
@@ -113,12 +189,27 @@ export default function Assets() {
   const [form, setForm] = useState({ tag: "", name: "", category: "IT", serial_number: "" })
   const [holderId, setHolderId] = useState("")
   const [condition, setCondition] = useState<ReturnCondition>("good")
+  const [statusFilter, setStatusFilter] = useState("")
+  const [categoryFilter, setCategoryFilter] = useState("")
+  const [edit, setEdit] = useState({ tag: "", name: "", category: "", description: "", serial_number: "" })
+  const [history, setHistory] = useState<AssignmentRow[]>([])
+  const [historyLoading, setHistoryLoading] = useState(false)
+  const [clearanceEmpId, setClearanceEmpId] = useState("")
+  const [clearance, setClearance] = useState<AssetClearance | null>(null)
+  const [clearanceBusy, setClearanceBusy] = useState(false)
+  const [clearanceError, setClearanceError] = useState("")
+  const [retireReason, setRetireReason] = useState("")
+  const [retireConfirm, setRetireConfirm] = useState(false)
+  const canClear = canViewClearance(user?.role)
 
-  const load = async () => {
+  const load = async (over?: { status?: string; category?: string }) => {
     setLoading(true)
     setError("")
+    const sf = over && "status" in over ? (over.status ?? "") : statusFilter
+    const cf = over && "category" in over ? (over.category ?? "") : categoryFilter
+    const params = buildAssetListParams(sf, cf)
     const results = await Promise.allSettled([
-      api.get("/assets"),
+      api.get("/assets", { params }),
       api.get("/assets/assignments"),
       isAdmin ? fetchAllEmployees().then(({ items }) => ({ data: items })) : Promise.resolve({ data: [] }),
     ])
@@ -137,6 +228,27 @@ export default function Assets() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Refetch the register whenever a filter changes (AC1: ?status=&category=).
+  useEffect(() => {
+    load({ status: statusFilter, category: categoryFilter })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusFilter, categoryFilter])
+
+  // Per-asset custody history via GET /assets/assignments?asset_id= (AC3).
+  useEffect(() => {
+    if (!selected) {
+      setHistory([])
+      return
+    }
+    setHistoryLoading(true)
+    api
+      .get("/assets/assignments", { params: { asset_id: selected.id } })
+      .then((r) => setHistory(r.data))
+      .catch(() => setHistory(assignments.filter((a) => a.asset_id === selected.id)))
+      .finally(() => setHistoryLoading(false))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected?.id])
+
   const act = async (key: string, run: () => Promise<unknown>, ok: string) => {
     setBusy(key)
     setError("")
@@ -147,6 +259,8 @@ export default function Assets() {
       setSelected(null)
       setHolderId("")
       setCondition("good")
+      setRetireReason("")
+      setRetireConfirm(false)
       await load()
     } catch (err) {
       // 409s (invalid_state_transition, duplicate_natural_key,
@@ -155,6 +269,37 @@ export default function Assets() {
       setError(errorMessage(err, "The asset action was refused."))
     } finally {
       setBusy("")
+    }
+  }
+
+  const select = (a: AssetRow) => {
+    setSelected(a)
+    setHolderId("")
+    setCondition("good")
+    setRetireReason("")
+    setRetireConfirm(false)
+    setEdit({
+      tag: a.tag ?? "",
+      name: a.name ?? "",
+      category: a.category ?? "",
+      description: a.description ?? "",
+      serial_number: a.serial_number ?? "",
+    })
+  }
+
+  const checkClearance = async () => {
+    const id = clearanceEmpId.trim()
+    if (!id) return
+    setClearanceBusy(true)
+    setClearanceError("")
+    setClearance(null)
+    try {
+      const r = await api.get(`/assets/clearance/${id}`)
+      setClearance(r.data)
+    } catch (err) {
+      setClearanceError(errorMessage(err, "Could not load clearance."))
+    } finally {
+      setClearanceBusy(false)
     }
   }
 
@@ -171,6 +316,8 @@ export default function Assets() {
   const allowed = selected ? actionsForStatus(selected.status) : []
   const activeEmployees = employees.filter((e) => e.status === "Active")
 
+  const categories = Array.from(new Set(assets.map((a) => a.category).filter(Boolean))).sort()
+
   return (
     <Layout>
       <PageHeader
@@ -179,7 +326,7 @@ export default function Assets() {
         title="Assets"
         description="Track company assets and who holds them. Custody moves are explicit and audited."
         actions={
-          <Button variant="secondary" size="sm" type="button" onClick={load}>
+          <Button variant="secondary" size="sm" type="button" onClick={() => load()}>
             <IconRefresh className="w-4 h-4" /> Reload
           </Button>
         }
@@ -187,7 +334,7 @@ export default function Assets() {
 
       {error && (
         <Alert tone="error" title="Asset action refused" action={
-          <Button variant="secondary" size="sm" type="button" onClick={load}>Reload</Button>
+          <Button variant="secondary" size="sm" type="button" onClick={() => load()}>Reload</Button>
         }>
           {error}
         </Alert>
@@ -239,6 +386,34 @@ export default function Assets() {
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 mb-5">
             <SectionCard compact icon={<IconBriefcase />} title="Register"
               description={isAdmin ? "Every asset in this tenant." : "Assets in your custody scope (read-only)."}>
+              <div className="toolbar mb-3">
+                <div className="field">
+                  <label htmlFor="ast-fstatus" className="field-label">Status filter</label>
+                  <select id="ast-fstatus" className="input" value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}>
+                    <option value="">All statuses</option>
+                    {Object.entries(ASSET_STATUS_LABELS).map(([v, l]) => (
+                      <option key={v} value={v}>{l}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="field">
+                  <label htmlFor="ast-fcat" className="field-label">Category filter</label>
+                  <select id="ast-fcat" className="input" value={categoryFilter}
+                    onChange={(e) => setCategoryFilter(e.target.value)}>
+                    <option value="">All categories</option>
+                    {categories.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+                {(statusFilter || categoryFilter) && (
+                  <Button variant="secondary" size="sm" type="button"
+                    onClick={() => { setStatusFilter(""); setCategoryFilter("") }}>
+                    Clear filters
+                  </Button>
+                )}
+              </div>
               {assets.length === 0 ? (
                 <EmptyState title="No assets" description={isAdmin ? "Register the first asset above." : "Nothing is in your custody yet."} />
               ) : (
@@ -252,7 +427,7 @@ export default function Assets() {
                     ...(isAdmin ? [{
                       key: "actions", header: "", accessor: (a: AssetRow) => (
                         <Button variant="secondary" size="sm" type="button"
-                          onClick={() => { setSelected(a); setHolderId(""); setCondition("good") }}>
+                          onClick={() => select(a)}>
                           Manage
                         </Button>
                       ),
@@ -323,6 +498,25 @@ export default function Assets() {
                     </Button>
                   </div>
                 )}
+                {allowed.includes("retire") && (
+                  <div className="toolbar mb-3">
+                    <div className="field grow min-w-[160px]">
+                      <label htmlFor="ast-retire-reason" className="field-label">Retire reason (required, final)</label>
+                      <input id="ast-retire-reason" className="input" value={retireReason}
+                        onChange={(e) => setRetireReason(e.target.value)}
+                        placeholder="e.g. end of life, beyond repair" />
+                    </div>
+                    <label className="flex items-center gap-2 text-sm">
+                      <input id="ast-retire-confirm" type="checkbox" checked={retireConfirm}
+                        onChange={(e) => setRetireConfirm(e.target.checked)} />
+                      I confirm retirement is final
+                    </label>
+                    <Button variant="secondary" disabled={!isRetireReady(retireReason, retireConfirm) || busy === "retire"}
+                      onClick={() => act("retire", () => api.post(`/assets/${selected.id}/retire`, { reason: retireReason.trim() }), "Asset retired.")}>
+                      {busy === "retire" ? "Retiring…" : "Retire"}
+                    </Button>
+                  </div>
+                )}
                 <div className="flex flex-wrap gap-2">
                   {allowed.includes("maintenance_start") && (
                     <Button variant="secondary" disabled={busy === "maint"}
@@ -337,16 +531,131 @@ export default function Assets() {
                     </Button>
                   )}
                   {allowed.includes("retire") && (
-                    <Button variant="secondary" disabled={busy === "retire"}
-                      onClick={() => act("retire", () => api.post(`/assets/${selected.id}/retire`, {}), "Asset retired.")}>
-                      Retire
-                    </Button>
+                    <span className="text-sm text-fg-muted self-center">Retirement uses the reason above.</span>
                   )}
                   <Button variant="secondary" onClick={() => setSelected(null)}>Close</Button>
+                </div>
+                <div className="mt-4 border-t pt-3">
+                  <h4 className="font-medium mb-2">Metadata (status is never editable)</h4>
+                  <div className="toolbar mb-2">
+                    <div className="field">
+                      <label htmlFor="ast-edit-tag" className="field-label">Tag</label>
+                      <input id="ast-edit-tag" className="input" value={edit.tag}
+                        onChange={(e) => setEdit({ ...edit, tag: e.target.value })} />
+                    </div>
+                    <div className="field grow min-w-[140px]">
+                      <label htmlFor="ast-edit-name" className="field-label">Name</label>
+                      <input id="ast-edit-name" className="input" value={edit.name}
+                        onChange={(e) => setEdit({ ...edit, name: e.target.value })} />
+                    </div>
+                    <div className="field">
+                      <label htmlFor="ast-edit-cat" className="field-label">Category</label>
+                      <input id="ast-edit-cat" className="input" value={edit.category}
+                        onChange={(e) => setEdit({ ...edit, category: e.target.value })} />
+                    </div>
+                  </div>
+                  <div className="toolbar">
+                    <div className="field grow min-w-[140px]">
+                      <label htmlFor="ast-edit-desc" className="field-label">Description</label>
+                      <input id="ast-edit-desc" className="input" value={edit.description}
+                        onChange={(e) => setEdit({ ...edit, description: e.target.value })} />
+                    </div>
+                    <div className="field">
+                      <label htmlFor="ast-edit-serial" className="field-label">Serial number</label>
+                      <input id="ast-edit-serial" className="input" value={edit.serial_number}
+                        onChange={(e) => setEdit({ ...edit, serial_number: e.target.value })} />
+                    </div>
+                    <Button variant="secondary" disabled={busy === "edit"}
+                      onClick={() => act("edit", () => api.patch(`/assets/${selected.id}`, buildAssetEditPayload(edit)), "Asset metadata updated.")}>
+                      {busy === "edit" ? "Saving…" : "Save metadata"}
+                    </Button>
+                  </div>
+                </div>
+                <div className="mt-4 border-t pt-3">
+                  <h4 className="font-medium mb-2">Custody history</h4>
+                  {historyLoading ? (
+                    <p className="text-sm text-fg-muted">Loading history…</p>
+                  ) : history.length === 0 ? (
+                    <p className="text-sm text-fg-muted">No custody spells for this asset.</p>
+                  ) : (
+                    <div className="table-scroll max-h-[220px] overflow-y-auto">
+                      <table className="table-base table-striped">
+                        <caption className="sr-only">Custody history for {selected.tag}</caption>
+                        <thead>
+                          <tr>
+                            <th scope="col">Holder</th>
+                            <th scope="col">Ack</th>
+                            <th scope="col">Close reason</th>
+                            <th scope="col">Condition</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {history.map((h) => (
+                            <tr key={h.id}>
+                              <td>{employeeName(h.employee_id)}</td>
+                              <td>{h.acknowledged_at ? h.acknowledged_at.slice(0, 10) : "Pending"}</td>
+                              <td>{h.close_reason ?? (h.status === "open" ? "open" : "—")}</td>
+                              <td>{h.return_condition ?? "—"}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </div>
               </SectionCard>
             )}
           </div>
+          {canClear && (
+            <SectionCard compact title="Clearance"
+              description="Read-only offboarding check: enter an employee id to list open custody, or clear.">
+              <div className="toolbar mb-3">
+                <div className="field">
+                  <label htmlFor="ast-clear-emp" className="field-label">Employee id</label>
+                  <input id="ast-clear-emp" className="input" value={clearanceEmpId}
+                    onChange={(e) => setClearanceEmpId(e.target.value)}
+                    placeholder="e.g. 100" inputMode="numeric" />
+                </div>
+                <Button variant="secondary" disabled={!clearanceEmpId.trim() || clearanceBusy}
+                  onClick={checkClearance}>
+                  {clearanceBusy ? "Checking…" : "Check clearance"}
+                </Button>
+              </div>
+              {clearanceError && <Alert tone="error">{clearanceError}</Alert>}
+              {clearance && (
+                clearance.clear ? (
+                  <p className="text-sm" role="status">Employee {clearance.employee_id} is clear — no outstanding custody.</p>
+                ) : (
+                  <div className="table-scroll max-h-[220px] overflow-y-auto">
+                    <p className="text-sm mb-2" role="status">
+                      Employee {clearance.employee_id}: {clearanceStatusText(clearance)}.
+                    </p>
+                    <table className="table-base table-striped">
+                      <caption className="sr-only">Outstanding custody</caption>
+                      <thead>
+                        <tr>
+                          <th scope="col">Tag</th>
+                          <th scope="col">Asset</th>
+                          <th scope="col">Assigned</th>
+                          <th scope="col">Receipt</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {clearance.outstanding.map((o) => (
+                          <tr key={o.assignment_id}>
+                            <td className="font-mono">{o.tag}</td>
+                            <td>{o.name}</td>
+                            <td>{o.assigned_at ? o.assigned_at.slice(0, 10) : "—"}</td>
+                            <td>{o.acknowledged_at ? "Acknowledged" : "Pending"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )
+              )}
+            </SectionCard>
+          )}
         </>
       )}
     </Layout>
