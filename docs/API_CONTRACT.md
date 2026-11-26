@@ -2,13 +2,27 @@
 
 Base path: `/api/v1` · Auth: `Authorization: Bearer <JWT>` (except `/auth/*`, `/health`).
 
-Legend: **A** = SuperAdmin/HR · **U** = any authenticated user.
+Legend: **A** = SuperAdmin/HR · **U** = any authenticated user · **R** = SuperAdmin/HR/PayrollViewer (`REPORTS_ROLES`, `backend/app/api/deps.py:111`) · **M** = SuperAdmin/HR/Manager (`MANAGER_ROLES`, `deps.py:96`).
 
 ## Auth
 | Method | Path | Access | Notes |
 |--------|------|--------|-------|
 | POST | `/auth/login` | — | JSON `{username, password}` → `{access_token, token_type, role, username}` |
 | POST | `/auth/register` | — | JSON `UserCreate` → `UserOut` |
+| POST | `/auth/refresh` | — | refresh-token rotation; reuse revokes family (`auth.py:318`) |
+| POST | `/auth/logout` | — | revokes refresh family (`auth.py:399`) |
+| GET | `/auth/me` | U | current user (`auth.py:418`) |
+| GET | `/auth/mfa/status` | U | enrollment state (`auth.py:435`) |
+| POST | `/auth/mfa/enroll` | U | start TOTP enroll (`auth.py:446`) |
+| POST | `/auth/mfa/confirm` | U | confirm TOTP, enables MFA (`auth.py:494`) |
+| POST | `/auth/mfa/disable` | U | password or recovery code; revokes sessions (`auth.py:554`) |
+| POST | `/auth/mfa/reset` | SuperAdmin | audited; step-up required (`auth.py:634`) |
+| POST | `/auth/password` | U | change own password; revokes other sessions (`auth.py:802`) |
+| POST | `/auth/users/{user_id}/password` | A | admin-set; forces change at next sign-in (`auth.py:854`) |
+| PATCH | `/auth/users/{user_id}` | A | role/email/active; deactivation revokes sessions (`auth.py:925`) |
+| GET | `/auth/users` | A | list users (`auth.py:1020`) |
+| POST | `/auth/users` | A | explicit role; only SuperAdmin may create SuperAdmin (`auth.py:1028`) |
+| POST | `/auth/impersonate` | SuperAdmin | audited short-lived target token (`auth.py:1091`) |
 
 ## Employees (Phase 1)
 | Method | Path | Access |
@@ -129,12 +143,12 @@ Legend: **A** = SuperAdmin/HR · **U** = any authenticated user.
 ## Reports (Phase 7)
 | Method | Path | Access |
 |--------|------|--------|
-| GET | `/reports/dashboard` | U |
-| GET | `/reports/headcount` | U |
-| GET | `/reports/leave` | U |
-| GET | `/reports/labor-cost` | U |
-| GET | `/reports/attendance?day=` | U |
-| GET | `/reports/audit?limit=` | U |
+| GET | `/reports/dashboard` | R |
+| GET | `/reports/headcount` | R |
+| GET | `/reports/leave` | R |
+| GET | `/reports/labor-cost` | R |
+| GET | `/reports/attendance?day=` | M |
+| GET | `/reports/audit?limit=` | A |
 
 ## Status enums
 - **Requisition**: Draft, Open, OnHold, Closed

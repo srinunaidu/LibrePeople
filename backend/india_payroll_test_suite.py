@@ -64,14 +64,27 @@ def check(name: str, ok: bool, detail: str = "") -> None:
 
 
 def _head_revision() -> str:
-    """The newest revision in the migrations directory."""
+    """The single current head, asked of the migration tree (fails loudly)."""
     from alembic.config import Config
     from alembic.script import ScriptDirectory
 
     cfg = Config(str(BACKEND_DIR / "alembic.ini"))
     cfg.set_main_option("script_location", str(BACKEND_DIR / "migrations"))
     heads = ScriptDirectory.from_config(cfg).get_heads()
-    return heads[0] if heads else ""
+    if len(heads) != 1:
+        raise RuntimeError(f"expected exactly one migration head, got: {heads}")
+    return heads[0]
+
+
+def _revision(db_path: str) -> str | None:
+    import sqlite3
+
+    conn = sqlite3.connect(db_path)
+    try:
+        rows = conn.execute("SELECT version_num FROM alembic_version").fetchall()
+        return rows[0][0] if rows else None
+    finally:
+        conn.close()
 
 
 def _run_migrations(db_path: str, direction: str, target: str) -> None:
@@ -209,13 +222,9 @@ def main() -> int:
         )
         head = _head_revision()
         check(
-            "the head revision is 0049_interviews (current head)",
-            head in ("0031_india_fnf_basic_da", "0032_india_aadhaar_encryption", "0042_notification_delivery",
-                     "0043_integrity_expand", "0044_forecasting_tenant_isolation",
-                     "0045_payroll_pipeline_run_type", "0046_assets",
-                     "0047_expense_category_tenant_code", "0048_mfa_secret_envelope",
-                     "0049_interviews"),
-            f"head={head}",
+            f"the fresh database reaches the single current head ({head})",
+            _revision(fresh) == head,
+            f"db={_revision(fresh)!r} head={head}",
         )
         _check_employee_columns(fresh, "fresh")
         # Slice 5 — basic_pct added by 0031
