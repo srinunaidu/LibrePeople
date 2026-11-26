@@ -128,6 +128,7 @@ const ADMIN_ITEMS: NavItem[] = [
   { label: "Departments & Cost Centres", to: "/admin/departments-cost-centres" },
   { label: "Document Classification", to: "/admin/document-classification" },
   { label: "Document Expiry", to: "/admin/documents-expiry" },
+  { label: "Documents", to: "/admin/documents" },
   { label: "ESS Profile", to: "/admin/essprofile" },
   { label: "Earnings & Deductions", to: "/admin/earnings-deductions" },
   { label: "Employer Contributions", to: "/admin/employer-contributions" },
@@ -295,6 +296,7 @@ const GROUPS: NavGroup[] = [
           { label: "Payroll overview", to: "/platform/payroll/overview" },
         ],
       },
+      { label: "Expenses", to: "/expenses", icon: CreditCard },
     ],
   },
   {
