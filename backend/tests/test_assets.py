@@ -24,8 +24,8 @@ What this suite proves
   declared columns/indexes and the per-tenant tag uniqueness; the downgrade
   removes exactly what the upgrade created.
 
-Run:  python app/api/v1/endpoints/test_assets.py   (from backend/)
-  or: pytest app/api/v1/endpoints/test_assets.py
+Run:  python tests/test_assets.py   (from backend/)
+  or: pytest tests/test_assets.py
 """
 import datetime
 import os
@@ -36,7 +36,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-_BACKEND_ROOT = Path(__file__).resolve().parents[4]
+_BACKEND_ROOT = Path(__file__).resolve().parents[1]
 if str(_BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(_BACKEND_ROOT))
 
