@@ -1,4 +1,7 @@
 import React, { useEffect, useRef, useState } from "react"
+/* R2 honesty-sweep verify (LP-DATA-001/E-UX-02): entities + rows + progress
+ * come from the live /import-export/* endpoints (see src/lib/imports.ts);
+ * no fabricated rows, no committed-about-queued imports (see below). */
 import { Layout } from "@/components/Layout"
 import {Alert,
   Button,

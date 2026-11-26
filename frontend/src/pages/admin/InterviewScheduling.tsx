@@ -1,98 +1,169 @@
-/* RC-04 — Interview scheduling + kits + scorecards (depends RC-03)
- * RC-03 (Candidate stages) shipped R3.
- * Uses real /clients/{id}/onboarding/steps endpoint for interview scheduling.
- * No fabricated interview data; reads actual seeded data.
+/* RC-04 — Interview scheduling (depends RC-03; candidate stages shipped R3).
+ * R2 honesty-sweep: list/create/update go to the live recruiting CRUD —
+ * real GET/POST/PUT /api/v1/interviews (backend/app/api/v1/endpoints/interviews.py,
+ * mounted at api.py:53; require_roles SuperAdmin/HR). The former
+ * feature-flags shim is gone — nothing here is read from or written to
+ * client config. No fabricated interview data; an empty ledger renders
+ * an EmptyState, never invented rows.
  */
 import { useCallback, useEffect, useState } from "react"
 import { Layout } from "@/components/Layout"
-import {Alert, Button, EmptyState, LoadingRegion, PageHeader, SectionCard, RetryableAlert, TableSkeleton} from "@/components/ui"
+import { Alert, Button, EmptyState, Input, LoadingRegion, PageHeader, SectionCard, RetryableAlert, TableSkeleton } from "@/components/ui"
 import { useAuth } from "@/context/AuthContext"
-import api, { getClientIdBySlug, errorMessage } from "@/lib/api"
+import { listInterviews, createInterview, updateInterview, errorMessage, type InterviewOut } from "@/lib/api"
 
-const INTERVIEW_TYPES = [
-  { value: "phone_screen", label: "Phone Screen" },
-  { value: "technical_interview", label: "Technical Interview" },
-  { value: "panel_interview", label: "Panel Interview" },
-]
+const STAGES = ["Screening", "Phone Screen", "Technical Interview", "Panel Interview", "Final Round"]
+const STATUSES = ["Scheduled", "Completed", "Cancelled", "NoShow"]
 
 export default function InterviewScheduling() {
   const { user } = useAuth()
-  const [clientId, setClientId] = useState<number | null>(null)
+  const canAdmin = ["SuperAdmin", "HR"].includes(user?.role ?? "")
 
-  const canWrite = user?.role === "SuperAdmin"
-  const [interviewType, setInterviewType] = useState("phone_screen")
+  const [interviews, setInterviews] = useState<InterviewOut[]>([])
+  const [candidateId, setCandidateId] = useState("")
+  const [stage, setStage] = useState("Screening")
+  const [scheduledAt, setScheduledAt] = useState("")
+  const [interviewers, setInterviewers] = useState("")
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [updatingId, setUpdatingId] = useState<number | null>(null)
   const [notice, setNotice] = useState("")
   const [actionError, setActionError] = useState("")
   const [error, setError] = useState<unknown | null>(null)
+  const [edits, setEdits] = useState<Record<number, { status: string; feedback: string }>>({})
 
   const load = useCallback(async () => {
-    if (!canWrite) { setLoading(false); return }
+    if (!canAdmin) { setLoading(false); return }
     setLoading(true); setError(null); setNotice("")
-    const id = await getClientIdBySlug()
-    setClientId(id)
-    if (id === null) {
-      setError("Could not resolve tenant — switch to default workspace");
-      setLoading(false);
-      return;
-    }
     try {
-      const { data } = await api.get(`/onboarding-portal/clients/${id}/feature-flags`)
-      const getCfg = (k: string) => (data as any[])?.find((x: any) => x.key === k)?.config
-      setInterviewType((getCfg("interview_type") ?? "phone_screen"))
+      const rows = await listInterviews({ limit: 100 })
+      setInterviews(rows)
+      setEdits(Object.fromEntries(rows.map(r => [r.id, { status: r.status, feedback: r.feedback ?? "" }])))
     } catch (e) { setError(e) } finally { setLoading(false) }
-  }, [canWrite])
+  }, [canAdmin])
   useEffect(() => { load() }, [load])
 
   const save = async () => {
-    if (clientId === null) return
+    const cid = Number(candidateId)
+    if (!Number.isInteger(cid) || cid <= 0) { setActionError("Candidate ID is required — enter the numeric candidate id."); return }
     setSaving(true); setNotice(""); setActionError("")
     try {
-      await api.put(`/onboarding-portal/clients/${clientId}/feature-flags/interview_type`, { config: interviewType })
+      await createInterview({
+        candidate_id: cid,
+        stage,
+        scheduled_at: scheduledAt ? new Date(scheduledAt).toISOString() : null,
+        interviewers: interviewers.split(",").map(s => s.trim()).filter(Boolean),
+      })
+      setCandidateId(""); setScheduledAt(""); setInterviewers("")
       await load()
-      setNotice("Interview type saved.")
-    } catch (e) { setActionError(errorMessage(e, "The interview type could not be saved.")) } finally { setSaving(false) }
+      setNotice("Interview scheduled.")
+    } catch (e) { setActionError(errorMessage(e, "The interview could not be scheduled.")) } finally { setSaving(false) }
   }
 
-  if (!canWrite) return <Layout><EmptyState title="Not visible for your role" description={`Interview scheduling config requires SuperAdmin; your role is ${user?.role || "unknown"}.`} /></Layout>
+  const saveRow = async (id: number) => {
+    const edit = edits[id]
+    if (!edit) return
+    setUpdatingId(id); setNotice(""); setActionError("")
+    try {
+      await updateInterview(id, { status: edit.status, feedback: edit.feedback || null })
+      await load()
+      setNotice("Interview updated.")
+    } catch (e) { setActionError(errorMessage(e, "The interview could not be updated.")) } finally { setUpdatingId(null) }
+  }
+
+  if (!canAdmin) return <Layout><EmptyState title="Not visible for your role" description={`Interview scheduling requires SuperAdmin or HR; your role is ${user?.role || "unknown"}.`} /></Layout>
 
   if (loading) return <Layout><LoadingRegion label="Interview Scheduling"><TableSkeleton rows={4} cols={4} /></LoadingRegion></Layout>
 
   return (
-      <Layout>
-      <PageHeader compact title="Interview Scheduling + Kits + Scorecards" description="RC-04 · interview scheduling + kits + scorecards · depends RC-03 (shipped R3) · reads /clients/:slug/feature-flags." />
+    <Layout>
+      <PageHeader compact title="Interview Scheduling" description="RC-04 · live interview ledger from GET /api/v1/interviews (SuperAdmin / HR)." />
       <div className="max-w-3xl mx-auto px-6 py-10 space-y-8">
         {notice && <Alert tone="success">{notice}</Alert>}
         {actionError && <Alert tone="error">{actionError}</Alert>}
-        {!!error && <RetryableAlert err={error} title="The interview scheduling + kits + scorecards could not be read." fallback="The interview scheduling + kits + scorecards could not be read." onRetry={load} />}
-        <SectionCard compact title="Interview scheduling" description="From /clients/:slug/feature-flags endpoint.">
+        {!!error && <RetryableAlert err={error} title="Interviews could not be read." fallback="Interviews could not be read." onRetry={load} />}
+        <SectionCard compact title="Schedule an interview" description="Writes to POST /api/v1/interviews.">
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
-              <label>Interview type</label>
-              <select
-                value={interviewType}
-                onChange={e => setInterviewType(e.target.value)}
-                className="w-full rounded border px-3 py-2"
-              >
-                {INTERVIEW_TYPES.map(i => (
-                  <option key={i.value} value={i.value}>{i.label}</option>
-                ))}
+              <label htmlFor="interview-candidate">Candidate ID</label>
+              <Input id="interview-candidate" inputMode="numeric" value={candidateId} onChange={e => setCandidateId(e.target.value)} placeholder="e.g. 42" />
+            </div>
+            <div>
+              <label htmlFor="interview-stage">Stage</label>
+              <select id="interview-stage" value={stage} onChange={e => setStage(e.target.value)} className="w-full rounded border px-3 py-2">
+                {STAGES.map(s => (<option key={s} value={s}>{s}</option>))}
               </select>
             </div>
-            <div />
-          </div>
-          <Button onClick={save} disabled={!canWrite || saving || !clientId} className="mt-4">{saving ? "Saving…" : "Save interview type"}</Button>
-        </SectionCard>
-        <SectionCard compact title="Interview kits + scorecards" description="Predefined interview structures.">
-          {INTERVIEW_TYPES.map(i => (
-            <div key={i.value} className="p-2 rounded border hover:border-border cursor-pointer">
-              <span>{i.label}</span>
+            <div>
+              <label htmlFor="interview-when">Scheduled at</label>
+              <Input id="interview-when" type="datetime-local" value={scheduledAt} onChange={e => setScheduledAt(e.target.value)} />
             </div>
-          ))}
+            <div>
+              <label htmlFor="interview-panel">Interviewers (comma-separated)</label>
+              <Input id="interview-panel" value={interviewers} onChange={e => setInterviewers(e.target.value)} placeholder="e.g. priya, omar" />
+            </div>
+          </div>
+          <Button
+            onClick={save}
+            disabled={saving || !candidateId.trim()}
+            title={!candidateId.trim() ? "Enter a candidate ID first — the backend requires one." : "Schedule via POST /api/v1/interviews"}
+            className="mt-4"
+          >
+            {saving ? "Scheduling…" : "Schedule interview"}
+          </Button>
+          {!candidateId.trim() && <p className="text-xs text-fg-muted mt-2">Enter a candidate ID to enable scheduling — the backend rejects rows without one.</p>}
         </SectionCard>
-        <div className="text-xs text-fg-muted">RC-04 · R3 · depends RC-03 · no fabricated interview data.</div>
+        <SectionCard
+          compact
+          title="Scheduled interviews"
+          description="From GET /api/v1/interviews; status and feedback persist via PUT /api/v1/interviews/:id."
+          actions={<Button variant="secondary" size="sm" onClick={() => load()} disabled={loading}>{loading ? "Refreshing…" : "Refresh"}</Button>}
+        >
+          {interviews.length === 0 ? (
+            <EmptyState title="No interviews scheduled" description="The live ledger is empty — schedule the first interview above. Nothing is shown that the backend does not store." />
+          ) : (
+            <div className="table-scroll">
+              <table className="w-full text-sm">
+                <caption className="sr-only">Scheduled interviews</caption>
+                <thead><tr className="border-b"><th scope="col" className="text-left">ID</th><th scope="col" className="text-left">Candidate</th><th scope="col" className="text-left">Stage</th><th scope="col" className="text-left">Status</th><th scope="col" className="text-left">Feedback</th><th scope="col" className="text-left"><span className="sr-only">Actions</span></th></tr></thead>
+                <tbody>
+                  {interviews.map(iv => (
+                    <tr key={iv.id} className="border-b last:border-0">
+                      <td className="py-2 pr-3 tabular-nums">{iv.id}</td>
+                      <td className="py-2 pr-3 tabular-nums">{iv.candidate_id}</td>
+                      <td className="py-2 pr-3">{iv.stage}</td>
+                      <td className="py-2 pr-3">
+                        <select
+                          aria-label={`Status for interview ${iv.id}`}
+                          value={edits[iv.id]?.status ?? iv.status}
+                          onChange={e => setEdits(prev => ({ ...prev, [iv.id]: { status: e.target.value, feedback: prev[iv.id]?.feedback ?? "" } }))}
+                          className="rounded border px-2 py-1"
+                        >
+                          {STATUSES.map(s => (<option key={s} value={s}>{s}</option>))}
+                        </select>
+                      </td>
+                      <td className="py-2 pr-3">
+                        <Input
+                          aria-label={`Feedback for interview ${iv.id}`}
+                          value={edits[iv.id]?.feedback ?? ""}
+                          onChange={e => setEdits(prev => ({ ...prev, [iv.id]: { status: prev[iv.id]?.status ?? iv.status, feedback: e.target.value } }))}
+                          placeholder="Outcome notes"
+                        />
+                      </td>
+                      <td className="py-2">
+                        <Button variant="secondary" size="sm" onClick={() => saveRow(iv.id)} disabled={updatingId === iv.id}>
+                          {updatingId === iv.id ? "Saving…" : "Save"}
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </SectionCard>
+        <div className="text-xs text-fg-muted">RC-04 · reads and writes /api/v1/interviews · no fabricated interview data.</div>
       </div>
-      </Layout>
+    </Layout>
   )
 }

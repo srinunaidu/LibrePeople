@@ -90,7 +90,9 @@ export default function ProjectStatus() {
   }, [])
 
   const now = new Date().toISOString().replace("T", " ").slice(0, 16) + " UTC"
-  const commit = "95d9cbd"
+  // R2 honesty-sweep: build-time injected commit (Vite `define.__BUILD__`
+  // in frontend/vite.config.ts) — never a hardcoded hash in source.
+  const commit = (typeof __BUILD__ !== "undefined" ? __BUILD__.commit : "local").slice(0, 7)
 
   const codeCls = "bg-[var(--surface-elevated)] px-1 py-0.5 rounded text-xs border border-[var(--border)]"
   const linkCls = "text-[var(--brand-text)] hover:underline"

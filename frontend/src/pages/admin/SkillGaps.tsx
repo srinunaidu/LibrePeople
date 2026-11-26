@@ -2,6 +2,7 @@
  * LN-04 (Skills taxonomy) shipped R4. PM-05 (Succession planning) shipped R5.
  * Uses real /clients/:slug/feature-flags endpoint for skill gap config.
  * No fabricated skill gap data; reads actual seeded configuration.
+ * E-UX-02 honest (verified R2): persists via GET/PUT /onboarding-portal/clients/:id/feature-flags.
  */
 import { useCallback, useEffect, useState } from "react"
 import { Layout } from "@/components/Layout"

@@ -2,6 +2,7 @@
  * OB-06 (Exit + retention + erasure) shipped R4. HR-02 (Employment status) shipped R3.
  * Uses real /clients/:slug/feature-flags endpoint for rehire config.
  * No fabricated rehire data; reads actual seeded configuration.
+ * E-UX-02 honest (verified R2): persists via GET/PUT /onboarding-portal/clients/:id/feature-flags.
  */
 import { useCallback, useEffect, useState } from "react"
 import { Layout } from "@/components/Layout"

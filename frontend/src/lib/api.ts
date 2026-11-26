@@ -373,6 +373,60 @@ export async function getFiling(
   return { data, headers } as { data: any; headers: Record<string, string> }
 }
 
+/** Interviews — live recruiting CRUD (backend/app/api/v1/endpoints/interviews.py).
+ * R2 honesty-sweep: replaces the former feature-flags/interview_type shim. */
+export interface InterviewOut {
+  id: number
+  candidate_id: number
+  requisition_id?: number | null
+  stage: string
+  scheduled_at?: string | null
+  interviewers: string[]
+  status: string
+  feedback?: string | null
+  created_at?: string | null
+}
+
+export interface InterviewCreate {
+  candidate_id: number
+  requisition_id?: number | null
+  stage?: string
+  scheduled_at?: string | null
+  interviewers?: string[]
+}
+
+export interface InterviewUpdate {
+  stage?: string
+  scheduled_at?: string | null
+  interviewers?: string[]
+  status?: string
+  feedback?: string | null
+}
+
+/** List interviews from GET /api/v1/interviews */
+export async function listInterviews(params?: {
+  candidate_id?: number
+  requisition_id?: number
+  status?: string
+  skip?: number
+  limit?: number
+}): Promise<InterviewOut[]> {
+  const { data } = await api.get<InterviewOut[]>("/interviews", { params })
+  return data ?? []
+}
+
+/** Schedule an interview via POST /api/v1/interviews */
+export async function createInterview(payload: InterviewCreate): Promise<InterviewOut> {
+  const { data } = await api.post<InterviewOut>("/interviews", payload)
+  return data
+}
+
+/** Reschedule / restage / record outcome via PUT /api/v1/interviews/{id} */
+export async function updateInterview(id: number, payload: InterviewUpdate): Promise<InterviewOut> {
+  const { data } = await api.put<InterviewOut>(`/interviews/${id}`, payload)
+  return data
+}
+
 export default api
 
 // Base URL for backend-served files (offer letters, uploads).
