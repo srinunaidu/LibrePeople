@@ -55,6 +55,8 @@ from .forecasting import ForecastRun, ForecastResult, ForecastModelVersion, Fore
 
 from .imports import ImportStatus, ImportDryRun
 
+from .er_case import ERCase, ERCaseComment, ERCaseAttachment
+
 from app.core.database import Base
 
 __all__ = [
@@ -71,6 +73,7 @@ __all__ = [
     "Goal", "PerformanceReview", "ReviewFeedback", "CompensationBand", "MeritCycle", "MeritAllocation",
     "BenefitPlan", "BenefitEnrollment", "LifeEvent", "LeaveOfAbsence",
     "ExpenseCategory", "ExpenseClaim", "ExpenseReceipt",
+    "ERCase", "ERCaseComment", "ERCaseAttachment",
     "WorkflowStep",
     "Course", "CourseEnrollment", "Certification", "TalentPool", "TalentPoolMember", "SuccessionPlan",
     "ComplianceRule", "ComplianceViolation", "HeadcountPlan", "Scenario", "ReportDefinition", "SavedReport",
