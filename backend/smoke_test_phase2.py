@@ -1,8 +1,11 @@
 """Local smoke test for Phase 2 (Hire & Onboarding) using SQLite."""
 import os
+import urllib.parse
 
 os.environ["DATABASE_URL"] = "sqlite:///./smoke_test2.db"
 os.environ["SECRET_KEY"] = "local-test-secret-key-not-for-production-0123456789"
+os.environ["FIELD_ENCRYPTION_KEYS"] = "lp-test-key:local-test-field-encryption-secret-0123456789"
+os.environ["FIELD_ENCRYPTION_ACTIVE_KEY_ID"] = "lp-test-key"
 os.environ["MIGRATE_ON_STARTUP"] = "false"  # the suite builds its own schema
 os.environ["BACKEND_CORS_ORIGINS"] = "*"
 os.environ["STORAGE_BACKEND"] = "local"
@@ -50,6 +53,27 @@ client = TestClient(app)
 r = client.post("/api/v1/auth/login", json={"username": "admin", "password": "secret123"})
 token = r.json()["access_token"]
 H = {"Authorization": f"Bearer {token}"}
+
+# Item 10: an unenrolled SuperAdmin cannot reach admin endpoints — the
+# shared gate answers 403 until the account enrolls in MFA. Enroll and
+# confirm here (idempotent across re-runs: the persistent sqlite file may
+# already hold an enrolled admin). Confirmation does not revoke sessions,
+# so the token above stays valid.
+import pyotp  # noqa: E402
+
+_enroll_status = client.get("/api/v1/auth/mfa/status", headers=H).json()
+if not _enroll_status.get("mfa_enabled"):
+    _enroll = client.post("/api/v1/auth/mfa/enroll", headers=H)
+    assert _enroll.status_code == 200, f"mfa enroll failed: {_enroll.text[:200]}"
+    _enroll_params = urllib.parse.parse_qs(
+        urllib.parse.urlparse(_enroll.json()["provisioning_uri"]).query
+    )
+    _confirm = client.post(
+        "/api/v1/auth/mfa/confirm",
+        headers=H,
+        json={"totp_code": pyotp.TOTP(_enroll_params["secret"][0]).now()},
+    )
+    assert _confirm.status_code == 200, f"mfa confirm failed: {_confirm.text[:200]}"
 
 # 1. Requisition
 r = client.post(
