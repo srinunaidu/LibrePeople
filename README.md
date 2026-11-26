@@ -15,3 +15,4 @@ Extracted from Karmathy, branch feature/librepeople-production at commit 5a6461e
 - FY2025–26 frozen; FY2026–27 pending verification; gratuity OFF. Register: 2 VERIFIED / 105 IMPLEMENTED / 18 BLOCKED / 8 DEFERRED / 3 IN PROGRESS (136).
 ## License
 No LICENSE published: ownership and dependency clearance pending. Do not distribute releases until cleared.
+Intended direction (PROPOSED/INTENDED only, no legal effect): AGPL-3.0-or-later. Each customer self-hosts and operates its own instance; no vendor-hosted control plane. Commercial managed hosting, implementation, support, and customisation may be offered separately under commercial terms (details TBD). No legal clearance is claimed and no licence is granted by this notice — see docs/legal/ (strategy, policy, clearance and blocker registers) before relying on any licensing statement.

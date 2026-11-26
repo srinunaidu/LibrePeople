@@ -1,0 +1,58 @@
+name: Licence compliance (report-only)
+
+# PREPARED-ONLY, report-only licensing compliance. This workflow NEVER blocks
+# merges: every step uses `continue-on-error: true` and the check script always
+# exits 0. Human gate: NO push to main, NO merge to main, NO release without
+# explicit human approval. All work stays on `chore/licensing-transition`.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [chore/licensing-transition]
+
+concurrency:
+  group: licence-compliance-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  compliance:
+    name: Compliance - inventory, SBOM, allowlist (report-only)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Dry run (stdout only, never fails)
+        continue-on-error: true
+        run: python ci/check_licences.py --check-only
+
+      # FUTURE ENFORCEMENT ONLY (disabled): uncomment only with explicit human
+      # approval per docs/legal/compliance-ci.md (enforcement policy). The
+      # --strict flag exits 1 on any Blocked/Unknown verdict row or finding.
+      # Do NOT add this as a required check or remove continue-on-error
+      # without a human decision recorded in docs/legal/legal-clearance-register.md.
+      # - name: Strict gate (DISABLED - requires human approval)
+      #   continue-on-error: true
+      #   run: python ci/check_licences.py --strict --check-only
+
+      - name: Build report artifacts
+        continue-on-error: true
+        run: |
+          mkdir -p "${{ runner.temp }}/licence-compliance"
+          python ci/check_licences.py --output-dir "${{ runner.temp }}/licence-compliance"
+
+      - name: Upload compliance reports
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: licensing-compliance-report
+          path: ${{ runner.temp }}/licence-compliance/licensing-compliance-report.*
+          if-no-files-found: warn
