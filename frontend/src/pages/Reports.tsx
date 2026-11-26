@@ -1,6 +1,8 @@
 import { useEffect, useState, type ChangeEvent } from "react"
 import { Layout } from "@/components/Layout"
-import {Alert,
+import {
+  Button,
+  Alert,
   CardSkeleton,
   EmptyState,
   LoadingRegion,
@@ -144,8 +146,8 @@ function MovementSection({ teamOnly }: { teamOnly: boolean }) {
         : "Joiners, leavers and attrition with entity, department and location filters. Exports are masked and audit-logged."}
       actions={
         <div className="flex gap-2">
-          <button type="button" onClick={() => download("joiners", "csv")} className="btn btn-secondary" disabled={loading || !joiners}>Joiners CSV</button>
-          <button type="button" onClick={() => download("leavers", "csv")} className="btn btn-secondary" disabled={loading || !leavers}>Leavers CSV</button>
+          <Button variant="secondary" type="button" onClick={() => download("joiners", "csv")} disabled={loading || !joiners}>Joiners CSV</Button>
+          <Button variant="secondary" type="button" onClick={() => download("leavers", "csv")} disabled={loading || !leavers}>Leavers CSV</Button>
         </div>
       }>
       <form className="flex flex-wrap gap-2 px-5 pt-4" onSubmit={(e) => { e.preventDefault(); apply() }}
@@ -160,7 +162,7 @@ function MovementSection({ teamOnly }: { teamOnly: boolean }) {
             <label className="text-xs">Location ID <input type="number" value={filters.location_id} onChange={set("location_id")} className="input w-24" aria-label="Location ID" /></label>
           </>
         )}
-        <button type="submit" className="btn btn-primary self-end" disabled={loading}>{loading ? "Loading…" : "Apply"}</button>
+        <Button variant="primary" className="self-end" type="submit" disabled={loading}>{loading ? "Loading…" : "Apply"}</Button>
       </form>
       <div className="px-5 py-4" aria-live="polite">
         {mvError ? (
@@ -296,10 +298,10 @@ export default function Reports() {
         description="Workforce composition, leave usage, labour cost and the audit trail."
         actions={
           orgRole ? (
-            <button type="button" onClick={load} className="btn btn-secondary" disabled={status === "loading"}>
+            <Button variant="secondary" type="button" onClick={load} disabled={status === "loading"}>
               <IconRefresh className="w-4 h-4" />
               Refresh
-            </button>
+            </Button>
           ) : undefined
         }
       />
@@ -500,15 +502,12 @@ export default function Reports() {
         }
         actions={
           isAdmin ? (
-            <button
-              type="button"
+            <Button variant="secondary" type="button"
               onClick={verifyChain}
-              className="btn btn-secondary"
-              disabled={chainChecking}
-            >
+              disabled={chainChecking}>
               <IconShield className="w-4 h-4" />
               {chainChecking ? "Checking…" : "Verify the chain"}
-            </button>
+            </Button>
           ) : undefined
         }>
         {isAdmin && (

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { Layout } from "@/components/Layout"
 import {
+  Button,
   Alert,
   EmptyState,
   LoadingRegion,
@@ -158,9 +159,9 @@ export default function Offboarding() {
           tone="error"
           title="Offboarding data incomplete"
           action={
-            <button type="button" className="btn btn-secondary btn-sm" onClick={load}>
+            <Button variant="secondary" size="sm" type="button" onClick={load}>
               Reload
-            </button>
+            </Button>
           }
         >
           {error}
@@ -225,8 +226,7 @@ export default function Offboarding() {
             <input id="ob-reason" className="input" value={form.reason}
               onChange={(e) => setForm({ ...form, reason: e.target.value })} />
           </div>
-          <button className="btn btn-primary"
-            disabled={!form.employee_id || !form.last_working_date || busy === "init"}
+          <Button variant="primary" disabled={!form.employee_id || !form.last_working_date || busy === "init"}
             onClick={() => act("init", () => api.post("/offboarding/terminations", {
               employee_id: Number(form.employee_id),
               last_working_date: form.last_working_date,
@@ -234,7 +234,7 @@ export default function Offboarding() {
               reason: form.reason || undefined,
             }), "Termination initiated with default checklist")}>
             {busy === "init" ? "Initiating…" : "Initiate termination"}
-          </button>
+          </Button>
           </div>
         </section>
       ) : (
@@ -274,9 +274,9 @@ export default function Offboarding() {
                       <td>{t.termination_type}</td>
                       <td><StatusPill status={t.status} /></td>
                       <td className="text-right">
-                        <button className="action-link" onClick={() => openTermination(t.id)}>
+                        <Button variant="ghost" onClick={() => openTermination(t.id)}>
                           Open
-                        </button>
+                        </Button>
                       </td>
                     </tr>
                   ))}
@@ -294,14 +294,14 @@ export default function Offboarding() {
             isAdmin && selected && selected.status !== "Completed" ? (
               /* complete/cancel are ADMIN_ROLES (offboarding.py:141/164) */
               <div className="flex items-center gap-2">
-                <button className="btn btn-primary btn-sm" disabled={busy === "done"}
+                <Button variant="primary" size="sm" disabled={busy === "done"}
                   onClick={() => act("done", () => api.post(`/offboarding/terminations/${selected.id}/complete`), "Termination completed")}>
                   {busy === "done" ? "Completing…" : "Complete"}
-                </button>
-                <button className="btn btn-secondary btn-sm" disabled={busy === "cancel"}
+                </Button>
+                <Button variant="secondary" size="sm" disabled={busy === "cancel"}
                   onClick={() => act("cancel", () => api.post(`/offboarding/terminations/${selected.id}/cancel`), "Termination cancelled")}>
                   Cancel
-                </button>
+                </Button>
               </div>
             ) : undefined
           }
@@ -398,10 +398,10 @@ export default function Offboarding() {
                 ))}
               </select>
             </div>
-            <button className="btn btn-primary" disabled={!taskForm.name || busy === "tt"}
+            <Button variant="primary" disabled={!taskForm.name || busy === "tt"}
               onClick={() => act("tt", () => api.post("/offboarding/tasks", taskForm), "Checklist template created")}>
               {busy === "tt" ? "Adding…" : "Add template"}
-            </button>
+            </Button>
           </div>
         ) : (
           <p className="px-5 pt-4 pb-2 text-sm text-text-secondary" role="note">

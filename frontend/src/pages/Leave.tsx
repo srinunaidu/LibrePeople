@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { Layout } from "@/components/Layout"
 import {
+  Button,
   Alert,
   EmptyState,
   LoadingRegion,
@@ -184,9 +185,9 @@ export default function Leave() {
           tone="error"
           title="Leave data incomplete"
           action={
-            <button type="button" className="btn btn-secondary btn-sm" onClick={load}>
+            <Button variant="secondary" size="sm" type="button" onClick={load}>
               Reload
-            </button>
+            </Button>
           }
         >
           {error}
@@ -233,11 +234,11 @@ export default function Leave() {
                   <input id="lt-days" type="number" className="input" value={typeForm.max_days_per_year}
                     onChange={(e) => setTypeForm({ ...typeForm, max_days_per_year: Number(e.target.value) })} />
                 </div>
-                <button className="btn btn-primary" disabled={!typeForm.name || !typeForm.code || busy === "lt"}
+                <Button variant="primary" disabled={!typeForm.name || !typeForm.code || busy === "lt"}
                   onClick={() => act("lt", () => api.post("/leave/types", typeForm), "Leave type created")}>
                   <IconPlus className="w-4 h-4" />
                   {busy === "lt" ? "Adding…" : "Add type"}
-                </button>
+                </Button>
               </div>
             ) : (
               <p className="px-5 pt-4 pb-2 text-sm text-text-secondary" role="note">
@@ -299,13 +300,13 @@ export default function Leave() {
                     ))}
                   </select>
                 </div>
-                <button className="btn btn-secondary" disabled={busy === "en"}
+                <Button variant="secondary" disabled={busy === "en"}
                   onClick={() => act("en", () => api.post("/leave/entitlements", {
                     entitlement_year: entitle.entitlement_year,
                     leave_type_id: entitle.leave_type_id ? Number(entitle.leave_type_id) : null,
                   }), "Entitlements assigned")}>
                   Assign entitlements
-                </button>
+                </Button>
               </div>
             ) : (
               <p className="px-5 py-4 text-sm text-text-secondary" role="note">
@@ -427,8 +428,7 @@ export default function Leave() {
               onBlur={() => setReqErrors((s) => ({ ...s, reason: validateReq("reason", reqForm.reason) }))} />
             {reqErrors.reason && <span className="text-xs text-error-text">{reqErrors.reason}</span>}
           </div>
-          <button className="btn btn-primary"
-            disabled={!reqForm.employee_id || !reqForm.leave_type_id || !reqForm.start_date || !reqForm.end_date || busy === "lr"}
+          <Button variant="primary" disabled={!reqForm.employee_id || !reqForm.leave_type_id || !reqForm.start_date || !reqForm.end_date || busy === "lr"}
             onClick={() => {
               localStorage.removeItem("leave-req-draft"); setShowDraftRestore(false);
               act("lr", () => api.post("/leave/requests", {
@@ -440,7 +440,7 @@ export default function Leave() {
             }), "Leave request created").then(() => setReqForm(initialReqForm))
             }}>
             {busy === "lr" ? "Submitting…" : "Submit request"}
-          </button>
+          </Button>
           </div>
           {draftSavedAt && <p className="px-4 py-1 text-xs text-fg-muted">Draft saved</p>}
         </section>
@@ -472,8 +472,8 @@ export default function Leave() {
               actions={
                 isManager ? (
                   <>
-                    <button type="button" className="btn btn-primary btn-xs min-h-[44px]" onClick={handleBulkApprove} disabled={selectedIds.size === 0}>Approve selected</button>
-                    <button type="button" className="btn btn-secondary btn-xs min-h-[44px]" onClick={handleBulkReject} disabled={selectedIds.size === 0}>Reject selected</button>
+                    <Button variant="primary" size="xs" className="min-h-[44px]" type="button" onClick={handleBulkApprove} disabled={selectedIds.size === 0}>Approve selected</Button>
+                    <Button variant="secondary" size="xs" className="min-h-[44px]" type="button" onClick={handleBulkReject} disabled={selectedIds.size === 0}>Reject selected</Button>
                   </>
                 ) : undefined
               }
@@ -505,21 +505,21 @@ export default function Leave() {
                       <div className="flex items-center gap-2">
                         {r.status === "Pending" && isManager && (
                           <>
-                            <button className="btn btn-primary btn-xs min-h-[44px]" disabled={busy === `ap${r.id}`}
+                            <Button variant="primary" size="xs" className="min-h-[44px]" disabled={busy === `ap${r.id}`}
                               onClick={() => act(`ap${r.id}`, () => api.post(`/leave/requests/${r.id}/approve`), "Approved")}>
                               Approve
-                            </button>
-                            <button className="btn btn-ghost btn-xs min-h-[44px]" disabled={busy === `rj${r.id}`}
+                            </Button>
+                            <Button variant="ghost" size="xs" className="min-h-[44px]" disabled={busy === `rj${r.id}`}
                               onClick={() => act(`rj${r.id}`, () => api.post(`/leave/requests/${r.id}/reject`), "Rejected")}>
                               Reject
-                            </button>
+                            </Button>
                           </>
                         )}
                         {(r.status === "Pending" || r.status === "Approved") && (
-                          <button className="action-link text-fg-muted min-h-[44px] inline-flex items-center" disabled={busy === `cx${r.id}`}
+                          <Button variant="ghost" className="text-fg-muted min-h-[44px] inline-flex items-center" disabled={busy === `cx${r.id}`}
                             onClick={() => act(`cx${r.id}`, () => api.post(`/leave/requests/${r.id}/cancel`), "Cancelled")}>
                             Cancel
-                          </button>
+                          </Button>
                         )}
                         {r.status === "Pending" && !isManager && (
                           <span className="text-xs text-fg-muted">Awaiting a manager</span>

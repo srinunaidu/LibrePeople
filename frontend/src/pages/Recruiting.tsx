@@ -1,6 +1,7 @@
 import { useEffect, useState, cloneElement, isValidElement, useId, type FormEvent, type ReactNode } from "react"
 import { Layout } from "@/components/Layout"
 import {
+  Button,
   Alert,
   EmptyState,
   LoadingRegion,
@@ -253,9 +254,9 @@ export default function Recruiting() {
           tone="error"
           title="Recruiting data incomplete"
           action={
-            <button type="button" className="btn btn-secondary btn-sm" onClick={load}>
+            <Button variant="secondary" size="sm" type="button" onClick={load}>
               Reload
-            </button>
+            </Button>
           }
         >
           {error}
@@ -372,9 +373,7 @@ export default function Recruiting() {
                   ))}
                 </select>
               </Field>
-              <button
-                className="btn btn-primary"
-                disabled={!reqForm.req_number || !reqForm.title || !reqForm.department_id || busy === "rq"}
+              <Button variant="primary" disabled={!reqForm.req_number || !reqForm.title || !reqForm.department_id || busy === "rq"}
                 onClick={() =>
                   run("rq", () => api.post("/requisitions/", {
                     ...reqForm,
@@ -382,11 +381,10 @@ export default function Recruiting() {
                     job_id: reqForm.job_id ? Number(reqForm.job_id) : null,
                     openings: Number(reqForm.openings),
                   }), "Requisition created")
-                }
-              >
+                }>
                 <IconPlus className="w-4 h-4" />
                 {busy === "rq" ? "Creating…" : "Create"}
-              </button>
+              </Button>
             </div>
           </section>
         )}
@@ -453,14 +451,11 @@ export default function Recruiting() {
                   ))}
                 </select>
               </Field>
-              <button
-                className="btn btn-primary"
-                disabled={!candForm.first_name || !candForm.last_name || !candForm.email || busy === "cd"}
-                onClick={() => run("cd", () => api.post("/candidates/", candForm), "Candidate added")}
-              >
+              <Button variant="primary" disabled={!candForm.first_name || !candForm.last_name || !candForm.email || busy === "cd"}
+                onClick={() => run("cd", () => api.post("/candidates/", candForm), "Candidate added")}>
                 <IconPlus className="w-4 h-4" />
                 {busy === "cd" ? "Adding…" : "Add candidate"}
-              </button>
+              </Button>
             </div>
           </section>
         )}
@@ -533,20 +528,17 @@ export default function Recruiting() {
                   ))}
                 </select>
               </Field>
-              <button
-                className="btn btn-primary"
-                disabled={!appForm.requisition_id || !appForm.candidate_id || busy === "ap"}
+              <Button variant="primary" disabled={!appForm.requisition_id || !appForm.candidate_id || busy === "ap"}
                 onClick={() =>
                   run("ap", () => api.post("/applications/", {
                     ...appForm,
                     requisition_id: Number(appForm.requisition_id),
                     candidate_id: Number(appForm.candidate_id),
                   }), "Application created")
-                }
-              >
+                }>
                 <IconPlus className="w-4 h-4" />
                 {busy === "ap" ? "Creating…" : "Create application"}
-              </button>
+              </Button>
             </div>
           </section>
         )}
@@ -612,9 +604,7 @@ export default function Recruiting() {
                 <input id="of-start" type="date" className="input" value={offerForm.start_date}
                   onChange={(e) => setOfferForm({ ...offerForm, start_date: e.target.value })} />
               </Field>
-              <button
-                className="btn btn-primary"
-                disabled={!offerForm.offer_number || !offerForm.application_id || busy === "of"}
+              <Button variant="primary" disabled={!offerForm.offer_number || !offerForm.application_id || busy === "of"}
                 onClick={() =>
                   run("of", () => api.post("/offers/", {
                     offer_number: offerForm.offer_number,
@@ -625,11 +615,10 @@ export default function Recruiting() {
                     offer_date: offerForm.offer_date,
                     status: "Draft",
                   }), "Offer created")
-                }
-              >
+                }>
                 <IconPlus className="w-4 h-4" />
                 {busy === "of" ? "Creating…" : "Create offer"}
-              </button>
+              </Button>
             </div>
           </section>
         )}
@@ -674,18 +663,18 @@ export default function Recruiting() {
                         <td><StatusPill status={o.status} /></td>
                         <td>
                           <div className="flex items-center gap-3 flex-wrap">
-                            <button className="action-link" disabled={busy === `l${o.id}`}
+                            <Button variant="ghost" disabled={busy === `l${o.id}`}
                               onClick={() => run(`l${o.id}`, () => api.post(`/offers/${o.id}/letter`), "Offer letter generated")}>
                               Letter
-                            </button>
-                            <button className="action-link" disabled={busy === `a${o.id}`}
+                            </Button>
+                            <Button variant="ghost" disabled={busy === `a${o.id}`}
                               onClick={() => run(`a${o.id}`, () => api.post(`/offers/${o.id}/accept`), "Offer accepted")}>
                               Accept
-                            </button>
-                            <button className="action-link" disabled={busy === `h${o.id}`}
+                            </Button>
+                            <Button variant="ghost" disabled={busy === `h${o.id}`}
                               onClick={() => setHireOfferId(o.id)}>
                               Hire
-                            </button>
+                            </Button>
                             {o.letter_url && (
                               <a className="action-link text-text-secondary" href={fileUrl(o.letter_url)}
                                 target="_blank" rel="noreferrer">
@@ -716,8 +705,8 @@ export default function Recruiting() {
               <input id="hire-employee-id" className="input" value={hireEmployeeId} onChange={(e) => setHireEmployeeId(e.target.value)} placeholder="EMP-1005" autoFocus />
             </div>
             <div className="flex justify-end gap-2">
-              <button type="button" className="btn btn-secondary" onClick={() => { setHireOfferId(null); setHireEmployeeId("") }}>Cancel</button>
-              <button type="button" className="btn btn-primary" disabled={!hireEmployeeId.trim() || busy === `h${hireOfferId}`}
+              <Button variant="secondary" type="button" onClick={() => { setHireOfferId(null); setHireEmployeeId("") }}>Cancel</Button>
+              <Button variant="primary" type="button" disabled={!hireEmployeeId.trim() || busy === `h${hireOfferId}`}
                 onClick={() => {
                   const eid = hireEmployeeId.trim()
                   if (!eid) return
@@ -726,7 +715,7 @@ export default function Recruiting() {
                   run(`h${oid}`, () => api.post(`/offers/${oid}/hire`, { employee_id: eid }), "Hired — onboarding checklist created")
                 }}>
                 Hire
-              </button>
+              </Button>
             </div>
           </div>
         </div>

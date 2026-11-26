@@ -8,6 +8,7 @@ import { useCallback, useEffect, useState } from "react"
 import { Link, useParams } from "react-router-dom"
 import { Layout } from "@/components/Layout"
 import {
+  Button,
   Alert,
   EmptyState,
   LoadingRegion,
@@ -145,9 +146,9 @@ export default function ExpenseDetail() {
           title="Expense claim not found"
           description="This claim was removed or never existed. Reload to get the current list."
           action={
-            <button type="button" className="btn btn-secondary btn-sm" onClick={load}>
+            <Button variant="secondary" size="sm" type="button" onClick={load}>
               Reload
-            </button>
+            </Button>
           }
         />
       </Layout>
@@ -220,52 +221,40 @@ export default function ExpenseDetail() {
         <SectionCard compact title="Actions" description="Each move posts, then the claim is re-read.">
           <div className="flex flex-wrap gap-2">
             {canSubmit(claim.status) && (
-              <button
-                type="button"
-                className="btn btn-primary btn-sm"
+              <Button variant="primary" size="sm" type="button"
                 disabled={busy === "submit"}
                 onClick={() =>
                   act("submit", () => api.post(`/expenses/claims/${claim.id}/submit`), "Claim submitted.")
-                }
-              >
+                }>
                 {busy === "submit" ? "Submitting…" : "Submit for approval"}
-              </button>
+              </Button>
             )}
             {showActions && canL1Approve(role, claim.status) && (
-              <button
-                type="button"
-                className="btn btn-primary btn-sm"
+              <Button variant="primary" size="sm" type="button"
                 disabled={busy === "l1"}
                 onClick={() =>
                   act("l1", () => api.post(`/expenses/claims/${claim.id}/l1-approve`), "L1 approval recorded.")
-                }
-              >
+                }>
                 {busy === "l1" ? "Approving…" : "Approve (L1)"}
-              </button>
+              </Button>
             )}
             {showActions && canFinalApprove(role, claim.status) && (
-              <button
-                type="button"
-                className="btn btn-primary btn-sm"
+              <Button variant="primary" size="sm" type="button"
                 disabled={busy === "approve"}
                 onClick={() =>
                   act("approve", () => api.post(`/expenses/claims/${claim.id}/approve`), "Final approval recorded.")
-                }
-              >
+                }>
                 {busy === "approve" ? "Approving…" : "Approve (final)"}
-              </button>
+              </Button>
             )}
             {showActions && isAdminRole(role) && canMarkPaid(role, claim.status, claim.payment_status) && (
-              <button
-                type="button"
-                className="btn btn-primary btn-sm"
+              <Button variant="primary" size="sm" type="button"
                 disabled={busy === "paid"}
                 onClick={() =>
                   act("paid", () => api.post(`/expenses/claims/${claim.id}/mark-paid`), "Claim marked paid.")
-                }
-              >
+                }>
                 {busy === "paid" ? "Marking…" : "Mark paid"}
-              </button>
+              </Button>
             )}
             {showActions && canReject(role, claim.status) && (
               <span className="inline-flex items-center gap-2">
@@ -276,9 +265,7 @@ export default function ExpenseDetail() {
                   onChange={(e) => setRejectReason(e.target.value)}
                   placeholder="Reason (optional)"
                 />
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-sm"
+                <Button variant="secondary" size="sm" type="button"
                   disabled={busy === "reject"}
                   onClick={() =>
                     act(
@@ -286,23 +273,19 @@ export default function ExpenseDetail() {
                       () => api.post(`/expenses/claims/${claim.id}/reject`, { reason: rejectReason || undefined }),
                       "Claim rejected.",
                     )
-                  }
-                >
+                  }>
                   {busy === "reject" ? "Rejecting…" : "Reject"}
-                </button>
+                </Button>
               </span>
             )}
             {canRework(claim.status) && (
-              <button
-                type="button"
-                className="btn btn-secondary btn-sm"
+              <Button variant="secondary" size="sm" type="button"
                 disabled={busy === "rework"}
                 onClick={() =>
                   act("rework", () => api.post(`/expenses/claims/${claim.id}/rework`), "Claim sent back to draft.")
-                }
-              >
+                }>
                 {busy === "rework" ? "Sending…" : "Send back to draft"}
-              </button>
+              </Button>
             )}
             {!canSubmit(claim.status) &&
               !canL1Approve(role, claim.status) &&
@@ -331,14 +314,11 @@ export default function ExpenseDetail() {
                 aria-label="Receipt file"
                 onChange={(e) => setFile(e.target.files?.[0] ?? null)}
               />
-              <button
-                type="button"
-                className="btn btn-secondary btn-sm"
+              <Button variant="secondary" size="sm" type="button"
                 disabled={!file || busy === "receipt"}
-                onClick={uploadReceipt}
-              >
+                onClick={uploadReceipt}>
                 {busy === "receipt" ? "Uploading…" : "Upload receipt"}
-              </button>
+              </Button>
             </div>
           )}
           {receipts.length === 0 ? (

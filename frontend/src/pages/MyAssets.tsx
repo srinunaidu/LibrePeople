@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { Layout } from "@/components/Layout"
 import {
+  Button,
   Alert,
   EmptyState,
   LoadingRegion,
@@ -76,15 +77,15 @@ export default function MyAssets() {
         title="My Assets"
         description="Equipment assigned to you. Acknowledge receipt so custody is on record."
         actions={
-          <button type="button" className="btn btn-secondary btn-sm" onClick={load}>
+          <Button variant="secondary" size="sm" type="button" onClick={load}>
             <IconRefresh className="w-4 h-4" /> Reload
-          </button>
+          </Button>
         }
       />
 
       {error && (
         <Alert tone="error" title="My assets unavailable" action={
-          <button type="button" className="btn btn-secondary btn-sm" onClick={load}>Retry</button>
+          <Button variant="secondary" size="sm" type="button" onClick={load}>Retry</Button>
         }>
           {error}
         </Alert>
@@ -132,12 +133,12 @@ export default function MyAssets() {
                           </td>
                           <td>
                             {ackable(a) ? (
-                              <button type="button" className="btn btn-primary btn-sm"
+                              <Button variant="primary" size="sm" type="button"
                                 disabled={busy === a.id}
                                 onClick={() => acknowledge(a)}>
                                 <IconCheck className="w-4 h-4" />
                                 {busy === a.id ? "Acknowledging…" : "Acknowledge receipt"}
-                              </button>
+                              </Button>
                             ) : (
                               <span className="text-sm text-fg-muted">On record</span>
                             )}

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import { Layout } from "@/components/Layout"
 import {
+  Button,
   Alert,
   EmptyState,
   LoadingRegion,
@@ -161,9 +162,9 @@ export default function Scheduling() {
           tone="error"
           title="Scheduling data incomplete"
           action={
-            <button type="button" className="btn btn-secondary btn-sm" onClick={load}>
+            <Button variant="secondary" size="sm" type="button" onClick={load}>
               Reload
-            </button>
+            </Button>
           }
         >
           {error}
@@ -213,11 +214,11 @@ export default function Scheduling() {
                 <input id="st-end" type="time" className="input" value={tpl.end_time}
                   onChange={(e) => setTpl({ ...tpl, end_time: e.target.value })} />
               </div>
-              <button className="btn btn-primary" disabled={!tpl.name || !tpl.code || busy === "tpl"}
+              <Button variant="primary" disabled={!tpl.name || !tpl.code || busy === "tpl"}
                 onClick={() => act("tpl", () => api.post("/scheduling/shift-templates", tpl), "Shift template created")}>
                 <IconPlus className="w-4 h-4" />
                 {busy === "tpl" ? "Adding…" : "Add template"}
-              </button>
+              </Button>
             </div>
           ) : (
             <p className="px-5 pt-4 pb-2 text-sm text-text-secondary" role="note">
@@ -283,8 +284,7 @@ export default function Scheduling() {
                 <input id="rg-to" type="date" className="input" value={form.end_date}
                   onChange={(e) => setForm({ ...form, end_date: e.target.value })} />
               </div>
-              <button className="btn btn-primary"
-                disabled={!form.employee_id || !form.shift_template_id || !form.start_date || !form.end_date || busy === "rg"}
+              <Button variant="primary" disabled={!form.employee_id || !form.shift_template_id || !form.start_date || !form.end_date || busy === "rg"}
                 onClick={() => act("rg", () => api.post("/scheduling/roster/generate", {
                   employee_id: Number(form.employee_id),
                   shift_template_id: Number(form.shift_template_id),
@@ -292,7 +292,7 @@ export default function Scheduling() {
                   end_date: form.end_date,
                 }), "Roster generated")}>
                 {busy === "rg" ? "Generating…" : "Generate roster"}
-              </button>
+              </Button>
             </div>
           ) : (
             <p className="px-5 pb-4 text-sm text-text-secondary" role="note">

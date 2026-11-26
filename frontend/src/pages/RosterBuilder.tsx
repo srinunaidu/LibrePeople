@@ -2,7 +2,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Link } from "react-router-dom"
 import { addDays, eachDayOfInterval, format } from "date-fns"
 import { Layout } from "@/components/Layout"
-import {Alert,
+import {
+  Button,
+  Alert,
   EmptyState,
   LoadingRegion,
   PageHeader,
@@ -633,9 +635,9 @@ export default function RosterBuilder() {
                   tone="error"
                   title="Reference data unavailable"
                   action={
-                    <button type="button" className="btn btn-secondary btn-sm" onClick={loadLookups}>
+                    <Button variant="secondary" size="sm" type="button" onClick={loadLookups}>
                       Try again
-                    </button>
+                    </Button>
                   }
                 >
                   {loadError}
@@ -851,14 +853,11 @@ export default function RosterBuilder() {
                   </div>
 
                   <div className="px-4 py-4">
-                    <button
-                      className="btn btn-primary"
-                      disabled={generating || rangeTooLong || !locationCode || hasDemand === false}
-                      onClick={generate}
-                    >
+                    <Button variant="primary" disabled={generating || rangeTooLong || !locationCode || hasDemand === false}
+                      onClick={generate}>
                       <IconCalendar className="w-4 h-4" />
                       {generating ? "Solving…" : "Generate draft roster"}
-                    </button>
+                    </Button>
                     <p className="field-hint mt-1">
                       The solver runs server-side and can take the whole time limit for a heavy range.
                     </p>
@@ -875,14 +874,11 @@ export default function RosterBuilder() {
                   draft.objective_value != null ? ` · objective ${Number(draft.objective_value).toFixed(2)}` : ""
                 }`}
                 actions={
-                  <button
-                    className="btn btn-primary"
-                    disabled={publishing || draft.valid === false}
-                    onClick={publish}
-                  >
+                  <Button variant="primary" disabled={publishing || draft.valid === false}
+                    onClick={publish}>
                     <IconCheck className="w-4 h-4" />
                     {publishing ? "Publishing…" : "Publish version"}
-                  </button>
+                  </Button>
                 }
               >
                 {draft.timed_out && (
@@ -972,20 +968,14 @@ export default function RosterBuilder() {
                                   </option>
                                 ))}
                               </select>
-                              <button
-                                className="action-link"
-                                disabled={adjusting === a.slot_instance || employees.length === 0}
-                                onClick={() => adjust(a.slot_instance, "reassign")}
-                              >
+                              <Button variant="ghost" disabled={adjusting === a.slot_instance || employees.length === 0}
+                                onClick={() => adjust(a.slot_instance, "reassign")}>
                                 {adjusting === a.slot_instance ? "Applying…" : "Apply"}
-                              </button>
-                              <button
-                                className="action-link-danger"
-                                disabled={adjusting === a.slot_instance}
-                                onClick={() => adjust(a.slot_instance, "unassign")}
-                              >
+                              </Button>
+                              <Button variant="danger" disabled={adjusting === a.slot_instance}
+                                onClick={() => adjust(a.slot_instance, "unassign")}>
                                 Unassign
-                              </button>
+                              </Button>
                             </div>
                           </td>
                         </tr>
@@ -1049,13 +1039,10 @@ export default function RosterBuilder() {
             title="Roster versions"
             description="Every draft and published version. A published version is immutable; new work goes through a draft."
             actions={
-              <button
-                className="btn btn-secondary btn-sm"
-                onClick={() => loadVersions(versionPage)}
-                disabled={versionsLoading}
-              >
+              <Button variant="secondary" size="sm" onClick={() => loadVersions(versionPage)}
+                disabled={versionsLoading}>
                 <IconRefresh className="w-4 h-4" /> Refresh
-              </button>
+              </Button>
             }
           >
             {versionsLoading ? (
@@ -1096,22 +1083,19 @@ export default function RosterBuilder() {
                           <td className="num">{v.unfilled_count}</td>
                           <td>
                             <div className="flex items-center gap-3 flex-wrap">
-                              <button className="action-link" onClick={() => loadVersionDetail(v.id)}>
+                              <Button variant="ghost" onClick={() => loadVersionDetail(v.id)}>
                                 Detail
-                              </button>
+                              </Button>
                               {v.status === "published" && (
-                                <button
-                                  className="action-link"
-                                  disabled={rolling === `v${v.id}`}
-                                  onClick={() => rollForward(v)}
-                                >
+                                <Button variant="ghost" disabled={rolling === `v${v.id}`}
+                                  onClick={() => rollForward(v)}>
                                   {rolling === `v${v.id}` ? "Copying…" : "Roll forward"}
-                                </button>
+                                </Button>
                               )}
                               {v.status === "draft" && (
-                                <button className="action-link" onClick={() => reviewDraft(v.id)}>
+                                <Button variant="ghost" onClick={() => reviewDraft(v.id)}>
                                   Review draft
-                                </button>
+                                </Button>
                               )}
                             </div>
                           </td>
@@ -1122,26 +1106,20 @@ export default function RosterBuilder() {
                 </div>
                 {(versionMeta.total_pages ?? 0) > 1 && (
                   <div className="px-4 py-2 border-t border-border flex items-center gap-3 flex-wrap">
-                    <button
-                      className="btn btn-secondary btn-sm"
-                      disabled={versionPage <= 1 || versionsLoading}
-                      onClick={() => loadVersions(versionPage - 1)}
-                    >
+                    <Button variant="secondary" size="sm" disabled={versionPage <= 1 || versionsLoading}
+                      onClick={() => loadVersions(versionPage - 1)}>
                       Previous
-                    </button>
+                    </Button>
                     <span className="text-sm text-text-secondary">
                       Page {versionPage} of {versionMeta.total_pages ?? "?"}
                       {versionMeta.total ? ` · ${versionMeta.total} versions` : ""}
                     </span>
-                    <button
-                      className="btn btn-secondary btn-sm"
-                      disabled={
+                    <Button variant="secondary" size="sm" disabled={
                         versionPage >= (versionMeta.total_pages ?? 1) || versionsLoading
                       }
-                      onClick={() => loadVersions(versionPage + 1)}
-                    >
+                      onClick={() => loadVersions(versionPage + 1)}>
                       Next
-                    </button>
+                    </Button>
                   </div>
                 )}
               </>
@@ -1249,13 +1227,10 @@ export default function RosterBuilder() {
                         ))}
                     </select>
                   </div>
-                  <button
-                    className="btn btn-secondary"
-                    disabled={!compareBase || compareLoading}
-                    onClick={loadCompare}
-                  >
+                  <Button variant="secondary" disabled={!compareBase || compareLoading}
+                    onClick={loadCompare}>
                     {compareLoading ? "Comparing…" : "Compare versions"}
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
@@ -1369,14 +1344,11 @@ export default function RosterBuilder() {
                         ))}
                       </select>
                     </div>
-                    <button
-                      className="btn btn-primary"
-                      disabled={!attendanceVersion || autoCreating}
-                      onClick={autoCreate}
-                    >
+                    <Button variant="primary" disabled={!attendanceVersion || autoCreating}
+                      onClick={autoCreate}>
                       <IconUsers className="w-4 h-4" />
                       {autoCreating ? "Creating…" : "Auto-create time entries"}
-                    </button>
+                    </Button>
                   </div>
                   <p className="px-4 py-2 text-xs text-text-secondary border-b border-border">
                     Auto-create writes clock in/out records for every scheduled shift that has none yet —
@@ -1463,14 +1435,11 @@ export default function RosterBuilder() {
                         onChange={(e) => setGrace(e.target.value)}
                       />
                     </div>
-                    <button
-                      className="btn btn-secondary"
-                      disabled={deviationsLoading}
-                      onClick={loadDeviations}
-                    >
+                    <Button variant="secondary" disabled={deviationsLoading}
+                      onClick={loadDeviations}>
                       <IconRefresh className="w-4 h-4" />
                       {deviationsLoading ? "Checking…" : "Check deviations"}
-                    </button>
+                    </Button>
                   </>
                 }
               >
