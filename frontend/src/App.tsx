@@ -244,13 +244,20 @@ function AppRoutes() {
       <Route path="/mfa" element={<ProtectedRoute><Mfa /></ProtectedRoute>} />
 
       {/* Admin pages */}
+      {/* D1 (portals-completion) FAIL CLOSED: branding/entitlements backend
+          endpoints require_roles("SuperAdmin") (client_onboarding.py settings +
+          feature-flags GET/PUT), and the pages gate writes to SuperAdmin, so
+          the routes admit SuperAdmin only — never wider than the backend.
+          UserAdmin stays SuperAdmin+HR: backend users CRUD allows ADMIN_ROLES
+          (SuperAdmin, HR) and the page gates read to HR with impersonate
+          SuperAdmin-only, matching POST /auth/users/{id}/impersonate. */}
       <Route path="/admin/users" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><UserAdmin /></ProtectedRoute>} />
-      <Route path="/admin/branding" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><TenantBranding /></ProtectedRoute>} />
-      <Route path="/admin/entitlements" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><ModuleEntitlements /></ProtectedRoute>} />
+      <Route path="/admin/branding" element={<ProtectedRoute roles={["SuperAdmin"]}><TenantBranding /></ProtectedRoute>} />
+      <Route path="/admin/entitlements" element={<ProtectedRoute roles={["SuperAdmin"]}><ModuleEntitlements /></ProtectedRoute>} />
       <Route path="/admin/workflow" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><WorkflowApproval /></ProtectedRoute>} />
       <Route path="/admin/integrations" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><IntegrationCredentials /></ProtectedRoute>} />
       <Route path="/admin/backup" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><BackupRestore /></ProtectedRoute>} />
-      <Route path="/admin/feature-flags" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><FeatureFlags /></ProtectedRoute>} />
+      <Route path="/admin/feature-flags" element={<ProtectedRoute roles={["SuperAdmin"]}><FeatureFlags /></ProtectedRoute>} />
       <Route path="/admin/locale" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><LocaleConfig /></ProtectedRoute>} />
       <Route path="/admin/retention-export" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><RetentionExport /></ProtectedRoute>} />
       <Route path="/admin/candidate-stages" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><CandidateStages /></ProtectedRoute>} />
@@ -336,7 +343,7 @@ function AppRoutes() {
       <Route path="/admin/mentoring-development" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><MentoringDevelopment /></ProtectedRoute>} />
       <Route path="/admin/mobile-interaction" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><MobileInteraction /></ProtectedRoute>} />
       <Route path="/admin/model-versioning" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><ModelVersioning /></ProtectedRoute>} />
-      <Route path="/admin/module-entitlements" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><ModuleEntitlements /></ProtectedRoute>} />
+      <Route path="/admin/module-entitlements" element={<ProtectedRoute roles={["SuperAdmin"]}><ModuleEntitlements /></ProtectedRoute>} />
       <Route path="/admin/multi-location-assignments" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><MultiLocationAssignments /></ProtectedRoute>} />
       <Route path="/admin/offer-approvals" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><OfferApprovals /></ProtectedRoute>} />
       <Route path="/admin/org-chart" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><OrgChart /></ProtectedRoute>} />
@@ -366,7 +373,7 @@ function AppRoutes() {
       <Route path="/admin/team-availability" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><TeamAvailability /></ProtectedRoute>} />
       <Route path="/admin/templates-drafts-publish" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><TemplatesDraftsPublish /></ProtectedRoute>} />
       <Route path="/admin/ten-step-journey" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><TenStepJourney /></ProtectedRoute>} />
-      <Route path="/admin/tenant-branding" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><TenantBranding /></ProtectedRoute>} />
+      <Route path="/admin/tenant-branding" element={<ProtectedRoute roles={["SuperAdmin"]}><TenantBranding /></ProtectedRoute>} />
       <Route path="/admin/timesheet-lock" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><TimesheetLock /></ProtectedRoute>} />
       <Route path="/admin/timesheets" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><Timesheets /></ProtectedRoute>} />
       <Route path="/admin/training-assignments" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><TrainingAssignments /></ProtectedRoute>} />

@@ -57,46 +57,39 @@ export interface NavGroup {
   items: NavItem[]
 }
 
-/* Every /admin/* route registered in App.tsx (L243-387), one click away
- * inside the collapsible Admin console. Labels distinguish the legacy
- * aliases of the same screen (e.g. /admin/users vs /admin/user-admin). */
+/* Admin console — one entry per screen (portals-completion AC4: <20 entries,
+ * no double aliases). Alias routes dropped (same component as the canonical
+ * entry): /admin/user-admin → users, /admin/tenant-branding → branding,
+ * /admin/module-entitlements → entitlements, /admin/workflow-approval →
+ * workflow, /admin/integration-credentials + /admin/integrations-hub stay
+ * separate (Credentials vs Hub are different screens; the -credentials alias
+ * of Credentials is dropped), /admin/backup-restore → backup,
+ * /admin/locale-config + /admin/ad-03 → locale, /admin/ad-09 →
+ * retention-export. Screens already reachable in the main groups are not
+ * repeated here: /admin/project-status + /project-status, /admin/design-gallery
+ * + /admin/theme → Theme & Gallery, /admin/data-quality → /data-quality,
+ * /admin/hr-01 → People, /admin/break-glass + /admin/compliance → Platform &
+ * Admin. /admin/platform-showcase is a marketing demo, not an admin function.
+ */
 const ADMIN_ITEMS: NavItem[] = [
-  { label: "User Admin (/admin/users)", to: "/admin/users" },
-  { label: "Tenant Branding (branding)", to: "/admin/branding" },
-  { label: "Entitlements", to: "/admin/entitlements" },
-  { label: "Workflow Approval (workflow)", to: "/admin/workflow" },
-  { label: "Integration Credentials (integrations)", to: "/admin/integrations" },
-  { label: "Backup / Restore (backup)", to: "/admin/backup" },
+  { label: "User Admin", to: "/admin/users" },
+  { label: "Tenant Branding", to: "/admin/branding" },
+  { label: "Module Entitlements", to: "/admin/entitlements" },
+  { label: "Workflow Approval", to: "/admin/workflow" },
+  { label: "Integration Credentials", to: "/admin/integrations" },
+  { label: "Backup / Restore", to: "/admin/backup" },
   { label: "Feature Flags", to: "/admin/feature-flags" },
-  { label: "Locale Config (locale)", to: "/admin/locale" },
+  { label: "Locale Config", to: "/admin/locale" },
   { label: "Retention Export", to: "/admin/retention-export" },
-  // Candidate Stages hidden from nav (admin-cleanup) — route + file stay working.
-  { label: "Project Status", to: "/admin/project-status" },
-  { label: "Design Gallery", to: "/admin/design-gallery" },
-  { label: "Theme Studio", to: "/admin/theme" },
-  { label: "Site Page: Platform Showcase", to: "/admin/platform-showcase" },
-  { label: "Locale Config (AD-03)", to: "/admin/ad-03" },
-  { label: "Retention Export (AD-09)", to: "/admin/ad-09" },
-  { label: "Employee Directory (HR-01)", to: "/admin/hr-01" },
-  { label: "Backup / Restore", to: "/admin/backup-restore" },
   { label: "Bank Export", to: "/admin/bank-export" },
-  { label: "Data Quality", to: "/admin/data-quality" },
   { label: "Documents", to: "/admin/documents" },
   { label: "ER Cases", to: "/admin/er-cases" },
   { label: "Export & Erasure", to: "/admin/export-erasure" },
   { label: "Goals & OKR", to: "/admin/goals-okr" },
   { label: "Headcount", to: "/admin/headcount-cost" },
-  { label: "Integration Credentials", to: "/admin/integration-credentials" },
   { label: "Integrations Hub", to: "/admin/integrations-hub" },
   { label: "Interview Scheduling", to: "/admin/interview-scheduling" },
-  { label: "Locale Config", to: "/admin/locale-config" },
-  { label: "Module Entitlements", to: "/admin/module-entitlements" },
   { label: "Org Chart", to: "/admin/org-chart" },
-  { label: "Tenant Branding", to: "/admin/tenant-branding" },
-  { label: "User Admin", to: "/admin/user-admin" },
-  { label: "Workflow Approval", to: "/admin/workflow-approval" },
-  { label: "Break-glass", to: "/admin/break-glass" },
-  { label: "Compliance Center", to: "/admin/compliance" },
 ]
 
 /* "g <letter>" navigation targets — same keys the old workspace rail

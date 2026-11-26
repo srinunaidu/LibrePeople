@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { useTenantNav } from "@/lib/tenantPath"
 import { Layout } from "@/components/Layout"
 import {
   Alert,
@@ -7,13 +9,9 @@ import {
   PageHeader,
   SectionCard,
   KPICard,
-  StatCard,
 } from "@/components/ui"
 import { NeedsAction, type NeedItem } from "@/components/home/NeedsAction"
 import {
-  IconChart,
-  IconCheck,
-  IconClock,
   IconExit,
   IconInbox,
   IconShield,
@@ -27,11 +25,12 @@ interface HrCase { id: number; subject: string; status: string; priority: string
 interface Requisition { id: number; req_number: string; title: string; status: string; openings: number }
 interface Termination { id: number; employee_id: number; status: string; last_working_date: string; termination_type: string }
 
-const mockSparklineData = [45, 52, 48, 55, 52, 58, 55, 62, 58, 65, 62, 68]
-const mockCaseSparkline = [12, 15, 13, 18, 16, 20, 18, 22, 20, 24, 22, 26]
-const mockReqSparkline = [8, 10, 9, 12, 11, 14, 13, 16, 15, 18, 17, 20]
+// D3 (portals-completion): no sparkline/trend props on portal KPIs — there is
+// no backend aggregation for deltas, so every KPI shows a live value + hint.
 
 export default function HRHome() {
+  const navigate = useNavigate()
+  const tenantNav = useTenantNav()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [cases, setCases] = useState<HrCase[]>([])
@@ -78,10 +77,10 @@ export default function HRHome() {
   const deptCount = (headcount?.by_department || []).length
 
   const needs: NeedItem[] = [
-    { id: "cases", label: "Open HR cases", count: openCases, description: "Employee cases needing resolution", actionLabel: "Review", onAction: () => { window.location.href = "/platform" }, tone: "rose" },
-    { id: "requisitions", label: "Open requisitions", count: openReqs, description: "Roles awaiting candidates or approval", actionLabel: "View", onAction: () => { window.location.href = "/recruiting" }, tone: "brand" },
-    { id: "violations", label: "Compliance violations", count: openViolations, description: "Policy or rule violations needing attention", actionLabel: "Review", onAction: () => { window.location.href = "/platform" }, tone: "rose" },
-    { id: "terminations", label: "Terminations in progress", count: activeTerms, description: "Exit checklists not yet complete", actionLabel: "View", onAction: () => { window.location.href = "/offboarding" }, tone: "amber" },
+    { id: "cases", label: "Open HR cases", count: openCases, description: "Employee cases needing resolution", actionLabel: "Review", onAction: () => { navigate(tenantNav.to("/admin/er-cases")) }, tone: "rose" },
+    { id: "requisitions", label: "Open requisitions", count: openReqs, description: "Roles awaiting candidates or approval", actionLabel: "View", onAction: () => { navigate(tenantNav.to("/recruiting")) }, tone: "brand" },
+    { id: "violations", label: "Compliance violations", count: openViolations, description: "Policy or rule violations needing attention", actionLabel: "Review", onAction: () => { navigate(tenantNav.to("/platform/compliance")) }, tone: "rose" },
+    { id: "terminations", label: "Terminations in progress", count: activeTerms, description: "Exit checklists not yet complete", actionLabel: "View", onAction: () => { navigate(tenantNav.to("/offboarding")) }, tone: "amber" },
   ]
 
   if (loading) {
@@ -116,9 +115,6 @@ export default function HRHome() {
           hint={`${deptCount} departments`}
           icon={<IconUsers className="w-5 h-5" />}
           tone="brand"
-          sparklineData={mockSparklineData}
-          trendValue={8}
-          trendLabel="vs last quarter"
         />
         <KPICard
           label="Open HR Cases"
@@ -126,9 +122,6 @@ export default function HRHome() {
           hint={`${cases.length} total`}
           icon={<IconInbox className="w-5 h-5" />}
           tone="rose"
-          sparklineData={mockCaseSparkline}
-          trendValue={12}
-          trendLabel="new this month"
         />
         <KPICard
           label="Open Requisitions"
@@ -136,9 +129,6 @@ export default function HRHome() {
           hint={`${requisitions.length} total`}
           icon={<IconTarget className="w-5 h-5" />}
           tone="amber"
-          sparklineData={mockReqSparkline}
-          trendValue={5}
-          trendLabel="vs last month"
         />
         <KPICard
           label="Compliance Violations"
@@ -146,14 +136,14 @@ export default function HRHome() {
           hint={`${violations.length} total`}
           icon={<IconShield className="w-5 h-5" />}
           tone="violet"
-          sparklineData={mockCaseSparkline}
-          trendValue={-3}
-          trendLabel="resolved"
         />
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-0">
         <SectionCard compact icon={<IconUsers />} title="Headcount by department" description="Workforce composition across the organisation.">
+          <div className="flex justify-end px-5 pt-3">
+            <button className="action-link" onClick={() => { navigate(tenantNav.to("/admin/headcount-cost")) }}>View cost report</button>
+          </div>
           {!headcount?.by_department || headcount.by_department.length === 0 ? (
             <EmptyState title="No headcount data" description="Headcount appears once employees are assigned to departments." />
           ) : (
@@ -225,6 +215,9 @@ export default function HRHome() {
               </table>
             </div>
           )}
+          <div className="flex justify-end px-5 py-3">
+            <button className="action-link" onClick={() => { navigate(tenantNav.to("/offboarding")) }}>View all exits</button>
+          </div>
         </SectionCard>
 
         <SectionCard compact icon={<IconTarget />} title="Open requisitions" description="Roles currently being recruited.">
@@ -236,12 +229,21 @@ export default function HRHome() {
                 <li key={r.id} className="flex items-center gap-3 px-5 py-3 hover:bg-surface-hover">
                   <span className="text-sm font-medium text-fg flex-1 truncate">{r.title}</span>
                   <span className="text-xs text-fg-muted">{r.openings} opening{r.openings !== 1 ? "s" : ""}</span>
-                  <button className="action-link" onClick={() => { window.location.href = "/recruiting" }}>View</button>
+                  <button className="action-link" onClick={() => { navigate(tenantNav.to("/recruiting")) }}>View</button>
                 </li>
               ))}
             </ul>
           )}
+          <div className="flex justify-end px-5 py-3">
+            <button className="action-link" onClick={() => { navigate(tenantNav.to("/recruiting")) }}>View all requisitions</button>
+          </div>
         </SectionCard>
+      </div>
+
+      <div className="card p-4 text-xs text-fg-muted flex flex-wrap items-center gap-x-4 gap-y-2">
+        <span className="font-semibold text-fg">Payroll prep</span>
+        <button className="action-link" onClick={() => { navigate(tenantNav.to("/platform/payroll/setup")) }}>Payroll setup</button>
+        <button className="action-link" onClick={() => { navigate(tenantNav.to("/platform/payroll/runs")) }}>Pay runs</button>
       </div>
     </Layout>
   )
