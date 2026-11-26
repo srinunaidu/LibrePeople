@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { useTenant } from "@/context/TenantContext"
+import { useAuth } from "@/context/AuthContext"
 import { listClients, type ClientOut } from "@/lib/api"
 import { barePath } from "@/lib/tenantPath"
 import { queryClient } from "@/lib/queryClient"
@@ -55,6 +56,11 @@ function tenantSafeSubRoute(bare: string): string {
 
 export function TenantSwitcher() {
   const { tenant } = useTenant()
+  const { user } = useAuth()
+  // GET /onboarding-portal/clients is SuperAdmin-only (backend require_roles).
+  // Non-SuperAdmin roles must not call it — the 403 surfaces as a console
+  // error on every page. They keep the current + default workspace entries.
+  const isSuperAdmin = user?.role === "SuperAdmin"
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const [open, setOpen] = useState(false)
@@ -62,6 +68,10 @@ export function TenantSwitcher() {
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    if (!isSuperAdmin) {
+      setClients([])
+      return
+    }
     let alive = true
     listClients()
       .then((rows) => {
@@ -73,7 +83,7 @@ export function TenantSwitcher() {
     return () => {
       alive = false
     }
-  }, [])
+  }, [isSuperAdmin])
 
   useEffect(() => {
     if (!open) return
