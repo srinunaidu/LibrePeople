@@ -179,9 +179,11 @@ describe("slice 2 — real data, real actions, persistence", () => {
     expect(src).toContain("/admin/jobs/${id}/${action}")
   })
 
-  test("InterviewScheduling saves via PUT, not alert()", () => {
+  test("InterviewScheduling uses live interviews CRUD, not the flag shim (R2 honesty-sweep, lead-approved)", () => {
     const src = readPage("InterviewScheduling.tsx")
-    expect(src).toContain("feature-flags/interview_type")
+    expect(src).toContain("/api/v1/interviews")
+    expect(src).not.toContain("feature-flags/interview_type")
+    expect(src).not.toContain("alert(")
   })
 
   test("PolicySearch stores the query only — no fabricated results", () => {

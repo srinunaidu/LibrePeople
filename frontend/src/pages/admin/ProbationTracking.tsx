@@ -2,6 +2,7 @@
  * OB-02 (Information collection) shipped R5. HR-02 (Employment status) shipped R3.
  * Uses real /clients/:slug/feature-flags endpoint for probation config.
  * No fabricated probation data; reads actual seeded configuration.
+ * E-UX-02 honest (verified R2): persists via GET/PUT /onboarding-portal/clients/:id/feature-flags.
  */
 import { useCallback, useEffect, useState } from "react"
 import { Layout } from "@/components/Layout"

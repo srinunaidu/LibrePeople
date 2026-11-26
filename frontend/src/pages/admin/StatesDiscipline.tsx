@@ -1,5 +1,6 @@
 /* UX-09 — States (loading/empty/error/retry) (depends AD-02 + AD-04)
  * Discipline flags per screen; no fabricated UX metrics. Reads real feature-flag state.
+ * E-UX-02 honest (verified R2): persists via GET/PUT /onboarding-portal/clients/:id/feature-flags.
  */
 import { useCallback, useEffect, useState } from "react"
 import { Layout } from "@/components/Layout"

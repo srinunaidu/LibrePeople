@@ -1,3 +1,4 @@
+/* internal preview — not product data */
 import { useState } from "react"
 import { Link } from "react-router-dom"
 import { Layout } from "@/components/Layout"

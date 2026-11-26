@@ -2,6 +2,7 @@
  * HR-01 (Employee master) shipped R2.
  * Uses real /clients/{id}/feature-flags endpoint for headcount config.
  * No fabricated headcount data; reads actual seeded configuration.
+ * E-UX-02 honest (verified R2): persists via GET/PUT /onboarding-portal/clients/:id/feature-flags.
  */
 import { useCallback, useEffect, useState } from "react"
 import { Layout } from "@/components/Layout"
