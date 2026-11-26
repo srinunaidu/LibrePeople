@@ -24,3 +24,14 @@
 ## Next step for architect
 
 Decide: (a) update harness (skip `#` prologue + reconcile gates to BLOCKED 18 / DEFERRED vocab), or (b) declare harness superseded. Either is a design decision — not taken here.
+
+---
+
+# 2026-11-26 follow-up: harness updated to reconciled register, dry-run PASS (exit 0)
+
+- HEAD at run: `0cc4251` (branch `agent/qa/acceptance-harness`); harness `scripts/acceptance_harness.py` gate logic updated, CSV untouched (`git diff` on CSV clean).
+- Gate changes only: skip leading `#` lines + require header `Requirement ID`; promotable set IMPLEMENTED only; assert VERIFIED 2 / IMPLEMENTED 105 / BLOCKED 18 / DEFERRED 8 / IN PROGRESS 3 / 136 rows before and after. Promotion bar unchanged. Write-guard verified by inspection (CSV `"w"` open only under `if not args.dry_run:`).
+- Command: `cd backend && SECRET_KEY=dummy-local-test-key python3 ../scripts/acceptance_harness.py --dry-run` → **exit 0, 01:36:42Z–01:40:27Z (3m45s), zero CSV writes, promoted 0.**
+- Counts: mapped 105 / passed 101 / failed 4 / crashed 0. Suites invoked: 30 distinct backend + `check:routes` (exit 0, 247 routes) + `check:api-paths` (exit 0). Shared perm legs (cross_tenant, security incl. 2162 passed, lp_phase2_access) all exit 0.
+- FAIL retained (no bar lowered, no flips): LP-NFR-014 (`integrity_test_suite` exit 1, 60 passed/2 failed — `0048_mfa_secret_envelope` upgrade/re-upgrade with violations); LP-TIME-008/009/010 (`scheduling_test_suite` exit 1 — `RuntimeError: ortools is not available`).
+- Expenses note: `backend/expenses_test_suite.py` exists and ran; frontend still has zero expense routes (prior finding stands).

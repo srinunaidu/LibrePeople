@@ -122,9 +122,13 @@ def main() -> int:
     only = {i.strip() for i in args.only.split(",") if i.strip()}
 
     with open(args.csv, newline="", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        fieldnames = list(reader.fieldnames or [])
-        rows = list(reader)
+        lines = [ln for ln in f if not ln.startswith("#")]
+    if not lines or not lines[0].startswith("Requirement ID"):
+        print("harness: expected header starting 'Requirement ID'", file=sys.stderr)
+        return 2
+    reader = csv.DictReader(lines)
+    fieldnames = list(reader.fieldnames or [])
+    rows = list(reader)
     for col in ("Requirement ID", "Implementation status", "Automated test IDs",
                 "UI reference", "Permission / security tests", "Acceptance evidence",
                 "Blocker / decision"):
@@ -140,7 +144,7 @@ def main() -> int:
     stamp_full = datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds")
     python = repo_python()
 
-    in_scope = [r for r in rows if r["Implementation status"] in ("TESTED", "IMPLEMENTED")]
+    in_scope = [r for r in rows if r["Implementation status"] == "IMPLEMENTED"]
     triage_blocked = [r for r in rows if r["Implementation status"] == "BLOCKED"]
     held_in_progress = [r for r in rows if r["Implementation status"] == "IN PROGRESS"]
     if only:
@@ -262,7 +266,7 @@ def main() -> int:
         by_id = {r["Requirement ID"]: r for r in rows}
         for rid in passing:
             row = by_id[rid]
-            if row["Implementation status"] in ("TESTED", "IMPLEMENTED"):
+            if row["Implementation status"] == "IMPLEMENTED":
                 legs = mapping[rid]["legs"]
                 note = (f"harness {stamp} HEAD {sha[:7]} "
                         f"{'+'.join(mapping[rid]['backend_suites']) or 'no-backend-suite'} PASS")
@@ -280,36 +284,45 @@ def main() -> int:
         # LP-NOT-002 INCLUDED -> IMPLEMENTED 2026-11-22 HEAD 72f066c).
         assert len(rows) == 136, "row count changed"
         statuses = [r["Implementation status"] for r in rows]
-        assert statuses.count("DEFERRED BY APPROVAL") == 8, f"DEFERRED-BY-APPROVAL=={statuses.count('DEFERRED BY APPROVAL')} != 8"
-        assert statuses.count("BLOCKED") == 3, f"BLOCKED=={statuses.count('BLOCKED')} != 3"
+        # Reconciled register (2026-11-24): VERIFIED 2 / IMPLEMENTED 105 /
+        # IN PROGRESS 3 / BLOCKED 18 / DEFERRED 8. Promotable set is
+        # IMPLEMENTED only; VERIFIED/BLOCKED/DEFERRED/IN PROGRESS never touched.
+        assert statuses.count("VERIFIED") == 2, f"VERIFIED=={statuses.count('VERIFIED')} != 2"
+        assert statuses.count("IMPLEMENTED") == 105, f"IMPLEMENTED=={statuses.count('IMPLEMENTED')} != 105"
+        assert statuses.count("DEFERRED") == 8, f"DEFERRED=={statuses.count('DEFERRED')} != 8"
+        assert statuses.count("BLOCKED") == 18, f"BLOCKED=={statuses.count('BLOCKED')} != 18"
         # (was ==4 pre-HEAD 65a1af2, which promoted LP-NFR-014 BLOCKED->IMPLEMENTED
         # per owner INCLUDE as hardening gate; gate updated to match that mandate)
         assert statuses.count("IN PROGRESS") == 3, "IN PROGRESS count changed"
         for r in rows:
             if r["Requirement ID"] not in csv_changed and r["Requirement ID"] in verdicts:
-                assert r["Implementation status"] in ("TESTED", "IMPLEMENTED"), \
+                assert r["Implementation status"] == "IMPLEMENTED", \
                     f"unexpected flip {r['Requirement ID']}"
         with open(args.csv, "w", newline="", encoding="utf-8") as f:
             w = csv.DictWriter(f, fieldnames=fieldnames)
             w.writeheader()
             w.writerows(rows)
     else:
-        assert len([r for r in rows if r["Implementation status"] == "BLOCKED"]) == 3  # ==4 pre-HEAD 65a1af2, see gate above
-        assert len([r for r in rows if r["Implementation status"] == "DEFERRED BY APPROVAL"]) == 8
+        assert len(rows) == 136, "row count changed"
+        assert len([r for r in rows if r["Implementation status"] == "VERIFIED"]) == 2
+        assert len([r for r in rows if r["Implementation status"] == "IMPLEMENTED"]) == 105
+        assert len([r for r in rows if r["Implementation status"] == "BLOCKED"]) == 18
+        assert len([r for r in rows if r["Implementation status"] == "DEFERRED"]) == 8
+        assert len([r for r in rows if r["Implementation status"] == "IN PROGRESS"]) == 3
 
     # Report: summary.md with counts + BLOCKED triage (verbatim dependency).
-    retained_tested = sum(1 for r in rows if r["Implementation status"] == "TESTED")
+    retained_ver = sum(1 for r in rows if r["Implementation status"] == "VERIFIED")
     retained_impl = sum(1 for r in rows if r["Implementation status"] == "IMPLEMENTED")
     lines = [f"# Acceptance harness summary ({stamp} HEAD {sha})",
              "",
              f"- mode: {'dry-run (CSV untouched)' if args.dry_run else 'full run (gated CSV write)'}",
              f"- in-scope rows: {len(in_scope)} "
-             f"({sum(1 for r in rows if r['Implementation status'] in ('TESTED','IMPLEMENTED'))} at write time)",
+             f"({sum(1 for r in rows if r['Implementation status'] == 'IMPLEMENTED')} at write time)",
              f"- PASS (all legs exit 0): {passed_n}",
              f"- FAIL retained: {len(failed_ids)}",
              f"- promoted to VERIFIED this run: {len(csv_changed)}"
              + (f" ({', '.join(sorted(csv_changed))})" if csv_changed else ""),
-             f"- retained TESTED/IMPLEMENTED: {retained_tested}/{retained_impl}",
+             f"- retained IMPLEMENTED: {retained_impl}; VERIFIED preserved: {retained_ver}",
              f"- BLOCKED held (never flipped): {len(triage_blocked)}",
              f"- IN PROGRESS held (never flipped): {len(held_in_progress)}",
              "",
