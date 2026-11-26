@@ -373,3 +373,36 @@ SuperAdmin workspace list; exit-interview detail UI; hard deletes; file
 bytes; payslip maths. No new product defects filed this round.
 Login budget respected (2 spec logins + 1 diagnostic login, all
 successful; zero 429/lockout signals).
+
+---
+
+## Round 8 — assets lifecycle + interview regression (BLOCKED: credential custody lost)
+
+Branch `agent/qa/cloud-assets-interview` from main `71ce36d`
+(assets-lifecycle UI completion: filters, metadata edit, history,
+clearance, retire confirm).
+
+**Verdict: STOPPED before execution — no credentials available.**
+`API.md` (repo-root Render API key, untracked, never committed) is absent
+from the worktree and unrecoverable (filesystem + stash + history
+searched; no `E2E_*`/`RENDER_*` in the environment; prior-session
+in-memory copies shredded per protocol). Without it: Render deploy poll
+impossible (only unverified signal: `GET /assets` 200 on the live
+frontend) and `E2E_*` staging impossible, so zero spec runs were
+attempted — nothing skipped-to-green, nothing invented.
+
+Delivered without execution (committed below):
+- New `frontend/e2e/cloud/cloud-assets-lifecycle.spec.ts` (2 tests,
+  typechecks clean): filters narrow (`#ast-fstatus`/`#ast-fcat` + Clear),
+  metadata edit persists via `PATCH` with status pinned, custody history
+  names the holder, clearance projection reads back, retire gate
+  requires reason + explicit confirm on a DEDICATED synthetic asset
+  (`CLOUDRT-*`, retired for real, left in place — no delete route).
+  Register/assign core stays in `cloud-assets-documents.spec.ts`;
+  interview schedule→complete stays in
+  `cloud-interview-scheduling.spec.ts` (both to run as regression once
+  unblocked — deliberately not duplicated).
+- Per-spec table: all rows NOT RUN this round (no data to report).
+
+Unblock: owner (or key-holding agent) restores `API.md`, then re-run
+`e2e/cloud/` fully on this branch — no spec changes needed.
