@@ -541,3 +541,51 @@ def leave_accrual(job: JobQueue, input_data: Dict[str, Any]) -> Dict[str, Any]:
         db.close()
     report.update({"job_id": job.id, "state": JobState.SUCCEEDED})
     return report
+
+
+@register(JobType.REPORT_RUN)
+def report_run(job: JobQueue, input_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Execute one scheduled report delivery, runs-as-owner.
+
+    The payload carries only ``schedule_id``. Data is resolved with the
+    schedule owner's visibility and masked with the owner's role; each
+    explicit recipient gets an in-app notification with a download link,
+    or a notice that the report is not available for their role. Email
+    goes out only when ``EMAIL_PROVIDER=smtp`` (the default log provider
+    means in-app only, documented and not a failure).
+
+    Failure handling follows the queue split: a missing id, a missing
+    schedule, or stored input that cannot validate raises
+    :class:`~app.jobs.errors.JobInputInvalid` and is dead-lettered at
+    once; anything else propagates as a transient failure retried with
+    backoff (five attempts by default).
+    """
+    from app.core.database import SessionLocal
+    from app.models.report_personalization import ReportSchedule
+    from app.services import report_personalization as rp
+
+    schedule_id = input_data.get("schedule_id")
+    if isinstance(schedule_id, bool) or not isinstance(schedule_id, int):
+        raise JobInputInvalid(
+            "a report run needs an integer 'schedule_id', "
+            f"got {schedule_id!r}"
+        )
+
+    db = SessionLocal()
+    try:
+        schedule = (
+            db.query(ReportSchedule)
+            .filter(ReportSchedule.id == schedule_id)
+            .first()
+        )
+        if schedule is None:
+            msg = (
+                f"report schedule {schedule_id} does not exist; "
+                "it cannot be executed, enqueue it again after it exists"
+            )
+            rp._record_run(db, schedule_id, job, status="dead", error=msg)
+            rp._audit_run(db, None, schedule_id, "unknown", 0, 0, "dead")
+            raise JobInputInvalid(msg)
+        return rp.execute_report_schedule(db, schedule, job)
+    finally:
+        db.close()

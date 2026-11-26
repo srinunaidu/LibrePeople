@@ -57,6 +57,8 @@ from .imports import ImportStatus, ImportDryRun
 
 from .er_case import ERCase, ERCaseComment, ERCaseAttachment
 
+from .report_personalization import ReportSavedView, ReportSchedule, ReportRun
+
 from app.core.database import Base
 
 __all__ = [
@@ -74,6 +76,7 @@ __all__ = [
     "BenefitPlan", "BenefitEnrollment", "LifeEvent", "LeaveOfAbsence",
     "ExpenseCategory", "ExpenseClaim", "ExpenseReceipt",
     "ERCase", "ERCaseComment", "ERCaseAttachment",
+    "ReportSavedView", "ReportSchedule", "ReportRun",
     "WorkflowStep",
     "Course", "CourseEnrollment", "Certification", "TalentPool", "TalentPoolMember", "SuccessionPlan",
     "ComplianceRule", "ComplianceViolation", "HeadcountPlan", "Scenario", "ReportDefinition", "SavedReport",

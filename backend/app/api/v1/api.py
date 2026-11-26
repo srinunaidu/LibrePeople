@@ -15,6 +15,7 @@ from app.api.v1.endpoints import (
     leave,
     offboarding,
     reports,
+    report_personalization,
     filings,
     client_onboarding,
     core_hr,
@@ -62,6 +63,8 @@ api_router.include_router(
 )
 api_router.include_router(reports.router, prefix="/reports", tags=["reports"])
 api_router.include_router(filings.router, prefix="/reports", tags=["reports"])
+api_router.include_router(report_personalization.views_router, prefix="/report-views", tags=["report-views"])
+api_router.include_router(report_personalization.schedules_router, prefix="/report-schedules", tags=["report-schedules"])
 api_router.include_router(
     client_onboarding.router, prefix="/onboarding-portal", tags=["client-onboarding"]
 )
