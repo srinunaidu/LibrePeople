@@ -21,16 +21,20 @@ Run:  python public_contact_test_suite.py
 """
 import logging
 import os
+import pyotp
 import shutil
 import sqlite3
 import subprocess
 import sys
 import tempfile
+import urllib.parse
 from pathlib import Path
 
 DB_PATH = os.path.join(tempfile.mkdtemp(prefix="public_contact_test_suite_"), "public_contact_test_suite.db")
 os.environ["DATABASE_URL"] = f"sqlite:///{DB_PATH}"
 os.environ["SECRET_KEY"] = "local-test-secret-key-not-for-production-0123456789"
+os.environ["FIELD_ENCRYPTION_KEYS"] = "lp-test-key:local-test-field-encryption-secret-0123456789"
+os.environ["FIELD_ENCRYPTION_ACTIVE_KEY_ID"] = "lp-test-key"
 os.environ["MIGRATE_ON_STARTUP"] = "false"  # the suite builds its own schema
 os.environ["BACKEND_CORS_ORIGINS"] = ""
 os.environ["ALLOW_SELF_REGISTRATION"] = "false"
@@ -113,10 +117,40 @@ token = client.post(
 ).json()["access_token"]
 H_HR = {"Authorization": f"Bearer {token}"}
 
+# Item 10: an unenrolled HR account cannot reach the case queue — the
+# shared gate refuses it with 403 until it enrolls. Enroll and confirm
+# MFA for the suite's HR operator so the queue checks below run as an
+# enrolled operator. (The visitor-facing contact endpoint needs no token
+# and is unaffected.) The token above stays valid: confirmation does not
+# revoke sessions, and the gate reads the enrolled flag per request.
+_enroll = client.post("/api/v1/auth/mfa/enroll", headers=H_HR)
+assert _enroll.status_code == 200, f"mfa enroll failed: {_enroll.text[:200]}"
+_enroll_params = urllib.parse.parse_qs(
+    urllib.parse.urlparse(_enroll.json()["provisioning_uri"]).query
+)
+_confirm = client.post(
+    "/api/v1/auth/mfa/confirm",
+    headers=H_HR,
+    json={"totp_code": pyotp.TOTP(_enroll_params["secret"][0]).now()},
+)
+assert _confirm.status_code == 200, f"mfa confirm failed: {_confirm.text[:200]}"
+
 
 def _from(address: str) -> dict:
-    """Headers that make the request look like it came from ``address``."""
+    """Headers that make the request look like it came from ``address``.
+
+    Note: the app honours ``X-Forwarded-For`` only from a trusted proxy
+    (app.core.trusted_proxy, client_ip: untrusted peer -> peer address),
+    and the TestClient peer ("testclient") is not one — so every request
+    below shares a single limiter budget regardless of this header.
+    """
     return {"X-Forwarded-For": address}
+
+
+#: The limiter key every request in this suite is measured against. The
+#: secure default ignores X-Forwarded-For from the untrusted test peer, so
+#: the per-IP budgets below are all drawn on this one address.
+_PEER = "testclient"
 
 
 # ===========================================================================
@@ -286,12 +320,17 @@ print("\n[PUBLIC-4] The rate limit is the control")
 
 from app.core.rate_limit import limiter  # noqa: E402
 
-flood = "203.0.113.20"
+# The secure default (app/core/trusted_proxy.py:78-86, client_ip): the peer
+# is untrusted, so X-Forwarded-For is ignored and every request below draws
+# on one shared budget. Reset that budget for a deterministic start, then
+# rotate the header per request to prove rotation cannot evade it.
+limiter.reset("contact", _PEER)
+limiter.reset("contact_daily", _PEER)
 statuses = []
-for _ in range(8):
+for i in range(8):
     posted = client.post(
         "/api/v1/public/contact",
-        headers=_from(flood),
+        headers=_from(f"203.0.113.{100 + i}"),
         json={"name": "A Visitor", "email": VISITOR_EMAIL, "message": "hello"},
     )
     statuses.append(posted.status_code)
@@ -307,7 +346,7 @@ check(
 )
 r = client.post(
     "/api/v1/public/contact",
-    headers=_from(flood),
+    headers=_from("203.0.113.120"),
     json={"name": "A Visitor", "email": VISITOR_EMAIL, "message": "hello"},
 )
 check(
@@ -317,14 +356,17 @@ check(
 )
 
 # The daily cap is the second line: it stops a flood that is slow enough to
-# stay under the short window, so the test spreads the messages out.
-slow = "203.0.113.21"
+# stay under the short window, so the test spreads the messages out. The
+# short-window budget is cleared per attempt (same shared peer key as above);
+# the header still rotates to prove rotation cannot evade the daily budget.
+limiter.reset("contact", _PEER)
+limiter.reset("contact_daily", _PEER)
 statuses = []
-for _ in range(25):
-    limiter.reset("contact", slow)
+for i in range(25):
+    limiter.reset("contact", _PEER)
     posted = client.post(
         "/api/v1/public/contact",
-        headers=_from(slow),
+        headers=_from(f"203.0.113.{130 + i}"),
         json={"name": "A Visitor", "email": VISITOR_EMAIL, "message": "hello"},
     )
     statuses.append(posted.status_code)
@@ -425,7 +467,7 @@ def _rows(db_path: str, sql: str) -> list[tuple]:
 workdir = tempfile.mkdtemp(prefix="karmathy-public-intake-")
 try:
     scratch = os.path.join(workdir, "intake.db")
-    _run_migrations(scratch, "0010_leave_ledger")
+    _run_migrations(scratch, "0012_leave_ledger")
 
     # The baseline builds the frozen tables from the models, so a fresh
     # database already has the columns. The migration is for the databases
@@ -479,7 +521,7 @@ try:
         )
 
     try:
-        _run_migrations(scratch, "0010_leave_ledger", "downgrade")
+        _run_migrations(scratch, "0012_leave_ledger", "downgrade")
         downgraded = True
         detail = ""
     except Exception as exc:  # noqa: BLE001
