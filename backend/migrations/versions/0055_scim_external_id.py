@@ -1,6 +1,6 @@
 """users.external_id for SCIM provisioning (scim-provisioning slice).
 
-Revision ID: 0054_scim_external_id
+Revision ID: 0055_scim_external_id
 Revises: 0053_report_schedules
 Create Date: 2026-11-26
 
@@ -36,8 +36,8 @@ from __future__ import annotations
 import sqlalchemy as sa
 from alembic import op
 
-revision = "0054_scim_external_id"
-down_revision = "0053_report_schedules"
+revision = "0055_scim_external_id"
+down_revision = "0054_filing_records"
 branch_labels = None
 depends_on = None
 
@@ -64,7 +64,7 @@ def _indexes(bind) -> set[str]:
 def upgrade() -> None:
     bind = op.get_bind()
     if TABLE not in set(sa.inspect(bind).get_table_names()):
-        print(f"[0054_scim_external_id] {TABLE} absent; skipping")
+        print(f"[0055_scim_external_id] {TABLE} absent; skipping")
         return
     if COLUMN not in _columns(bind):
         if bind.dialect.name == "sqlite":
@@ -72,20 +72,20 @@ def upgrade() -> None:
                 batch.add_column(sa.Column(COLUMN, sa.String(255), nullable=True))
         else:
             op.add_column(TABLE, sa.Column(COLUMN, sa.String(255), nullable=True))
-        print(f"[0054_scim_external_id] added {TABLE}.{COLUMN}")
+        print(f"[0055_scim_external_id] added {TABLE}.{COLUMN}")
     else:
-        print(f"[0054_scim_external_id] {TABLE}.{COLUMN} already present; skipping")
+        print(f"[0055_scim_external_id] {TABLE}.{COLUMN} already present; skipping")
     if INDEX not in _indexes(bind):
         op.create_index(INDEX, TABLE, [COLUMN])
-        print(f"[0054_scim_external_id] created index {INDEX}")
+        print(f"[0055_scim_external_id] created index {INDEX}")
     else:
-        print(f"[0054_scim_external_id] index {INDEX} already present; skipping")
+        print(f"[0055_scim_external_id] index {INDEX} already present; skipping")
 
 
 def downgrade() -> None:
     bind = op.get_bind()
     if TABLE not in set(sa.inspect(bind).get_table_names()):
-        print(f"[0054_scim_external_id] {TABLE} absent; skipping")
+        print(f"[0055_scim_external_id] {TABLE} absent; skipping")
         return
     if COLUMN in _columns(bind):
         # Check before touching anything: refusing after the index is gone
@@ -95,20 +95,20 @@ def downgrade() -> None:
         ).scalar()
         if live:
             raise RuntimeError(
-                f"[0054_scim_external_id] refusing downgrade: {live} row(s) "
+                f"[0055_scim_external_id] refusing downgrade: {live} row(s) "
                 f"carry {TABLE}.{COLUMN}; clear them first"
             )
     if INDEX in _indexes(bind):
         op.drop_index(INDEX, table_name=TABLE)
-        print(f"[0054_scim_external_id] dropped index {INDEX}")
+        print(f"[0055_scim_external_id] dropped index {INDEX}")
     else:
-        print(f"[0054_scim_external_id] index {INDEX} already absent; skipping")
+        print(f"[0055_scim_external_id] index {INDEX} already absent; skipping")
     if COLUMN in _columns(bind):
         if bind.dialect.name == "sqlite":
             with op.batch_alter_table(TABLE) as batch:
                 batch.drop_column(COLUMN)
         else:
             op.drop_column(TABLE, COLUMN)
-        print(f"[0054_scim_external_id] dropped {TABLE}.{COLUMN}")
+        print(f"[0055_scim_external_id] dropped {TABLE}.{COLUMN}")
     else:
-        print(f"[0054_scim_external_id] {TABLE}.{COLUMN} already absent; skipping")
+        print(f"[0055_scim_external_id] {TABLE}.{COLUMN} already absent; skipping")
