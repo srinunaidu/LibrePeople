@@ -9,933 +9,933 @@
     {
       "name": "fastapi",
       "version": "0.111.0",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-direct",
-      "source": "backend/requirements.txt pin `fastapi==0.111.0`; freeze-confirmed 0.111.0; no backend lock file; see docs/licensing/backend-direct.md"
+      "source": "backend/requirements.txt pin `fastapi==0.111.0`; freeze-confirmed 0.111.0; no backend lock file; see docs/licensing/backend-direct.md | Track-2 2026-11-26: CLASSIFIER (accessed 2026-11-26)"
     },
     {
       "name": "uvicorn",
       "version": "0.29.0",
-      "license": "UNVERIFIED",
+      "license": "BSD-3-Clause",
       "scope": "backend-direct",
-      "source": "backend/requirements.txt pin `uvicorn[standard]==0.29.0`; freeze-confirmed 0.29.0; no backend lock file; see docs/licensing/backend-direct.md"
+      "source": "backend/requirements.txt pin `uvicorn[standard]==0.29.0`; freeze-confirmed 0.29.0; no backend lock file; see docs/licensing/backend-direct.md | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "sqlalchemy",
       "version": "2.0.29",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-direct",
-      "source": "backend/requirements.txt pin `sqlalchemy==2.0.29`; freeze-confirmed 2.0.29; no backend lock file; see docs/licensing/backend-direct.md"
+      "source": "backend/requirements.txt pin `sqlalchemy==2.0.29`; freeze-confirmed 2.0.29; no backend lock file; see docs/licensing/backend-direct.md | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "oracledb",
       "version": "26.0.1",
-      "license": "UNVERIFIED",
+      "license": "UPL-1.0 OR Apache-2.0",
       "scope": "backend-direct",
-      "source": "backend/requirements.txt pin `oracledb==26.0.1`; freeze-confirmed 26.0.1; no backend lock file; see docs/licensing/backend-direct.md"
+      "source": "backend/requirements.txt pin `oracledb==26.0.1`; freeze-confirmed 26.0.1; no backend lock file; see docs/licensing/backend-direct.md | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "pydantic-settings",
       "version": "2.3.0",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-direct",
-      "source": "backend/requirements.txt pin `pydantic-settings==2.3.0`; freeze-confirmed 2.3.0; no backend lock file; see docs/licensing/backend-direct.md"
+      "source": "backend/requirements.txt pin `pydantic-settings==2.3.0`; freeze-confirmed 2.3.0; no backend lock file; see docs/licensing/backend-direct.md | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "pydantic",
       "version": "2.7.4",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-direct",
-      "source": "backend/requirements.txt pin `pydantic==2.7.4`; freeze-confirmed 2.7.4; no backend lock file; see docs/licensing/backend-direct.md"
+      "source": "backend/requirements.txt pin `pydantic==2.7.4`; freeze-confirmed 2.7.4; no backend lock file; see docs/licensing/backend-direct.md | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "python-jose",
       "version": "3.3.0",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-direct",
-      "source": "backend/requirements.txt pin `python-jose[cryptography]==3.3.0`; freeze-confirmed 3.3.0; no backend lock file; see docs/licensing/backend-direct.md"
+      "source": "backend/requirements.txt pin `python-jose[cryptography]==3.3.0`; freeze-confirmed 3.3.0; no backend lock file; see docs/licensing/backend-direct.md | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "bcrypt",
       "version": "4.2.0",
-      "license": "UNVERIFIED",
+      "license": "Apache-2.0",
       "scope": "backend-direct",
-      "source": "backend/requirements.txt pin `bcrypt==4.2.0`; freeze-confirmed 4.2.0; no backend lock file; see docs/licensing/backend-direct.md"
+      "source": "backend/requirements.txt pin `bcrypt==4.2.0`; freeze-confirmed 4.2.0; no backend lock file; see docs/licensing/backend-direct.md | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "python-multipart",
       "version": "0.0.9",
-      "license": "UNVERIFIED",
+      "license": "Apache-2.0",
       "scope": "backend-direct",
-      "source": "backend/requirements.txt pin `python-multipart==0.0.9`; freeze-confirmed 0.0.9; no backend lock file; see docs/licensing/backend-direct.md"
+      "source": "backend/requirements.txt pin `python-multipart==0.0.9`; freeze-confirmed 0.0.9; no backend lock file; see docs/licensing/backend-direct.md | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "fpdf2",
       "version": "2.9.0",
-      "license": "UNVERIFIED",
+      "license": "LGPL-3.0-only",
       "scope": "backend-direct",
-      "source": "backend/requirements.txt pin `fpdf2>=2.7.0,<3.0.0`; freeze-confirmed 2.9.0; no backend lock file; see docs/licensing/backend-direct.md"
+      "source": "backend/requirements.txt pin `fpdf2>=2.7.0,<3.0.0`; freeze-confirmed 2.9.0; no backend lock file; see docs/licensing/backend-direct.md | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "oci",
       "version": "2.192.0",
-      "license": "UNVERIFIED",
+      "license": "UPL-1.0 OR Apache-2.0",
       "scope": "backend-direct",
-      "source": "backend/requirements.txt pin `oci>=2.120.0`; freeze-confirmed 2.192.0; no backend lock file; see docs/licensing/backend-direct.md"
+      "source": "backend/requirements.txt pin `oci>=2.120.0`; freeze-confirmed 2.192.0; no backend lock file; see docs/licensing/backend-direct.md | Track-2 2026-11-26: PYPI-JSON (accessed 2026-11-26)"
     },
     {
       "name": "alembic",
       "version": "1.13.1",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-direct",
-      "source": "backend/requirements.txt pin `alembic==1.13.1`; freeze-confirmed 1.13.1; no backend lock file; see docs/licensing/backend-direct.md"
+      "source": "backend/requirements.txt pin `alembic==1.13.1`; freeze-confirmed 1.13.1; no backend lock file; see docs/licensing/backend-direct.md | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "jsonschema",
       "version": "4.26.0",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-direct",
-      "source": "backend/requirements.txt pin `jsonschema==4.26.0`; freeze-confirmed 4.26.0; no backend lock file; see docs/licensing/backend-direct.md"
+      "source": "backend/requirements.txt pin `jsonschema==4.26.0`; freeze-confirmed 4.26.0; no backend lock file; see docs/licensing/backend-direct.md | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "python-dotenv",
       "version": "1.0.1",
-      "license": "UNVERIFIED",
+      "license": "BSD-3-Clause",
       "scope": "backend-direct",
-      "source": "backend/requirements.txt pin `python-dotenv==1.0.1`; freeze-confirmed 1.0.1; no backend lock file; see docs/licensing/backend-direct.md"
+      "source": "backend/requirements.txt pin `python-dotenv==1.0.1`; freeze-confirmed 1.0.1; no backend lock file; see docs/licensing/backend-direct.md | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "pyotp",
       "version": "2.9.0",
-      "license": "UNVERIFIED",
+      "license": "MIT License",
       "scope": "backend-direct",
-      "source": "backend/requirements.txt pin `pyotp==2.9.0`; freeze-confirmed 2.9.0; no backend lock file; see docs/licensing/backend-direct.md"
+      "source": "backend/requirements.txt pin `pyotp==2.9.0`; freeze-confirmed 2.9.0; no backend lock file; see docs/licensing/backend-direct.md | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "qrcode",
       "version": "7.4.2",
-      "license": "UNVERIFIED",
+      "license": "BSD",
       "scope": "backend-direct",
-      "source": "backend/requirements.txt pin `qrcode[pil]==7.4.2`; freeze-confirmed 7.4.2; no backend lock file; see docs/licensing/backend-direct.md"
+      "source": "backend/requirements.txt pin `qrcode[pil]==7.4.2`; freeze-confirmed 7.4.2; no backend lock file; see docs/licensing/backend-direct.md | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "numpy",
       "version": "2.4.6",
-      "license": "UNVERIFIED",
+      "license": "BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0",
       "scope": "backend-direct",
-      "source": "backend/requirements.txt pin `numpy>=1.26.0`; freeze-confirmed 2.4.6; no backend lock file; see docs/licensing/backend-direct.md"
+      "source": "backend/requirements.txt pin `numpy>=1.26.0`; freeze-confirmed 2.4.6; no backend lock file; see docs/licensing/backend-direct.md | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "statsmodels",
       "version": "0.15.0",
-      "license": "UNVERIFIED",
+      "license": "BSD-3-Clause",
       "scope": "backend-direct",
-      "source": "backend/requirements.txt pin `statsmodels>=0.14.0`; freeze-confirmed 0.15.0; no backend lock file; see docs/licensing/backend-direct.md"
+      "source": "backend/requirements.txt pin `statsmodels>=0.14.0`; freeze-confirmed 0.15.0; no backend lock file; see docs/licensing/backend-direct.md | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "ortools",
       "version": "9.15.6755",
-      "license": "UNVERIFIED",
+      "license": "Apache 2.0",
       "scope": "backend-direct",
-      "source": "backend/requirements.txt pin `ortools==9.15.*`; freeze-confirmed 9.15.6755; no backend lock file; see docs/licensing/backend-direct.md"
+      "source": "backend/requirements.txt pin `ortools==9.15.*`; freeze-confirmed 9.15.6755; no backend lock file; see docs/licensing/backend-direct.md | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "absl-py",
       "version": "2.5.1",
-      "license": "UNVERIFIED",
+      "license": "Apache-2.0",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "aiohappyeyeballs",
       "version": "2.7.1",
-      "license": "UNVERIFIED",
+      "license": "PSF-2.0",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "aiohttp",
       "version": "3.14.5",
-      "license": "UNVERIFIED",
+      "license": "Apache-2.0 AND MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "aiosignal",
       "version": "1.4.0",
-      "license": "UNVERIFIED",
+      "license": "Apache 2.0",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "alembic",
       "version": "1.13.1",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "annotated-doc",
       "version": "0.0.7",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "annotated-types",
       "version": "0.8.0",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "anyio",
       "version": "4.16.0",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "asn1crypto",
       "version": "1.5.1",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "attrs",
       "version": "26.1.0",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "bcrypt",
       "version": "4.2.0",
-      "license": "UNVERIFIED",
+      "license": "Apache-2.0",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "boolean.py",
       "version": "5.0",
-      "license": "UNVERIFIED",
+      "license": "BSD-2-Clause",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "CacheControl",
       "version": "0.15.0",
-      "license": "UNVERIFIED",
+      "license": "Apache-2.0",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "certifi",
       "version": "2026.11.20",
-      "license": "UNVERIFIED",
+      "license": "MPL-2.0",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "cffi",
       "version": "2.1.1",
-      "license": "UNVERIFIED",
+      "license": "MIT-0",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "charset-normalizer",
       "version": "3.5.2",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "circuitbreaker",
       "version": "2.1.3",
-      "license": "UNVERIFIED",
+      "license": "BSD-3-Clause",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "click",
       "version": "8.5.1",
-      "license": "UNVERIFIED",
+      "license": "BSD-3-Clause",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "crc32c",
       "version": "2.8",
-      "license": "UNVERIFIED",
+      "license": "LGPL-2.1-or-later",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "cryptography",
       "version": "50.0.2",
-      "license": "UNVERIFIED",
+      "license": "Apache-2.0 OR BSD-3-Clause",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "cyclonedx-python-lib",
       "version": "11.12.0",
-      "license": "UNVERIFIED",
+      "license": "Apache-2.0",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "defusedxml",
       "version": "0.7.1",
-      "license": "UNVERIFIED",
+      "license": "PSFL",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "dnspython",
       "version": "2.9.2",
-      "license": "UNVERIFIED",
+      "license": "ISC",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "ecdsa",
       "version": "0.19.2",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "email-validator",
       "version": "2.4.0",
-      "license": "UNVERIFIED",
+      "license": "Unlicense",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "fastapi",
       "version": "0.111.0",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: CLASSIFIER (accessed 2026-11-26)"
     },
     {
       "name": "fastapi-cli",
       "version": "0.0.34",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "filelock",
       "version": "4.3.0",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "fonttools",
       "version": "4.68.0",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "formulaic",
       "version": "1.2.2",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "fpdf2",
       "version": "2.9.0",
-      "license": "UNVERIFIED",
+      "license": "LGPL-3.0-only",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "frozenlist",
       "version": "1.8.0",
-      "license": "UNVERIFIED",
+      "license": "Apache-2.0",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "h11",
       "version": "0.16.0",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "httpcore",
       "version": "1.0.9",
-      "license": "UNVERIFIED",
+      "license": "BSD-3-Clause",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "httptools",
       "version": "0.9.0",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "httpx",
       "version": "0.28.1",
-      "license": "UNVERIFIED",
+      "license": "BSD-3-Clause",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "idna",
       "version": "3.20",
-      "license": "UNVERIFIED",
+      "license": "BSD-3-Clause",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "immutabledict",
       "version": "4.3.1",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "iniconfig",
       "version": "2.3.1",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "interface_meta",
       "version": "2.0.1",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "Jinja2",
       "version": "3.1.6",
-      "license": "UNVERIFIED",
+      "license": "BSD",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: CLASSIFIER (accessed 2026-11-26)"
     },
     {
       "name": "jsonschema",
       "version": "4.26.0",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "jsonschema-specifications",
       "version": "2025.9.1",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "license-expression",
       "version": "30.4.4",
-      "license": "UNVERIFIED",
+      "license": "Apache-2.0",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "Mako",
       "version": "1.4.3",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "markdown-it-py",
       "version": "4.3.0",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: CLASSIFIER (accessed 2026-11-26)"
     },
     {
       "name": "MarkupSafe",
       "version": "3.0.4",
-      "license": "UNVERIFIED",
+      "license": "BSD-3-Clause",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "mdurl",
       "version": "0.1.2",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: CLASSIFIER (accessed 2026-11-26)"
     },
     {
       "name": "msgpack",
       "version": "1.2.4",
-      "license": "UNVERIFIED",
+      "license": "Apache-2.0",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "multidict",
       "version": "7.2.1",
-      "license": "UNVERIFIED",
+      "license": "Apache-2.0",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "narwhals",
       "version": "2.29.0",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "numpy",
       "version": "2.4.6",
-      "license": "UNVERIFIED",
+      "license": "BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "oci",
       "version": "2.192.0",
-      "license": "UNVERIFIED",
+      "license": "UPL-1.0 OR Apache-2.0",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: PYPI-JSON (accessed 2026-11-26)"
     },
     {
       "name": "oracledb",
       "version": "26.0.1",
-      "license": "UNVERIFIED",
+      "license": "UPL-1.0 OR Apache-2.0",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "orjson",
       "version": "3.13.0",
-      "license": "UNVERIFIED",
+      "license": "MPL-2.0 AND (Apache-2.0 OR MIT)",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "ortools",
       "version": "9.15.6755",
-      "license": "UNVERIFIED",
+      "license": "Apache 2.0",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "packageurl-python",
       "version": "0.17.6",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "packaging",
       "version": "26.3",
-      "license": "UNVERIFIED",
+      "license": "Apache-2.0 OR BSD-2-Clause",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "pandas",
       "version": "3.1.1",
-      "license": "UNVERIFIED",
+      "license": "BSD-3-Clause",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "patsy",
       "version": "1.0.3",
-      "license": "UNVERIFIED",
+      "license": "2-clause BSD",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "pillow",
       "version": "13.0.0",
-      "license": "UNVERIFIED",
+      "license": "MIT-CMU",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "pip-requirements-parser",
       "version": "32.0.1",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "pip_api",
       "version": "0.0.35",
-      "license": "UNVERIFIED",
+      "license": "Apache-2.0",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: CLASSIFIER (accessed 2026-11-26)"
     },
     {
       "name": "pip_audit",
       "version": "2.10.1",
-      "license": "UNVERIFIED",
+      "license": "Apache-2.0",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: CLASSIFIER (accessed 2026-11-26)"
     },
     {
       "name": "platformdirs",
       "version": "4.14.8",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "pluggy",
       "version": "1.7.0",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "propcache",
       "version": "0.5.4",
-      "license": "UNVERIFIED",
+      "license": "Apache-2.0",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "protobuf",
       "version": "6.33.6",
-      "license": "UNVERIFIED",
+      "license": "3-Clause BSD License",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "py-serializable",
       "version": "2.2.0",
-      "license": "UNVERIFIED",
+      "license": "Apache-2.0",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "pyasn1",
       "version": "0.6.5",
-      "license": "UNVERIFIED",
+      "license": "BSD-2-Clause",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "pycparser",
       "version": "3.12",
-      "license": "UNVERIFIED",
+      "license": "BSD-3-Clause",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "pydantic",
       "version": "2.7.4",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "pydantic-settings",
       "version": "2.3.0",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "pydantic_core",
       "version": "2.18.4",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "Pygments",
       "version": "2.21.0",
-      "license": "UNVERIFIED",
+      "license": "BSD-2-Clause",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "PyJWT",
       "version": "2.15.1",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "pyOpenSSL",
       "version": "26.4.0",
-      "license": "UNVERIFIED",
+      "license": "Apache License, Version 2.0",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "pyotp",
       "version": "2.9.0",
-      "license": "UNVERIFIED",
+      "license": "MIT License",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "pyparsing",
       "version": "3.3.3",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "pypng",
       "version": "0.20220715.0",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "pytest",
       "version": "9.2.0",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "python-dateutil",
       "version": "2.9.0.post0",
-      "license": "UNVERIFIED",
+      "license": "Dual License",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "python-dotenv",
       "version": "1.0.1",
-      "license": "UNVERIFIED",
+      "license": "BSD-3-Clause",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "python-jose",
       "version": "3.3.0",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "python-multipart",
       "version": "0.0.9",
-      "license": "UNVERIFIED",
+      "license": "Apache-2.0",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "python-pkcs11",
       "version": "0.9.4",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "pytz",
       "version": "2026.6",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "PyYAML",
       "version": "6.0.4",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "qrcode",
       "version": "7.4.2",
-      "license": "UNVERIFIED",
+      "license": "BSD",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "referencing",
       "version": "0.37.0",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "requests",
       "version": "2.34.2",
-      "license": "UNVERIFIED",
+      "license": "Apache-2.0",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "rich",
       "version": "15.0.0",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "rich-toolkit",
       "version": "0.20.6",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "rpds-py",
       "version": "2026.9.1",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "rsa",
       "version": "4.9.1",
-      "license": "UNVERIFIED",
+      "license": "Apache-2.0",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "scipy",
       "version": "1.17.1",
-      "license": "UNVERIFIED",
+      "license": "BSD",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: CLASSIFIER (accessed 2026-11-26)"
     },
     {
       "name": "shellingham",
       "version": "1.5.4",
-      "license": "UNVERIFIED",
+      "license": "ISC License",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "six",
       "version": "1.17.0",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "sortedcontainers",
       "version": "2.4.0",
-      "license": "UNVERIFIED",
+      "license": "Apache 2.0",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "SQLAlchemy",
       "version": "2.0.29",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "starlette",
       "version": "0.37.2",
-      "license": "UNVERIFIED",
+      "license": "BSD-3-Clause",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "statsmodels",
       "version": "0.15.0",
-      "license": "UNVERIFIED",
+      "license": "BSD-3-Clause",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "tomli",
       "version": "2.5.0",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "tomli_w",
       "version": "1.2.0",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: CLASSIFIER (accessed 2026-11-26)"
     },
     {
       "name": "typer",
       "version": "0.29.2",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "typing_extensions",
       "version": "4.16.0",
-      "license": "UNVERIFIED",
+      "license": "PSF-2.0",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "ujson",
       "version": "6.1.0",
-      "license": "UNVERIFIED",
+      "license": "BSD-3-Clause AND TCL",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "urllib3",
       "version": "2.8.0",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "uvicorn",
       "version": "0.29.0",
-      "license": "UNVERIFIED",
+      "license": "BSD-3-Clause",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "uvloop",
       "version": "0.23.0",
-      "license": "UNVERIFIED",
+      "license": "MIT License",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "watchfiles",
       "version": "1.3.0",
-      "license": "UNVERIFIED",
+      "license": "MIT",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "websockets",
       "version": "17.4",
-      "license": "UNVERIFIED",
+      "license": "BSD-3-Clause",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "wrapt",
       "version": "2.5.2",
-      "license": "UNVERIFIED",
+      "license": "BSD-2-Clause",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "yarl",
       "version": "1.25.1",
-      "license": "UNVERIFIED",
+      "license": "Apache-2.0",
       "scope": "backend-transitive",
-      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json"
+      "source": "docs/licensing/backend-transitive.md (.venv311 pip freeze); no licence metadata collected; frozen versions see docs/licensing/sbom/backend-transitive.json | Track-2 2026-11-26: METADATA (accessed 2026-11-26)"
     },
     {
       "name": "@radix-ui/react-checkbox",
@@ -4996,6 +4996,20 @@
       "license": "MIT",
       "scope": "frontend-transitive",
       "source": "frontend/package-lock.json packages[\"node_modules/yocto-queue\"].license (verbatim); see docs/licensing/sbom/frontend-transitive.json"
+    },
+    {
+      "name": "psycopg2-binary",
+      "version": "2.9.13",
+      "license": "LGPL with exceptions",
+      "scope": "backend-direct",
+      "source": "backend/requirements.txt pin `psycopg2-binary==2.9.13` | Track-2 2026-11-26: PYPI-JSON https://pypi.org/pypi/psycopg2-binary/2.9.13/json license='LGPL with exceptions'; classifiers=[License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)] (accessed 2026-11-26)"
+    },
+    {
+      "name": "boto3",
+      "version": "1.34.0",
+      "license": "Apache-2.0",
+      "scope": "backend-direct",
+      "source": "backend/requirements.txt pin `boto3>=1.34.0` (floor 1.34.0; pin unbounded, no lock) | Track-2 2026-11-26: PYPI-JSON https://pypi.org/pypi/boto3/1.34.0/json license='Apache License 2.0'; classifiers=[License :: OSI Approved :: Apache Software License] (accessed 2026-11-26)"
     }
   ]
 }
