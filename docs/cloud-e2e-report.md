@@ -289,3 +289,33 @@ Notably the test executed fully rather than skipping: `e2e_employee` now
 resolves a linked employee row, so the round-4 provisioning gap is also
 closed. No lockout signals (logins: 1 associate UI + API, 1 HR API setup —
 all successful). No spec changes, no product changes; report-only commit.
+
+---
+
+## Round 6 — regression + interview scheduling on live f3bc760 (2026-11-26)
+
+Branch `agent/qa/cloud-regression-r4` from main `f3bc760` (honesty-sweep
+R2: interviews CRUD wired). Deploy gate: frontend live on `f3bc760` at
+run start; backend polled `update_in_progress` → `live` on `f3bc760`
+before testing. `/expenses` 200, app boots.
+
+**Full cloud suite: 32 passed / 0 failed / 0 skipped, cloud-chromium
+only** (25 carried + 3 expenses + 4 new interview). Zero console-error /
+failed-request evidence in the run output.
+
+New spec `frontend/e2e/cloud/cloud-interview-scheduling.spec.ts` (4/4):
+HR schedules via UI (`#interview-candidate` + stage select + datetime +
+panel → `POST /interviews` 201, `Interview scheduled.`, ledger row
+visible, API reads back `Scheduled`); status→`Completed` + verbatim
+feedback via row controls (`PUT`, `Interview updated.`, API read-back);
+associate meets the ProtectedRoute 403 card at the same URL (spec first
+asserted the component EmptyState — wrong layer, fixed to the 403
+heading per the ess-access precedent); unauthenticated `GET /interviews`
+→ 401. Setup seeds a namespaced candidate (`POST /candidates` 201);
+no fabricated ids. Login budget respected (no 429/lockout signals).
+
+### NOT TESTED remainder (carried over)
+
+SuperAdmin workspace list (no such synthetic); exit-interview detail UI;
+hard deletes; file bytes; payslip maths; responsive sweep. No new
+product defects filed this round.
