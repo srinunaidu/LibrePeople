@@ -1,0 +1,161 @@
+Licensing compliance (report-only, PREPARED-ONLY) - no enforcement, exit always 0
+Inventory: 713 rows (62 direct, 651 transitive) via dependency-licence-inventory.json
+
+Per-dependency verdicts:
+  Confirmed: 575
+  Review required: 2
+  Blocked: 3
+  Unknown: 133
+
+Status legend: Confirmed = verified permissive, compatible with proposed posture; Review required = needs human legal review; Blocked = restricted (GPL/AGPL/LGPL/MPL/commercial/unknown) or secret-blob, must not ship until cleared; Unknown = licence metadata missing/UNVERIFIED or check unevaluable.
+
+Non-confirmed dependencies (package@version -> status: reason):
+  fastapi@0.111.0 [direct] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  uvicorn@0.29.0 [direct] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  sqlalchemy@2.0.29 [direct] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  oracledb@26.0.1 [direct] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  pydantic-settings@2.3.0 [direct] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  pydantic@2.7.4 [direct] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  python-jose@3.3.0 [direct] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  bcrypt@4.2.0 [direct] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  python-multipart@0.0.9 [direct] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  fpdf2@2.9.0 [direct] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  oci@2.192.0 [direct] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  alembic@1.13.1 [direct] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  jsonschema@4.26.0 [direct] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  python-dotenv@1.0.1 [direct] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  pyotp@2.9.0 [direct] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  qrcode@7.4.2 [direct] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  numpy@2.4.6 [direct] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  statsmodels@0.15.0 [direct] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  ortools@9.15.6755 [direct] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  absl-py@2.5.1 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  aiohappyeyeballs@2.7.1 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  aiohttp@3.14.5 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  aiosignal@1.4.0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  alembic@1.13.1 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  annotated-doc@0.0.7 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  annotated-types@0.8.0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  anyio@4.16.0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  asn1crypto@1.5.1 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  attrs@26.1.0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  bcrypt@4.2.0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  boolean.py@5.0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  CacheControl@0.15.0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  certifi@2026.11.20 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  cffi@2.1.1 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  charset-normalizer@3.5.2 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  circuitbreaker@2.1.3 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  click@8.5.1 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  crc32c@2.8 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  cryptography@50.0.2 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  cyclonedx-python-lib@11.12.0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  defusedxml@0.7.1 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  dnspython@2.9.2 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  ecdsa@0.19.2 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  email-validator@2.4.0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  fastapi@0.111.0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  fastapi-cli@0.0.34 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  filelock@4.3.0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  fonttools@4.68.0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  formulaic@1.2.2 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  fpdf2@2.9.0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  frozenlist@1.8.0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  h11@0.16.0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  httpcore@1.0.9 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  httptools@0.9.0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  httpx@0.28.1 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  idna@3.20 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  immutabledict@4.3.1 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  iniconfig@2.3.1 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  interface_meta@2.0.1 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  Jinja2@3.1.6 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  jsonschema@4.26.0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  jsonschema-specifications@2025.9.1 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  license-expression@30.4.4 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  Mako@1.4.3 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  markdown-it-py@4.3.0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  MarkupSafe@3.0.4 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  mdurl@0.1.2 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  msgpack@1.2.4 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  multidict@7.2.1 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  narwhals@2.29.0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  numpy@2.4.6 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  oci@2.192.0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  oracledb@26.0.1 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  orjson@3.13.0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  ortools@9.15.6755 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  packageurl-python@0.17.6 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  packaging@26.3 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  pandas@3.1.1 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  patsy@1.0.3 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  pillow@13.0.0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  pip-requirements-parser@32.0.1 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  pip_api@0.0.35 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  pip_audit@2.10.1 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  platformdirs@4.14.8 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  pluggy@1.7.0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  propcache@0.5.4 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  protobuf@6.33.6 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  py-serializable@2.2.0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  pyasn1@0.6.5 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  pycparser@3.12 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  pydantic@2.7.4 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  pydantic-settings@2.3.0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  pydantic_core@2.18.4 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  Pygments@2.21.0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  PyJWT@2.15.1 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  pyOpenSSL@26.4.0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  pyotp@2.9.0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  pyparsing@3.3.3 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  pypng@0.20220715.0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  pytest@9.2.0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  python-dateutil@2.9.0.post0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  python-dotenv@1.0.1 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  python-jose@3.3.0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  python-multipart@0.0.9 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  python-pkcs11@0.9.4 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  pytz@2026.6 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  PyYAML@6.0.4 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  qrcode@7.4.2 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  referencing@0.37.0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  requests@2.34.2 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  rich@15.0.0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  rich-toolkit@0.20.6 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  rpds-py@2026.9.1 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  rsa@4.9.1 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  scipy@1.17.1 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  shellingham@1.5.4 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  six@1.17.0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  sortedcontainers@2.4.0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  SQLAlchemy@2.0.29 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  starlette@0.37.2 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  statsmodels@0.15.0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  tomli@2.5.0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  tomli_w@1.2.0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  typer@0.29.2 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  typing_extensions@4.16.0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  ujson@6.1.0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  urllib3@2.8.0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  uvicorn@0.29.0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  uvloop@0.23.0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  watchfiles@1.3.0 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  websockets@17.4 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  wrapt@2.5.2 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  yarl@1.25.1 [transitive] -> Unknown: licence metadata missing or UNVERIFIED; verification pending
+  @axe-core/playwright@4.14.0 [direct] -> Blocked: restricted licence (copyleft/commercial/unknown); legal clearance required
+  @axe-core/playwright@4.14.0 [transitive] -> Blocked: restricted licence (copyleft/commercial/unknown); legal clearance required
+  argparse@2.0.1 [transitive] -> Review required: recognised licence needing posture review (see compliance-ci.md)
+  axe-core@4.14.0 [transitive] -> Blocked: restricted licence (copyleft/commercial/unknown); legal clearance required
+  caniuse-lite@1.0.30001816 [transitive] -> Review required: recognised licence needing posture review (see compliance-ci.md)
+
+Repo-level findings:
+  [Confirmed] direct-coverage: all 19 requirements pins + 43 package.json deps have scope==direct inventory rows
+  [Confirmed] sbom-freshness: SBOM fresh: all 713 inventory rows (640 unique package@version) covered by 2 SBOM file(s)
+  [Review required] notice: no root NOTICE file; third-party attributions live in docs/legal/third-party-licences.md - confirm NOTICE sufficiency with legal
+  [Review required] proprietary-allowlist: tracked despite .gitignore allowlist (confirm intentional, secret-free): .env.example
+  [Review required] proprietary-allowlist: tracked despite .gitignore allowlist (confirm intentional, secret-free): backend/migrations/versions/0002_credential_lifecycle.py
+  [Review required] proprietary-allowlist: tracked despite .gitignore allowlist (confirm intentional, secret-free): backend/migrations/versions/0009_credential_role_constraint.py
+  [Review required] proprietary-allowlist: tracked despite .gitignore allowlist (confirm intentional, secret-free): backend/wallet/README.md
+  [Review required] proprietary-allowlist: tracked despite .gitignore allowlist (confirm intentional, secret-free): frontend/.env.example
+  [Review required] proprietary-allowlist: tracked despite .gitignore allowlist (confirm intentional, secret-free): frontend/src/pages/admin/IntegrationCredentials.tsx
