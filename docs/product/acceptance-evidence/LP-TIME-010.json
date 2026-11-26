@@ -1,7 +1,7 @@
 {
   "id": "LP-TIME-010",
-  "head_sha": "2d27af4272457c8be02604399a74ecce460f37b4",
-  "timestamp_utc": "2026-11-22T12:45:56+00:00",
+  "head_sha": "fd568cd730963cd114cd4cd2b6207bc15a132f4f",
+  "timestamp_utc": "2026-11-26T01:52:03+00:00",
   "status_before": "IMPLEMENTED",
   "mapping": {
     "backend_suites": [
@@ -15,8 +15,8 @@
   },
   "suites": {
     "scheduling_test_suite": {
-      "exit": 0,
-      "summary": "115 passed, 0 failed"
+      "exit": 1,
+      "summary": "failures: 1"
     },
     "cross_tenant_test_suite": {
       "exit": 0,
@@ -24,7 +24,7 @@
     },
     "security_test_suite": {
       "exit": 0,
-      "summary": "2073 passed, 0 failed"
+      "summary": "2162 passed, 0 failed"
     },
     "lp_phase2_access_test_suite": {
       "exit": 0,
@@ -32,7 +32,7 @@
     },
     "frontend:check:routes": {
       "exit": 0,
-      "summary": "\u2713 Route integrity OK \u2014 all internal links resolve to 243 registered routes."
+      "summary": "\u2713 Route integrity OK \u2014 all internal links resolve to 247 registered routes."
     },
     "frontend:check:api-paths": {
       "exit": 0,
@@ -43,6 +43,11 @@
       "summary": "no row-specific unit file; route/api-path checks apply"
     }
   },
-  "fail_reasons": [],
-  "verdict": "PASS"
+  "fail_reasons": [
+    "backend:scheduling_test_suite"
+  ],
+  "verdict": "FAIL",
+  "failing_tail": {
+    "scheduling_test_suite": "Running scheduling test suite...\n\n  FAIL  ortools cp_model imports  ortools missing: No module named 'ortools'\n/Users/srinivas/LLM/Workforce/LibrePeople/backend/app/api/deps.py:68: StarletteDeprecationWarning: 'HTTP_422_UNPROCESSABLE_ENTITY' is deprecated. Use 'HTTP_422_UNPROCESSABLE_CONTENT' instead.\n  from app.core.errors import forbidden\nTraceback (most recent call last):\n  File \"/Users/srinivas/LLM/Workforce/LibrePeople/backend/scheduling_test_suite.py\", line 1278, in <module>\n    test_generate_draft_roster()\n    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^\n  File \"/Users/srinivas/LLM/Workforce/LibrePeople/backend/scheduling_test_suite.py\", line 319, in test_generate_draft_roster\n    result = generate_draft_roster(db, problem, admin_user)\n  File \"/Users/srinivas/LLM/Workforce/LibrePeople/backend/app/services/scheduling.py\", line 326, in generate_draft_roster\n    result = solver.solve(problem)\n  File \"/Users/srinivas/LLM/Workforce/LibrePeople/backend/app/services/solver.py\", line 73, in solve\n    raise RuntimeError(\"ortools is not available\")\nRuntimeError: ortools is not available"
+  }
 }

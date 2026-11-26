@@ -1,9 +1,9 @@
 {
   "id": "LP-DOC-003",
-  "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
-  "timestamp_utc": "2026-11-22T08:42:33+00:00",
+  "head_sha": "fd568cd730963cd114cd4cd2b6207bc15a132f4f",
+  "timestamp_utc": "2026-11-26T01:52:03+00:00",
   "status_before": "BLOCKED",
   "verdict": "HELD",
   "reason": "BLOCKED/IN PROGRESS rows are never flipped by the harness",
-  "blocker_or_decision": "BLOCKED \u2014 surplus ID with no phase assignment (docs/product/release-readiness.json defects_surplus: 14 IDs incl. this one; decision: product-owner decisions required before start). Delivery evidence in row proves implementation only, not scope approval. Per PRD 28: exact dependency = product-owner scope decision; recorded 2026-11-22."
+  "blocker_or_decision": "BLOCKED \u2014 storage matrix recorded 2026-11-22 at HEAD 8beddae1ce5cd5e98427fee08f2d6c8ea70b7d86 (see docs/product/storage-matrix.md): local dir backend is the default (settings.LOCAL_STORAGE_DIR, ephemeral) and OCI Object Storage is prod opt-in (STORAGE_BACKEND=oci + OCI_NAMESPACE/OCI_BUCKET_NAME); no S3/GCS backend exists. Implemented via backend/app/storage/backends.py get_storage() (LocalStorage/OCIObjectStorage). Matrix/scope approval pending per PRD \u00a729 (supported deployment matrix, data residency/region, S3/licence decisions); acceptance N/A while BLOCKED."
 }

@@ -1,7 +1,7 @@
 {
   "id": "LP-NFR-011",
-  "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
-  "timestamp_utc": "2026-11-22T08:42:33+00:00",
+  "head_sha": "fd568cd730963cd114cd4cd2b6207bc15a132f4f",
+  "timestamp_utc": "2026-11-26T01:52:03+00:00",
   "status_before": "IN PROGRESS",
   "verdict": "HELD",
   "reason": "BLOCKED/IN PROGRESS rows are never flipped by the harness",
