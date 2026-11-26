@@ -4,6 +4,23 @@ Dated, append-only record of Render testing-deploy observations.
 (Karmathy-era history lives in `docs/DEPLOYMENT.md`; this file starts
 with the LibrePeople `librepeople-backend` service.)
 
+## 2026-11-26 — bootstrap secret rotated: ADMIN_INITIAL_PASSWORD deleted, app independent
+
+- Branch: `agent/ops/secret-rotation` from `eb86f87`.
+- Rotation: `DELETE /services/srv-dc3g9q4ipgvc738jo7ug/env-vars/ADMIN_INITIAL_PASSWORD`
+  → 204; GET env list confirms absent (20 vars remain).
+- Triggered redeploy `dep-dc3oh1a9lscs73dcbp10`, `live` 01:18:33Z,
+  commit `eb86f87` — matches. **Not stale.**
+- Verification (no bootstrap secret in env): `GET /health` → 200
+  (0.3 s); admin login with custodied password → 200 (1 attempt);
+  `GET /api/v1/employees` (admin token) → 200 (0.6 s). App has no
+  dependency on the bootstrap secret.
+- Secrets posture: `E2E_*` (12 + 2 MFA secrets) in env = intended E2E
+  custody. `BOOTSTRAP_ADMIN_PASSWORD` **kept** — it is the documented
+  custody store for the current admin password, never read by the app
+  (custom name, zero runtime dependency); removing it would destroy the
+  only credential record with no benefit.
+
 ## 2026-11-26 — deploy dep-dc3ob78ae00c73cnpf8g LIVE @ 8c12425 (D1 TenantSwitcher fix)
 
 - Branch: `agent/ops/render-watch-2` from `8c12425`.
