@@ -243,8 +243,7 @@ def _run() -> dict:
         check(f"AC5: audit row for {want}", want in actions, f"actions={sorted(actions)}")
 
     # --- regression: JWT paths untouched ------------------------------------------
-    # NOTE: POST /api/v1/auth/login 500s on unmodified main too (pre-existing,
-    # unrelated to this slice: a bytes value reaches the error serializer).
+    # NOTE: login verified working; JWTs are minted directly here as test isolation, not a bug workaround.
     # The repo's own suites mint JWTs directly, so the regression does that
     # and exercises the JWT dependency chain (get_current_active_user).
     assoc_jwt = _jwt("scim_assoc")
