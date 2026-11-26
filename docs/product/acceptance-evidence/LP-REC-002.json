@@ -1,8 +1,8 @@
 {
   "id": "LP-REC-002",
-  "head_sha": "669e200e1430b25c68c997ade1eda0299972e506",
-  "timestamp_utc": "2026-11-22T08:42:33+00:00",
-  "status_before": "TESTED",
+  "head_sha": "fd568cd730963cd114cd4cd2b6207bc15a132f4f",
+  "timestamp_utc": "2026-11-26T01:52:03+00:00",
+  "status_before": "IMPLEMENTED",
   "mapping": {
     "backend_suites": [
       "hire_test_suite",
@@ -29,7 +29,7 @@
     },
     "security_test_suite": {
       "exit": 0,
-      "summary": "2073 passed, 0 failed"
+      "summary": "2162 passed, 0 failed"
     },
     "lp_phase2_access_test_suite": {
       "exit": 0,
@@ -37,7 +37,7 @@
     },
     "frontend:check:routes": {
       "exit": 0,
-      "summary": "\u2713 Route integrity OK \u2014 all internal links resolve to 243 registered routes."
+      "summary": "\u2713 Route integrity OK \u2014 all internal links resolve to 247 registered routes."
     },
     "frontend:check:api-paths": {
       "exit": 0,
