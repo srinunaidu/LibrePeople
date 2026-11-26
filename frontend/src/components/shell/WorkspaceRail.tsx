@@ -70,7 +70,7 @@ const ADMIN_ITEMS: NavItem[] = [
   { label: "Feature Flags", to: "/admin/feature-flags" },
   { label: "Locale Config (locale)", to: "/admin/locale" },
   { label: "Retention Export", to: "/admin/retention-export" },
-  {/* Candidate Stages hidden from nav (admin-cleanup) — route + file stay working. */}
+  // Candidate Stages hidden from nav (admin-cleanup) — route + file stay working.
   { label: "Project Status", to: "/admin/project-status" },
   { label: "Design Gallery", to: "/admin/design-gallery" },
   { label: "Theme Studio", to: "/admin/theme" },

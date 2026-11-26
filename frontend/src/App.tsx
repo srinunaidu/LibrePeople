@@ -261,7 +261,7 @@ function AppRoutes() {
       {/* Marketing aliases removed (admin-cleanup): same components reachable at
           /solutions /resources /about /careers /contact /privacy /terms /docs
           /pricing /security /faq /industries/:slug /compare/:competitor /design.
-          /admin/platform-showcase kept — no non-admin route renders it. */
+          /admin/platform-showcase kept — no non-admin route renders it. */}
       <Route path="/admin/platform-showcase" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><PlatformShowcase /></ProtectedRoute>} />
 
       {/* R6/R7/R8 Features */}
