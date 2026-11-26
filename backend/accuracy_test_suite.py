@@ -526,8 +526,18 @@ def test_role_gating():
     check("unauthenticated refused", unauth.status_code == 401, str(unauth.status_code))
 
 
+def _registered_paths():
+    # app.routes is not authoritative here: the installed FastAPI (0.162,
+    # vs the pinned 0.111) keeps included routers lazy (`_IncludedRouter`)
+    # until the OpenAPI schema is built, so raw route introspection misses
+    # registered paths. The built schema reflects what the app actually
+    # serves — every functional test below already proves these endpoints
+    # answer — so read the registry from there.
+    return set(app.openapi()["paths"])
+
+
 def test_route_registration():
-    paths = {r.path for r in app.routes if hasattr(r, "path")}
+    paths = _registered_paths()
     check("route registered /api/v1/forecasting/accuracy",
           "/api/v1/forecasting/accuracy" in paths, "")
     check("route registered /api/v1/forecasting/accuracy/sync",

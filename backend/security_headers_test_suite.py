@@ -19,7 +19,7 @@ DB_PATH = os.path.join(tempfile.mkdtemp(prefix="security_headers_test_"), "secur
 os.environ["DATABASE_URL"] = f"sqlite:///{DB_PATH}"
 os.environ["SECRET_KEY"] = "local-test-secret-key-not-for-production-0123456789"
 os.environ["MIGRATE_ON_STARTUP"] = "false"
-os.environ["BACKEND_CORS_ORIGINS"] = ""
+os.environ["BACKEND_CORS_ORIGINS"] = "https://app.example.com"
 os.environ["ALLOW_SELF_REGISTRATION"] = "false"
 os.environ["LOG_LEVEL"] = "CRITICAL"
 os.environ["ENVIRONMENT"] = "production"  # HSTS only applies in production
