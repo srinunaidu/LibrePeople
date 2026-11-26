@@ -8,6 +8,7 @@ import { useEffect, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { Layout } from "@/components/Layout"
 import {
+  Button,
   Alert,
   EmptyState,
   LoadingRegion,
@@ -99,9 +100,9 @@ export default function ExpenseNew() {
       <Layout>
         <PageHeader compact title="New expense claim" description="File a claim for reimbursement." />
         <Alert tone="error">{errorMessage(loadError, "The expense categories could not be read.")}</Alert>
-        <button type="button" className="btn btn-secondary btn-sm mt-4" onClick={loadCategories}>
+        <Button variant="secondary" size="sm" className="mt-4" type="button" onClick={loadCategories}>
           Reload
-        </button>
+        </Button>
       </Layout>
     )
   }
@@ -220,14 +221,11 @@ export default function ExpenseNew() {
             {field("description") && <p className="text-sm text-rose-600 mt-1">{field("description")}</p>}
           </div>
         </div>
-        <button
-          type="button"
-          className="btn btn-primary mt-4"
+        <Button variant="primary" className="mt-4" type="button"
           disabled={saving || !employeeId.trim() || !categoryId || !expenseDate || !amount.trim()}
-          onClick={submit}
-        >
+          onClick={submit}>
           {saving ? "Filing…" : "File claim"}
-        </button>
+        </Button>
       </SectionCard>
     </Layout>
   )

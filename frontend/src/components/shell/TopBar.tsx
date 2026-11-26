@@ -5,7 +5,7 @@ import { useTenantNav } from "@/lib/tenantPath"
 import { ThemeToggle } from "./ThemeToggle"
 import { IconLogout, IconMenu, IconSearch } from "@/components/icons"
 import { cn } from "@/lib/utils"
-import { toast } from "sonner"
+import { showSuccess } from "@/components/ui"
 
 export interface TopBarBreadcrumbItem {
   label: string
@@ -71,7 +71,7 @@ export function TopBar({
             data-testid="exit-impersonation"
             onClick={() => {
               exitImpersonation()
-              toast.success("Exited impersonation")
+              showSuccess("Exited impersonation")
               navigate(tenantNav.to("/dashboard"))
             }}
             className="rounded bg-white px-3 py-1 text-xs font-semibold text-warning-text hover:bg-surface-inset"

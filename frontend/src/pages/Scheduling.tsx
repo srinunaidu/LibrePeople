@@ -2,6 +2,8 @@ import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import { Layout } from "@/components/Layout"
 import {
+  Button,
+  Table,
   Alert,
   EmptyState,
   LoadingRegion,
@@ -161,9 +163,9 @@ export default function Scheduling() {
           tone="error"
           title="Scheduling data incomplete"
           action={
-            <button type="button" className="btn btn-secondary btn-sm" onClick={load}>
+            <Button variant="secondary" size="sm" type="button" onClick={load}>
               Reload
-            </button>
+            </Button>
           }
         >
           {error}
@@ -213,11 +215,11 @@ export default function Scheduling() {
                 <input id="st-end" type="time" className="input" value={tpl.end_time}
                   onChange={(e) => setTpl({ ...tpl, end_time: e.target.value })} />
               </div>
-              <button className="btn btn-primary" disabled={!tpl.name || !tpl.code || busy === "tpl"}
+              <Button variant="primary" disabled={!tpl.name || !tpl.code || busy === "tpl"}
                 onClick={() => act("tpl", () => api.post("/scheduling/shift-templates", tpl), "Shift template created")}>
                 <IconPlus className="w-4 h-4" />
                 {busy === "tpl" ? "Adding…" : "Add template"}
-              </button>
+              </Button>
             </div>
           ) : (
             <p className="px-5 pt-4 pb-2 text-sm text-text-secondary" role="note">
@@ -283,8 +285,7 @@ export default function Scheduling() {
                 <input id="rg-to" type="date" className="input" value={form.end_date}
                   onChange={(e) => setForm({ ...form, end_date: e.target.value })} />
               </div>
-              <button className="btn btn-primary"
-                disabled={!form.employee_id || !form.shift_template_id || !form.start_date || !form.end_date || busy === "rg"}
+              <Button variant="primary" disabled={!form.employee_id || !form.shift_template_id || !form.start_date || !form.end_date || busy === "rg"}
                 onClick={() => act("rg", () => api.post("/scheduling/roster/generate", {
                   employee_id: Number(form.employee_id),
                   shift_template_id: Number(form.shift_template_id),
@@ -292,7 +293,7 @@ export default function Scheduling() {
                   end_date: form.end_date,
                 }), "Roster generated")}>
                 {busy === "rg" ? "Generating…" : "Generate roster"}
-              </button>
+              </Button>
             </div>
           ) : (
             <p className="px-5 pb-4 text-sm text-text-secondary" role="note">
@@ -316,34 +317,19 @@ export default function Scheduling() {
             <EmptyState title={failed.includes("roster") ? "Roster unavailable" : "No roster entries"}
               description={emptyDesc("roster", "Generate a roster above to schedule an employee.")} />
           ) : (
-            <div
-              className="table-scroll max-h-[420px] overflow-y-auto"
-              tabIndex={0}
-              role="region"
-              aria-label="Roster entries"
-            >
-              <table className="table-base table-striped table-compact">
-                <caption className="sr-only">Roster entries</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Employee</th>
-                    <th scope="col">Date</th>
-                    <th scope="col">Shift</th>
-                    <th scope="col">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {roster.slice(0, 50).map((r) => (
-                    <tr key={r.id}>
-                      <td>{empName(r.employee_id)}</td>
-                      <td className="whitespace-nowrap">{r.work_date}</td>
-                      <td className="whitespace-nowrap">{r.start_time}–{r.end_time}</td>
-                      <td><StatusPill status={r.status} /></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table
+              className="max-h-[420px] overflow-y-auto"
+              columns={[
+                { key: "employee", header: "Employee", accessor: (r) => empName(r.employee_id) },
+                { key: "date", header: "Date", accessor: (r) => <span className="whitespace-nowrap">{r.work_date}</span> },
+                { key: "shift", header: "Shift", accessor: (r) => <span className="whitespace-nowrap">{r.start_time}–{r.end_time}</span> },
+                { key: "status", header: "Status", accessor: (r) => <StatusPill status={r.status} /> },
+              ]}
+              data={roster.slice(0, 50)}
+              keyAccessor={(r) => r.id}
+              caption="Roster entries"
+              sortable={false}
+            />
           )}
           {roster.length > 50 && (
             <p className="px-5 py-2.5 text-xs text-text-secondary border-t border-border">

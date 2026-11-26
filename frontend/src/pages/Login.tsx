@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "@/context/AuthContext"
-import { RetryableAlert } from "@/components/ui"
+import { Button, RetryableAlert } from "@/components/ui"
 import api from "@/lib/api"
 
 /**
@@ -140,9 +140,9 @@ export default function Login() {
                 />
               </div>
 
-              <button className="btn btn-primary w-full" type="submit" disabled={busy}>
+              <Button variant="primary" className="w-full" type="submit" disabled={busy}>
                 {busy ? "Signing in…" : "Sign in"}
-              </button>
+              </Button>
             </form>
           </div>
 

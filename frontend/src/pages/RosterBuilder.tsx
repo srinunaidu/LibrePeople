@@ -2,7 +2,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Link } from "react-router-dom"
 import { addDays, eachDayOfInterval, format } from "date-fns"
 import { Layout } from "@/components/Layout"
-import {Alert,
+import {
+  Button,
+  Table,
+  Alert,
   EmptyState,
   LoadingRegion,
   PageHeader,
@@ -633,9 +636,9 @@ export default function RosterBuilder() {
                   tone="error"
                   title="Reference data unavailable"
                   action={
-                    <button type="button" className="btn btn-secondary btn-sm" onClick={loadLookups}>
+                    <Button variant="secondary" size="sm" type="button" onClick={loadLookups}>
                       Try again
-                    </button>
+                    </Button>
                   }
                 >
                   {loadError}
@@ -721,53 +724,50 @@ export default function RosterBuilder() {
 
                   {templates.length > 0 && restDates.length > 0 && (
                     <>
-                      <div className="table-scroll border-t border-border">
-                        <table className="table-base table-compact table-striped">
-                          <caption className="sr-only">Headcount demand per shift template</caption>
-                          <thead>
-                            <tr>
-                              <th scope="col">Shift template</th>
-                              {restDates.map((d) => (
-                                <th scope="col" key={d} className="num">{d.slice(5)}</th>
-                              ))}
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {templates.map((tpl) => (
-                              <tr key={tpl.id}>
-                                <th scope="row" className="text-left font-medium whitespace-nowrap">
-                                  {tpl.code} — {tpl.name}
-                                  <span className="block text-xs text-text-secondary font-normal">
-                                    {tpl.start_time}–{tpl.end_time}{tpl.is_night ? " · night" : ""}
-                                  </span>
-                                </th>
-                                {restDates.map((d, i) => (
-                                  <td key={d}>
-                                    <label className="sr-only" htmlFor={`rb-dem-${tpl.id}-${i}`}>
-                                      Headcount for {tpl.code} on {d}
-                                    </label>
-                                    <input
-                                      id={`rb-dem-${tpl.id}-${i}`}
-                                      type="number"
-                                      min={0}
-                                      max={12}
-                                      className="input w-16 px-1.5 text-right"
-                                      aria-label={`Headcount for ${tpl.code} on ${d}`}
-                                      value={demand[tpl.id] ?? 0}
-                                      onChange={(e) =>
-                                        setDemand((prev) => ({
-                                          ...prev,
-                                          [tpl.id]: Math.max(0, Math.floor(Number(e.target.value) || 0)),
-                                        }))
-                                      }
-                                    />
-                                  </td>
-                                ))}
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
+                      <Table
+                        className="border-t border-border"
+                        columns={[
+                          { key: "tpl", header: "Shift template", accessor: (tpl) => (
+                            <span>
+                              <span className="font-medium whitespace-nowrap">{tpl.code} — {tpl.name}</span>
+                              <span className="block text-xs text-text-secondary font-normal">
+                                {tpl.start_time}–{tpl.end_time}{tpl.is_night ? " · night" : ""}
+                              </span>
+                            </span>
+                          ) },
+                          ...restDates.map((d, i) => ({
+                            key: d,
+                            header: d.slice(5),
+                            headerClassName: "num",
+                            accessor: (tpl: ShiftTemplate) => (
+                              <>
+                                <label className="sr-only" htmlFor={`rb-dem-${tpl.id}-${i}`}>
+                                  Headcount for {tpl.code} on {d}
+                                </label>
+                                <input
+                                  id={`rb-dem-${tpl.id}-${i}`}
+                                  type="number"
+                                  min={0}
+                                  max={12}
+                                  className="input w-16 px-1.5 text-right"
+                                  aria-label={`Headcount for ${tpl.code} on ${d}`}
+                                  value={demand[tpl.id] ?? 0}
+                                  onChange={(e) =>
+                                    setDemand((prev) => ({
+                                      ...prev,
+                                      [tpl.id]: Math.max(0, Math.floor(Number(e.target.value) || 0)),
+                                    }))
+                                  }
+                                />
+                              </>
+                            ),
+                          })),
+                        ]}
+                        data={templates}
+                        keyAccessor={(tpl) => tpl.id}
+                        caption="Headcount demand per shift template"
+                        sortable={false}
+                      />
                       <p className="px-4 py-2 text-xs text-text-secondary border-b border-border">
                         The headcount applies to every day of the period. {restDates.length} day(s) in scope.
                       </p>
@@ -851,14 +851,11 @@ export default function RosterBuilder() {
                   </div>
 
                   <div className="px-4 py-4">
-                    <button
-                      className="btn btn-primary"
-                      disabled={generating || rangeTooLong || !locationCode || hasDemand === false}
-                      onClick={generate}
-                    >
+                    <Button variant="primary" disabled={generating || rangeTooLong || !locationCode || hasDemand === false}
+                      onClick={generate}>
                       <IconCalendar className="w-4 h-4" />
                       {generating ? "Solving…" : "Generate draft roster"}
-                    </button>
+                    </Button>
                     <p className="field-hint mt-1">
                       The solver runs server-side and can take the whole time limit for a heavy range.
                     </p>
@@ -875,14 +872,11 @@ export default function RosterBuilder() {
                   draft.objective_value != null ? ` · objective ${Number(draft.objective_value).toFixed(2)}` : ""
                 }`}
                 actions={
-                  <button
-                    className="btn btn-primary"
-                    disabled={publishing || draft.valid === false}
-                    onClick={publish}
-                  >
+                  <Button variant="primary" disabled={publishing || draft.valid === false}
+                    onClick={publish}>
                     <IconCheck className="w-4 h-4" />
                     {publishing ? "Publishing…" : "Publish version"}
-                  </button>
+                  </Button>
                 }
               >
                 {draft.timed_out && (
@@ -926,73 +920,53 @@ export default function RosterBuilder() {
                   </div>
                 </div>
 
-                <div
-                  className="table-scroll max-h-[420px] overflow-y-auto mt-4"
-                  tabIndex={0}
-                  role="region"
-                  aria-label="Solver assignments for the draft"
-                >
-                  <table className="table-base table-compact table-striped">
-                    <caption className="sr-only">Solver assignments for the draft</caption>
-                    <thead>
-                      <tr>
-                        <th scope="col">Date</th>
-                        <th scope="col">Slot</th>
-                        <th scope="col">Shift</th>
-                        <th scope="col">Employee</th>
-                        <th scope="col">Adjust</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {draft.assignments.slice(0, 200).map((a) => (
-                        <tr key={a.slot_instance}>
-                          <td className="whitespace-nowrap">{a.date}</td>
-                          <td className="font-mono text-xs">{a.slot_id}</td>
-                          <td className="whitespace-nowrap">
-                            {a.start}–{a.end}
-                            {a.is_night ? " (night)" : ""}
-                          </td>
-                          <td>{employeeName(a.employee_id)}</td>
-                          <td>
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <label className="sr-only" htmlFor={`rb-pick-${a.slot_instance}`}>
-                                Change employee for slot {a.slot_id}
-                              </label>
-                              <select
-                                id={`rb-pick-${a.slot_instance}`}
-                                className="input w-40 py-1"
-                                value={adjustPick[a.slot_instance] ?? String(a.employee_id)}
-                                onChange={(e) =>
-                                  setAdjustPick((p) => ({ ...p, [a.slot_instance]: e.target.value }))
-                                }
-                              >
-                                {employees.map((e) => (
-                                  <option key={e.id} value={e.id}>
-                                    {e.first_name} {e.last_name}
-                                  </option>
-                                ))}
-                              </select>
-                              <button
-                                className="action-link"
-                                disabled={adjusting === a.slot_instance || employees.length === 0}
-                                onClick={() => adjust(a.slot_instance, "reassign")}
-                              >
-                                {adjusting === a.slot_instance ? "Applying…" : "Apply"}
-                              </button>
-                              <button
-                                className="action-link-danger"
-                                disabled={adjusting === a.slot_instance}
-                                onClick={() => adjust(a.slot_instance, "unassign")}
-                              >
-                                Unassign
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <Table
+                  className="max-h-[420px] overflow-y-auto mt-4"
+                  columns={[
+                    { key: "date", header: "Date", accessor: (a) => <span className="whitespace-nowrap">{a.date}</span> },
+                    { key: "slot", header: "Slot", accessor: (a) => <span className="font-mono text-xs">{a.slot_id}</span> },
+                    { key: "shift", header: "Shift", accessor: (a) => (
+                      <span className="whitespace-nowrap">
+                        {a.start}–{a.end}
+                        {a.is_night ? " (night)" : ""}
+                      </span>
+                    ) },
+                    { key: "employee", header: "Employee", accessor: (a) => employeeName(a.employee_id) },
+                    { key: "adjust", header: "Adjust", accessor: (a) => (
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <label className="sr-only" htmlFor={`rb-pick-${a.slot_instance}`}>
+                          Change employee for slot {a.slot_id}
+                        </label>
+                        <select
+                          id={`rb-pick-${a.slot_instance}`}
+                          className="input w-40 py-1"
+                          value={adjustPick[a.slot_instance] ?? String(a.employee_id)}
+                          onChange={(e) =>
+                            setAdjustPick((p) => ({ ...p, [a.slot_instance]: e.target.value }))
+                          }
+                        >
+                          {employees.map((e) => (
+                            <option key={e.id} value={e.id}>
+                              {e.first_name} {e.last_name}
+                            </option>
+                          ))}
+                        </select>
+                        <Button variant="ghost" disabled={adjusting === a.slot_instance || employees.length === 0}
+                          onClick={() => adjust(a.slot_instance, "reassign")}>
+                          {adjusting === a.slot_instance ? "Applying…" : "Apply"}
+                        </Button>
+                        <Button variant="danger" disabled={adjusting === a.slot_instance}
+                          onClick={() => adjust(a.slot_instance, "unassign")}>
+                          Unassign
+                        </Button>
+                      </div>
+                    ) },
+                  ]}
+                  data={draft.assignments.slice(0, 200)}
+                  keyAccessor={(a) => a.slot_instance}
+                  caption="Solver assignments for the draft"
+                  sortable={false}
+                />
                 {draft.assignments.length > 200 && (
                   <p className="px-4 py-2 text-xs text-text-secondary border-t border-border">
                     Showing the first 200 of {draft.assignments.length} assignments. Adjustments are applied per slot.
@@ -1005,38 +979,28 @@ export default function RosterBuilder() {
                     {<Alert tone="success">All slots filled — no further action.</Alert>}
                   </div>
                 ) : (
-                  <div className="table-scroll mt-2">
-                    <table className="table-base table-compact">
-                      <caption className="sr-only">
-                        Slots the solver could not fill, with the blocking cause
-                      </caption>
-                      <thead>
-                        <tr>
-                          <th scope="col">Date</th>
-                          <th scope="col">Slot</th>
-                          <th scope="col" className="num">Headcount</th>
-                          <th scope="col">Cause</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {draft.unfilled_slots.map((u, i) => (
-                          <tr key={`${u.slot_id}-${i}`}>
-                            <td className="whitespace-nowrap">{u.date}</td>
-                            <td className="font-mono text-xs">
-                              {u.slot_id}
-                              {u.role ? ` · ${u.role}` : ""}
-                            </td>
-                            <td className="num">{u.headcount}</td>
-                            <td>
-                              <span className="badge badge-amber" title={u.blocking_constraint ?? undefined}>
-                                {u.cause}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                  <Table
+                    className="mt-2"
+                    columns={[
+                      { key: "date", header: "Date", accessor: (u) => <span className="whitespace-nowrap">{u.date}</span> },
+                      { key: "slot", header: "Slot", accessor: (u) => (
+                        <span className="font-mono text-xs">
+                          {u.slot_id}
+                          {u.role ? ` · ${u.role}` : ""}
+                        </span>
+                      ) },
+                      { key: "headcount", header: "Headcount", accessor: (u) => u.headcount, cellClassName: "num" },
+                      { key: "cause", header: "Cause", accessor: (u) => (
+                        <span className="badge badge-amber" title={u.blocking_constraint ?? undefined}>
+                          {u.cause}
+                        </span>
+                      ) },
+                    ]}
+                    data={draft.unfilled_slots.map((u, i) => ({ ...u, _k: `${u.slot_id}-${i}` }))}
+                    keyAccessor={(u) => u._k}
+                    caption="Slots the solver could not fill, with the blocking cause"
+                    sortable={false}
+                  />
                 )}
               </SectionCard>
             )}
@@ -1049,13 +1013,10 @@ export default function RosterBuilder() {
             title="Roster versions"
             description="Every draft and published version. A published version is immutable; new work goes through a draft."
             actions={
-              <button
-                className="btn btn-secondary btn-sm"
-                onClick={() => loadVersions(versionPage)}
-                disabled={versionsLoading}
-              >
+              <Button variant="secondary" size="sm" onClick={() => loadVersions(versionPage)}
+                disabled={versionsLoading}>
                 <IconRefresh className="w-4 h-4" /> Refresh
-              </button>
+              </Button>
             }
           >
             {versionsLoading ? (
@@ -1069,79 +1030,58 @@ export default function RosterBuilder() {
               />
             ) : (
               <>
-                <div className="table-scroll">
-                  <table className="table-base table-compact table-striped">
-                    <caption className="sr-only">Roster versions, newest first</caption>
-                    <thead>
-                      <tr>
-                        <th scope="col">Version</th>
-                        <th scope="col">Location</th>
-                        <th scope="col">Period</th>
-                        <th scope="col">Status</th>
-                        <th scope="col" className="num">Entries</th>
-                        <th scope="col" className="num">Unfilled</th>
-                        <th scope="col">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {versions.map((v) => (
-                        <tr key={v.id}>
-                          <td className="whitespace-nowrap">#{v.id}</td>
-                          <td>{v.location_code || "\u2014"}</td>
-                          <td className="whitespace-nowrap">
-                            {v.period_start} → {v.period_end}
-                          </td>
-                          <td><StatusPill status={v.status} /></td>
-                          <td className="num">{v.entry_count}</td>
-                          <td className="num">{v.unfilled_count}</td>
-                          <td>
-                            <div className="flex items-center gap-3 flex-wrap">
-                              <button className="action-link" onClick={() => loadVersionDetail(v.id)}>
-                                Detail
-                              </button>
-                              {v.status === "published" && (
-                                <button
-                                  className="action-link"
-                                  disabled={rolling === `v${v.id}`}
-                                  onClick={() => rollForward(v)}
-                                >
-                                  {rolling === `v${v.id}` ? "Copying…" : "Roll forward"}
-                                </button>
-                              )}
-                              {v.status === "draft" && (
-                                <button className="action-link" onClick={() => reviewDraft(v.id)}>
-                                  Review draft
-                                </button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <Table
+                  columns={[
+                    { key: "version", header: "Version", accessor: (v) => <span className="whitespace-nowrap">#{v.id}</span> },
+                    { key: "location", header: "Location", accessor: (v) => v.location_code || "\u2014" },
+                    { key: "period", header: "Period", accessor: (v) => (
+                      <span className="whitespace-nowrap">
+                        {v.period_start} {"\u2192"} {v.period_end}
+                      </span>
+                    ) },
+                    { key: "status", header: "Status", accessor: (v) => <StatusPill status={v.status} /> },
+                    { key: "entries", header: "Entries", accessor: (v) => v.entry_count, cellClassName: "num" },
+                    { key: "unfilled", header: "Unfilled", accessor: (v) => v.unfilled_count, cellClassName: "num" },
+                    { key: "actions", header: "Actions", accessor: (v) => (
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <Button variant="ghost" onClick={() => loadVersionDetail(v.id)}>
+                          Detail
+                        </Button>
+                        {v.status === "published" && (
+                          <Button variant="ghost" disabled={rolling === `v${v.id}`}
+                            onClick={() => rollForward(v)}>
+                            {rolling === `v${v.id}` ? "Copying\u2026" : "Roll forward"}
+                          </Button>
+                        )}
+                        {v.status === "draft" && (
+                          <Button variant="ghost" onClick={() => reviewDraft(v.id)}>
+                            Review draft
+                          </Button>
+                        )}
+                      </div>
+                    ) },
+                  ]}
+                  data={versions}
+                  keyAccessor={(v) => v.id}
+                  caption="Roster versions, newest first"
+                  sortable={false}
+                />
                 {(versionMeta.total_pages ?? 0) > 1 && (
                   <div className="px-4 py-2 border-t border-border flex items-center gap-3 flex-wrap">
-                    <button
-                      className="btn btn-secondary btn-sm"
-                      disabled={versionPage <= 1 || versionsLoading}
-                      onClick={() => loadVersions(versionPage - 1)}
-                    >
+                    <Button variant="secondary" size="sm" disabled={versionPage <= 1 || versionsLoading}
+                      onClick={() => loadVersions(versionPage - 1)}>
                       Previous
-                    </button>
+                    </Button>
                     <span className="text-sm text-text-secondary">
                       Page {versionPage} of {versionMeta.total_pages ?? "?"}
                       {versionMeta.total ? ` · ${versionMeta.total} versions` : ""}
                     </span>
-                    <button
-                      className="btn btn-secondary btn-sm"
-                      disabled={
+                    <Button variant="secondary" size="sm" disabled={
                         versionPage >= (versionMeta.total_pages ?? 1) || versionsLoading
                       }
-                      onClick={() => loadVersions(versionPage + 1)}
-                    >
+                      onClick={() => loadVersions(versionPage + 1)}>
                       Next
-                    </button>
+                    </Button>
                   </div>
                 )}
               </>
@@ -1164,39 +1104,30 @@ export default function RosterBuilder() {
                     />
                   </div>
                 ) : (
-                  <div className="table-scroll max-h-[320px] overflow-y-auto mt-2">
-                    <table className="table-base table-compact table-striped">
-                      <caption className="sr-only">Roster entries of the selected version</caption>
-                      <thead>
-                        <tr>
-                          <th scope="col">Employee</th>
-                          <th scope="col">Date</th>
-                          <th scope="col">Shift</th>
-                          <th scope="col">Night</th>
-                          <th scope="col">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {versionDetail.entries.slice(0, 200).map((e) => (
-                          <tr key={e.id}>
-                            <td>{employeeName(e.employee_id)}</td>
-                            <td className="whitespace-nowrap">{e.work_date}</td>
-                            <td className="whitespace-nowrap">
-                              {e.start_time}–{e.end_time}
-                            </td>
-                            <td>
-                              {e.is_night ? (
-                                <span className="badge badge-violet">Night</span>
-                              ) : (
-                                <span className="badge badge-slate">Day</span>
-                              )}
-                            </td>
-                            <td><StatusPill status={e.status} /></td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                  <Table
+                    className="max-h-[320px] overflow-y-auto mt-2"
+                    columns={[
+                      { key: "employee", header: "Employee", accessor: (e) => employeeName(e.employee_id) },
+                      { key: "date", header: "Date", accessor: (e) => <span className="whitespace-nowrap">{e.work_date}</span> },
+                      { key: "shift", header: "Shift", accessor: (e) => (
+                        <span className="whitespace-nowrap">
+                          {e.start_time}{"\u2013"}{e.end_time}
+                        </span>
+                      ) },
+                      { key: "night", header: "Night", accessor: (e) => (
+                        e.is_night ? (
+                          <span className="badge badge-violet">Night</span>
+                        ) : (
+                          <span className="badge badge-slate">Day</span>
+                        )
+                      ) },
+                      { key: "status", header: "Status", accessor: (e) => <StatusPill status={e.status} /> },
+                    ]}
+                    data={versionDetail.entries.slice(0, 200)}
+                    keyAccessor={(e) => e.id}
+                    caption="Roster entries of the selected version"
+                    sortable={false}
+                  />
                 )}
 
                 {versionDetail.unfilled_slots && versionDetail.unfilled_slots.length > 0 && (
@@ -1204,29 +1135,19 @@ export default function RosterBuilder() {
                     <h4 className="font-semibold px-4">
                       Unfilled slots of this version ({versionDetail.unfilled_slots.length})
                     </h4>
-                    <div className="table-scroll mt-1">
-                      <table className="table-base table-compact">
-                        <caption className="sr-only">Unfilled slots stored with the version</caption>
-                        <thead>
-                          <tr>
-                            <th scope="col">Date</th>
-                            <th scope="col">Slot</th>
-                            <th scope="col" className="num">Headcount</th>
-                            <th scope="col">Cause</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {versionDetail.unfilled_slots.map((u, i) => (
-                            <tr key={`${u.slot_id}-${i}`}>
-                              <td className="whitespace-nowrap">{u.date}</td>
-                              <td className="font-mono text-xs">{u.slot_id}</td>
-                              <td className="num">{u.headcount}</td>
-                              <td><span className="badge badge-amber">{u.cause}</span></td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+                    <Table
+                      className="mt-1"
+                      columns={[
+                        { key: "date", header: "Date", accessor: (u) => <span className="whitespace-nowrap">{u.date}</span> },
+                        { key: "slot", header: "Slot", accessor: (u) => <span className="font-mono text-xs">{u.slot_id}</span> },
+                        { key: "headcount", header: "Headcount", accessor: (u) => u.headcount, cellClassName: "num" },
+                        { key: "cause", header: "Cause", accessor: (u) => <span className="badge badge-amber">{u.cause}</span> },
+                      ]}
+                      data={versionDetail.unfilled_slots.map((u, i) => ({ ...u, _k: `${u.slot_id}-${i}` }))}
+                      keyAccessor={(u) => u._k}
+                      caption="Unfilled slots stored with the version"
+                      sortable={false}
+                    />
                   </div>
                 )}
 
@@ -1249,13 +1170,10 @@ export default function RosterBuilder() {
                         ))}
                     </select>
                   </div>
-                  <button
-                    className="btn btn-secondary"
-                    disabled={!compareBase || compareLoading}
-                    onClick={loadCompare}
-                  >
+                  <Button variant="secondary" disabled={!compareBase || compareLoading}
+                    onClick={loadCompare}>
                     {compareLoading ? "Comparing…" : "Compare versions"}
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
@@ -1286,47 +1204,38 @@ export default function RosterBuilder() {
                     />
                   </div>
                 ) : (
-                  <div className="table-scroll max-h-[320px] overflow-y-auto">
-                    <table className="table-base table-compact table-striped">
-                      <caption className="sr-only">
-                        Added, removed and changed shifts between the two versions
-                      </caption>
-                      <thead>
-                        <tr>
-                          <th scope="col">Type</th>
-                          <th scope="col">Employee</th>
-                          <th scope="col">Date</th>
-                          <th scope="col">Current</th>
-                          <th scope="col">Base</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {[...compare.added, ...compare.removed, ...compare.changed].map((d, i) => (
-                          <tr key={i}>
-                            <td>
-                              <span className={`badge ${DIFF_TONE[d.type] ?? "badge-slate"}`}>
-                                {d.type}
-                              </span>
-                            </td>
-                            <td>
-                              {employeeName(
-                                d.type === "removed" ? d.base_entry?.employee_id : d.entry?.employee_id
-                              )}
-                            </td>
-                            <td className="whitespace-nowrap">
-                              {d.type === "removed" ? d.base_entry?.work_date : d.entry?.work_date}
-                            </td>
-                            <td className="whitespace-nowrap">
-                              {d.entry ? `${d.entry.start_time}–${d.entry.end_time}` : "\u2014"}
-                            </td>
-                            <td className="whitespace-nowrap">
-                              {d.base_entry ? `${d.base_entry.start_time}–${d.base_entry.end_time}` : "\u2014"}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                  <Table
+                    className="max-h-[320px] overflow-y-auto"
+                    columns={[
+                      { key: "type", header: "Type", accessor: (d) => (
+                        <span className={`badge ${DIFF_TONE[d.type] ?? "badge-slate"}`}>
+                          {d.type}
+                        </span>
+                      ) },
+                      { key: "employee", header: "Employee", accessor: (d) => employeeName(
+                        d.type === "removed" ? d.base_entry?.employee_id : d.entry?.employee_id
+                      ) },
+                      { key: "date", header: "Date", accessor: (d) => (
+                        <span className="whitespace-nowrap">
+                          {d.type === "removed" ? d.base_entry?.work_date : d.entry?.work_date}
+                        </span>
+                      ) },
+                      { key: "current", header: "Current", accessor: (d) => (
+                        <span className="whitespace-nowrap">
+                          {d.entry ? `${d.entry.start_time}\u2013${d.entry.end_time}` : "\u2014"}
+                        </span>
+                      ) },
+                      { key: "base", header: "Base", accessor: (d) => (
+                        <span className="whitespace-nowrap">
+                          {d.base_entry ? `${d.base_entry.start_time}\u2013${d.base_entry.end_time}` : "\u2014"}
+                        </span>
+                      ) },
+                    ]}
+                    data={[...compare.added, ...compare.removed, ...compare.changed].map((d, i) => ({ ...d, _k: i }))}
+                    keyAccessor={(d) => d._k}
+                    caption="Added, removed and changed shifts between the two versions"
+                    sortable={false}
+                  />
                 )}
               </div>
             )}
@@ -1369,14 +1278,11 @@ export default function RosterBuilder() {
                         ))}
                       </select>
                     </div>
-                    <button
-                      className="btn btn-primary"
-                      disabled={!attendanceVersion || autoCreating}
-                      onClick={autoCreate}
-                    >
+                    <Button variant="primary" disabled={!attendanceVersion || autoCreating}
+                      onClick={autoCreate}>
                       <IconUsers className="w-4 h-4" />
                       {autoCreating ? "Creating…" : "Auto-create time entries"}
-                    </button>
+                    </Button>
                   </div>
                   <p className="px-4 py-2 text-xs text-text-secondary border-b border-border">
                     Auto-create writes clock in/out records for every scheduled shift that has none yet —
@@ -1399,46 +1305,33 @@ export default function RosterBuilder() {
                         <SummaryBox tone="amber" label="Missing" value={attendance.summary.missing ?? 0} />
                         <SummaryBox tone="rose" label="Extra" value={attendance.summary.extra ?? 0} />
                       </div>
-                      <div
-                        className="table-scroll max-h-[420px] overflow-y-auto"
-                        tabIndex={0}
-                        role="region"
-                        aria-label="Scheduled shifts with their recorded working periods"
-                      >
-                        <table className="table-base table-compact table-striped">
-                          <caption className="sr-only">
-                            Scheduled shifts with their recorded working periods
-                          </caption>
-                          <thead>
-                            <tr>
-                              <th scope="col">Employee</th>
-                              <th scope="col">Date</th>
-                              <th scope="col">Scheduled</th>
-                              <th scope="col">Clocked in</th>
-                              <th scope="col">Clocked out</th>
-                              <th scope="col" className="num">Hours</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {attendance.entries.map((row, i) => (
-                              <tr key={`${row.roster_entry.id}-${i}`}>
-                                <td>{employeeName(row.roster_entry.employee_id)}</td>
-                                <td className="whitespace-nowrap">{row.roster_entry.work_date}</td>
-                                <td className="whitespace-nowrap">
-                                  {row.roster_entry.start_time}–{row.roster_entry.end_time}
-                                </td>
-                                <td className="text-text-secondary whitespace-nowrap">
-                                  {shortTime(row.time_entry?.clock_in)}
-                                </td>
-                                <td className="text-text-secondary whitespace-nowrap">
-                                  {shortTime(row.time_entry?.clock_out)}
-                                </td>
-                                <td className="num">{row.time_entry?.worked_hours ?? "\u2014"}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
+                      <Table
+                        className="max-h-[420px] overflow-y-auto"
+                        columns={[
+                          { key: "employee", header: "Employee", accessor: (row) => employeeName(row.roster_entry.employee_id) },
+                          { key: "date", header: "Date", accessor: (row) => <span className="whitespace-nowrap">{row.roster_entry.work_date}</span> },
+                          { key: "scheduled", header: "Scheduled", accessor: (row) => (
+                            <span className="whitespace-nowrap">
+                              {row.roster_entry.start_time}{"\u2013"}{row.roster_entry.end_time}
+                            </span>
+                          ) },
+                          { key: "in", header: "Clocked in", accessor: (row) => (
+                            <span className="text-text-secondary whitespace-nowrap">
+                              {shortTime(row.time_entry?.clock_in)}
+                            </span>
+                          ) },
+                          { key: "out", header: "Clocked out", accessor: (row) => (
+                            <span className="text-text-secondary whitespace-nowrap">
+                              {shortTime(row.time_entry?.clock_out)}
+                            </span>
+                          ) },
+                          { key: "hours", header: "Hours", accessor: (row) => row.time_entry?.worked_hours ?? "\u2014", cellClassName: "num" },
+                        ]}
+                        data={attendance.entries}
+                        keyAccessor={(row) => `${row.roster_entry.id}-${row.time_entry?.id ?? "none"}`}
+                        caption="Scheduled shifts with their recorded working periods"
+                        sortable={false}
+                      />
                     </>
                   ) : null}
                 </>
@@ -1463,14 +1356,11 @@ export default function RosterBuilder() {
                         onChange={(e) => setGrace(e.target.value)}
                       />
                     </div>
-                    <button
-                      className="btn btn-secondary"
-                      disabled={deviationsLoading}
-                      onClick={loadDeviations}
-                    >
+                    <Button variant="secondary" disabled={deviationsLoading}
+                      onClick={loadDeviations}>
                       <IconRefresh className="w-4 h-4" />
                       {deviationsLoading ? "Checking…" : "Check deviations"}
-                    </button>
+                    </Button>
                   </>
                 }
               >
@@ -1503,49 +1393,42 @@ export default function RosterBuilder() {
                         </span>
                       ))}
                     </div>
-                    <div className="table-scroll max-h-[380px] overflow-y-auto">
-                      <table className="table-base table-compact table-striped">
-                        <caption className="sr-only">Working time deviations per roster entry</caption>
-                        <thead>
-                          <tr>
-                            <th scope="col">Employee</th>
-                            <th scope="col">Date</th>
-                            <th scope="col">Scheduled</th>
-                            <th scope="col">Actual</th>
-                            <th scope="col">Violations</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {deviations.deviations.map((d, i) => (
-                            <tr key={`${d.roster_entry.id}-${i}`}>
-                              <td>{employeeName(d.roster_entry.employee_id)}</td>
-                              <td className="whitespace-nowrap">{d.roster_entry.work_date}</td>
-                              <td className="whitespace-nowrap">
-                                {d.roster_entry.start_time}–{d.roster_entry.end_time}
-                              </td>
-                              <td className="whitespace-nowrap">
-                                {d.time_entry
-                                  ? `${shortTime(d.time_entry.clock_in)}–${shortTime(d.time_entry.clock_out)}`
-                                  : "\u2014"}
-                              </td>
-                              <td>
-                                <div className="flex flex-wrap gap-1.5">
-                                  {d.violations.map((v) => (
-                                    <span
-                                      key={v.id}
-                                      className={`badge ${SEVERITY_TONE[v.severity] ?? "badge-slate"}`}
-                                    >
-                                      {v.kind}
-                                      {v.minutes ? ` · ${v.minutes}m` : ""}
-                                    </span>
-                                  ))}
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+                    <Table
+                      className="max-h-[380px] overflow-y-auto"
+                      columns={[
+                        { key: "employee", header: "Employee", accessor: (d) => employeeName(d.roster_entry.employee_id) },
+                        { key: "date", header: "Date", accessor: (d) => <span className="whitespace-nowrap">{d.roster_entry.work_date}</span> },
+                        { key: "scheduled", header: "Scheduled", accessor: (d) => (
+                          <span className="whitespace-nowrap">
+                            {d.roster_entry.start_time}{"\u2013"}{d.roster_entry.end_time}
+                          </span>
+                        ) },
+                        { key: "actual", header: "Actual", accessor: (d) => (
+                          <span className="whitespace-nowrap">
+                            {d.time_entry
+                              ? `${shortTime(d.time_entry.clock_in)}\u2013${shortTime(d.time_entry.clock_out)}`
+                              : "\u2014"}
+                          </span>
+                        ) },
+                        { key: "violations", header: "Violations", accessor: (d) => (
+                          <div className="flex flex-wrap gap-1.5">
+                            {d.violations.map((v) => (
+                              <span
+                                key={v.id}
+                                className={`badge ${SEVERITY_TONE[v.severity] ?? "badge-slate"}`}
+                              >
+                                {v.kind}
+                                {v.minutes ? ` \u00b7 ${v.minutes}m` : ""}
+                              </span>
+                            ))}
+                          </div>
+                        ) },
+                      ]}
+                      data={deviations.deviations.map((d, i) => ({ ...d, _k: `${d.roster_entry.id}-${i}` }))}
+                      keyAccessor={(d) => d._k}
+                      caption="Working time deviations per roster entry"
+                      sortable={false}
+                    />
                   </>
                 ) : null}
               </SectionCard>

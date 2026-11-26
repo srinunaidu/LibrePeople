@@ -1,26 +1,14 @@
-import * as DialogPrimitive from "@radix-ui/react-dialog"
-import { cn } from "@/lib/utils"
-import * as React from "react"
-import { X } from "lucide-react"
+import {
+  Modal,
+  ModalContent,
+  ModalTrigger,
+} from "@/components/ui"
 
-const ConfirmDialog = DialogPrimitive.Root
-const ConfirmTrigger = DialogPrimitive.Trigger
-const ConfirmClose = DialogPrimitive.Close
-
-const ConfirmOverlay = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Overlay>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
->(({ className, ...props }, ref) => (
-  <DialogPrimitive.Overlay
-    ref={ref}
-    className={cn(
-      "fixed inset-0 z-[1400] bg-[rgba(2,6,23,0.5)] backdrop-blur-sm data-[state=open]:animate-fade-in",
-      className
-    )}
-    {...props}
-  />
-))
-ConfirmOverlay.displayName = "ConfirmOverlay"
+// Canonical confirm dialog, built on the barrel Modal primitives
+// (a single overlay, focus and close affordance). Previously a third
+// radix wrapper; kept exports preserve the call-site API.
+const ConfirmDialog = Modal
+const ConfirmTrigger = ModalTrigger
 
 interface ConfirmDialogProps {
   open: boolean
@@ -32,7 +20,7 @@ interface ConfirmDialogProps {
   cancelText?: string
 }
 
-const ConfirmContent = DialogPrimitive.Content
+const ConfirmContent = ModalContent
 
 ConfirmDialog.displayName = "ConfirmDialog"
 

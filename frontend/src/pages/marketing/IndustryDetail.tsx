@@ -2,6 +2,7 @@ import { Link, useParams } from "react-router-dom"
 import { useState } from "react"
 import { PublicLayout } from "@/components/PublicLayout"
 import { INDUSTRIES } from "@/lib/industries"
+import { Button } from "@/components/ui"
 
 const RICH_SLUGS = new Set(["healthcare", "manufacturing"])
 
@@ -88,9 +89,9 @@ export default function IndustryDetail() {
                   className="input max-w-xs"
                   aria-label="Work email for early access"
                 />
-                <button type="submit" className="btn btn-primary">
+                <Button variant="primary" type="submit">
                   Get early access
-                </button>
+                </Button>
               </form>
               {submitted && (
                 <p className="text-sm mt-2 text-success-text">Thanks — we&apos;ll be in touch.</p>

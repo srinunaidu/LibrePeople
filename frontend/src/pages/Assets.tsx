@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react"
 import { Layout } from "@/components/Layout"
 import {
+  Button,
+  Table,
   Alert,
   EmptyState,
   LoadingRegion,
@@ -177,15 +179,15 @@ export default function Assets() {
         title="Assets"
         description="Track company assets and who holds them. Custody moves are explicit and audited."
         actions={
-          <button type="button" className="btn btn-secondary btn-sm" onClick={load}>
+          <Button variant="secondary" size="sm" type="button" onClick={load}>
             <IconRefresh className="w-4 h-4" /> Reload
-          </button>
+          </Button>
         }
       />
 
       {error && (
         <Alert tone="error" title="Asset action refused" action={
-          <button type="button" className="btn btn-secondary btn-sm" onClick={load}>Reload</button>
+          <Button variant="secondary" size="sm" type="button" onClick={load}>Reload</Button>
         }>
           {error}
         </Alert>
@@ -221,8 +223,7 @@ export default function Assets() {
                   <input id="ast-serial" className="input" value={form.serial_number}
                     onChange={(e) => setForm({ ...form, serial_number: e.target.value })} />
                 </div>
-                <button className="btn btn-primary"
-                  disabled={!form.tag.trim() || !form.name.trim() || busy === "create"}
+                <Button variant="primary" disabled={!form.tag.trim() || !form.name.trim() || busy === "create"}
                   onClick={() => act("create", () => api.post("/assets", {
                     tag: form.tag.trim(),
                     name: form.name.trim(),
@@ -230,7 +231,7 @@ export default function Assets() {
                     serial_number: form.serial_number.trim() || undefined,
                   }), "Asset registered (in stock).")}>
                   {busy === "create" ? "Registering…" : "Register asset"}
-                </button>
+                </Button>
               </div>
             </section>
           )}
@@ -241,38 +242,27 @@ export default function Assets() {
               {assets.length === 0 ? (
                 <EmptyState title="No assets" description={isAdmin ? "Register the first asset above." : "Nothing is in your custody yet."} />
               ) : (
-                <div className="table-scroll max-h-[420px] overflow-y-auto">
-                  <table className="table-base table-striped">
-                    <caption className="sr-only">Asset register</caption>
-                    <thead>
-                      <tr>
-                        <th scope="col">Tag</th>
-                        <th scope="col">Name</th>
-                        <th scope="col">Status</th>
-                        <th scope="col">Holder</th>
-                        {isAdmin && <th scope="col"><span className="sr-only">Actions</span></th>}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {assets.map((a) => (
-                        <tr key={a.id}>
-                          <td className="font-mono">{a.tag}</td>
-                          <td>{a.name}</td>
-                          <td><StatusPill status={ASSET_STATUS_LABELS[a.status] ?? a.status} /></td>
-                          <td>{holderOf(a.id)}</td>
-                          {isAdmin && (
-                            <td>
-                              <button type="button" className="btn btn-secondary btn-sm"
-                                onClick={() => { setSelected(a); setHolderId(""); setCondition("good") }}>
-                                Manage
-                              </button>
-                            </td>
-                          )}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <Table
+                  className="max-h-[420px] overflow-y-auto"
+                  columns={[
+                    { key: "tag", header: "Tag", accessor: (a) => <span className="font-mono">{a.tag}</span> },
+                    { key: "name", header: "Name", accessor: (a) => a.name },
+                    { key: "status", header: "Status", accessor: (a) => <StatusPill status={ASSET_STATUS_LABELS[a.status] ?? a.status} /> },
+                    { key: "holder", header: "Holder", accessor: (a) => holderOf(a.id) },
+                    ...(isAdmin ? [{
+                      key: "actions", header: "", accessor: (a: AssetRow) => (
+                        <Button variant="secondary" size="sm" type="button"
+                          onClick={() => { setSelected(a); setHolderId(""); setCondition("good") }}>
+                          Manage
+                        </Button>
+                      ),
+                    }] : []),
+                  ]}
+                  data={assets}
+                  keyAccessor={(a) => a.id}
+                  caption="Asset register"
+                  sortable={false}
+                />
               )}
             </SectionCard>
 
@@ -301,17 +291,17 @@ export default function Assets() {
                       </select>
                     </div>
                     {allowed.includes("assign") ? (
-                      <button className="btn btn-primary" disabled={!holderId || busy === "assign"}
+                      <Button variant="primary" disabled={!holderId || busy === "assign"}
                         onClick={() => act("assign", () => api.post(`/assets/${selected.id}/assign`, { employee_id: Number(holderId) }),
                           "Assigned. The employee must acknowledge receipt.")}>
                         {busy === "assign" ? "Assigning…" : "Assign"}
-                      </button>
+                      </Button>
                     ) : (
-                      <button className="btn btn-primary" disabled={!holderId || busy === "transfer"}
+                      <Button variant="primary" disabled={!holderId || busy === "transfer"}
                         onClick={() => act("transfer", () => api.post(`/assets/${selected.id}/transfer`, { employee_id: Number(holderId) }),
                           "Transferred. The new holder must acknowledge afresh.")}>
                         {busy === "transfer" ? "Transferring…" : "Transfer"}
-                      </button>
+                      </Button>
                     )}
                   </div>
                 )}
@@ -326,33 +316,33 @@ export default function Assets() {
                         ))}
                       </select>
                     </div>
-                    <button className="btn btn-primary" disabled={busy === "return"}
+                    <Button variant="primary" disabled={busy === "return"}
                       onClick={() => act("return", () => api.post(`/assets/${selected.id}/return`, { condition }),
                         `Returned (${condition}).`)}>
                       {busy === "return" ? "Returning…" : "Take return"}
-                    </button>
+                    </Button>
                   </div>
                 )}
                 <div className="flex flex-wrap gap-2">
                   {allowed.includes("maintenance_start") && (
-                    <button className="btn btn-secondary" disabled={busy === "maint"}
+                    <Button variant="secondary" disabled={busy === "maint"}
                       onClick={() => act("maint", () => api.post(`/assets/${selected.id}/maintenance/start`, {}), "Sent to maintenance.")}>
                       Send to maintenance
-                    </button>
+                    </Button>
                   )}
                   {allowed.includes("maintenance_complete") && (
-                    <button className="btn btn-secondary" disabled={busy === "maint"}
+                    <Button variant="secondary" disabled={busy === "maint"}
                       onClick={() => act("maint", () => api.post(`/assets/${selected.id}/maintenance/complete`, {}), "Maintenance complete — back in stock.")}>
                       Complete maintenance
-                    </button>
+                    </Button>
                   )}
                   {allowed.includes("retire") && (
-                    <button className="btn btn-secondary" disabled={busy === "retire"}
+                    <Button variant="secondary" disabled={busy === "retire"}
                       onClick={() => act("retire", () => api.post(`/assets/${selected.id}/retire`, {}), "Asset retired.")}>
                       Retire
-                    </button>
+                    </Button>
                   )}
-                  <button className="btn btn-secondary" onClick={() => setSelected(null)}>Close</button>
+                  <Button variant="secondary" onClick={() => setSelected(null)}>Close</Button>
                 </div>
               </SectionCard>
             )}

@@ -1,6 +1,9 @@
 import { useEffect, useState, type ChangeEvent } from "react"
 import { Layout } from "@/components/Layout"
-import {Alert,
+import {
+  Button,
+  Table,
+  Alert,
   CardSkeleton,
   EmptyState,
   LoadingRegion,
@@ -144,8 +147,8 @@ function MovementSection({ teamOnly }: { teamOnly: boolean }) {
         : "Joiners, leavers and attrition with entity, department and location filters. Exports are masked and audit-logged."}
       actions={
         <div className="flex gap-2">
-          <button type="button" onClick={() => download("joiners", "csv")} className="btn btn-secondary" disabled={loading || !joiners}>Joiners CSV</button>
-          <button type="button" onClick={() => download("leavers", "csv")} className="btn btn-secondary" disabled={loading || !leavers}>Leavers CSV</button>
+          <Button variant="secondary" type="button" onClick={() => download("joiners", "csv")} disabled={loading || !joiners}>Joiners CSV</Button>
+          <Button variant="secondary" type="button" onClick={() => download("leavers", "csv")} disabled={loading || !leavers}>Leavers CSV</Button>
         </div>
       }>
       <form className="flex flex-wrap gap-2 px-5 pt-4" onSubmit={(e) => { e.preventDefault(); apply() }}
@@ -160,7 +163,7 @@ function MovementSection({ teamOnly }: { teamOnly: boolean }) {
             <label className="text-xs">Location ID <input type="number" value={filters.location_id} onChange={set("location_id")} className="input w-24" aria-label="Location ID" /></label>
           </>
         )}
-        <button type="submit" className="btn btn-primary self-end" disabled={loading}>{loading ? "Loading…" : "Apply"}</button>
+        <Button variant="primary" className="self-end" type="submit" disabled={loading}>{loading ? "Loading…" : "Apply"}</Button>
       </form>
       <div className="px-5 py-4" aria-live="polite">
         {mvError ? (
@@ -296,10 +299,10 @@ export default function Reports() {
         description="Workforce composition, leave usage, labour cost and the audit trail."
         actions={
           orgRole ? (
-            <button type="button" onClick={load} className="btn btn-secondary" disabled={status === "loading"}>
+            <Button variant="secondary" type="button" onClick={load} disabled={status === "loading"}>
               <IconRefresh className="w-4 h-4" />
               Refresh
-            </button>
+            </Button>
           ) : undefined
         }
       />
@@ -359,34 +362,17 @@ export default function Reports() {
             <EmptyState title="No headcount data"
               description="Headcount appears once employees are assigned to departments." />
           ) : (
-            <div
-              className="table-scroll"
-              role="region"
-              aria-label="Headcount by department"
-              tabIndex={0}
-            >
-              <table className="table-base table-striped">
-                <caption className="sr-only">Headcount by department</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Department</th>
-                    <th scope="col" className="num">Employees</th>
-                    <th scope="col" className="num">Share</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {deptRows.map((r) => (
-                    <tr key={r.department || "none"}>
-                      <td>{r.department || "(none)"}</td>
-                      <td className="num font-semibold">{r.employees}</td>
-                      <td className="num">
-                        <Bar value={Number(r.employees) || 0} max={maxDept} />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table
+              columns={[
+                { key: "dept", header: "Department", accessor: (r) => r.department || "(none)" },
+                { key: "employees", header: "Employees", accessor: (r) => r.employees, cellClassName: "num font-semibold" },
+                { key: "share", header: "Share", accessor: (r) => <Bar value={Number(r.employees) || 0} max={maxDept} />, cellClassName: "num" },
+              ]}
+              data={deptRows}
+              keyAccessor={(r) => r.department || "none"}
+              caption="Headcount by department"
+              sortable={false}
+            />
           )}
         </SectionCard>
 
@@ -500,15 +486,12 @@ export default function Reports() {
         }
         actions={
           isAdmin ? (
-            <button
-              type="button"
+            <Button variant="secondary" type="button"
               onClick={verifyChain}
-              className="btn btn-secondary"
-              disabled={chainChecking}
-            >
+              disabled={chainChecking}>
               <IconShield className="w-4 h-4" />
               {chainChecking ? "Checking…" : "Verify the chain"}
-            </button>
+            </Button>
           ) : undefined
         }>
         {isAdmin && (
@@ -564,46 +547,27 @@ export default function Reports() {
                 : `The audit trail requires the SuperAdmin or HR role; your role is ${user?.role || "unknown"}. The workforce reports above are unaffected.`
             }
           />
+        ) : audit.length === 0 ? (
+          <EmptyState title="No activity yet"
+            description="Recorded actions will appear here." />
         ) : (
-          <div
-            className="table-scroll"
-            role="region"
-            aria-label="Audit trail of the 25 most recent actions"
-            tabIndex={0}
-          >
-            <table className="table-base table-striped">
-              <caption className="sr-only">Audit trail of the 25 most recent actions</caption>
-              <thead>
-                <tr>
-                  <th scope="col">When</th>
-                  <th scope="col">Actor</th>
-                  <th scope="col">Action</th>
-                  <th scope="col">Entity</th>
-                </tr>
-              </thead>
-              <tbody>
-                {audit.map((a) => (
-                  <tr key={a.id}>
-                    <td className="whitespace-nowrap text-text-secondary">{formatTimestamp(a.created_at, localeOpts)}</td>
-                    <td className="font-medium">{a.actor_name || "—"}</td>
-                    <td>{a.action}</td>
-                    <td className="text-text-secondary">
-                      {a.entity_type}
-                      {a.entity_id ? ` #${a.entity_id}` : ""}
-                    </td>
-                  </tr>
-                ))}
-                {audit.length === 0 && (
-                  <tr>
-                    <td colSpan={4}>
-                      <EmptyState title="No activity yet"
-                        description="Recorded actions will appear here." />
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-            </div>
+          <Table
+            columns={[
+              { key: "when", header: "When", accessor: (a) => <span className="whitespace-nowrap text-text-secondary">{formatTimestamp(a.created_at, localeOpts)}</span> },
+              { key: "actor", header: "Actor", accessor: (a) => <span className="font-medium">{a.actor_name || "—"}</span> },
+              { key: "action", header: "Action", accessor: (a) => a.action },
+              { key: "entity", header: "Entity", accessor: (a) => (
+                <span className="text-text-secondary">
+                  {a.entity_type}
+                  {a.entity_id ? ` #${a.entity_id}` : ""}
+                </span>
+              ) },
+            ]}
+            data={audit}
+            keyAccessor={(a) => a.id}
+            caption="Audit trail of the 25 most recent actions"
+            sortable={false}
+          />
           )}
       </SectionCard>
         </>

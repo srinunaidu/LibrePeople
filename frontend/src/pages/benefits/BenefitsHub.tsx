@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react"
 import { Layout } from "@/components/Layout"
-import {Alert, EmptyState, PageHeader, SectionCard, StatusPill, TableSkeleton, LoadingRegion, RetryableAlert} from "@/components/ui"
-import { Button } from "@/components/ui/button"
-import { Input, Select, Checkbox } from "@/components/ui/inputs"
+import { Button, Input, Select, Checkbox,Alert, EmptyState, PageHeader, SectionCard, StatusPill, Table, TableSkeleton, LoadingRegion, RetryableAlert} from "@/components/ui"
+
 import { useAuth } from "@/context/AuthContext"
 import { useTenant } from "@/context/TenantContext"
 import api, { errorMessage } from "@/lib/api"
@@ -280,25 +279,21 @@ export default function BenefitsHub() {
             {plans.length === 0 ? (
               <div className="p-5"><EmptyState title="No benefit plans" description="No benefit plans exist yet." /></div>
             ) : (
-              <div className="table-scroll">
-                <table className="table-base w-full text-sm">
-                  <caption className="sr-only">Benefit plans</caption>
-                  <thead><tr><th scope="col">Code</th><th scope="col">Name</th><th scope="col">Plan type</th><th scope="col">Provider</th><th scope="col" className="num">Employer</th><th scope="col" className="num">Employee</th><th scope="col">Active</th></tr></thead>
-                  <tbody>
-                    {plans.map((p) => (
-                      <tr key={p.id}>
-                        <td className="font-mono text-xs">{p.code}</td>
-                        <td>{p.name}</td>
-                        <td>{p.plan_type}</td>
-                        <td>{p.provider ?? "—"}</td>
-                        <td className="num tabular-nums">{money(p.employer_contribution, { locale: tenantLocale, currency: tenantCurrency })}</td>
-                        <td className="num tabular-nums">{money(p.employee_contribution, { locale: tenantLocale, currency: tenantCurrency })}</td>
-                        <td>{p.is_active ? <span className="badge badge-green">Active</span> : <span className="badge badge-slate">Inactive</span>}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                columns={[
+                  { key: "code", header: "Code", accessor: (p) => <span className="font-mono text-xs">{p.code}</span> },
+                  { key: "name", header: "Name", accessor: (p) => p.name },
+                  { key: "type", header: "Plan type", accessor: (p) => p.plan_type },
+                  { key: "provider", header: "Provider", accessor: (p) => p.provider ?? "\u2014" },
+                  { key: "employer", header: "Employer", accessor: (p) => money(p.employer_contribution, { locale: tenantLocale, currency: tenantCurrency }), cellClassName: "num tabular-nums" },
+                  { key: "employee", header: "Employee", accessor: (p) => money(p.employee_contribution, { locale: tenantLocale, currency: tenantCurrency }), cellClassName: "num tabular-nums" },
+                  { key: "active", header: "Active", accessor: (p) => p.is_active ? <span className="badge badge-green">Active</span> : <span className="badge badge-slate">Inactive</span> },
+                ]}
+                data={plans}
+                keyAccessor={(p) => p.id}
+                caption="Benefit plans"
+                sortable={false}
+              />
             )}
           </>
         )}
@@ -350,23 +345,19 @@ export default function BenefitsHub() {
             {canWorkforce && enrollments.length === 0 ? (
               <div className="p-5"><EmptyState title="No enrollments" description="No benefit enrollments recorded yet." /></div>
             ) : canWorkforce && enrollments.length > 0 ? (
-              <div className="table-scroll">
-                <table className="table-base w-full text-sm">
-                  <caption className="sr-only">Benefit enrollments</caption>
-                  <thead><tr><th scope="col">Employee</th><th scope="col">Plan</th><th scope="col">Effective</th><th scope="col">End</th><th scope="col">Status</th></tr></thead>
-                  <tbody>
-                    {enrollments.map((en) => (
-                      <tr key={en.id}>
-                        <td>{employeeName(en.employee_id)}</td>
-                        <td>{planName(en.plan_id)}</td>
-                        <td>{fmtDate(en.effective_date)}</td>
-                        <td>{fmtDate(en.end_date)}</td>
-                        <td><StatusPill status={en.status} /></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                columns={[
+                  { key: "employee", header: "Employee", accessor: (en) => employeeName(en.employee_id) },
+                  { key: "plan", header: "Plan", accessor: (en) => planName(en.plan_id) },
+                  { key: "effective", header: "Effective", accessor: (en) => fmtDate(en.effective_date) },
+                  { key: "end", header: "End", accessor: (en) => fmtDate(en.end_date) },
+                  { key: "status", header: "Status", accessor: (en) => <StatusPill status={en.status} /> },
+                ]}
+                data={enrollments}
+                keyAccessor={(en) => en.id}
+                caption="Benefit enrollments"
+                sortable={false}
+              />
             ) : null}
           </>
         )}
@@ -415,22 +406,18 @@ export default function BenefitsHub() {
             {canWorkforce && lifeEvents.length === 0 ? (
               <div className="p-5"><EmptyState title="No life events" description="No life events recorded yet." /></div>
             ) : canWorkforce && lifeEvents.length > 0 ? (
-              <div className="table-scroll">
-                <table className="table-base w-full text-sm">
-                  <caption className="sr-only">Life events</caption>
-                  <thead><tr><th scope="col">Employee</th><th scope="col">Event type</th><th scope="col">Event date</th><th scope="col">Status</th></tr></thead>
-                  <tbody>
-                    {lifeEvents.map((ev) => (
-                      <tr key={ev.id}>
-                        <td>{employeeName(ev.employee_id)}</td>
-                        <td>{ev.event_type}</td>
-                        <td>{fmtDate(ev.event_date)}</td>
-                        <td><StatusPill status={ev.status} /></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                columns={[
+                  { key: "employee", header: "Employee", accessor: (ev) => employeeName(ev.employee_id) },
+                  { key: "type", header: "Event type", accessor: (ev) => ev.event_type },
+                  { key: "date", header: "Event date", accessor: (ev) => fmtDate(ev.event_date) },
+                  { key: "status", header: "Status", accessor: (ev) => <StatusPill status={ev.status} /> },
+                ]}
+                data={lifeEvents}
+                keyAccessor={(ev) => ev.id}
+                caption="Life events"
+                sortable={false}
+              />
             ) : null}
           </>
         )}
@@ -483,28 +470,24 @@ export default function BenefitsHub() {
             {canWorkforce && leaves.length === 0 ? (
               <div className="p-5"><EmptyState title="No leaves of absence" description="No leaves of absence recorded yet." /></div>
             ) : canWorkforce && leaves.length > 0 ? (
-              <div className="table-scroll">
-                <table className="table-base w-full text-sm">
-                  <caption className="sr-only">Leaves of absence</caption>
-                  <thead><tr><th scope="col">Employee</th><th scope="col">Leave type</th><th scope="col">Start</th><th scope="col">End</th><th scope="col">Status</th>{canAdmin && <th scope="col">Actions</th>}</tr></thead>
-                  <tbody>
-                    {leaves.map((lv) => (
-                      <tr key={lv.id}>
-                        <td>{employeeName(lv.employee_id)}</td>
-                        <td>{lv.leave_type}</td>
-                        <td>{fmtDate(lv.start_date)}</td>
-                        <td>{fmtDate(lv.end_date)}</td>
-                        <td><StatusPill status={lv.status} /></td>
-                        {canAdmin && (
-                          <td>
-                            <Button size="xs" variant="secondary" loading={busy === `approve-${lv.id}`} disabled={lv.status !== "Pending"} onClick={() => approveLeave(lv.id)}>Approve</Button>
-                          </td>
-                        )}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                columns={[
+                  { key: "employee", header: "Employee", accessor: (lv) => employeeName(lv.employee_id) },
+                  { key: "type", header: "Leave type", accessor: (lv) => lv.leave_type },
+                  { key: "start", header: "Start", accessor: (lv) => fmtDate(lv.start_date) },
+                  { key: "end", header: "End", accessor: (lv) => fmtDate(lv.end_date) },
+                  { key: "status", header: "Status", accessor: (lv) => <StatusPill status={lv.status} /> },
+                  ...(canAdmin ? [{
+                    key: "actions", header: "Actions", accessor: (lv: (typeof leaves)[number]) => (
+                      <Button size="xs" variant="secondary" loading={busy === `approve-${lv.id}`} disabled={lv.status !== "Pending"} onClick={() => approveLeave(lv.id)}>Approve</Button>
+                    ),
+                  }] : []),
+                ]}
+                data={leaves}
+                keyAccessor={(lv) => lv.id}
+                caption="Leaves of absence"
+                sortable={false}
+              />
             ) : null}
           </>
         )}

@@ -6,8 +6,8 @@
  */
 import { useState } from "react"
 import { Layout } from "@/components/Layout"
-import { Alert, Button, PageHeader, SectionCard } from "@/components/ui"
-import { Input } from "@/components/ui/inputs"
+import { Input, Alert, Button, PageHeader, SectionCard } from "@/components/ui"
+
 import { useAuth } from "@/context/AuthContext"
 import api, { errorMessage } from "@/lib/api"
 

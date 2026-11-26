@@ -3,6 +3,7 @@ import { useSearchParams, Link } from "react-router-dom"
 import { PublicLayout } from "@/components/PublicLayout"
 import { PageHero } from "@/components/marketing/PageHero"
 import api from "@/lib/api"
+import { Button } from "@/components/ui"
 
 export default function Contact() {
   const [searchParams] = useSearchParams()
@@ -205,9 +206,9 @@ export default function Contact() {
                 />
               </div>
 
-              <button className="mk-cta w-full" type="submit" disabled={status === "submitting"}>
+              <Button variant="primary" className="w-full" type="submit" disabled={status === "submitting"}>
                 {status === "submitting" ? "Sending…" : "Send message"}
-              </button>
+              </Button>
               <p className="text-xs text-fg-muted">
                 By sending, you agree to our <Link to="/privacy" className="mk-link">Privacy</Link> and{" "}
                 <Link to="/terms" className="mk-link">Terms</Link>.

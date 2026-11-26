@@ -1,9 +1,9 @@
 import { useState, type FormEvent } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "@/context/AuthContext"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/inputs"
+
 import api, { errorMessage } from "@/lib/api"
+import { Button, Input } from "@/components/ui"
 
 /**
  * Forced password change.

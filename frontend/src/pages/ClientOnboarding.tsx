@@ -5,13 +5,12 @@ import {
   EmptyState,
   Meter,
 } from "@/components/ui/feedback"
-import { RetryableAlert } from "@/components/ui"
+import { Button, Input, Select, Textarea, Checkbox, Switch, RetryableAlert, Table } from "@/components/ui"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Card, SectionCard } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { StatusPill } from "@/components/ui/status-pill"
-import { Button } from "@/components/ui/button"
-import { Input, Select, Textarea, Checkbox, Switch } from "@/components/ui/inputs"
+
 import { Field, PageHeader } from "@/components/ui/layout"
 import { IconBuilding, IconPlus, IconAlert, IconDownload, IconRefresh, IconFile, IconX } from "@/components/icons"
 import api from "@/lib/api"
@@ -418,40 +417,33 @@ export default function ClientOnboarding() {
                     </Alert>
                   )}
                   <Card padded={false}>
-                    <table className="min-w-full text-sm">
-                      <thead className="bg-surface-sunken text-fg-muted">
-                        <tr>
-                          <th className="text-left px-5 py-2">Flag</th>
-                          <th className="text-left px-5 py-2">Description</th>
-                          <th className="text-left px-5 py-2">Enabled</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {flags.map((f) => (
-                          <tr key={f.id} className="border-t">
-                            <td className="px-5 py-2 font-medium">{f.key}</td>
-                            <td className="px-5 py-2 text-fg-muted">{f.description}</td>
-                            <td className="px-5 py-2">
-                              <Button
-                                variant="ghost"
-                                size="xs"
-                                onClick={() => act(() => api.put(`/onboarding-portal/clients/${selected}/feature-flags/${f.key}`, { enabled: !f.enabled }), "Flag updated")}
-                                aria-pressed={f.enabled}
-                                aria-label={f.enabled ? `Disable ${f.key}` : `Enable ${f.key}`}
-                              >
-                                <span className={`relative inline-flex h-5 w-9 items-center rounded-full transition ${
-                                  f.enabled ? "bg-brand-600" : "bg-surface-inset"
-                                }`}>
-                                  <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-surface transition ${
-                                    f.enabled ? "translate-x-5" : "translate-x-1"
-                                  }`} aria-hidden="true" />
-                                </span>
-                              </Button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+<Table
+                      columns={[
+                        { key: "flag", header: "Flag", accessor: (f) => <span className="font-medium">{f.key}</span> },
+                        { key: "desc", header: "Description", accessor: (f) => <span className="text-fg-muted">{f.description}</span> },
+                        { key: "enabled", header: "Enabled", accessor: (f) => (
+                          <Button
+                            variant="ghost"
+                            size="xs"
+                            onClick={() => act(() => api.put(`/onboarding-portal/clients/${selected}/feature-flags/${f.key}`, { enabled: !f.enabled }), "Flag updated")}
+                            aria-pressed={f.enabled}
+                            aria-label={f.enabled ? `Disable ${f.key}` : `Enable ${f.key}`}
+                          >
+                            <span className={`relative inline-flex h-5 w-9 items-center rounded-full transition ${
+                              f.enabled ? "bg-brand-600" : "bg-surface-inset"
+                            }`}>
+                              <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-surface transition ${
+                                f.enabled ? "translate-x-5" : "translate-x-1"
+                              }`} aria-hidden="true" />
+                            </span>
+                          </Button>
+                        ) },
+                      ]}
+                      data={flags}
+                      keyAccessor={(f) => f.id}
+                      caption="Client feature flags"
+                      sortable={false}
+                    />
                     {flags.length === 0 && (
                       <EmptyState
                         className="p-8"
@@ -542,47 +534,28 @@ export default function ClientOnboarding() {
                   </Card>
 
                   <Card padded={false}>
-                    <table className="min-w-full text-sm">
-                      <thead className="bg-surface-sunken text-fg-muted">
-                        <tr>
-                          <th className="text-left px-3 py-2">Name</th>
-                          <th className="text-left px-3 py-2">Kind</th>
-                          <th className="text-left px-3 py-2">Status</th>
-                          <th className="text-left px-3 py-2">Has secret</th>
-                          <th className="text-left px-3 py-2">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {integrations.map((i) => (
-                          <tr key={i.id} className="border-t">
-                            <td className="px-3 py-2">{i.name}</td>
-                            <td className="px-3 py-2">{i.kind}</td>
-                            <td className="px-3 py-2"><StatusPill status={i.status} dot /></td>
-                            <td className="px-3 py-2">{i.has_secret ? "Yes" : "No"}</td>
-                            <td className="px-3 py-2 space-x-2">
-                              <Button variant="ghost" size="xs" onClick={() => act(() => api.post(`/onboarding-portal/clients/${selected}/integrations/${i.id}/test`), "Tested")}>
-                                Test
-                              </Button>
-                              <Button variant="ghost" size="xs" onClick={() => act(() => api.delete(`/onboarding-portal/clients/${selected}/integrations/${i.id}`), "Deleted")}>
-                                <IconX className="h-3.5 w-3.5" aria-hidden="true" />
-                              </Button>
-                            </td>
-                          </tr>
-                        ))}
-                        {integrations.length === 0 && (
-                          <tr>
-                            <td className="px-3 py-8 text-center text-fg-muted" colSpan={5}>
-                              <EmptyState
-                                className="p-4"
-                                icon={<IconDownload />}
-                                title="No integrations"
-                                description="Add an integration to connect a data source."
-                              />
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
+                    <Table
+                      columns={[
+                        { key: "name", header: "Name", accessor: (i) => i.name },
+                        { key: "kind", header: "Kind", accessor: (i) => i.kind },
+                        { key: "status", header: "Status", accessor: (i) => <StatusPill status={i.status} dot /> },
+                        { key: "secret", header: "Has secret", accessor: (i) => i.has_secret ? "Yes" : "No" },
+                        { key: "actions", header: "Actions", accessor: (i) => (
+                          <span className="space-x-2">
+                            <Button variant="ghost" size="xs" onClick={() => act(() => api.post(`/onboarding-portal/clients/${selected}/integrations/${i.id}/test`), "Tested")}>
+                              Test
+                            </Button>
+                            <Button variant="ghost" size="xs" onClick={() => act(() => api.delete(`/onboarding-portal/clients/${selected}/integrations/${i.id}`), "Deleted")}>
+                              <IconX className="h-3.5 w-3.5" aria-hidden="true" />
+                            </Button>
+                          </span>
+                        ) },
+                      ]}
+                      data={integrations}
+                      keyAccessor={(i) => i.id}
+                      caption="Client integrations"
+                      sortable={false}
+                    />
                   </Card>
                 </SectionCard>
               )}
@@ -645,38 +618,27 @@ export default function ClientOnboarding() {
                   </Card>
 
                   <Card padded={false}>
-                    <table className="min-w-full text-sm">
-                      <thead className="bg-surface-sunken text-fg-muted">
-                        <tr>
-                          <th className="text-left px-3 py-2">Entity</th>
-                          <th className="text-left px-3 py-2">Status</th>
-                          <th className="text-left px-3 py-2">Progress</th>
-                          <th className="text-left px-3 py-2">Succeeded/Failed</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {migrations.map((m) => (
-                          <tr key={m.id} className="border-t">
-                            <td className="px-3 py-2">{m.entity}</td>
-                            <td className="px-3 py-2"><StatusPill status={m.status} dot /></td>
-                            <td className="px-3 py-2">{m.processed}/{m.total}</td>
-                            <td className="px-3 py-2">{m.succeeded}/{m.failed}</td>
-                          </tr>
-                        ))}
-                        {migrations.length === 0 && (
-                          <tr>
-                            <td className="px-3 py-8 text-center text-fg-muted" colSpan={4}>
-                              <EmptyState
-                                className="p-4"
-                                icon={<IconRefresh />}
-                                title="No migrations yet"
-                                description="Run a migration to see results here."
-                              />
-                            </td>
-                          </tr>
+                    {migrations.length === 0 ? (
+                          <EmptyState
+                            className="p-4"
+                            icon={<IconRefresh />}
+                            title="No migrations yet"
+                            description="Run a migration to see results here."
+                          />
+                        ) : (
+                          <Table
+                            columns={[
+                              { key: "entity", header: "Entity", accessor: (m) => m.entity },
+                              { key: "status", header: "Status", accessor: (m) => <StatusPill status={m.status} dot /> },
+                              { key: "progress", header: "Progress", accessor: (m) => `${m.processed}/${m.total}` },
+                              { key: "result", header: "Succeeded/Failed", accessor: (m) => `${m.succeeded}/${m.failed}` },
+                            ]}
+                            data={migrations}
+                            keyAccessor={(m) => m.id}
+                            caption="Client data migrations"
+                            sortable={false}
+                          />
                         )}
-                      </tbody>
-                    </table>
                   </Card>
                 </SectionCard>
               )}
@@ -722,34 +684,25 @@ export default function ClientOnboarding() {
                   </Card>
 
                   <Card padded={false}>
-                    <table className="min-w-full text-sm">
-                      <thead className="bg-surface-sunken text-fg-muted">
-                        <tr>
-                          <th className="text-left px-3 py-2">Key</th>
-                          <th className="text-left px-3 py-2">Value</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {settings.map((s) => (
-                          <tr key={s.id} className="border-t">
-                            <td className="px-3 py-2 font-medium">{s.key}</td>
-                            <td className="px-3 py-2">{s.value}</td>
-                          </tr>
-                        ))}
-                        {settings.length === 0 && (
-                          <tr>
-                            <td className="px-3 py-8 text-center text-fg-muted" colSpan={2}>
-                              <EmptyState
-                                className="p-4"
-                                icon={<IconFile />}
-                                title="No custom settings"
-                                description="Add a key/value pair to store custom configuration."
-                              />
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
+                    {settings.length === 0 ? (
+                        <EmptyState
+                          className="p-4"
+                          icon={<IconFile />}
+                          title="No custom settings"
+                          description="Add a key/value pair to store custom configuration."
+                        />
+                      ) : (
+                        <Table
+                          columns={[
+                            { key: "key", header: "Key", accessor: (x) => <span className="font-medium">{x.key}</span> },
+                            { key: "value", header: "Value", accessor: (x) => x.value },
+                          ]}
+                          data={settings}
+                          keyAccessor={(x) => x.id}
+                          caption="Client custom settings"
+                          sortable={false}
+                        />
+                      )}
                   </Card>
                 </SectionCard>
               )}
@@ -769,51 +722,32 @@ export default function ClientOnboarding() {
                   />
 
                   <Card padded={false}>
-                    <table className="min-w-full text-sm">
-                      <thead className="bg-surface-sunken text-fg-muted">
-                        <tr>
-                          <th className="text-left px-3 py-2">#</th>
-                          <th className="text-left px-3 py-2">Step</th>
-                          <th className="text-left px-3 py-2">Owner</th>
-                          <th className="text-left px-3 py-2">Status</th>
-                          <th className="text-left px-3 py-2">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {steps.map((st) => (
-                          <tr key={st.id} className="border-t">
-                            <td className="px-3 py-2">{st.order_index}</td>
-                            <td className="px-3 py-2">
-                              <div className="font-medium">{st.title}</div>
-                              <div className="text-xs text-fg-muted">{st.description}</div>
-                            </td>
-                            <td className="px-3 py-2">{st.owner}</td>
-                            <td className="px-3 py-2">
-                              <StatusPill status={st.completed ? "Completed" : "Pending"} dot />
-                            </td>
-                            <td className="px-3 py-2">
-                              {!st.completed && (
-                                <Button variant="ghost" size="xs" onClick={() => act(() => api.post(`/onboarding-portal/clients/${selected}/onboarding/steps/${st.id}/complete`), "Step completed")}>
-                                  Mark complete
-                                </Button>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                        {steps.length === 0 && (
-                          <tr>
-                            <td className="px-3 py-8 text-center text-fg-muted" colSpan={5}>
-                              <EmptyState
-                                className="p-4"
-                                icon={<IconAlert />}
-                                title="No onboarding steps"
-                                description="This client has no onboarding steps configured."
-                              />
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
+                    <Table
+                      columns={[
+                        { key: "order", header: "#", accessor: (st) => st.order_index },
+                        { key: "step", header: "Step", accessor: (st) => (
+                          <span>
+                            <div className="font-medium">{st.title}</div>
+                            <div className="text-xs text-fg-muted">{st.description}</div>
+                          </span>
+                        ) },
+                        { key: "owner", header: "Owner", accessor: (st) => st.owner },
+                        { key: "status", header: "Status", accessor: (st) => (
+                          <StatusPill status={st.completed ? "Completed" : "Pending"} dot />
+                        ) },
+                        { key: "action", header: "Action", accessor: (st) => (
+                          !st.completed ? (
+                            <Button variant="ghost" size="xs" onClick={() => act(() => api.post(`/onboarding-portal/clients/${selected}/onboarding/steps/${st.id}/complete`), "Step completed")}>
+                              Mark complete
+                            </Button>
+                          ) : <></>
+                        ) },
+                      ]}
+                      data={steps}
+                      keyAccessor={(st) => st.id}
+                      caption="Client onboarding steps"
+                      sortable={false}
+                    />
                   </Card>
                 </SectionCard>
               )}

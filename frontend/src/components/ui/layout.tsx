@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils"
+import { Button } from "./button"
 import * as React from "react"
 
 export interface PageHeaderProps {
@@ -190,13 +191,13 @@ export function SubmitBar({
     >
       {dirty && <span className="text-xs text-fg-muted mr-auto">Unsaved changes</span>}
       {onCancel && (
-        <button type="button" onClick={onCancel} className="btn btn-secondary btn-sm" disabled={loading}>
+        <Button variant="secondary" size="sm" type="button" onClick={onCancel} disabled={loading}>
           {cancelLabel}
-        </button>
+        </Button>
       )}
-      <button type="submit" className="btn btn-primary btn-sm" disabled={loading}>
+      <Button variant="primary" size="sm" type="submit" disabled={loading}>
         {loading ? "Saving…" : submitLabel}
-      </button>
+      </Button>
     </div>
   )
 }

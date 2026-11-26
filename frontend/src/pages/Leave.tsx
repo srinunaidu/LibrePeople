@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react"
 import { Layout } from "@/components/Layout"
 import {
+  Button,
+  Table,
   Alert,
   EmptyState,
   LoadingRegion,
@@ -184,9 +186,9 @@ export default function Leave() {
           tone="error"
           title="Leave data incomplete"
           action={
-            <button type="button" className="btn btn-secondary btn-sm" onClick={load}>
+            <Button variant="secondary" size="sm" type="button" onClick={load}>
               Reload
-            </button>
+            </Button>
           }
         >
           {error}
@@ -233,11 +235,11 @@ export default function Leave() {
                   <input id="lt-days" type="number" className="input" value={typeForm.max_days_per_year}
                     onChange={(e) => setTypeForm({ ...typeForm, max_days_per_year: Number(e.target.value) })} />
                 </div>
-                <button className="btn btn-primary" disabled={!typeForm.name || !typeForm.code || busy === "lt"}
+                <Button variant="primary" disabled={!typeForm.name || !typeForm.code || busy === "lt"}
                   onClick={() => act("lt", () => api.post("/leave/types", typeForm), "Leave type created")}>
                   <IconPlus className="w-4 h-4" />
                   {busy === "lt" ? "Adding…" : "Add type"}
-                </button>
+                </Button>
               </div>
             ) : (
               <p className="px-5 pt-4 pb-2 text-sm text-text-secondary" role="note">
@@ -251,33 +253,22 @@ export default function Leave() {
               <EmptyState title={failed.includes("types") ? "Leave types unavailable" : "No leave types yet — you're all set"}
                 description={emptyDesc("types", "Add a leave type above to start assigning entitlements.")} />
             ) : (
-              <div className="table-scroll">
-                <table className="table-base table-striped table-compact">
-                  <caption className="sr-only">Configured leave types</caption>
-                  <thead>
-                    <tr>
-                      <th scope="col">Code</th>
-                      <th scope="col">Name</th>
-                      <th scope="col" className="num">Days/yr</th>
-                      <th scope="col">Paid</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {types.map((t) => (
-                      <tr key={t.id}>
-                        <td className="font-mono text-xs">{t.code}</td>
-                        <td>{t.name}</td>
-                        <td className="num">{t.max_days_per_year}</td>
-                        <td>
-                          <span className={`badge ${t.is_paid ? "badge-green" : "badge-slate"}`}>
-                            {t.is_paid ? "Paid" : "Unpaid"}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                columns={[
+                  { key: "code", header: "Code", accessor: (t) => <span className="font-mono text-xs">{t.code}</span> },
+                  { key: "name", header: "Name", accessor: (t) => t.name },
+                  { key: "days", header: "Days/yr", accessor: (t) => t.max_days_per_year, cellClassName: "num" },
+                  { key: "paid", header: "Paid", accessor: (t) => (
+                    <span className={`badge ${t.is_paid ? "badge-green" : "badge-slate"}`}>
+                      {t.is_paid ? "Paid" : "Unpaid"}
+                    </span>
+                  ) },
+                ]}
+                data={types}
+                keyAccessor={(t) => t.id}
+                caption="Configured leave types"
+                sortable={false}
+              />
             )}
           </section>
 
@@ -299,13 +290,13 @@ export default function Leave() {
                     ))}
                   </select>
                 </div>
-                <button className="btn btn-secondary" disabled={busy === "en"}
+                <Button variant="secondary" disabled={busy === "en"}
                   onClick={() => act("en", () => api.post("/leave/entitlements", {
                     entitlement_year: entitle.entitlement_year,
                     leave_type_id: entitle.leave_type_id ? Number(entitle.leave_type_id) : null,
                   }), "Entitlements assigned")}>
                   Assign entitlements
-                </button>
+                </Button>
               </div>
             ) : (
               <p className="px-5 py-4 text-sm text-text-secondary" role="note">
@@ -328,44 +319,26 @@ export default function Leave() {
             <EmptyState title={failed.includes("balances") ? "Balances unavailable" : "No balances assigned"}
               description={emptyDesc("balances", "Assign entitlements above to populate leave balances.")} />
           ) : (
-            <div
-              className="table-scroll max-h-[420px] overflow-y-auto"
-              tabIndex={0}
-              role="region"
-              aria-label="Leave balances by employee and type"
-            >
-              <table className="table-base table-striped table-compact">
-                <caption className="sr-only">Leave balances by employee and type</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Employee</th>
-                    <th scope="col">Type</th>
-                    <th scope="col" className="num">Year</th>
-                    <th scope="col" className="num">Entitled</th>
-                    <th scope="col" className="num">Used</th>
-                    <th scope="col" className="num">Available</th>
-                    <th scope="col">Ledger</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {balances.map((b) => (
-                    <tr key={b.id}>
-                      <td>{empName(b.employee_id)}</td>
-                      <td>{b.leave_type_name || `#${b.leave_type_id}`}</td>
-                      <td className="num">{b.entitlement_year}</td>
-                      <td className="num">{b.entitled_days}</td>
-                      <td className="num">{b.used_days}</td>
-                      <td className="num font-semibold">{b.available_days}</td>
-                      <td>
-                        <Link to={tenantNav.to(`/leave/ledger/${b.employee_id}`)} className="action-link whitespace-nowrap">
-                          View ledger →
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table
+              className="max-h-[420px] overflow-y-auto"
+              columns={[
+                { key: "employee", header: "Employee", accessor: (b) => empName(b.employee_id) },
+                { key: "type", header: "Type", accessor: (b) => b.leave_type_name || `#${b.leave_type_id}` },
+                { key: "year", header: "Year", accessor: (b) => b.entitlement_year, cellClassName: "num" },
+                { key: "entitled", header: "Entitled", accessor: (b) => b.entitled_days, cellClassName: "num" },
+                { key: "used", header: "Used", accessor: (b) => b.used_days, cellClassName: "num" },
+                { key: "available", header: "Available", accessor: (b) => b.available_days, cellClassName: "num font-semibold" },
+                { key: "ledger", header: "Ledger", accessor: (b) => (
+                  <Link to={tenantNav.to(`/leave/ledger/${b.employee_id}`)} className="action-link whitespace-nowrap">
+                    View ledger →
+                  </Link>
+                ) },
+              ]}
+              data={balances}
+              keyAccessor={(b) => b.id}
+              caption="Leave balances by employee and type"
+              sortable={false}
+            />
           )}
         </SectionCard>
       </div>
@@ -427,8 +400,7 @@ export default function Leave() {
               onBlur={() => setReqErrors((s) => ({ ...s, reason: validateReq("reason", reqForm.reason) }))} />
             {reqErrors.reason && <span className="text-xs text-error-text">{reqErrors.reason}</span>}
           </div>
-          <button className="btn btn-primary"
-            disabled={!reqForm.employee_id || !reqForm.leave_type_id || !reqForm.start_date || !reqForm.end_date || busy === "lr"}
+          <Button variant="primary" disabled={!reqForm.employee_id || !reqForm.leave_type_id || !reqForm.start_date || !reqForm.end_date || busy === "lr"}
             onClick={() => {
               localStorage.removeItem("leave-req-draft"); setShowDraftRestore(false);
               act("lr", () => api.post("/leave/requests", {
@@ -440,7 +412,7 @@ export default function Leave() {
             }), "Leave request created").then(() => setReqForm(initialReqForm))
             }}>
             {busy === "lr" ? "Submitting…" : "Submit request"}
-          </button>
+          </Button>
           </div>
           {draftSavedAt && <p className="px-4 py-1 text-xs text-fg-muted">Draft saved</p>}
         </section>
@@ -472,68 +444,57 @@ export default function Leave() {
               actions={
                 isManager ? (
                   <>
-                    <button type="button" className="btn btn-primary btn-xs min-h-[44px]" onClick={handleBulkApprove} disabled={selectedIds.size === 0}>Approve selected</button>
-                    <button type="button" className="btn btn-secondary btn-xs min-h-[44px]" onClick={handleBulkReject} disabled={selectedIds.size === 0}>Reject selected</button>
+                    <Button variant="primary" size="xs" className="min-h-[44px]" type="button" onClick={handleBulkApprove} disabled={selectedIds.size === 0}>Approve selected</Button>
+                    <Button variant="secondary" size="xs" className="min-h-[44px]" type="button" onClick={handleBulkReject} disabled={selectedIds.size === 0}>Reject selected</Button>
                   </>
                 ) : undefined
               }
             />
-            <div className="table-scroll mt-3">
-            <table className="table-base table-striped table-compact">
-              <caption className="sr-only">Leave requests and their approval actions</caption>
-              <thead>
-                <tr>
-                  <th scope="col"><input type="checkbox" aria-label="Select all" checked={selectedIds.size === requests.length && requests.length > 0} onChange={() => setSelectedIds(selectedIds.size === requests.length ? new Set() : new Set(requests.map((r) => r.id)))} className="rounded border-border" /></th>
-                  <th scope="col">Employee</th>
-                  <th scope="col">Dates</th>
-                  <th scope="col" className="num">Days</th>
-                  <th scope="col">Reason</th>
-                  <th scope="col">Status</th>
-                  <th scope="col">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {requests.map((r) => (
-                  <tr key={r.id}>
-                    <td><input type="checkbox" aria-label={`Select request ${r.id}`} checked={selectedIds.has(r.id)} onChange={(e) => { const s = new Set(selectedIds); if (e.target.checked) s.add(r.id); else s.delete(r.id); setSelectedIds(s) }} className="rounded border-border" /></td>
-                    <td>{empName(r.employee_id)}</td>
-                    <td className="whitespace-nowrap">{r.start_date} → {r.end_date}</td>
-                    <td className="num font-medium">{r.working_days}</td>
-                    <td className="text-fg-muted">{r.reason || "—"}</td>
-                    <td><StatusPill status={r.status} /></td>
-                    <td>
-                      <div className="flex items-center gap-2">
-                        {r.status === "Pending" && isManager && (
-                          <>
-                            <button className="btn btn-primary btn-xs min-h-[44px]" disabled={busy === `ap${r.id}`}
-                              onClick={() => act(`ap${r.id}`, () => api.post(`/leave/requests/${r.id}/approve`), "Approved")}>
-                              Approve
-                            </button>
-                            <button className="btn btn-ghost btn-xs min-h-[44px]" disabled={busy === `rj${r.id}`}
-                              onClick={() => act(`rj${r.id}`, () => api.post(`/leave/requests/${r.id}/reject`), "Rejected")}>
-                              Reject
-                            </button>
-                          </>
-                        )}
-                        {(r.status === "Pending" || r.status === "Approved") && (
-                          <button className="action-link text-fg-muted min-h-[44px] inline-flex items-center" disabled={busy === `cx${r.id}`}
-                            onClick={() => act(`cx${r.id}`, () => api.post(`/leave/requests/${r.id}/cancel`), "Cancelled")}>
-                            Cancel
-                          </button>
-                        )}
-                        {r.status === "Pending" && !isManager && (
-                          <span className="text-xs text-fg-muted">Awaiting a manager</span>
-                        )}
-                        {r.status !== "Pending" && r.status !== "Approved" && (
-                          <span className="text-xs text-fg-muted">Closed</span>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+            <Table
+              className="mt-3"
+              columns={[
+                { key: "employee", header: "Employee", accessor: (r) => empName(r.employee_id) },
+                { key: "dates", header: "Dates", accessor: (r) => <span className="whitespace-nowrap">{r.start_date} → {r.end_date}</span> },
+                { key: "days", header: "Days", accessor: (r) => r.working_days, cellClassName: "num font-medium" },
+                { key: "reason", header: "Reason", accessor: (r) => <span className="text-fg-muted">{r.reason || "—"}</span> },
+                { key: "status", header: "Status", accessor: (r) => <StatusPill status={r.status} /> },
+                { key: "actions", header: "Actions", accessor: (r) => (
+                  <div className="flex items-center gap-2">
+                    {r.status === "Pending" && isManager && (
+                      <>
+                        <Button variant="primary" size="xs" className="min-h-[44px]" disabled={busy === `ap${r.id}`}
+                          onClick={() => act(`ap${r.id}`, () => api.post(`/leave/requests/${r.id}/approve`), "Approved")}>
+                          Approve
+                        </Button>
+                        <Button variant="ghost" size="xs" className="min-h-[44px]" disabled={busy === `rj${r.id}`}
+                          onClick={() => act(`rj${r.id}`, () => api.post(`/leave/requests/${r.id}/reject`), "Rejected")}>
+                          Reject
+                        </Button>
+                      </>
+                    )}
+                    {(r.status === "Pending" || r.status === "Approved") && (
+                      <Button variant="ghost" className="text-fg-muted min-h-[44px] inline-flex items-center" disabled={busy === `cx${r.id}`}
+                        onClick={() => act(`cx${r.id}`, () => api.post(`/leave/requests/${r.id}/cancel`), "Cancelled")}>
+                        Cancel
+                      </Button>
+                    )}
+                    {r.status === "Pending" && !isManager && (
+                      <span className="text-xs text-fg-muted">Awaiting a manager</span>
+                    )}
+                    {r.status !== "Pending" && r.status !== "Approved" && (
+                      <span className="text-xs text-fg-muted">Closed</span>
+                    )}
+                  </div>
+                ) },
+              ]}
+              data={requests}
+              keyAccessor={(r) => r.id}
+              caption="Leave requests and their approval actions"
+              sortable={false}
+              selectionMode="multiple"
+              selectedRows={selectedIds}
+              onSelectionChange={(s) => setSelectedIds(new Set([...s].filter((x): x is number => typeof x === "number")))}
+            />
           </>
         )}
         <div className="mt-4">

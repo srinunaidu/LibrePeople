@@ -8,7 +8,7 @@ import { TenantLayout } from "@/components/TenantLayout"
 import { PageSkeleton } from "@/components/ui/page-skeleton"
 import { ThemeProvider } from "@/context/ThemeContext"
 import { QueryProvider } from "@/components/QueryProvider"
-import { Toaster } from "@/components/ui/sonner"
+import { Toaster } from "@/components/ui"
 
 // Public pages (lazy loaded)
 const Homepage = lazy(() => import("@/pages/Homepage"))

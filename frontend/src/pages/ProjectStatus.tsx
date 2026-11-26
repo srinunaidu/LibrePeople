@@ -11,6 +11,7 @@ import { useMemo, useState } from "react"
 import { Link } from "react-router-dom"
 import { Layout } from "@/components/Layout"
 import { PageHeader } from "@/components/ui/layout"
+import { Table } from "@/components/ui"
 import { useTenantNav } from "@/lib/tenantPath"
 import { cn } from "@/lib/utils"
 import {
@@ -217,28 +218,17 @@ export default function ProjectStatus() {
 
         {/* Deploys */}
         <h2 className={h2Cls}>Deploys — last 5</h2>
-        <div className="overflow-x-auto rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)]">
-          <table className="w-full text-sm border-collapse tabular-nums">
-            <thead>
-              <tr className="text-left border-b border-[var(--border)] text-[var(--fg-muted)]">
-                <th className="px-2 py-1.5 font-semibold text-xs whitespace-nowrap">Time</th>
-                <th className="px-2 py-1.5 font-semibold text-xs whitespace-nowrap">Commit</th>
-                <th className="px-2 py-1.5 font-semibold text-xs whitespace-nowrap">Notes</th>
-              </tr>
-            </thead>
-            <tbody>
-              {DEPLOYS.map((d, i) => (
-                <tr key={i} className="border-b border-[var(--border-subtle)] last:border-0">
-                  <td className="px-2 py-1.5 align-top text-[var(--fg-muted)]">{d.time}</td>
-                  <td className="px-2 py-1.5 align-top">
-                    <code className={codeCls}>{d.commit}</code>
-                  </td>
-                  <td className="px-2 py-1.5 align-top text-[var(--fg)]">{d.notes}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Table
+            columns={[
+              { key: "time", header: "Time", accessor: (d) => <span className="text-[var(--fg-muted)]">{d.time}</span> },
+              { key: "commit", header: "Commit", accessor: (d) => <code className={codeCls}>{d.commit}</code> },
+              { key: "notes", header: "Notes", accessor: (d) => <span className="text-[var(--fg)]">{d.notes}</span> },
+            ]}
+            data={DEPLOYS.map((d, i) => ({ ...d, _k: i }))}
+            keyAccessor={(d) => d._k}
+            caption="Deploys — last 5"
+            sortable={false}
+          />
 
         {/* References */}
         <h2 className={h2Cls}>References</h2>

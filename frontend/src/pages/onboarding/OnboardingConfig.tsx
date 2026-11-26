@@ -12,15 +12,17 @@
  */
 import { Fragment, useCallback, useEffect, useState } from "react"
 import { Layout } from "@/components/Layout"
-import {Alert,
+import {
+  Select,Alert,
   EmptyState,
   LoadingRegion,
   PageHeader,
   SectionCard,
+  Table,
   TableSkeleton, RetryableAlert} from "@/components/ui"
 import { StatusPill } from "@/components/ui/status-pill"
 import { Meter } from "@/components/ui/feedback"
-import { Select } from "@/components/ui/inputs"
+
 import { useAuth } from "@/context/AuthContext"
 import api, { errorMessage } from "@/lib/api"
 import { fetchAllEmployees } from "@/lib/employees"
@@ -439,34 +441,24 @@ export default function OnboardingConfig() {
               </p>
             )}
             {readiness.findings.length > 0 ? (
-              <div className="table-scroll">
-                <table className="table-base table-compact w-full text-sm">
-                  <caption className="sr-only">Readiness findings</caption>
-                  <thead>
-                    <tr>
-                      <th scope="col">Severity</th>
-                      <th scope="col">Title / Message</th>
-                      <th scope="col">Category</th>
-                      <th scope="col">Code</th>
-                      <th scope="col">Recommendation</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {readiness.findings.map((f, i) => (
-                      <tr key={`${f.rule_id}-${i}`}>
-                        <td><span className={`badge badge-${severityBadge(f.severity)}`}>{f.severity}</span></td>
-                        <td className="max-w-[320px]">
-                          <span className="font-medium">{f.title ?? f.message}</span>
-                          {f.title && f.message !== f.title && <span className="block text-xs text-text-secondary">{f.message}</span>}
-                        </td>
-                        <td className="text-xs">{f.category}</td>
-                        <td className="font-mono text-xs">{f.code ?? f.rule_id}</td>
-                        <td className="text-xs max-w-[260px] truncate" title={f.recommendation ?? ""}>{f.recommendation ?? "—"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                columns={[
+                  { key: "severity", header: "Severity", accessor: (f) => <span className={`badge badge-${severityBadge(f.severity)}`}>{f.severity}</span> },
+                  { key: "title", header: "Title / Message", accessor: (f) => (
+                    <span className="max-w-[320px]">
+                      <span className="font-medium">{f.title ?? f.message}</span>
+                      {f.title && f.message !== f.title && <span className="block text-xs text-text-secondary">{f.message}</span>}
+                    </span>
+                  ) },
+                  { key: "category", header: "Category", accessor: (f) => <span className="text-xs">{f.category}</span> },
+                  { key: "code", header: "Code", accessor: (f) => <span className="font-mono text-xs">{f.code ?? f.rule_id}</span> },
+                  { key: "rec", header: "Recommendation", accessor: (f) => <span className="text-xs max-w-[260px] truncate" title={f.recommendation ?? ""}>{f.recommendation ?? "\u2014"}</span> },
+                ]}
+                data={readiness.findings.map((f, i) => ({ ...f, _k: `${f.rule_id}-${i}` }))}
+                keyAccessor={(f) => f._k}
+                caption="Readiness findings"
+                sortable={false}
+              />
             ) : (
               <p className="text-sm text-text-secondary">No findings — this deployment is ready for the selected preset.</p>
             )}
@@ -506,29 +498,18 @@ export default function OnboardingConfig() {
             <p className="text-sm text-text-secondary">
               {gapsCount} gap{gapsCount === 1 ? "" : "s"} — the missing and inconsistent findings that block publishing.
             </p>
-            <div className="table-scroll">
-              <table className="table-base table-compact w-full text-sm">
-                <caption className="sr-only">Configuration gaps</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">State</th>
-                    <th scope="col">Title</th>
-                    <th scope="col">Severity</th>
-                    <th scope="col">Recommendation</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[...readiness.missing.map((f) => ({ ...f, _state: "Missing" })), ...readiness.inconsistent.map((f) => ({ ...f, _state: "Inconsistent" }))].map((f, i) => (
-                    <tr key={`${f.rule_id}-${i}`}>
-                      <td><StatusPill status={f._state} /></td>
-                      <td className="font-medium">{f.title ?? f.message}</td>
-                      <td><span className={`badge badge-${severityBadge(f.severity)}`}>{f.severity}</span></td>
-                      <td className="text-xs max-w-[320px] truncate" title={f.recommendation ?? ""}>{f.recommendation ?? "—"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table
+                columns={[
+                  { key: "state", header: "State", accessor: (f) => <StatusPill status={f._state} /> },
+                  { key: "title", header: "Title", accessor: (f) => <span className="font-medium">{f.title ?? f.message}</span> },
+                  { key: "severity", header: "Severity", accessor: (f) => <span className={`badge badge-${severityBadge(f.severity)}`}>{f.severity}</span> },
+                  { key: "rec", header: "Recommendation", accessor: (f) => <span className="text-xs max-w-[320px] truncate" title={f.recommendation ?? ""}>{f.recommendation ?? "\u2014"}</span> },
+                ]}
+                data={[...readiness.missing.map((f) => ({ ...f, _state: "Missing" })), ...readiness.inconsistent.map((f) => ({ ...f, _state: "Inconsistent" }))].map((f, i) => ({ ...f, _k: `${f.rule_id}-${i}` }))}
+                keyAccessor={(f) => f._k}
+                caption="Configuration gaps"
+                sortable={false}
+              />
             <p className="text-xs text-text-secondary">Config gaps are the missing + inconsistent findings of the readiness check — there is no separate config-gaps endpoint.</p>
           </div>
         )}
@@ -614,29 +595,18 @@ export default function OnboardingConfig() {
             ) : drillTasks.length === 0 ? (
               <div className="p-5 text-sm text-text-secondary">No onboarding tasks for this employee.</div>
             ) : (
-              <div className="table-scroll">
-                <table className="table-base table-compact w-full text-sm">
-                  <caption className="sr-only">Onboarding tasks for the selected employee</caption>
-                  <thead>
-                    <tr>
-                      <th scope="col">Task</th>
-                      <th scope="col">Category</th>
-                      <th scope="col">Due</th>
-                      <th scope="col">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {drillTasks.map((t) => (
-                      <tr key={t.id}>
-                        <td className="font-medium">{t.title}</td>
-                        <td>{t.category}</td>
-                        <td>{fmtDate(t.due_date)}</td>
-                        <td><StatusPill status={t.status} dot /></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                columns={[
+                  { key: "task", header: "Task", accessor: (t) => <span className="font-medium">{t.title}</span> },
+                  { key: "category", header: "Category", accessor: (t) => t.category },
+                  { key: "due", header: "Due", accessor: (t) => fmtDate(t.due_date) },
+                  { key: "status", header: "Status", accessor: (t) => <StatusPill status={t.status} dot /> },
+                ]}
+                data={drillTasks}
+                keyAccessor={(t) => t.id}
+                caption="Onboarding tasks for the selected employee"
+                sortable={false}
+              />
             )}
 
             <div className="px-5 pb-1 border-t border-border mt-3">
@@ -649,29 +619,18 @@ export default function OnboardingConfig() {
             ) : drillDocs.length === 0 ? (
               <div className="p-5 text-sm text-text-secondary">No documents uploaded for this employee.</div>
             ) : (
-              <div className="table-scroll">
-                <table className="table-base table-compact w-full text-sm">
-                  <caption className="sr-only">Onboarding documents for the selected employee</caption>
-                  <thead>
-                    <tr>
-                      <th scope="col">Type</th>
-                      <th scope="col">File</th>
-                      <th scope="col">Status</th>
-                      <th scope="col">Uploaded</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {drillDocs.map((d) => (
-                      <tr key={d.id}>
-                        <td>{d.document_type}</td>
-                        <td>{d.file_name}</td>
-                        <td><StatusPill status={d.status} /></td>
-                        <td>{fmtDate(d.uploaded_at)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                columns={[
+                  { key: "type", header: "Type", accessor: (d) => d.document_type },
+                  { key: "file", header: "File", accessor: (d) => d.file_name },
+                  { key: "status", header: "Status", accessor: (d) => <StatusPill status={d.status} /> },
+                  { key: "uploaded", header: "Uploaded", accessor: (d) => fmtDate(d.uploaded_at) },
+                ]}
+                data={drillDocs}
+                keyAccessor={(d) => d.id}
+                caption="Onboarding documents for the selected employee"
+                sortable={false}
+              />
             )}
           </>
         )}

@@ -16,7 +16,10 @@
  */
 import { useCallback, useEffect, useState, type FormEvent } from "react"
 import { Layout } from "@/components/Layout"
-import { EmptyState, Alert,
+import {
+  Checkbox,
+  Input,
+  Select, EmptyState, Alert,
   Button,
   LoadingRegion,
   PageHeader,
@@ -24,7 +27,7 @@ import { EmptyState, Alert,
   PendingVerificationAlert,
   SectionCard,
   TableSkeleton, } from "@/components/ui"
-import { Checkbox, Input, Select } from "@/components/ui/inputs"
+
 import { useAuth } from "@/context/AuthContext"
 import api from "@/lib/api"
 import { useFieldErrors } from "@/lib/useFieldErrors"
@@ -270,8 +273,6 @@ export default function PayrollSetup() {
         title="Pay setup"
         description="The pay periods, components and employee pay profiles a run is built from. Creating these is limited to SuperAdmin and HR; reading the periods and components is limited to SuperAdmin, HR and PayrollViewer."
       />
-
-
 
       {!canRead && (
         <Alert tone="info">

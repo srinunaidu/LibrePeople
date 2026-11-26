@@ -11,8 +11,8 @@
 import { useState, type FormEvent } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Layout } from "@/components/Layout"
-import {Alert, Button, EmptyState, LoadingRegion, PageHeader, SectionCard, TableSkeleton, RetryableAlert} from "@/components/ui"
-import { Input, Textarea, Select } from "@/components/ui/inputs"
+import { Input, Textarea, Select,Alert, Button, EmptyState, LoadingRegion, PageHeader, SectionCard, TableSkeleton, RetryableAlert} from "@/components/ui"
+
 import { StatusPill } from "@/components/ui/status-pill"
 import { useAuth } from "@/context/AuthContext"
 import { useTenant } from "@/context/TenantContext"

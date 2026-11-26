@@ -262,10 +262,14 @@ describe("slice 3 — states, a11y, responsive", () => {
       })
 
       test(`${dir}/${file}: tables have caption sr-only and scope="col"`, () => {
-        // PayrollOverview has tables with caption/scope
+        // PayrollOverview has tables with caption/scope.
+        // Design-system unification (R1) migrates raw tables to kit Table,
+        // which emits scope="col" + sr-only caption at runtime: accept
+        // either raw markup in source or kit <Table with a caption prop.
         if (file === "PayRuns.tsx" || file === "PayrollSetup.tsx" || file === "PayrollOverview.tsx" || file === "PayRunDetail.tsx" || file === "LeaveLedger.tsx" || file === "OnboardingConfig.tsx") {
-          expect(src).toContain('scope="col"')
-          expect(src).toContain('className="sr-only"')
+          const usesKitTable = src.includes("<Table") && src.includes("caption=")
+          const usesRawTable = src.includes('scope="col"') && src.includes('className="sr-only"')
+          expect(usesKitTable || usesRawTable).toBe(true)
         }
       })
     }
