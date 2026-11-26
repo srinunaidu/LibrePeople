@@ -1,16 +1,15 @@
 import { useEffect, useState } from "react"
-import { Link } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
+import { useTenantNav } from "@/lib/tenantPath"
 import { fetchAllEmployees } from "@/lib/employees"
 import { Layout } from "@/components/Layout"
 import {
   Alert,
-  CardSkeleton,
   EmptyState,
   LoadingRegion,
   PageHeader,
   SectionCard,
   KPICard,
-  StatCard,
   Button,
 } from "@/components/ui"
 import { NeedsAction, type NeedItem } from "@/components/home/NeedsAction"
@@ -24,8 +23,6 @@ import {
   IconPalm,
   IconSparkle,
   IconWallet,
-  IconTrendingUp,
-  IconTrendingDown,
 } from "@/components/icons"
 import api from "@/lib/api"
 import { useAuth } from "@/context/AuthContext"
@@ -38,13 +35,14 @@ interface Payslip { id: number; period_start: string; period_end: string; net_pa
 interface OnboardingTask { id: number; title: string; status: string; due_date?: string }
 interface Announcement { id: number; title: string; content: string; priority?: string; category?: string; published_at?: string }
 
-const mockSparklineData = [12, 15, 13, 17, 19, 16, 20, 18, 22, 21, 24, 23]
-const mockLeaveSparkline = [2, 3, 2, 4, 3, 5, 4, 6, 5, 7, 6, 8]
-const mockShiftSparkline = [1, 2, 1, 2, 3, 2, 3, 4, 3, 4, 4, 5]
+// D3 (portals-completion): no sparkline/trend props on portal KPIs — there is
+// no backend aggregation for deltas, so every KPI shows a live value + hint.
 
 export default function AssociateHome() {
   const { user } = useAuth()
   const { tenant } = useTenant()
+  const navigate = useNavigate()
+  const tenantNav = useTenantNav()
   const localeOpts = { locale: tenant?.locale, timeZone: tenant?.timezone }
   const currency = tenant?.currency || undefined
   const [loading, setLoading] = useState(true)
@@ -129,7 +127,7 @@ export default function AssociateHome() {
       count: pendingTasks.length,
       description: "New-hire checklist items pending your attention",
       actionLabel: "Open",
-      onAction: () => { window.location.href = "/onboarding" },
+      onAction: () => { navigate(tenantNav.to("/onboarding")) },
       icon: <IconCheck className="w-4 h-4" />,
       tone: "amber" as const,
     },
@@ -169,9 +167,6 @@ export default function AssociateHome() {
           hint={`${myBalances.length} leave types`}
           icon={<IconPalm className="w-5 h-5" />}
           tone="green"
-          sparklineData={mockLeaveSparkline}
-          trendValue={12}
-          trendLabel="vs last year"
           className="mk-reveal-d1"
         />
         <KPICard
@@ -180,18 +175,14 @@ export default function AssociateHome() {
           hint="Next 7 days"
           icon={<IconCalendar className="w-5 h-5" />}
           tone="brand"
-          sparklineData={mockShiftSparkline}
-          trendValue={5}
-          trendLabel="vs last week"
           className="mk-reveal-d2"
         />
         <KPICard
           label="Clock Status"
           value={clockedIn ? "Clocked In" : "Clocked Out"}
-          hint={clockedIn ? "Since 09:00 AM" : "Ready to start"}
+          hint={clockedIn ? "Currently clocked in" : "Ready to start"}
           icon={<IconClock className="w-5 h-5" />}
           tone={clockedIn ? "green" : "slate"}
-          sparklineData={mockSparklineData}
           className="mk-reveal-d1"
         />
         <KPICard
@@ -200,9 +191,6 @@ export default function AssociateHome() {
           hint={`${tasks.length} total tasks`}
           icon={<IconCheck className="w-5 h-5" />}
           tone="amber"
-          sparklineData={[pendingTasks.length, pendingTasks.length + 1, pendingTasks.length, pendingTasks.length - 1]}
-          trendValue={-pendingTasks.length * 10}
-          trendLabel="completion rate"
           className="mk-reveal-d2"
         />
       </div>

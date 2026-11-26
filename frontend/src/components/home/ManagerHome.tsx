@@ -1,23 +1,23 @@
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { useTenantNav } from "@/lib/tenantPath"
 import { Layout } from "@/components/Layout"
 import {
   Alert,
+  Button,
   EmptyState,
   LoadingRegion,
   PageHeader,
   SectionCard,
   KPICard,
-  StatCard,
 } from "@/components/ui"
 import { NeedsAction, type NeedItem } from "@/components/home/NeedsAction"
 import {
-  IconCalendar,
   IconChart,
   IconCheck,
   IconClock,
   IconTarget,
   IconUsers,
-  IconTrendingUp,
 } from "@/components/icons"
 import api from "@/lib/api"
 import { StatusPill } from "@/components/ui/status-pill"
@@ -28,13 +28,18 @@ interface ShiftSwap { id: number; requester_id: number; status: string; roster_e
 interface Goal { id: number; title: string; progress: number; status: string }
 interface Review { id: number; period: string; status: string; overall_rating?: number }
 
-const mockSparklineData = [8, 12, 10, 15, 13, 18, 16, 20, 18, 22, 20, 24]
-const mockLeaveSparkline = [3, 5, 4, 6, 5, 7, 6, 8, 7, 9, 8, 10]
-const mockTimesheetSparkline = [12, 15, 13, 18, 16, 20, 18, 22, 20, 24, 22, 26]
+// D3 (portals-completion): no sparkline/trend props on portal KPIs — there is
+// no backend aggregation for deltas, so every KPI shows a live value + hint.
+// Timesheet reject is INCOMPLETE: backend exposes only
+// POST /time/timesheets/{id}/approve (time_attendance.py), no reject route.
 
 export default function ManagerHome() {
+  const navigate = useNavigate()
+  const tenantNav = useTenantNav()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
+  const [notice, setNotice] = useState("")
+  const [busy, setBusy] = useState("")
   const [leaveReqs, setLeaveReqs] = useState<LeaveReq[]>([])
   const [timesheets, setTimesheets] = useState<Timesheet[]>([])
   const [swaps, setSwaps] = useState<ShiftSwap[]>([])
@@ -42,34 +47,49 @@ export default function ManagerHome() {
   const [reviews, setReviews] = useState<Review[]>([])
   const [presentToday, setPresentToday] = useState(0)
 
-  useEffect(() => {
-    let cancelled = false
-    async function load() {
-      try {
-        const [lr, ts, ss, g, rv, att] = await Promise.all([
-          api.get("/leave/requests").catch(() => ({ data: [] })),
-          api.get("/time/timesheets").catch(() => ({ data: [] })),
-          api.get("/scheduling/swaps").catch(() => ({ data: [] })),
-          api.get("/performance/goals").catch(() => ({ data: [] })),
-          api.get("/performance/reviews").catch(() => ({ data: [] })),
-          api.get("/time/today").catch(() => ({ data: { present: 0 } })),
-        ])
-        if (cancelled) return
-        setLeaveReqs(lr.data || [])
-        setTimesheets(ts.data || [])
-        setSwaps(ss.data || [])
-        setGoals(g.data || [])
-        setReviews(rv.data || [])
-        setPresentToday(att.data?.present ?? 0)
-      } catch {
-        if (!cancelled) setError("We couldn't load your team workspace.")
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
+  const load = useCallback(async (initial = false) => {
+    if (initial) setLoading(true)
+    try {
+      const [lr, ts, ss, g, rv, att] = await Promise.all([
+        api.get("/leave/requests").catch(() => ({ data: [] })),
+        api.get("/time/timesheets").catch(() => ({ data: [] })),
+        api.get("/scheduling/swaps").catch(() => ({ data: [] })),
+        api.get("/performance/goals").catch(() => ({ data: [] })),
+        api.get("/performance/reviews").catch(() => ({ data: [] })),
+        api.get("/time/today").catch(() => ({ data: { present: 0 } })),
+      ])
+      setLeaveReqs(lr.data || [])
+      setTimesheets(ts.data || [])
+      setSwaps(ss.data || [])
+      setGoals(g.data || [])
+      setReviews(rv.data || [])
+      setPresentToday(att.data?.present ?? 0)
+    } catch {
+      setError("We couldn't load your team workspace.")
+    } finally {
+      setLoading(false)
     }
-    load()
-    return () => { cancelled = true }
   }, [])
+
+  useEffect(() => { void load(true) }, [load])
+
+  // Inline decide: approve/reject without a full-page reload; the list
+  // refreshes in place so the manager stays on the portal.
+  const decide = async (key: string, fn: () => Promise<unknown>, msg: string) => {
+    if (busy) return
+    setBusy(key)
+    setError("")
+    setNotice("")
+    try {
+      await fn()
+      setNotice(msg)
+      await load()
+    } catch (e: any) {
+      setError(e?.response?.data?.detail || "Decision failed. Please try again.")
+    } finally {
+      setBusy("")
+    }
+  }
 
   const pendingLeave = leaveReqs.filter((r) => r.status === "Pending").length
   const pendingTimesheets = timesheets.filter((t) => t.status === "Submitted").length
@@ -79,11 +99,11 @@ export default function ManagerHome() {
   const totalActions = pendingLeave + pendingTimesheets + pendingSwaps + pendingGoals + pendingReviews
 
   const needs: NeedItem[] = [
-    { id: "leave", label: "Leave requests awaiting approval", count: pendingLeave, description: "Approve or reject team leave requests", actionLabel: "Review", onAction: () => { window.location.href = "/leave" }, tone: "amber" },
-    { id: "timesheets", label: "Timesheets to approve", count: pendingTimesheets, description: "Submitted timesheets needing your sign-off", actionLabel: "Review", onAction: () => { window.location.href = "/time" }, tone: "amber" },
-    { id: "swaps", label: "Shift swap requests", count: pendingSwaps, description: "Team members requesting shift changes", actionLabel: "Review", onAction: () => { window.location.href = "/scheduling" }, tone: "amber" },
-    { id: "goals", label: "Goals in progress", count: pendingGoals, description: "Team goals needing updates", actionLabel: "View", onAction: () => { window.location.href = "/platform" }, tone: "brand" },
-    { id: "reviews", label: "Reviews pending", count: pendingReviews, description: "Performance reviews to complete", actionLabel: "View", onAction: () => { window.location.href = "/platform" }, tone: "violet" },
+    { id: "leave", label: "Leave requests awaiting approval", count: pendingLeave, description: "Approve or reject team leave requests", actionLabel: "Review", onAction: () => { navigate(tenantNav.to("/leave")) }, tone: "amber" },
+    { id: "timesheets", label: "Timesheets to approve", count: pendingTimesheets, description: "Submitted timesheets needing your sign-off", actionLabel: "Review", onAction: () => { navigate(tenantNav.to("/time")) }, tone: "amber" },
+    { id: "swaps", label: "Shift swap requests", count: pendingSwaps, description: "Team members requesting shift changes", actionLabel: "Review", onAction: () => { navigate(tenantNav.to("/scheduling")) }, tone: "amber" },
+    { id: "goals", label: "Goals in progress", count: pendingGoals, description: "Team goals needing updates", actionLabel: "View", onAction: () => { navigate(tenantNav.to("/platform/performance")) }, tone: "brand" },
+    { id: "reviews", label: "Reviews pending", count: pendingReviews, description: "Performance reviews to complete", actionLabel: "View", onAction: () => { navigate(tenantNav.to("/platform/performance")) }, tone: "violet" },
   ]
 
   if (loading) {
@@ -108,6 +128,7 @@ export default function ManagerHome() {
       />
 
       {error && <Alert tone="error">{error}</Alert>}
+      {notice && <Alert tone="success">{notice}</Alert>}
 
       {needs.length > 0 && <NeedsAction title="Needs your action" items={needs} emptyMessage="No pending approvals or actions." />}
 
@@ -118,19 +139,13 @@ export default function ManagerHome() {
           hint="Leave, timesheets, swaps, goals, reviews"
           icon={<IconCheck className="w-5 h-5" />}
           tone="brand"
-          sparklineData={mockSparklineData}
-          trendValue={15}
-          trendLabel="vs last month"
         />
         <KPICard
           label="Present Today"
           value={presentToday}
-          hint="Team attendance"
+          hint="Team attendance today"
           icon={<IconUsers className="w-5 h-5" />}
           tone="green"
-          sparklineData={mockTimesheetSparkline}
-          trendValue={8}
-          trendLabel="vs avg"
         />
         <KPICard
           label="Team Goals"
@@ -138,9 +153,6 @@ export default function ManagerHome() {
           hint={`${pendingGoals} in progress`}
           icon={<IconTarget className="w-5 h-5" />}
           tone="violet"
-          sparklineData={[goals.length - 2, goals.length - 1, goals.length, goals.length + 1]}
-          trendValue={12}
-          trendLabel="completion rate"
         />
         <KPICard
           label="Reviews"
@@ -148,14 +160,11 @@ export default function ManagerHome() {
           hint={`${pendingReviews} pending`}
           icon={<IconChart className="w-5 h-5" />}
           tone="amber"
-          sparklineData={mockLeaveSparkline}
-          trendValue={-5}
-          trendLabel="overdue"
         />
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        <SectionCard icon={<IconClock />} title="Approvals inbox" description="Items waiting for your decision.">
+        <SectionCard icon={<IconClock />} title="Approvals inbox" description="Items waiting for your decision — approve inline or open the full list.">
           {leaveReqs.length + timesheets.length + swaps.length === 0 ? (
             <EmptyState title="Inbox empty" description="No pending approvals at this time." />
           ) : (
@@ -164,21 +173,26 @@ export default function ManagerHome() {
                 <li key={`l-${r.id}`} className="flex items-center gap-3 px-5 py-3 hover:bg-surface-hover">
                   <span className="badge badge-amber shrink-0">Leave</span>
                   <span className="text-sm text-fg flex-1">Employee #{r.employee_id} · {r.working_days}d</span>
-                  <button className="action-link" onClick={() => { window.location.href = "/leave" }}>Review</button>
+                  <Button size="xs" variant="secondary" disabled={!!busy} onClick={() => decide(`al-${r.id}`, () => api.post(`/leave/requests/${r.id}/approve`), `Leave request #${r.id} approved.`)}>Approve</Button>
+                  <Button size="xs" variant="ghost" disabled={!!busy} onClick={() => decide(`rl-${r.id}`, () => api.post(`/leave/requests/${r.id}/reject`), `Leave request #${r.id} rejected.`)}>Reject</Button>
+                  <button className="action-link" onClick={() => { navigate(tenantNav.to("/leave")) }}>Review</button>
                 </li>
               ))}
               {timesheets.filter((t) => t.status === "Submitted").slice(0, 5).map((t) => (
                 <li key={`t-${t.id}`} className="flex items-center gap-3 px-5 py-3 hover:bg-surface-hover">
                   <span className="badge badge-brand shrink-0">Timesheet</span>
                   <span className="text-sm text-fg flex-1">Employee #{t.employee_id} · {t.total_hours}h</span>
-                  <button className="action-link" onClick={() => { window.location.href = "/time" }}>Review</button>
+                  <Button size="xs" variant="secondary" disabled={!!busy} onClick={() => decide(`at-${t.id}`, () => api.post(`/time/timesheets/${t.id}/approve`), `Timesheet #${t.id} approved.`)}>Approve</Button>
+                  <button className="action-link" onClick={() => { navigate(tenantNav.to("/time")) }}>Review</button>
                 </li>
               ))}
               {swaps.filter((s) => s.status === "Pending").slice(0, 5).map((s) => (
                 <li key={`s-${s.id}`} className="flex items-center gap-3 px-5 py-3 hover:bg-surface-hover">
                   <span className="badge badge-violet shrink-0">Swap</span>
                   <span className="text-sm text-fg flex-1">Roster #{s.roster_entry_id}</span>
-                  <button className="action-link" onClick={() => { window.location.href = "/scheduling" }}>Review</button>
+                  <Button size="xs" variant="secondary" disabled={!!busy} onClick={() => decide(`as-${s.id}`, () => api.post(`/scheduling/swaps/${s.id}/approve`), `Swap #${s.id} approved.`)}>Approve</Button>
+                  <Button size="xs" variant="ghost" disabled={!!busy} onClick={() => decide(`rs-${s.id}`, () => api.post(`/scheduling/swaps/${s.id}/reject`), `Swap #${s.id} rejected.`)}>Reject</Button>
+                  <button className="action-link" onClick={() => { navigate(tenantNav.to("/scheduling")) }}>Review</button>
                 </li>
               ))}
             </ul>
