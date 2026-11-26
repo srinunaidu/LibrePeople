@@ -217,3 +217,31 @@ Failure screenshots + traces under `frontend/test-results/` (gitignored);
 console-error arrays name the 403 URLs per role; probe logs show per-role
 `auth/me` (`HR×2`, `PayrollViewer×2`, `Manager`, `Associate`) with
 `must_change_password: false` for all six.
+
+---
+
+## Verification — expenses associate flow vs live 530a49f (2026-11-26)
+
+Branch `agent/qa/cloud-expenses-verify` from main `530a49f`. Mandate:
+confirm the nav fix is deployed before re-running.
+
+**Verdict: fix NOT yet deployed — re-run BLOCKED pending
+merge+push+redeploy. No workaround attempted; no specs run, no specs
+touched.**
+
+Evidence: both live deploys track main `530a49f` (re-verified this run via
+the Render deploys API: latest live frontend and backend deploys both
+report commit `530a49f`). The nav fix
+(`7d4ab08 fix(expenses): absolute post-create navigate to /expenses/:id`)
+exists only on unmerged branch `agent/feat/expenses-ui-navfix` — Render
+builds pushed main only, so the deployed `ExpenseNew` still navigates
+relative (`../${data.id}`). A minified-asset grep was inconclusive, so the
+Render deploy-commit check is the canonical evidence. The associate-filing
+spec (`cloud-expenses.spec.ts`, on unmerged `agent/qa/cloud-expenses`)
+was therefore NOT executed against live; its post-submit URL assertion
+(expect `/expenses/<id>`) remains unverified on the deployed build.
+Next step for the owner: merge the navfix branch, push, wait for both
+Render services live on the new SHA, then re-run
+`e2e/cloud/cloud-expenses.spec.ts -g "associate files"`.
+No credentials were staged and none were needed; no lockout signals;
+working tree otherwise clean.
