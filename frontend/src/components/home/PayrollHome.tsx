@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react"
+import { Link, useNavigate } from "react-router-dom"
+import { useTenantNav } from "@/lib/tenantPath"
 import { Layout } from "@/components/Layout"
 import {
   Alert,
@@ -7,10 +9,9 @@ import {
   PageHeader,
   SectionCard,
   KPICard,
-  StatCard,
 } from "@/components/ui"
 import { NeedsAction, type NeedItem } from "@/components/home/NeedsAction"
-import { IconChart, IconFile, IconWallet, IconTrendingUp } from "@/components/icons"
+import { IconChart, IconFile, IconWallet } from "@/components/icons"
 import api from "@/lib/api"
 import { StatusPill } from "@/components/ui/status-pill"
 import { useTenant } from "@/context/TenantContext"
@@ -19,10 +20,14 @@ import { formatCurrency } from "@/lib/format"
 interface PayRun { id: number; status: string; total_gross?: number; total_net?: number; headcount?: number; period_id?: number }
 interface Payslip { id: number; employee_id: number; net_pay?: number; status: string; period_start: string; period_end: string }
 
-const mockSparklineData = [45, 52, 48, 55, 52, 58, 55, 62, 58, 65, 62, 68]
-const mockPayslipSparkline = [120, 135, 128, 145, 138, 152, 145, 160, 152, 168, 160, 175]
+// D3 (portals-completion): no sparkline/trend props on portal KPIs — there is
+// no backend aggregation for deltas, so every KPI shows a live value + hint.
+// Gross pay is NOT derived client-side (net×1.3 was a fake); totals come from
+// the runs/payslips endpoints only.
 
 export default function PayrollHome() {
+  const navigate = useNavigate()
+  const tenantNav = useTenantNav()
   const { tenant } = useTenant()
   const localeOpts = { locale: tenant?.locale, timeZone: tenant?.timezone }
   const currency = tenant?.currency || undefined
@@ -60,11 +65,10 @@ export default function PayrollHome() {
   const pendingApprovals = runs.filter((r) => r.status === "Draft" || r.status === "Processing").length
   const totalPayslips = payslips.length
   const totalNet = payslips.reduce((s, p) => s + (p.net_pay ?? 0), 0)
-  const totalGross = payslips.reduce((s, p) => s + (p.net_pay ?? 0) * 1.3, 0) // approximate
 
   const needs: NeedItem[] = [
-    { id: "draft-runs", label: "Pay runs in draft", count: draftRuns, description: "Pay runs awaiting processing", actionLabel: "Process", onAction: () => { window.location.href = "/platform" }, tone: "amber" },
-    { id: "processing", label: "Runs processing", count: processingRuns, description: "Pay runs currently being processed", actionLabel: "Review", onAction: () => { window.location.href = "/platform" }, tone: "brand" },
+    { id: "draft-runs", label: "Pay runs in draft", count: draftRuns, description: "Pay runs awaiting processing", actionLabel: "Process", onAction: () => { navigate(tenantNav.to("/platform/payroll/runs")) }, tone: "amber" },
+    { id: "processing", label: "Runs processing", count: processingRuns, description: "Pay runs currently being processed", actionLabel: "Review", onAction: () => { navigate(tenantNav.to("/platform/payroll/runs")) }, tone: "brand" },
   ]
 
   if (loading) {
@@ -99,9 +103,6 @@ export default function PayrollHome() {
           hint={`${draftRuns} draft, ${processingRuns} processing`}
           icon={<IconWallet className="w-5 h-5" />}
           tone="brand"
-          sparklineData={mockSparklineData}
-          trendValue={15}
-          trendLabel="vs last quarter"
         />
         <KPICard
           label="Pending Approval"
@@ -109,9 +110,6 @@ export default function PayrollHome() {
           hint="Requires action"
           icon={<IconFile className="w-5 h-5" />}
           tone="amber"
-          sparklineData={mockSparklineData}
-          trendValue={-5}
-          trendLabel="processing"
         />
         <KPICard
           label="Payslips Issued"
@@ -119,26 +117,20 @@ export default function PayrollHome() {
           hint="This period"
           icon={<IconFile className="w-5 h-5" />}
           tone="green"
-          sparklineData={mockPayslipSparkline}
-          trendValue={12}
-          trendLabel="vs last period"
         />
         <KPICard
           label="Total Net Pay"
           value={formatCurrency(totalNet, { ...localeOpts, currency, minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          hint={`Gross: ${formatCurrency(totalGross, { ...localeOpts, currency, minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+          hint={`Across ${totalPayslips} payslip${totalPayslips !== 1 ? "s" : ""}`}
           icon={<IconChart className="w-5 h-5" />}
           tone="violet"
-          sparklineData={mockSparklineData}
-          trendValue={8}
-          trendLabel="payroll growth"
         />
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-0">
         <SectionCard compact icon={<IconWallet />} title="Pay runs" description="Recent payroll runs and their status.">
           {runs.length === 0 ? (
-            <EmptyState title="No pay runs" description="Create a pay run from the Platform module." />
+            <EmptyState title="No pay runs" description="Create a pay run from payroll setup." />
           ) : (
             <div className="table-scroll">
               <table className="table-base table-compact table-striped">
@@ -155,7 +147,7 @@ export default function PayrollHome() {
                 <tbody>
                   {runs.slice(0, 8).map((r) => (
                     <tr key={r.id}>
-                      <td className="font-medium">#{r.id}</td>
+                      <td className="font-medium"><Link className="action-link" to={tenantNav.to(`/platform/payroll/runs/${r.id}`)}>#{r.id}</Link></td>
                       <td><StatusPill status={r.status} /></td>
                       <td className="num">{formatCurrency(r.total_gross, { ...localeOpts, currency, minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                       <td className="num font-semibold">{formatCurrency(r.total_net, { ...localeOpts, currency, minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
@@ -166,6 +158,10 @@ export default function PayrollHome() {
               </table>
             </div>
           )}
+          <div className="flex flex-wrap justify-end gap-x-4 gap-y-1 px-5 py-3">
+            <button className="action-link" onClick={() => { navigate(tenantNav.to("/platform/payroll/runs")) }}>View all runs</button>
+            <button className="action-link" onClick={() => { navigate(tenantNav.to("/platform/payroll/setup")) }}>Pay setup</button>
+          </div>
         </SectionCard>
 
         <SectionCard compact icon={<IconFile />} title="Labour cost" description="Monthly payroll cost by department.">
@@ -198,12 +194,16 @@ export default function PayrollHome() {
               </table>
             </div>
           )}
+          <div className="flex justify-end px-5 py-3">
+            <button className="action-link" onClick={() => { navigate(tenantNav.to("/platform/payroll/overview")) }}>Open payroll overview</button>
+          </div>
         </SectionCard>
       </div>
 
-      <div className="card p-4 text-xs text-fg-muted flex items-center gap-2">
-        <span className="badge badge-slate">Read-only</span>
-        Payroll data is viewed here. Processing and approval actions are in the Platform module.
+      <div className="card p-4 text-xs text-fg-muted flex flex-wrap items-center gap-x-3 gap-y-1">
+        <span className="badge badge-slate">Payroll workspace</span>
+        <span>Open a run to process, approve or finalize it (SuperAdmin and HR; PayrollViewer reads).</span>
+        <button className="action-link" onClick={() => { navigate(tenantNav.to("/platform/payroll/runs")) }}>Open runs</button>
       </div>
     </Layout>
   )
