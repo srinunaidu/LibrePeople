@@ -2,6 +2,8 @@
 
 Base path: `/api/v1` · Auth: `Authorization: Bearer <JWT>` (except `/auth/*`, `/health`).
 
+**Scope:** Phases 1–7. Post-Phase-7 growth (time corrections/period-locks, scheduling drafts/versions, leave ledger, extended reports/onboarding, and whole modules: core-hr, payroll, ess, expenses, assets, forecasting, platform, compliance, import-export, data-quality, client-onboarding, admin/*, break-glass, filings) is implemented but undocumented here by design; `docs/api-inventory.md` is the interim reference.
+
 Legend: **A** = SuperAdmin/HR · **U** = any authenticated user · **R** = SuperAdmin/HR/PayrollViewer (`REPORTS_ROLES`, `backend/app/api/deps.py:111`) · **M** = SuperAdmin/HR/Manager (`MANAGER_ROLES`, `deps.py:96`).
 
 ## Auth
@@ -31,6 +33,10 @@ Legend: **A** = SuperAdmin/HR · **U** = any authenticated user · **R** = Super
 | POST | `/employees/` | A |
 | GET | `/employees/{id}` | U |
 | PUT | `/employees/{id}` | A |
+| PATCH | `/employees/{id}` | A |
+| GET | `/employees/{id}/history?from=&to=&field=` | U |
+
+`PUT /employees/{id}` is the historical alias of `PATCH` (same dated-update path, `employees.py:587` vs `:565`); history is `ALL_ROLES` + per-employee visibility filter (`employees.py:609`).
 
 ## Departments / Jobs (Phase 1)
 | Method | Path | Access |
