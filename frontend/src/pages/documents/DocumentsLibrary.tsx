@@ -105,7 +105,7 @@ const ALLOWED_ROLES = ["SuperAdmin", "HR"]
 export default function DocumentsLibrary() {
   const { user } = useAuth()
   const canView = !!user?.role && ALLOWED_ROLES.includes(user.role)
-  const canUpload = user?.role === "SuperAdmin"
+  const canUpload = !!user?.role && ALLOWED_ROLES.includes(user.role)
 
   const [docs, setDocs] = useState<EmployeeDocument[]>([])
   const [loading, setLoading] = useState(true)
@@ -297,7 +297,7 @@ export default function DocumentsLibrary() {
         </SectionCard>
 
         <SectionCard compact title="Upload / associate document" description="POST /employee-documents only. Status defaults to Active server-side.">
-          {!canUpload && <Alert tone="error">Upload requires SuperAdmin — your role is {user?.role}. Attempts return 403.</Alert>}
+          {!canUpload && <Alert tone="error">Upload requires {ALLOWED_ROLES.join(" or ")} — your role is {user?.role}. Attempts return 403.</Alert>}
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div><label>Employee ID</label><Input value={form.employee_id} onChange={(e) => setForm({ ...form, employee_id: e.target.value })} disabled={!canUpload || saving} className="font-mono" placeholder="e.g. 12" /></div>
             <div><label>Document type</label>
