@@ -23,6 +23,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from sqlalchemy.orm import Session
 
+from app.core.booleans import is_true
 from app.core.visibility import resolve_visible_employee_ids
 
 #: Report keys a view or schedule may name. Nothing else validates.
@@ -369,7 +370,7 @@ def enqueue_due_schedules(db: Session, now: datetime | None = None) -> list[dict
     # ones, so a SQL ``<=`` against an aware parameter is dialect-fragile.
     candidates = (
         db.query(ReportSchedule)
-        .filter(ReportSchedule.active.is_(True))
+        .filter(is_true(ReportSchedule.active))
         .order_by(ReportSchedule.id.asc())
         .all()
     )
