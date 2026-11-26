@@ -263,6 +263,14 @@ def main() -> int:
     # Gate + writer (skipped under --dry-run).
     csv_changed: list[str] = []
     if not args.dry_run:
+        # Pre-flip snapshots (register BEFORE this run's flips).
+        pre_statuses = [r["Implementation status"] for r in rows]
+        assert len(rows) == 136, "row count changed"
+        assert pre_statuses.count("VERIFIED") == 2, f"VERIFIED=={pre_statuses.count('VERIFIED')} != 2"
+        assert pre_statuses.count("IMPLEMENTED") == 105, f"IMPLEMENTED=={pre_statuses.count('IMPLEMENTED')} != 105"
+        assert pre_statuses.count("DEFERRED") == 8, f"DEFERRED=={pre_statuses.count('DEFERRED')} != 8"
+        assert pre_statuses.count("BLOCKED") == 18, f"BLOCKED=={pre_statuses.count('BLOCKED')} != 18"
+        assert pre_statuses.count("IN PROGRESS") == 3, "IN PROGRESS count changed"
         by_id = {r["Requirement ID"]: r for r in rows}
         for rid in passing:
             row = by_id[rid]
@@ -282,13 +290,15 @@ def main() -> int:
         # LP-DOC-001 INCLUDED -> IMPLEMENTED 2026-11-22 HEAD 99a3739;
         # LP-ADM-005 INCLUDED -> IMPLEMENTED 2026-11-22 HEAD 13a85b5;
         # LP-NOT-002 INCLUDED -> IMPLEMENTED 2026-11-22 HEAD 72f066c).
+        # Post-flip assertions: VERIFIED == 2+promoted,
+        # IMPLEMENTED == 105-promoted, others unchanged.
         assert len(rows) == 136, "row count changed"
         statuses = [r["Implementation status"] for r in rows]
         # Reconciled register (2026-11-24): VERIFIED 2 / IMPLEMENTED 105 /
         # IN PROGRESS 3 / BLOCKED 18 / DEFERRED 8. Promotable set is
         # IMPLEMENTED only; VERIFIED/BLOCKED/DEFERRED/IN PROGRESS never touched.
-        assert statuses.count("VERIFIED") == 2, f"VERIFIED=={statuses.count('VERIFIED')} != 2"
-        assert statuses.count("IMPLEMENTED") == 105, f"IMPLEMENTED=={statuses.count('IMPLEMENTED')} != 105"
+        assert statuses.count("VERIFIED") == 2 + len(csv_changed), f"VERIFIED=={statuses.count('VERIFIED')} != {2 + len(csv_changed)}"
+        assert statuses.count("IMPLEMENTED") == 105 - len(csv_changed), f"IMPLEMENTED=={statuses.count('IMPLEMENTED')} != {105 - len(csv_changed)}"
         assert statuses.count("DEFERRED") == 8, f"DEFERRED=={statuses.count('DEFERRED')} != 8"
         assert statuses.count("BLOCKED") == 18, f"BLOCKED=={statuses.count('BLOCKED')} != 18"
         # (was ==4 pre-HEAD 65a1af2, which promoted LP-NFR-014 BLOCKED->IMPLEMENTED
