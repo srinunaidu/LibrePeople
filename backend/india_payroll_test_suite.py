@@ -209,11 +209,12 @@ def main() -> int:
         )
         head = _head_revision()
         check(
-            "the head revision is 0048_mfa_secret_envelope (current head)",
+            "the head revision is 0049_interviews (current head)",
             head in ("0031_india_fnf_basic_da", "0032_india_aadhaar_encryption", "0042_notification_delivery",
                      "0043_integrity_expand", "0044_forecasting_tenant_isolation",
                      "0045_payroll_pipeline_run_type", "0046_assets",
-                     "0047_expense_category_tenant_code", "0048_mfa_secret_envelope"),
+                     "0047_expense_category_tenant_code", "0048_mfa_secret_envelope",
+                     "0049_interviews"),
             f"head={head}",
         )
         _check_employee_columns(fresh, "fresh")
