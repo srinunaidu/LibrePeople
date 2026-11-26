@@ -406,3 +406,40 @@ Delivered without execution (committed below):
 
 Unblock: owner (or key-holding agent) restores `API.md`, then re-run
 `e2e/cloud/` fully on this branch — no spec changes needed.
+## Round 9 — ER + extended custody + expense revise (BLOCKED: still no credentials)
+
+Branch `agent/qa/cloud-er-assets` from main `dfb4ba8` (confidential ER
+module, gap #9). Unverified signals only: `GET /health`, `/admin/er-cases`
+and `/assets` all 200 on the live frontend; backend deploy state unknown
+(deploys API unreachable without the key).
+
+**Verdict: STOPPED before execution — credential custody still lost.**
+`API.md` remains absent (re-verified: filesystem + env empty, `0`
+matches). No deploy poll, no `E2E_*` staging, zero spec runs attempted —
+nothing skipped-to-green, nothing invented. STOP conditions respected
+(no lockout risk taken, no secrets handled).
+
+Delivered without execution (committed below):
+- New `frontend/e2e/cloud/cloud-er-assets.spec.ts` (3 tests, typechecks
+  clean), each genuinely new vs the pack:
+  - ER lifecycle on `/admin/er-cases`: API-open with classification +
+    assignee, UI detail open, investigation note (asserted in the
+    append-only list), five `Move to …` advances with Resolved-gate
+    outcome, API read-back `Closed` + comment history; associate negative
+    is API-404 (expected denial, no page traffic) plus the HR-gated
+    queue denial in UI.
+  - Extended custody: register → assign to the associate's linked
+    employee (skip with reason when unlinked) → associate acknowledges
+    in My Assets (self-only, UI) → transfer → damaged return
+    (→ `maintenance`) → complete (→ `in_stock`) → retire with reason;
+    transitions asserted on the API, ack + final state in UI.
+  - Expense revise through the expenses UI: submit → L1 → reject with
+    reason → rework to draft → resubmit → L1 → final → paid, with
+    `APPROVED`/`PAID` read back (rework/resubmit is the new leg;
+    plain approve+pay stays in `cloud-expenses.spec.ts`).
+  - Not duplicated: register/assign core, document versions, interview
+    schedule→complete (existing specs cover them; run as regression).
+- Per-spec table: all rows NOT RUN this round (no data to report).
+
+Unblock: restore `API.md`, then run the full `e2e/cloud/` suite on this
+branch — no spec changes needed.
