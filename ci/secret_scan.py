@@ -375,6 +375,24 @@ ALLOWLIST: dict[str, str] = {
         "Local test password in test_report_views.py. "
         "Created at run time, authenticates only against the throwaway "
         "SQLite file. Never deployed.",
+    # --- backend/tests/test_filings_persistence.py:54 PASSWORD -------------- #
+    # Local-only fixture password, same precedent as above: created at run
+    # time, authenticates only against the throwaway SQLite file the suite
+    # builds. Never deployed. No rule disabled, no file exempted:
+    # allowlisted by its exact string.
+    "FilingsPersist123":
+        "Local test password in test_filings_persistence.py. "
+        "Created at run time, authenticates only against the throwaway "
+        "SQLite file. Never deployed.",
+    # --- backend/tests/test_scim_provisioning.py:58 PASSWORD ---------------- #
+    # Local-only fixture password, same precedent as above: created at run
+    # time, authenticates only against the throwaway SQLite file the suite
+    # builds. Never deployed. No rule disabled, no file exempted:
+    # allowlisted by its exact string.
+    "ScimSuitePass123":
+        "Local test password in test_scim_provisioning.py. "
+        "Created at run time, authenticates only against the throwaway "
+        "SQLite file. Never deployed.",
 }
 
 #: Files that are exempt from the high-entropy heuristic because they are
