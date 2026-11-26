@@ -101,6 +101,7 @@ def test_production_starts_with_keys():
             "ENVIRONMENT": "production",
             "FIELD_ENCRYPTION_KEYS": "k1:lp-item6-test-secret-0123456789",
             "FIELD_ENCRYPTION_ACTIVE_KEY_ID": "k1",
+            "BACKEND_CORS_ORIGINS": "https://app.example.com",
         }
     )
     assert r.returncode == 0, f"production must start with keys: {r.stderr}"
