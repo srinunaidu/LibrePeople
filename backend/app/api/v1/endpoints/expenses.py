@@ -46,6 +46,8 @@ from app.core.visibility import (
 from app.models.employee import Employee
 from app.models.expenses import ExpenseCategory, ExpenseClaim, ExpenseReceipt
 from app.models.user import User
+from app.services.notifications import user_id_for_employee
+from app.workflows import service as wf_service
 from app.schemas.expenses import (
     ExpenseCategoryCreate,
     ExpenseCategoryOut,
@@ -413,6 +415,13 @@ def l1_approve_claim(
     db.refresh(obj)
     record_audit(db, u, "l1_approve_expense_claim", "ExpenseClaim", obj.id)
     db.commit()
+    wf_service.record_mirror(
+        db, actor=u, entity_type="expense_claim", entity_id=obj.id,
+        action="L1_APPROVE", stage="PENDING",
+        comment="L1 approval mirrored from the expense claim.",
+        recipient_user_id=user_id_for_employee(db, obj.employee_id),
+        audit_action="workflow_mirror_expense_l1",
+    )
     return obj
 
 
@@ -433,6 +442,13 @@ def approve_claim(
     db.refresh(obj)
     record_audit(db, u, "approve_expense_claim", "ExpenseClaim", obj.id)
     db.commit()
+    wf_service.record_mirror(
+        db, actor=u, entity_type="expense_claim", entity_id=obj.id,
+        action="APPROVE", stage="APPROVED",
+        comment="Final approval mirrored from the expense claim.",
+        recipient_user_id=user_id_for_employee(db, obj.employee_id),
+        audit_action="workflow_mirror_expense_final",
+    )
     return obj
 
 

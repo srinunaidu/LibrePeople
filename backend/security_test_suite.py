@@ -1607,6 +1607,11 @@ ROLE_MATRIX = {
     "POST /api/v1/assets/{asset_id}/transfer": ("SuperAdmin, HR"),
     # Payroll run audit history: HR books (SuperAdmin, HR, PayrollViewer).
     "GET /api/v1/payroll/runs/{run_id}/history": ("SuperAdmin, HR, PayrollViewer"),
+    # Workflow engine core: workforce reads and decides; only admins reassign.
+    "GET /api/v1/workflows/overdue": ("SuperAdmin, HR, Manager, Associate"),
+    "GET /api/v1/workflows/{entity_type}/{entity_id}/history": ("SuperAdmin, HR, Manager, Associate"),
+    "POST /api/v1/workflows/{entity_type}/{entity_id}/decide": ("SuperAdmin, HR, Manager, Associate"),
+    "POST /api/v1/workflows/{entity_type}/{entity_id}/reassign": ("SuperAdmin, HR"),
 }
 
 # --- every endpoint is in the matrix ---------------------------------------

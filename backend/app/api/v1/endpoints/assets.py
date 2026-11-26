@@ -33,6 +33,8 @@ from app.core.tenancy import tenant_column_criterion
 from app.core.visibility import apply_visibility, ensure_can_view_employee
 from app.models.assets import Asset, AssetAssignment
 from app.models.user import User
+from app.services.notifications import user_id_for_employee
+from app.workflows import service as wf_service
 from app.schemas.assets import (
     AssetAssign,
     AssetAssignmentOut,
@@ -224,6 +226,13 @@ def assign_asset(
     assignment = svc.assign_asset(db, u, obj, payload.employee_id, payload.notes)
     db.commit()
     db.refresh(assignment)
+    wf_service.record_mirror(
+        db, actor=u, entity_type="asset", entity_id=obj.id,
+        action="OPEN", stage="PENDING",
+        comment=f"Custody assigned; see asset assignment {assignment.id}.",
+        recipient_user_id=user_id_for_employee(db, payload.employee_id),
+        audit_action="workflow_mirror_asset_assign",
+    )
     return assignment
 
 
