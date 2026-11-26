@@ -4,6 +4,7 @@ import {
   type APIRequestContext,
   type Page,
 } from "@playwright/test"
+import { completeMfaIfRequired, mfaSecretFor } from "./totp"
 
 /**
  * Cloud E2E: the helpdesk (HR cases) opens, takes a comment, and keeps the
@@ -66,7 +67,8 @@ function watch(page: Page) {
 async function apiLogin(
   request: APIRequestContext,
   username: string,
-  password: string
+  password: string,
+  mfaSecret: string | null = null
 ): Promise<string> {
   const res = await request.post(`${API}/auth/login`, {
     data: { username, password },
@@ -74,7 +76,11 @@ async function apiLogin(
   expect(res.status(), "API login answers 200").toBe(200)
   const body = await res.json()
   expect(body.access_token, "login returns a token").toBeTruthy()
-  return body.access_token as string
+  const token = body.access_token as string
+  // HR roles pass the MFA gate only once enrolled; the helper completes the
+  // step when the account still requires it and otherwise returns as-is.
+  await completeMfaIfRequired(request, API, token, mfaSecret)
+  return token
 }
 
 async function signIn(page: Page, username: string, password: string) {
@@ -95,7 +101,12 @@ test.describe("cloud helpdesk: open, comment, history, visibility", () => {
       "E2E_HRADMIN_USERNAME/E2E_HRADMIN_PASSWORD unset — the provisioned cloud HR admin is not available (see frontend/e2e/cloud/README.md)."
     )
     const token = runToken()
-    const admin = await apiLogin(request, ADMIN_USER, password!)
+    const admin = await apiLogin(
+      request,
+      ADMIN_USER,
+      password!,
+      mfaSecretFor("HRADMIN")
+    )
     const subject = `Cloud E2E case ${token}`
 
     // --- open -------------------------------------------------------------
@@ -163,7 +174,12 @@ test.describe("cloud helpdesk: open, comment, history, visibility", () => {
     )
     const { consoleErrors, failed } = watch(page)
     const token = runToken()
-    const admin = await apiLogin(request, ADMIN_USER, password!)
+    const admin = await apiLogin(
+      request,
+      ADMIN_USER,
+      password!,
+      mfaSecretFor("HRADMIN")
+    )
     const subject = `Cloud E2E queue ${token}`
     const opened = await request.post(`${API}/core-hr/cases`, {
       headers: auth(admin),
@@ -198,7 +214,12 @@ test.describe("cloud helpdesk: open, comment, history, visibility", () => {
       "E2E_HRADMIN_* and E2E_EMPLOYEE_* variables unset — the visibility probe needs both provisioned users (see frontend/e2e/cloud/README.md)."
     )
     const token = runToken()
-    const admin = await apiLogin(request, ADMIN_USER, adminPw!)
+    const admin = await apiLogin(
+      request,
+      ADMIN_USER,
+      adminPw!,
+      mfaSecretFor("HRADMIN")
+    )
     const opened = await request.post(`${API}/core-hr/cases`, {
       headers: auth(admin),
       data: {

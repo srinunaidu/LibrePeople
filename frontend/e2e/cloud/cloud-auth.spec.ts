@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test"
+import { completeMfaIfRequired, mfaSecretFor } from "./totp"
 
 /**
  * Cloud E2E: role sign-in and sign-out against the DEPLOYED environment.
@@ -100,6 +101,16 @@ async function signInOut(role: CloudRole, page: Page) {
   expect(login.status(), `${role} API login answers 200`).toBe(200)
   const body = await login.json()
   expect(body.access_token, `${role} login returns a token`).toBeTruthy()
+  // HR roles pass the MFA gate only once enrolled; the helper completes the
+  // step when the account still requires it and otherwise returns as-is.
+  const secret =
+    role === "HRADMIN" || role === "HREXEC" ? mfaSecretFor(role) : null
+  await completeMfaIfRequired(
+    page.request,
+    API,
+    body.access_token as string,
+    secret
+  )
 
   // --- UI: sign in lands on the dashboard -------------------------------
   await signIn(page, username, password)

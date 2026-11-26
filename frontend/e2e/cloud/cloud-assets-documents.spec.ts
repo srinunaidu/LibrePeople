@@ -4,6 +4,7 @@ import {
   type APIRequestContext,
   type Page,
 } from "@playwright/test"
+import { completeMfaIfRequired, mfaSecretFor } from "./totp"
 
 /**
  * Cloud E2E: asset assignment and employee documents.
@@ -74,7 +75,8 @@ function watch(page: Page) {
 async function apiLogin(
   request: APIRequestContext,
   username: string,
-  password: string
+  password: string,
+  mfaSecret: string | null = null
 ): Promise<string> {
   const res = await request.post(`${API}/auth/login`, {
     data: { username, password },
@@ -82,7 +84,11 @@ async function apiLogin(
   expect(res.status(), "API login answers 200").toBe(200)
   const body = await res.json()
   expect(body.access_token, "login returns a token").toBeTruthy()
-  return body.access_token as string
+  const token = body.access_token as string
+  // HR roles pass the MFA gate only once enrolled; the helper completes the
+  // step when the account still requires it and otherwise returns as-is.
+  await completeMfaIfRequired(request, API, token, mfaSecret)
+  return token
 }
 
 async function signIn(page: Page, username: string, password: string) {
@@ -93,12 +99,16 @@ async function signIn(page: Page, username: string, password: string) {
   await expect(page).toHaveURL(/\/dashboard/, { timeout: 30_000 })
 }
 
-async function makeEmployee(
+/**
+ * Reuse-or-create the master data the custody tests need. The deployed
+ * tenant ships no departments or jobs, so the run provisions its own
+ * namespaced rows when the lists are empty (reruns reuse them).
+ */
+async function ensureDeptAndJob(
   request: APIRequestContext,
   admin: string,
-  prefix: string,
   token: string
-): Promise<{ id: number; number: string }> {
+): Promise<{ depId: number; jobId: number }> {
   const [deps, jobs] = await Promise.all([
     request.get(`${API}/departments/`, { headers: auth(admin) }),
     request.get(`${API}/jobs/`, { headers: auth(admin) }),
@@ -107,6 +117,34 @@ async function makeEmployee(
   expect(jobs.status(), "jobs list answers 200").toBe(200)
   const depList = (await deps.json()) as Array<{ id: number }>
   const jobList = (await jobs.json()) as Array<{ id: number }>
+  let depId = depList[0]?.id
+  let jobId = jobList[0]?.id
+  if (depId === undefined) {
+    const created = await request.post(`${API}/departments/`, {
+      headers: auth(admin),
+      data: { name: `Cloud E2E Dept ${token}`, code: `CDEPT-${token}` },
+    })
+    expect(created.status(), "department creation answers 201").toBe(201)
+    depId = ((await created.json()) as { id: number }).id
+  }
+  if (jobId === undefined) {
+    const created = await request.post(`${API}/jobs/`, {
+      headers: auth(admin),
+      data: { title: `Cloud E2E Job ${token}`, department_id: depId },
+    })
+    expect(created.status(), "job creation answers 201").toBe(201)
+    jobId = ((await created.json()) as { id: number }).id
+  }
+  return { depId, jobId }
+}
+
+async function makeEmployee(
+  request: APIRequestContext,
+  admin: string,
+  prefix: string,
+  token: string
+): Promise<{ id: number; number: string }> {
+  const { depId, jobId } = await ensureDeptAndJob(request, admin, token)
   const number = `${prefix}-${token}`
   const created = await request.post(`${API}/employees/`, {
     headers: auth(admin),
@@ -116,8 +154,8 @@ async function makeEmployee(
       last_name: `Fixture ${token}`,
       email: `${prefix}-${token.toLowerCase()}@example.com`,
       hire_date: "2026-01-05",
-      job_id: jobList[0].id,
-      department_id: depList[0].id,
+      job_id: jobId,
+      department_id: depId,
     },
   })
   expect(created.status(), "employee creation answers 201").toBe(201)
@@ -137,7 +175,12 @@ test.describe("cloud assets and documents", () => {
     )
     const { consoleErrors, failed } = watch(page)
     const token = runToken()
-    const admin = await apiLogin(request, ADMIN_USER, password!)
+    const admin = await apiLogin(
+      request,
+      ADMIN_USER,
+      password!,
+      mfaSecretFor("HRADMIN")
+    )
     const employee = await makeEmployee(request, admin, "CLOUDAS", token)
 
     // --- register: every asset starts in_stock, status is not settable ----
@@ -159,7 +202,7 @@ test.describe("cloud assets and documents", () => {
       headers: auth(admin),
       data: { employee_id: employee.id },
     })
-    expect(assigned.status(), "asset assignment answers 201").toBe(201)
+    expect(assigned.status(), "asset assignment answers 200").toBe(200)
 
     // --- persistence: the assignment list holds the custody row ------------
     const custody = await request.get(`${API}/assets/assignments`, {
@@ -204,7 +247,12 @@ test.describe("cloud assets and documents", () => {
     )
     const { consoleErrors, failed } = watch(page)
     const token = runToken()
-    const admin = await apiLogin(request, ADMIN_USER, password!)
+    const admin = await apiLogin(
+      request,
+      ADMIN_USER,
+      password!,
+      mfaSecretFor("HRADMIN")
+    )
     const employee = await makeEmployee(request, admin, "CLOUDDC", token)
 
     // --- record: the synthetic file is metadata, no real bytes ------------
@@ -299,7 +347,12 @@ test.describe("cloud assets and documents", () => {
       "E2E_HRADMIN_* and E2E_EMPLOYEE_* variables unset — the boundary probe needs both provisioned users (see frontend/e2e/cloud/README.md)."
     )
     const token = runToken()
-    const admin = await apiLogin(request, ADMIN_USER, adminPw!)
+    const admin = await apiLogin(
+      request,
+      ADMIN_USER,
+      adminPw!,
+      mfaSecretFor("HRADMIN")
+    )
     const registered = await request.post(`${API}/assets`, {
       headers: auth(admin),
       data: { tag: `CLOUD-PVT-${token}`, name: `Private asset ${token}` },

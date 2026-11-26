@@ -6,8 +6,93 @@ Targets: `https://librepeople-backend.onrender.com` (`/health` 200, 0.2 s),
 `frontend/e2e/cloud/playwright.cloud.config.ts` (new; `CLOUD_E2E_ACK=1` gate,
 workers 1, retries 0, screenshots/traces on failure). Synthetic users only
 (`e2e_*`); credentials via `E2E_*` env at runtime, never in files.
-Result: **9 passed / 16 failed / 0 skipped of 25, browser: cloud-chromium
-(Desktop Chrome) only** — responsive projects not run (single-browser run).
+
+> **Round 2 (this section) supersedes round-1 dispositions where they differ;
+> round-1 history is kept below unchanged.** Round 2 result: **15 passed /
+> 10 failed / 0 skipped of 25, browser: cloud-chromium (Desktop Chrome)
+> only.** Round 1 result (kept for history): 9 passed / 16 failed.
+
+## Round 2 — full re-run with MFA (2026-11-26)
+
+MFA gate satisfied without touching account security: both HR accounts
+(`e2e_hradmin`, `e2e_hrexec`, role HR) report `mfa_enabled: true`
+(`GET /auth/mfa/status` 200); password-only login mints a JWT that now
+answers privileged reads (`GET /employees/` 200 — round 1's 403
+`Multi-factor authentication is required…` envelope is gone). New helper
+`frontend/e2e/cloud/totp.ts` (RFC 6238, `node:crypto` only) +
+`completeMfaIfRequired` wired into all five API-login specs and the auth
+spec: checks status, returns when enabled, otherwise attempts a SINGLE
+`POST /auth/mfa/confirm` with the provisioned `E2E_<ROLE>_MFA_SECRET` and
+asserts the JWT on a privileged endpoint — never enrolls (a server-minted
+secret nobody holds would lock the account after the shred), never retries,
+never logs. No login-time MFA challenge exists in the product
+(`Login.tsx` is password-only; `POST /auth/login` always mints a pair), so
+the UI flow is unchanged. Lockout budget respected: 2 probe logins + spec
+logins, all successful (successes reset server counters); zero 429s,
+zero lockout signals observed.
+
+### Round-2 per-spec results
+
+| Spec | Pass | Fail |
+|---|---|---|
+| cloud-auth (6) | hradmin, manager, readonly | hrexec, payroll, employee |
+| cloud-employee-lifecycle (4) | admin-create, leave-apply→approve, employee-denied | leave-screen-loads |
+| cloud-ess-access (5) | admin-screen-403-card, admin-writes-refused, 401 | employee-self-service, admin-surface-loads |
+| cloud-helpdesk (4) | open→comment→history, stranger-404, 401 | queue-screen-loads |
+| cloud-assets-documents (3) | boundaries (refused-create, stranger-404) | register→assign, document→versions |
+| cloud-reports-exit (3) | termination-denied | reports-answers, exit-termination |
+
+Every API flow now passes end to end (MFA + seed + entitlement fixes hold).
+All 10 failures are UI tests tripping on D-1's console error (below) — the
+functional assertions in those same tests pass (writes persist, screens
+serve, denials render).
+
+### Defects fixed in round 2 (spec/test-setup only, committed)
+
+1. `totp.ts` + login-flow MFA completion (above); zero product-code changes.
+2. Empty-tenant seed: deployed tenant ships 0 departments / 0 jobs / 0 leave
+   types (`GET` all 200, `count= 0`), so specs now provision-or-reuse
+   namespaced rows (`POST /departments|/jobs|/leave/types` 201) in
+   lifecycle (×2), assets `makeEmployee`, reports-exit — mirrors the local
+   harness seeding its DB.
+3. Leave approval needs a balance: grant `POST /leave/entitlements`
+   `{2026, type, 20d}` 201 before apply, else 409 `leave_no_entitlement`
+   (by design, `leave.py:359-376`).
+4. Asset assign answers **200**, not 201 (router sets no 201) — expectation
+   corrected; custody persistence holds.
+
+### D-1 confirmation: NOT fixed on the deployed env
+
+`TenantSwitcher` (`WorkspaceRail.tsx:460`) still fires SuperAdmin-only
+`GET /onboarding-portal/clients` (`client_onboarding.py:98-103`) for every
+non-SuperAdmin page load → exactly one console-error 403 per UI test; all
+10 round-2 failures show it and nothing else. The fix exists as
+`28f75ba` on `agent/frontend/tenantswitcher-gate` (12-line role gate,
+unmerged, undeployed — this branch does not touch it). These cloud specs
+are the regression test: once that branch merges and Render redeploys,
+`ESS/employee specs show zero console errors and no clients-403` is the
+acceptance check. SuperAdmin workspace list: not covered (no SuperAdmin
+synthetic provisioned) — noted, not tested.
+
+### Flakes (retried, documented, not masked)
+
+Cross-run flips with no spec changes on those paths: reports-answers
+✓→✘, ess-admin-surface ✘→✓→✘, auth manager ✘→✓, readonly ✓→✘→✓, hradmin
+✘→✓✓, hrexec ✓→✘. Mechanism: the console-error listener races the
+in-flight forbidden request — a 403 landing after the assertion passes
+silently. Deterministic cause (D-1), race-dependent manifestation. No
+assertion was weakened and nothing was skipped to green.
+
+### NOT TESTED (round 2)
+
+None on MFA grounds — the round-1 NOT TESTED list (all HR-token flows) is
+now TESTED and passing at the API level. Still open, carried over: exit-
+interview detail UI, hard deletes, file bytes, payslip maths, responsive
+sweep (see round-1 section).
+
+---
+
+## Round 1 (history — 9 passed / 16 failed)
 
 ## Per-spec results
 

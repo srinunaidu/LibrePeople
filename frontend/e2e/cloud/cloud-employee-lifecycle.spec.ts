@@ -4,6 +4,7 @@ import {
   type APIRequestContext,
   type Page,
 } from "@playwright/test"
+import { completeMfaIfRequired, mfaSecretFor } from "./totp"
 
 /**
  * Cloud E2E: HR admin creates an employee; a leave request runs
@@ -67,7 +68,8 @@ function watch(page: Page) {
 async function apiLogin(
   request: APIRequestContext,
   username: string,
-  password: string
+  password: string,
+  mfaSecret: string | null = null
 ): Promise<string> {
   const res = await request.post(`${API}/auth/login`, {
     data: { username, password },
@@ -75,7 +77,11 @@ async function apiLogin(
   expect(res.status(), "API login answers 200").toBe(200)
   const body = await res.json()
   expect(body.access_token, "login returns a token").toBeTruthy()
-  return body.access_token as string
+  const token = body.access_token as string
+  // HR roles pass the MFA gate only once enrolled; the helper completes the
+  // step when the account still requires it and otherwise returns as-is.
+  await completeMfaIfRequired(request, API, token, mfaSecret)
+  return token
 }
 
 async function signIn(page: Page, username: string, password: string) {
@@ -84,6 +90,68 @@ async function signIn(page: Page, username: string, password: string) {
   await page.locator("#login-password").fill(password)
   await page.getByRole("button", { name: "Sign in" }).click()
   await expect(page).toHaveURL(/\/dashboard/, { timeout: 30_000 })
+}
+
+/**
+ * Reuse-or-create the master data the employee tests need. The deployed
+ * tenant ships no departments, jobs or leave types, so the run provisions
+ * its own namespaced rows when the lists are empty (reruns reuse them).
+ */
+async function ensureDeptAndJob(
+  request: APIRequestContext,
+  admin: string,
+  token: string
+): Promise<{ depId: number; jobId: number }> {
+  const [deps, jobs] = await Promise.all([
+    request.get(`${API}/departments/`, { headers: auth(admin) }),
+    request.get(`${API}/jobs/`, { headers: auth(admin) }),
+  ])
+  expect(deps.status(), "departments list answers 200").toBe(200)
+  expect(jobs.status(), "jobs list answers 200").toBe(200)
+  const depList = (await deps.json()) as Array<{ id: number }>
+  const jobList = (await jobs.json()) as Array<{ id: number }>
+  let depId = depList[0]?.id
+  let jobId = jobList[0]?.id
+  if (depId === undefined) {
+    const created = await request.post(`${API}/departments/`, {
+      headers: auth(admin),
+      data: { name: `Cloud E2E Dept ${token}`, code: `CDEPT-${token}` },
+    })
+    expect(created.status(), "department creation answers 201").toBe(201)
+    depId = ((await created.json()) as { id: number }).id
+  }
+  if (jobId === undefined) {
+    const created = await request.post(`${API}/jobs/`, {
+      headers: auth(admin),
+      data: { title: `Cloud E2E Job ${token}`, department_id: depId },
+    })
+    expect(created.status(), "job creation answers 201").toBe(201)
+    jobId = ((await created.json()) as { id: number }).id
+  }
+  return { depId, jobId }
+}
+
+async function ensureLeaveType(
+  request: APIRequestContext,
+  admin: string,
+  token: string
+): Promise<number> {
+  const types = await request.get(`${API}/leave/types`, {
+    headers: auth(admin),
+  })
+  expect(types.status(), "leave types list answers 200").toBe(200)
+  const typeList = (await types.json()) as Array<{ id: number }>
+  if (typeList.length > 0) return typeList[0].id
+  const created = await request.post(`${API}/leave/types`, {
+    headers: auth(admin),
+    data: {
+      name: `Cloud E2E Leave ${token}`,
+      code: `CLV-${token}`,
+      max_days_per_year: 20,
+    },
+  })
+  expect(created.status(), "leave type creation answers 201").toBe(201)
+  return ((await created.json()) as { id: number }).id
 }
 
 test.describe("cloud employee lifecycle: create, leave apply -> approve", () => {
@@ -98,19 +166,15 @@ test.describe("cloud employee lifecycle: create, leave apply -> approve", () => 
     )
     const { consoleErrors, failed } = watch(page)
     const token = runToken()
-    const admin = await apiLogin(request, ADMIN_USER, password!)
+    const admin = await apiLogin(
+      request,
+      ADMIN_USER,
+      password!,
+      mfaSecretFor("HRADMIN")
+    )
 
-    // --- API setup: seed ids, then the employee -------------------------
-    const [deps, jobs] = await Promise.all([
-      request.get(`${API}/departments/`, { headers: auth(admin) }),
-      request.get(`${API}/jobs/`, { headers: auth(admin) }),
-    ])
-    expect(deps.status(), "departments list answers 200").toBe(200)
-    expect(jobs.status(), "jobs list answers 200").toBe(200)
-    const depList = (await deps.json()) as Array<{ id: number }>
-    const jobList = (await jobs.json()) as Array<{ id: number }>
-    expect(depList.length, "seed departments exist").toBeGreaterThan(0)
-    expect(jobList.length, "seed jobs exist").toBeGreaterThan(0)
+    // --- API setup: master-data ids, then the employee --------------------
+    const { depId, jobId } = await ensureDeptAndJob(request, admin, token)
 
     const number = `CLOUDEMP-${token}`
     const created = await request.post(`${API}/employees/`, {
@@ -121,8 +185,8 @@ test.describe("cloud employee lifecycle: create, leave apply -> approve", () => 
         last_name: `Fixture ${token}`,
         email: `cloudemp-${token.toLowerCase()}@example.com`,
         hire_date: "2026-01-05",
-        job_id: jobList[0].id,
-        department_id: depList[0].id,
+        job_id: jobId,
+        department_id: depId,
       },
     })
     expect(created.status(), "employee creation answers 201").toBe(201)
@@ -157,22 +221,17 @@ test.describe("cloud employee lifecycle: create, leave apply -> approve", () => 
       "E2E_HRADMIN_USERNAME/E2E_HRADMIN_PASSWORD unset — the provisioned cloud HR admin is not available (see frontend/e2e/cloud/README.md)."
     )
     const token = runToken()
-    const admin = await apiLogin(request, ADMIN_USER, password!)
+    const admin = await apiLogin(
+      request,
+      ADMIN_USER,
+      password!,
+      mfaSecretFor("HRADMIN")
+    )
 
-    // --- API setup: a leave type and an employee to take the leave -------
-    const types = await request.get(`${API}/leave/types`, {
-      headers: auth(admin),
-    })
-    expect(types.status(), "leave types list answers 200").toBe(200)
-    const typeList = (await types.json()) as Array<{ id: number }>
-    expect(typeList.length, "a leave type exists").toBeGreaterThan(0)
+    // --- API setup: master data, then an employee to take the leave -----
+    const leaveTypeId = await ensureLeaveType(request, admin, token)
+    const { depId, jobId } = await ensureDeptAndJob(request, admin, token)
 
-    const [deps, jobs] = await Promise.all([
-      request.get(`${API}/departments/`, { headers: auth(admin) }),
-      request.get(`${API}/jobs/`, { headers: auth(admin) }),
-    ])
-    const depList = (await deps.json()) as Array<{ id: number }>
-    const jobList = (await jobs.json()) as Array<{ id: number }>
     const number = `CLOUDLV-${token}`
     const created = await request.post(`${API}/employees/`, {
       headers: auth(admin),
@@ -182,19 +241,31 @@ test.describe("cloud employee lifecycle: create, leave apply -> approve", () => 
         last_name: `Fixture ${token}`,
         email: `cloudlv-${token.toLowerCase()}@example.com`,
         hire_date: "2026-01-05",
-        job_id: jobList[0].id,
-        department_id: depList[0].id,
+        job_id: jobId,
+        department_id: depId,
       },
     })
     expect(created.status(), "employee creation answers 201").toBe(201)
     const employee = (await created.json()) as { id: number }
+
+    // --- entitle: approval takes days from a balance, so grant one -------
+    // (no balance -> 409 leave_no_entitlement, by design)
+    const entitled = await request.post(`${API}/leave/entitlements`, {
+      headers: auth(admin),
+      data: {
+        entitlement_year: 2026,
+        leave_type_id: leaveTypeId,
+        entitled_days: 20,
+      },
+    })
+    expect(entitled.status(), "entitlement grant answers 201").toBe(201)
 
     // --- apply ------------------------------------------------------------
     const applied = await request.post(`${API}/leave/requests`, {
       headers: auth(admin),
       data: {
         employee_id: employee.id,
-        leave_type_id: typeList[0].id,
+        leave_type_id: leaveTypeId,
         start_date: "2026-12-15",
         end_date: "2026-12-16",
         reason: `Cloud E2E leave ${token}`,
