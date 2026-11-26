@@ -4,8 +4,9 @@ from typing import Literal, Optional
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 #: The HR helpdesk case categories (LP-SVC-001). The closed set the queue
-#: triages on. "Public Contact" is the intake lane: the public form writes
-#: it, the API never takes it as input.
+#: triages on. An intake case carries no category of its own: the public
+#: form writes the default, and the queue tells those cases apart by
+#: status ("Intake") and source ("public_contact").
 CaseCategory = Literal[
     "Payroll", "Benefits", "IT", "Facilities", "Policy", "General",
 ]

@@ -708,7 +708,7 @@ def public_contact(
 
     case = HRCase(
         subject=payload.name[:200],
-        category="Public Contact",
+        category="General",
         priority="Medium",
         status="Intake",
         source="public_contact",
