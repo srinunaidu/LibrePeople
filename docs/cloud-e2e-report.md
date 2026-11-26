@@ -7,10 +7,66 @@ Targets: `https://librepeople-backend.onrender.com` (`/health` 200, 0.2 s),
 workers 1, retries 0, screenshots/traces on failure). Synthetic users only
 (`e2e_*`); credentials via `E2E_*` env at runtime, never in files.
 
-> **Round 2 (this section) supersedes round-1 dispositions where they differ;
-> round-1 history is kept below unchanged.** Round 2 result: **15 passed /
-> 10 failed / 0 skipped of 25, browser: cloud-chromium (Desktop Chrome)
-> only.** Round 1 result (kept for history): 9 passed / 16 failed.
+> **Round 3 (this section) supersedes round-2 dispositions where they differ;
+> round-1/2 history is kept below unchanged.** Round 3 result: **25 passed /
+> 0 failed / 0 skipped of 25, browser: cloud-chromium (Desktop Chrome)
+> only.**
+>
+> **Headline reconciliation (round 2):** the canonical counts are the
+> runner-verified **15 passed / 10 failed** (10 ✘ items; `grep -c ✓` = 15).
+> The first-draft table summed to 14/11 because ESS self-service — which
+> PASSED in the canonical run but failed in an earlier run of the same round
+> (D-1 race manifestation) — was misfiled under Fail. Corrected in the
+> round-2 table below to 4/1 (self-service moved to Pass); headline and
+> table now agree at 15/10.
+
+## Round 3 — D-1 confirmation on live 8c12425 (2026-11-26)
+
+Branch `agent/qa/cloud-e2e-round3` from `8c12425` (merge of the D-1
+TenantSwitcher role gate). All 6 specs re-run unmodified except one
+spec-defect fix (below). **25/25 pass; output contains zero 403 console
+errors and zero failed-request entries.**
+
+| Spec | Pass | Fail |
+|---|---|---|
+| cloud-auth (6) | 6/6 | 0 |
+| cloud-employee-lifecycle (4) | 4/4 | 0 |
+| cloud-ess-access (5) | 5/5 | 0 |
+| cloud-helpdesk (4) | 4/4 | 0 |
+| cloud-assets-documents (3) | 3/3 | 0 |
+| cloud-reports-exit (3) | 3/3 | 0 |
+
+### D-1 verdict: FIXED on the deployed env
+
+Every non-SuperAdmin journey (HR, Manager, Associate, PayrollViewer) is
+free of `GET /onboarding-portal/clients` 403s — the TenantSwitcher no
+longer fires the call (`28f75ba`), and every `consoleErrors`/`failed`
+assertion in the pack holds on the first attempt. No SuperAdmin synthetic
+exists, so the SuperAdmin workspace list itself is **not covered** (no
+account to sign in with) — noted, not tested; the gate's SuperAdmin path
+(`listClients()` still called for `role === "SuperAdmin"`) is code-read,
+not run.
+
+### Defect fixed in round 3 (spec-only, committed)
+
+`cloud-helpdesk` queue-screen test expected HR to see the queue UI, but
+`HRHelpCases.tsx:26,65` gates the screen on SuperAdmin (`canWrite`) by
+long-standing design — HR works the queue through the API (`GET/POST
+/core-hr/cases` 200/201, proven passing). The test now asserts the honest
+denial (`Not visible for your role` EmptyState text — a `<p>`, not a
+heading, per `feedback.tsx:18`) instead of the subject row, mirroring the
+round-1 ProtectedRoute-403 precedent. No weakening: denial + API coverage
+together prove the designed split. No other spec changes; no retries
+needed — the full suite passed consecutively (24/1 → 4/4 helpdesk →
+25/25).
+
+### NOT TESTED remainder (carried over)
+
+SuperAdmin workspace list (no provisioned SuperAdmin synthetic);
+exit-interview detail UI (no backend endpoint); document/comment hard
+delete (no DELETE routes); file bytes; payslip maths; responsive sweep.
+MFA: nothing outstanding — both HR logins satisfy the gate, TOTP helper
+unused at runtime (accounts already enrolled), no lockout signals seen.
 
 ## Round 2 — full re-run with MFA (2026-11-26)
 
@@ -37,7 +93,7 @@ zero lockout signals observed.
 |---|---|---|
 | cloud-auth (6) | hradmin, manager, readonly | hrexec, payroll, employee |
 | cloud-employee-lifecycle (4) | admin-create, leave-apply→approve, employee-denied | leave-screen-loads |
-| cloud-ess-access (5) | admin-screen-403-card, admin-writes-refused, 401 | employee-self-service, admin-surface-loads |
+| cloud-ess-access (5) | self-service, admin-screen-403-card, admin-writes-refused, 401 | admin-surface-loads |
 | cloud-helpdesk (4) | open→comment→history, stranger-404, 401 | queue-screen-loads |
 | cloud-assets-documents (3) | boundaries (refused-create, stranger-404) | register→assign, document→versions |
 | cloud-reports-exit (3) | termination-denied | reports-answers, exit-termination |

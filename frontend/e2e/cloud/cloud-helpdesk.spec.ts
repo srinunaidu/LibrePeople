@@ -163,7 +163,7 @@ test.describe("cloud helpdesk: open, comment, history, visibility", () => {
     ).toBe(true)
   })
 
-  test("the helpdesk queue screen loads for the HR admin", async ({
+  test("the helpdesk queue screen is SuperAdmin-only (HR works the queue via API)", async ({
     page,
     request,
   }) => {
@@ -187,15 +187,21 @@ test.describe("cloud helpdesk: open, comment, history, visibility", () => {
     })
     expect(opened.status(), "case creation answers 201").toBe(201)
 
+    // HRHelpCases gates its screen on SuperAdmin (canWrite, HRHelpCases.tsx):
+    // HR works the queue through the API (proven above and in the
+    // open→comment test), while the screen says so honestly instead of
+    // rendering an empty queue. The denial content is the assertion
+    // (EmptyState renders its title as text, not a heading).
     await signIn(page, ADMIN_USER, password!)
     await page.goto(`${APP}/admin/hrhelp-cases`)
     await expect(page).toHaveURL(/\/admin\/hrhelp-cases/, {
       timeout: 30_000,
     })
     await expect(page).not.toHaveURL(/\/$/, { timeout: 5_000 })
-    await expect(page.getByText(subject).first()).toBeVisible({
-      timeout: 30_000,
-    })
+    await expect(
+      page.getByText("Not visible for your role").first(),
+      "HR is told the queue screen requires SuperAdmin"
+    ).toBeVisible({ timeout: 30_000 })
 
     expect(
       failed.filter((entry) => entry.includes("onrender")),
