@@ -4,6 +4,34 @@ Dated, append-only record of Render testing-deploy observations.
 (Karmathy-era history lives in `docs/DEPLOYMENT.md`; this file starts
 with the LibrePeople `librepeople-backend` service.)
 
+## 2026-11-26 — cloud backup rehearsal: dump + restore-to-new-DB, all counts match
+
+- Branch: `agent/ops/cloud-backup-rehearsal` from `552e2af`. No code,
+  migration, or config changes. Synthetic-only pre-check passed
+  (`users` 9, `employees` 50 sampled `CLOUD*`/`E2E*`/`example.com` —
+  clearly synthetic, proceeded).
+- Restore target: `librepeople_restore_test` (id 37081, owner
+  `neondb_owner`, created 06:14:01Z) via Neon API (201) — separate DB,
+  no production objects touched.
+- Tooling detour: local `pg_dump` 16 vs server 18.7 (abort on version
+  mismatch) → installed `postgresql@18` via brew (no sudo; user-level),
+  `pg_dump` 18.7 matches server.
+- Dump: custom format, rc 0, 10.3 s, 477,588 bytes; `pg_restore --list`
+  rc 0, 998 entries / 223 TABLE lines / 111 base tables.
+- Restore: rc 0, 87.6 s (`--no-owner --no-acl --clean --if-exists`).
+  Quirk: pooler sessions needed schema-qualified names during
+  verification (`public.users` 200-ok while bare `users` 404'd on the
+  pooler); direct endpoint unqualified worked. Data identical either way.
+- Counts source → restored: users 9=9, employees 50=50,
+  expense_claims 10=10, audit_logs 798=798, tables 111=111,
+  `alembic_version` 0049=0049. **ALL MATCH.** (Bonus: live DB head is
+  `0049_interviews` — yesterday's missing-revision error resolved.)
+- Recovery procedure (honest): restore-to-new-DB proven; promote-by-
+  repointing-`DATABASE_URL` cutover is **untested** (gap — app never
+  pointed at the restore).
+- Retention: restore DB is 16 MB (<100 MB) → **left in place** as
+  evidence; `/tmp` dumps removed, no strays. Free tier throughout ($0).
+
 ## 2026-11-26 — credential rotation: new admin + ESS passwords, custody updated
 
 - Branch: `agent/ops/password-rotation` from `76df99b`. No code changes.
