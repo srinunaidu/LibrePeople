@@ -1614,6 +1614,9 @@ ROLE_MATRIX = {
     "POST /api/v1/payroll/runs/{run_id}/fnf": ("SuperAdmin, HR, PayrollViewer"),
     "GET /api/v1/reports/payroll": ("SuperAdmin, HR, PayrollViewer"),
     "GET /api/v1/reports/filings/{filing_type}": ("SuperAdmin, HR, PayrollViewer"),
+    "GET /api/v1/reports/filings/records": ("SuperAdmin", "HR", "PayrollViewer"),
+    "POST /api/v1/reports/filings/{filing_type}/records": ("SuperAdmin", "HR", "PayrollViewer"),
+    "POST /api/v1/reports/filings/records/{record_id}/{action}": ("SuperAdmin", "HR", "PayrollViewer"),
     "POST /api/v1/auth/impersonate": ("SuperAdmin",),
     "POST /api/v1/auth/mfa/reset": ("SuperAdmin",),
     # Assets register + custody lifecycle: reads admit the workforce
