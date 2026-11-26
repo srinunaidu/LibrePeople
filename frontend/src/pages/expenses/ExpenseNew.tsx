@@ -73,7 +73,7 @@ export default function ExpenseNew() {
     try {
       const { data } = await api.post("/expenses/claims", body)
       setNotice(`Claim #${data.id} filed as Draft (unpaid).`)
-      navigate(`../${data.id}`, { replace: true })
+      navigate(`/expenses/${data.id}`, { replace: true })
     } catch (e) {
       // 422 arrays render per-field; archived-category 422 names the category.
       const fe = fieldErrors(e)
