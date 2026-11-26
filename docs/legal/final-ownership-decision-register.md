@@ -164,3 +164,25 @@
 - **Requires owner signature/attestation:** U1, U3, U4, U5, U7, U8, U9, U10, U12 (all responsible parties UNKNOWN — requires owner to identify; no names invented).
 - **ESTABLISHED-BY-EVIDENCE:** none (no signed instrument exists in-repo).
 - Companion fact base: `docs/legal/chain-of-title-appendix.md`.
+
+## Addenda 2026-11-26 — founder declaration record (append-only; history above unchanged)
+
+> Each entry below records the bearing of the founder-provided declaration
+> (`docs/legal/founder-ownership-declaration.md`, received 2026-11-26, NOT
+> independently verified) on one item. No entry advances any item toward a
+> conclusive status: the declaration is an unverified assertion, not a
+> signed instrument, title record, or counsel determination. All counsel
+> requirements and closure criteria stand as written above.
+
+- **U1 addendum 2026-11-26:** previous NOT DOCUMENTED → recorded: NOT DOCUMENTED (unchanged; no instrument on file) + founder points 1–5 filed as DECLARED (unverified). Counsel requirement retained (instrument validity/sufficiency + owner-side signatory). Exact closure criteria: signed instrument filed in-repo (or cited with reference number) + counsel written confirmation recorded.
+- **U2 addendum 2026-11-26:** previous PARTIALLY DOCUMENTED → recorded: PARTIALLY DOCUMENTED (unchanged). The declaration supplies no information on this item — declaration changes nothing about third-party obligations. Counsel requirement retained. Exact closure criteria: counsel-signed compatibility note per licence group, filed in `docs/legal/`.
+- **U3 addendum 2026-11-26:** previous NOT DOCUMENTED → recorded: NOT DOCUMENTED (unchanged; no scope list on file) + founder points 6–7 filed as DECLARED (unverified) intent only. Counsel requirement retained (scope determination + owner sign-off). Exact closure criteria: filed enumerated scope list + counsel confirmation.
+- **U4 addendum 2026-11-26:** previous PARTIALLY DOCUMENTED → recorded: PARTIALLY DOCUMENTED (unchanged; pre-extraction authorship still unevidenced) + founder points 1–2 filed as DECLARED (unverified) authorship pointer. Owner + counsel requirements retained. Exact closure criteria: per-file authorship table sourced to records + filed contributor declarations.
+- **U5 addendum 2026-11-26:** previous NOT DOCUMENTED → recorded: NOT DOCUMENTED (unchanged; official text still NOT fetched) + founder point 6 filed as DECLARED (unverified) intent only. Owner + counsel requirements retained. Exact closure criteria: verified fetched text on file + verification note (publication itself stays withheld per U12).
+- **U6 addendum 2026-11-26:** previous PARTIALLY DOCUMENTED → recorded: PARTIALLY DOCUMENTED (unchanged). The declaration supplies no information on this item — declaration changes nothing about third-party obligations. Counsel requirement retained. Exact closure criteria: counsel clearance per group, same as U2.
+- **U7 addendum 2026-11-26:** previous NOT DOCUMENTED → recorded: NOT DOCUMENTED (unchanged; no brand instrument on file) + founder points 1–5 filed as DECLARED (unverified). Counsel + brand-holder signatory requirements retained. Exact closure criteria: signed brand instrument + counsel note; any rename executed only after that.
+- **U8 addendum 2026-11-26:** previous NOT DOCUMENTED → recorded: NOT DOCUMENTED (unchanged; no authorisation on file) + founder points 1–5 filed as DECLARED (unverified). Counsel + signatory requirements retained. Exact closure criteria: filed authorisation covering trademark/service-name use and rename authority + counsel note.
+- **U9 addendum 2026-11-26:** previous NOT DOCUMENTED → recorded: NOT DOCUMENTED (unchanged; no relicensing instrument on file) + founder points 4–5 filed as DECLARED (unverified). Counsel + controlling-party signatory requirements retained. Exact closure criteria: signed relicensing/transfer instrument from the controlling party + counsel confirmation.
+- **U10 addendum 2026-11-26:** previous NOT DOCUMENTED → recorded: NOT DOCUMENTED (unchanged; no instrument on file) + founder points 4–5 filed as DECLARED (unverified). Counsel + signatory requirements retained. Exact closure criteria: signed instrument of the same class as U9 + counsel note.
+- **U11 addendum 2026-11-26:** previous PARTIALLY DOCUMENTED → recorded: PARTIALLY DOCUMENTED (unchanged). The declaration supplies no information on this item — declaration changes nothing about third-party obligations. Counsel requirement retained. Exact closure criteria: counsel-signed clearance records per row/group.
+- **U12 addendum 2026-11-26:** previous PARTIALLY DOCUMENTED → recorded: PARTIALLY DOCUMENTED (unchanged; gate approvals still absent; package still WITHHELD). The declaration grants no clearance. Counsel + owner requirements retained. Exact closure criteria: every U1–U11 item closed with filed artefacts + written counsel publication approval; until then no `LICENSE`/`NOTICE` files, no headers, no notice changes.
