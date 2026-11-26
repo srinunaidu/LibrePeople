@@ -20,6 +20,8 @@ import { useCallback, useEffect, useState, type FormEvent } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { Layout } from "@/components/Layout"
 import {
+  Input,
+  Select,
   Alert,
   Button,
   EmptyState,
@@ -30,7 +32,7 @@ import {
   SectionCard,
   TableSkeleton,
 } from "@/components/ui"
-import { Input, Select } from "@/components/ui/inputs"
+
 import { StatusPill } from "@/components/ui/status-pill"
 import { useAuth } from "@/context/AuthContext"
 import { useTenant } from "@/context/TenantContext"

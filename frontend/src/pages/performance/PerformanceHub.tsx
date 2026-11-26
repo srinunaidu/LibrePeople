@@ -19,7 +19,10 @@
  */
 import { useCallback, useEffect, useState, type FormEvent } from "react"
 import { Layout } from "@/components/Layout"
-import {Alert,
+import {
+  Input,
+  Select,
+  Textarea,Alert,
   Button,
   Table,
   EmptyState,
@@ -29,7 +32,7 @@ import {Alert,
   TableSkeleton, RetryableAlert} from "@/components/ui"
 import { Field } from "@/components/ui/layout"
 import { Meter } from "@/components/ui/feedback"
-import { Input, Select, Textarea } from "@/components/ui/inputs"
+
 import { StatusPill } from "@/components/ui/status-pill"
 import { useAuth } from "@/context/AuthContext"
 import { useTenant } from "@/context/TenantContext"

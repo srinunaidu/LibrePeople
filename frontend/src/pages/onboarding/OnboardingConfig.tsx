@@ -12,7 +12,8 @@
  */
 import { Fragment, useCallback, useEffect, useState } from "react"
 import { Layout } from "@/components/Layout"
-import {Alert,
+import {
+  Select,Alert,
   EmptyState,
   LoadingRegion,
   PageHeader,
@@ -21,7 +22,7 @@ import {Alert,
   TableSkeleton, RetryableAlert} from "@/components/ui"
 import { StatusPill } from "@/components/ui/status-pill"
 import { Meter } from "@/components/ui/feedback"
-import { Select } from "@/components/ui/inputs"
+
 import { useAuth } from "@/context/AuthContext"
 import api, { errorMessage } from "@/lib/api"
 import { fetchAllEmployees } from "@/lib/employees"

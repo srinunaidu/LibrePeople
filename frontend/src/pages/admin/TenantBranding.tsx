@@ -10,8 +10,8 @@
  */
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { Layout } from "@/components/Layout"
-import {Alert, Button, EmptyState, LoadingRegion, PageHeader, SectionCard, RetryableAlert, TableSkeleton} from "@/components/ui"
-import { Input } from "@/components/ui/inputs"
+import { Input,Alert, Button, EmptyState, LoadingRegion, PageHeader, SectionCard, RetryableAlert, TableSkeleton} from "@/components/ui"
+
 import { useAuth } from "@/context/AuthContext"
 import api, { getClientIdBySlug, readableLoadError, errorMessage } from "@/lib/api"
 import { shell } from "@/lib/tokens"

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react"
 import { Layout } from "@/components/Layout"
-import {Alert, Button, EmptyState, LoadingRegion, PageHeader, SectionCard, RetryableAlert, TableSkeleton} from "@/components/ui"
-import { Switch } from "@/components/ui/inputs"
+import { Switch,Alert, Button, EmptyState, LoadingRegion, PageHeader, SectionCard, RetryableAlert, TableSkeleton} from "@/components/ui"
+
 import { useAuth } from "@/context/AuthContext"
 import { useTenant } from "@/context/TenantContext"
 import { listClients, listFeatureFlags, updateFeatureFlag, errorMessage } from "@/lib/api"

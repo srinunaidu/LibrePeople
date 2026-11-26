@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useState } from "react"
 import { Layout } from "@/components/Layout"
-import {Alert,
+import {
+  Button,
+  Select,
+  Textarea,Alert,
   EmptyState,
   LoadingRegion,
   Modal,
@@ -11,8 +14,7 @@ import {Alert,
   PageHeader,
   SectionCard,
   TableSkeleton, RetryableAlert} from "@/components/ui"
-import { Button } from "@/components/ui/button"
-import { Select, Textarea } from "@/components/ui/inputs"
+
 import { IconGrid, IconRefresh } from "@/components/icons"
 import type { PageMeta } from "@/types"
 import { StatusPill, type StatusTone } from "@/components/ui/status-pill"

@@ -10,7 +10,9 @@
  */
 import { useCallback, useEffect, useState, type FormEvent } from "react"
 import { Layout } from "@/components/Layout"
-import {Alert,
+import {
+  Input,
+  Select,Alert,
   Button,
   EmptyState,
   LoadingRegion,
@@ -18,7 +20,7 @@ import {Alert,
   SectionCard,
   Table,
   TableSkeleton, RetryableAlert} from "@/components/ui"
-import { Input, Select } from "@/components/ui/inputs"
+
 import { StatusPill } from "@/components/ui/status-pill"
 import { useAuth } from "@/context/AuthContext"
 import api, { errorMessage } from "@/lib/api"

@@ -15,6 +15,11 @@ import { useState, type FormEvent } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Layout } from "@/components/Layout"
 import {
+  PendingVerificationAlert,
+  Button,
+  Input,
+  Textarea,
+  Select,
   Alert,
   EmptyState,
   LoadingRegion,
@@ -24,9 +29,7 @@ import {
   TableSkeleton,
   Table,
 } from "@/components/ui"
-import { PendingVerificationAlert } from "@/components/ui/PendingVerificationAlert"
-import { Button } from "@/components/ui/button"
-import { Input, Textarea, Select } from "@/components/ui/inputs"
+
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { StatusPill } from "@/components/ui/status-pill"
 import { useAuth } from "@/context/AuthContext"

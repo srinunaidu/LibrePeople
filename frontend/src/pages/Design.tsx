@@ -1,16 +1,16 @@
 import { Layout } from "@/components/Layout"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Card, SectionCard } from "@/components/ui/card"
-import { Input, Select, Textarea, Checkbox, Switch } from "@/components/ui/inputs"
+
 import { Badge, badgeVariants } from "@/components/ui/badge"
 import { Avatar } from "@/components/ui/avatar"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { StatusPill } from "@/components/ui/status-pill"
 import { Alert, EmptyState, Meter } from "@/components/ui/feedback"
-import { RetryableAlert } from "@/components/ui"
+import { Input, Select, Textarea, Checkbox, Switch, RetryableAlert, showSuccess, showError, showInfo } from "@/components/ui"
 import { Skeleton, CardSkeleton, TableSkeleton, LoadingRegion } from "@/components/ui/skeleton"
 import { PageHeader, Field, FormSection, Toolbar, Breadcrumb, SubmitBar } from "@/components/ui/layout"
-import { toast } from "@/components/ui/sonner"
+
 import { IconCheck, IconGrid, IconInbox, IconPlus, IconSparkle, IconX } from "@/components/icons"
 import { cn } from "@/lib/utils"
 import * as React from "react"
@@ -32,10 +32,10 @@ export default function DesignShowcase() {
         description="Component library and token reference for the LibrePeople HCM revamp."
         actions={
           <div className="flex gap-2">
-            <Button variant="secondary" size="sm" onClick={() => toast.success("Toast works!", { description: "This is a Sonner toast." })}>
+            <Button variant="secondary" size="sm" onClick={() => showSuccess("Toast works!", { description: "This is a Sonner toast." })}>
               Trigger Toast
             </Button>
-            <Button size="sm" onClick={() => toast.error("Error toast", { description: "Something went wrong." })}>
+            <Button size="sm" onClick={() => showError("Error toast", { description: "Something went wrong." })}>
               Error Toast
             </Button>
           </div>
@@ -238,7 +238,7 @@ export default function DesignShowcase() {
           <Alert tone="error" title="Error">
             Something went wrong. Please try again.
             <div className="mt-2">
-              <Button size="sm" variant="secondary" onClick={() => toast.info("Retrying…")}>
+              <Button size="sm" variant="secondary" onClick={() => showInfo("Retrying…")}>
                 Retry
               </Button>
             </div>

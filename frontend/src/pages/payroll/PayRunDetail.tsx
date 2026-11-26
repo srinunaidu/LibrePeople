@@ -15,6 +15,9 @@ import { useCallback, useEffect, useState } from "react"
 import { Link, useParams } from "react-router-dom"
 import { Layout } from "@/components/Layout"
 import {
+  PendingVerificationAlert,
+  Input,
+  Select,
   Alert,
   Button,
   EmptyState,
@@ -29,7 +32,7 @@ import { StatusPill } from "@/components/ui/status-pill"
 import { useAuth } from "@/context/AuthContext"
 import { useTenant } from "@/context/TenantContext"
 import api, { errorMessage, getFnf, postFnf, previewPayRun, getPayRunHistory, isPendingVerification, readableLoadError } from "@/lib/api"
-import { PendingVerificationAlert } from "@/components/ui/PendingVerificationAlert"
+
 import { fetchAllEmployees } from "@/lib/employees"
 import { useTenantNav } from "@/lib/tenantPath"
 import type {
@@ -41,7 +44,7 @@ import type {
   PayrollPeriodRow,
 } from "@/types"
 import { fmtDate, fmtDateTime, money, PayrollLinks, PayslipDetail } from "./shared"
-import { Input, Select } from "@/components/ui/inputs"
+
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 
 const READ_ROLES = ["SuperAdmin", "HR", "PayrollViewer"]

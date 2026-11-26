@@ -5,9 +5,8 @@
  */
 import { useCallback, useEffect, useState } from "react"
 import { Layout } from "@/components/Layout"
-import { Alert, Button, EmptyState, LoadingRegion, PageHeader, RetryableAlert, SectionCard, TableSkeleton } from "@/components/ui"
-import { PendingVerificationAlert } from "@/components/ui/PendingVerificationAlert"
-import { Input } from "@/components/ui/inputs"
+import { PendingVerificationAlert, Input, Alert, Button, EmptyState, LoadingRegion, PageHeader, RetryableAlert, SectionCard, TableSkeleton } from "@/components/ui"
+
 import { useAuth } from "@/context/AuthContext"
 import api, { getClientIdBySlug, errorMessage } from "@/lib/api"
 

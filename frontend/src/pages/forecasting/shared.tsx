@@ -18,9 +18,8 @@ import type {
 } from "@/types"
 import api, { errorMessage } from "@/lib/api"
 import { saveBlob } from "@/lib/imports"
-import { Button } from "@/components/ui/button"
-import { Table } from "@/components/ui"
-import { Input } from "@/components/ui/inputs"
+
+import { Button, Input, Table } from "@/components/ui"
 
 /** The roles the backend allows on every forecasting endpoint
  * (`MANAGER_ROLES` in `app/api/deps.py`). Below Manager the server answers

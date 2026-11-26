@@ -27,9 +27,8 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from "react"
 import { Layout } from "@/components/Layout"
-import {Alert, EmptyState, LoadingRegion, PageHeader, SectionCard, Table, TableSkeleton, RetryableAlert} from "@/components/ui"
-import { Button } from "@/components/ui/button"
-import { Checkbox, Input, Select, Textarea } from "@/components/ui/inputs"
+import { Button, Checkbox, Input, Select, Textarea,Alert, EmptyState, LoadingRegion, PageHeader, SectionCard, Table, TableSkeleton, RetryableAlert} from "@/components/ui"
+
 import { StatusPill } from "@/components/ui/status-pill"
 import { Field } from "@/components/ui/layout"
 import { useAuth } from "@/context/AuthContext"

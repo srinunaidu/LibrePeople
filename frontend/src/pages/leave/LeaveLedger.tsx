@@ -14,7 +14,9 @@ import { useCallback, useEffect, useState } from "react"
 import { useParams, Link } from "react-router-dom"
 import { useTenantNav } from "@/lib/tenantPath"
 import { Layout } from "@/components/Layout"
-import {Alert,
+import {
+  Input,
+  Select,Alert,
   Button,
   EmptyState,
   LoadingRegion,
@@ -22,7 +24,7 @@ import {Alert,
   SectionCard,
   Table,
   TableSkeleton, RetryableAlert} from "@/components/ui"
-import { Input, Select } from "@/components/ui/inputs"
+
 import { StatusPill } from "@/components/ui/status-pill"
 import { useAuth } from "@/context/AuthContext"
 import { useTenant } from "@/context/TenantContext"

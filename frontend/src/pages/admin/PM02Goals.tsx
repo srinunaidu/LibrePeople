@@ -6,8 +6,8 @@
  */
 import { useCallback, useEffect, useState } from "react"
 import { Layout } from "@/components/Layout"
-import {Alert, Button, LoadingRegion, PageHeader, SectionCard, RetryableAlert, TableSkeleton, EmptyState} from "@/components/ui"
-import { Input } from "@/components/ui/inputs"
+import { Input,Alert, Button, LoadingRegion, PageHeader, SectionCard, RetryableAlert, TableSkeleton, EmptyState} from "@/components/ui"
+
 import { useAuth } from "@/context/AuthContext"
 import { useTenant } from "@/context/TenantContext"
 import api, { getClientIdBySlug, errorMessage } from "@/lib/api"
