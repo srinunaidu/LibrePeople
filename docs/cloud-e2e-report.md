@@ -271,3 +271,21 @@ Render services live on the new SHA, then re-run
 `e2e/cloud/cloud-expenses.spec.ts -g "associate files"`.
 No credentials were staged and none were needed; no lockout signals;
 working tree otherwise clean.
+
+---
+
+## Round 5 — expenses nav-fix verified live on abcbf62 (2026-11-26)
+
+Branch `agent/qa/cloud-expenses-proof` from main `abcbf62` (navfix merge).
+Deploy gate: frontend build of `abcbf62` polled `build_in_progress` → `live`
+via the Render deploys API; `/expenses` 200 before testing.
+
+**Verdict: D-fix VERIFIED live. Associate spec PASSES** (12.1 s, chromium):
+file claim → post-submit URL matches `/expenses/<id>` (Playwright
+`toHaveURL(/\/expenses\/\d+/)`, no `/6` tenant prefix — the relative
+`../${id}` navigate is gone), receipt uploads with server download link,
+submit persists `SUBMITTED`, zero console errors, zero failed requests.
+Notably the test executed fully rather than skipping: `e2e_employee` now
+resolves a linked employee row, so the round-4 provisioning gap is also
+closed. No lockout signals (logins: 1 associate UI + API, 1 HR API setup —
+all successful). No spec changes, no product changes; report-only commit.
