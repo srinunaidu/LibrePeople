@@ -3,6 +3,7 @@ import { Link } from "react-router-dom"
 import { Layout } from "@/components/Layout"
 import {
   Button,
+  Table,
   Alert,
   EmptyState,
   LoadingRegion,
@@ -316,34 +317,19 @@ export default function Scheduling() {
             <EmptyState title={failed.includes("roster") ? "Roster unavailable" : "No roster entries"}
               description={emptyDesc("roster", "Generate a roster above to schedule an employee.")} />
           ) : (
-            <div
-              className="table-scroll max-h-[420px] overflow-y-auto"
-              tabIndex={0}
-              role="region"
-              aria-label="Roster entries"
-            >
-              <table className="table-base table-striped table-compact">
-                <caption className="sr-only">Roster entries</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Employee</th>
-                    <th scope="col">Date</th>
-                    <th scope="col">Shift</th>
-                    <th scope="col">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {roster.slice(0, 50).map((r) => (
-                    <tr key={r.id}>
-                      <td>{empName(r.employee_id)}</td>
-                      <td className="whitespace-nowrap">{r.work_date}</td>
-                      <td className="whitespace-nowrap">{r.start_time}–{r.end_time}</td>
-                      <td><StatusPill status={r.status} /></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table
+              className="max-h-[420px] overflow-y-auto"
+              columns={[
+                { key: "employee", header: "Employee", accessor: (r) => empName(r.employee_id) },
+                { key: "date", header: "Date", accessor: (r) => <span className="whitespace-nowrap">{r.work_date}</span> },
+                { key: "shift", header: "Shift", accessor: (r) => <span className="whitespace-nowrap">{r.start_time}–{r.end_time}</span> },
+                { key: "status", header: "Status", accessor: (r) => <StatusPill status={r.status} /> },
+              ]}
+              data={roster.slice(0, 50)}
+              keyAccessor={(r) => r.id}
+              caption="Roster entries"
+              sortable={false}
+            />
           )}
           {roster.length > 50 && (
             <p className="px-5 py-2.5 text-xs text-text-secondary border-t border-border">

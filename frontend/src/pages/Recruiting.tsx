@@ -2,6 +2,7 @@ import { useEffect, useState, cloneElement, isValidElement, useId, type FormEven
 import { Layout } from "@/components/Layout"
 import {
   Button,
+  Table,
   Alert,
   EmptyState,
   LoadingRegion,
@@ -396,33 +397,20 @@ export default function Recruiting() {
               <EmptyState title="No requisitions yet"
                 description={emptyDesc("requisitions", "Create a requisition above to open a role.")} />
             ) : (
-              <div className="table-scroll">
-                <table className="table-base table-striped">
-                  <caption className="sr-only">All job requisitions</caption>
-                  <thead>
-                    <tr>
-                      <th scope="col">Req #</th>
-                      <th scope="col">Title</th>
-                      <th scope="col">Department</th>
-                      <th scope="col">Location</th>
-                      <th scope="col" className="num">Openings</th>
-                      <th scope="col">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {requisitions.map((r) => (
-                      <tr key={r.id}>
-                        <td className="font-mono text-xs">{r.req_number}</td>
-                        <td className="font-medium">{r.title}</td>
-                        <td className="text-text-secondary">{deptName(r.department_id)}</td>
-                        <td className="text-text-secondary">{r.location || "—"}</td>
-                        <td className="num">{r.openings}</td>
-                        <td><StatusPill status={r.status} /></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                columns={[
+                  { key: "req", header: "Req #", accessor: (r) => <span className="font-mono text-xs">{r.req_number}</span> },
+                  { key: "title", header: "Title", accessor: (r) => <span className="font-medium">{r.title}</span> },
+                  { key: "dept", header: "Department", accessor: (r) => <span className="text-text-secondary">{deptName(r.department_id)}</span> },
+                  { key: "loc", header: "Location", accessor: (r) => <span className="text-text-secondary">{r.location || "—"}</span> },
+                  { key: "openings", header: "Openings", accessor: (r) => r.openings, cellClassName: "num" },
+                  { key: "status", header: "Status", accessor: (r) => <StatusPill status={r.status} /> },
+                ]}
+                data={requisitions}
+                keyAccessor={(r) => r.id}
+                caption="All job requisitions"
+                sortable={false}
+              />
             )}
           </SectionCard>
         )}
@@ -467,29 +455,18 @@ export default function Recruiting() {
               <EmptyState title="No candidates yet"
                 description={emptyDesc("candidates", "Add a candidate above to start building your pipeline.")} />
             ) : (
-              <div className="table-scroll">
-                <table className="table-base table-striped">
-                  <caption className="sr-only">All candidates in the talent pool</caption>
-                  <thead>
-                    <tr>
-                      <th scope="col">Name</th>
-                      <th scope="col">Email</th>
-                      <th scope="col">Source</th>
-                      <th scope="col">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {candidates.map((c) => (
-                      <tr key={c.id}>
-                        <td className="font-medium">{c.first_name} {c.last_name}</td>
-                        <td className="text-text-secondary">{c.email}</td>
-                        <td>{c.source || "—"}</td>
-                        <td><StatusPill status={c.status} /></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                columns={[
+                  { key: "name", header: "Name", accessor: (c) => <span className="font-medium">{c.first_name} {c.last_name}</span> },
+                  { key: "email", header: "Email", accessor: (c) => <span className="text-text-secondary">{c.email}</span> },
+                  { key: "source", header: "Source", accessor: (c) => c.source || "—" },
+                  { key: "status", header: "Status", accessor: (c) => <StatusPill status={c.status} /> },
+                ]}
+                data={candidates}
+                keyAccessor={(c) => c.id}
+                caption="All candidates in the talent pool"
+                sortable={false}
+              />
             )}
           </SectionCard>
         )}
@@ -550,29 +527,18 @@ export default function Recruiting() {
               <EmptyState title="No applications yet"
                 description={emptyDesc("applications", "Link a candidate to a requisition above to begin tracking.")} />
             ) : (
-              <div className="table-scroll">
-                <table className="table-base table-striped">
-                  <caption className="sr-only">All applications</caption>
-                  <thead>
-                    <tr>
-                      <th scope="col">Requisition</th>
-                      <th scope="col">Candidate</th>
-                      <th scope="col">Applied</th>
-                      <th scope="col">Stage</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {applications.map((a) => (
-                      <tr key={a.id}>
-                        <td className="font-mono text-xs">{reqLabel(a.requisition_id)}</td>
-                        <td className="font-medium">{candName(a.candidate_id)}</td>
-                        <td className="whitespace-nowrap text-text-secondary">{a.applied_date}</td>
-                        <td><StatusPill status={a.status} /></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                columns={[
+                  { key: "req", header: "Requisition", accessor: (a) => <span className="font-mono text-xs">{reqLabel(a.requisition_id)}</span> },
+                  { key: "cand", header: "Candidate", accessor: (a) => <span className="font-medium">{candName(a.candidate_id)}</span> },
+                  { key: "applied", header: "Applied", accessor: (a) => <span className="whitespace-nowrap text-text-secondary">{a.applied_date}</span> },
+                  { key: "stage", header: "Stage", accessor: (a) => <StatusPill status={a.status} /> },
+                ]}
+                data={applications}
+                keyAccessor={(a) => a.id}
+                caption="All applications"
+                sortable={false}
+              />
             )}
           </SectionCard>
         )}
@@ -630,64 +596,52 @@ export default function Recruiting() {
               <EmptyState title="No offers yet"
                 description={emptyDesc("offers", "Create an offer from an accepted application above.")} />
             ) : (
-              <div className="table-scroll">
-                <table className="table-base table-striped">
-                  <caption className="sr-only">All offers</caption>
-                  <thead>
-                    <tr>
-                      <th scope="col">Offer #</th>
-                      <th scope="col">Application</th>
-                      <th scope="col" className="num">Salary</th>
-                      <th scope="col">Status</th>
-                      <th scope="col">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {offers.map((o) => (
-                      <tr key={o.id}>
-                        <td className="font-mono text-xs">{o.offer_number}</td>
-                        <td>
-                          <span className="font-medium">#{o.application_id}</span>
-                          <span className="block text-xs text-text-secondary">
-                            {candName(applications.find((a) => a.id === o.application_id)?.candidate_id ?? 0)}
-                          </span>
-                        </td>
-                        <td className="num">
-                          {formatCurrency(o.salary_offered, {
-                            locale: tenant?.locale,
-                            currency: tenant?.currency,
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}
-                        </td>
-                        <td><StatusPill status={o.status} /></td>
-                        <td>
-                          <div className="flex items-center gap-3 flex-wrap">
-                            <Button variant="ghost" disabled={busy === `l${o.id}`}
-                              onClick={() => run(`l${o.id}`, () => api.post(`/offers/${o.id}/letter`), "Offer letter generated")}>
-                              Letter
-                            </Button>
-                            <Button variant="ghost" disabled={busy === `a${o.id}`}
-                              onClick={() => run(`a${o.id}`, () => api.post(`/offers/${o.id}/accept`), "Offer accepted")}>
-                              Accept
-                            </Button>
-                            <Button variant="ghost" disabled={busy === `h${o.id}`}
-                              onClick={() => setHireOfferId(o.id)}>
-                              Hire
-                            </Button>
-                            {o.letter_url && (
-                              <a className="action-link text-text-secondary" href={fileUrl(o.letter_url)}
-                                target="_blank" rel="noreferrer">
-                                PDF
-                              </a>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                columns={[
+                  { key: "offer", header: "Offer #", accessor: (o) => <span className="font-mono text-xs">{o.offer_number}</span> },
+                  { key: "app", header: "Application", accessor: (o) => (
+                    <span>
+                      <span className="font-medium">#{o.application_id}</span>
+                      <span className="block text-xs text-text-secondary">
+                        {candName(applications.find((a) => a.id === o.application_id)?.candidate_id ?? 0)}
+                      </span>
+                    </span>
+                  ) },
+                  { key: "salary", header: "Salary", accessor: (o) => formatCurrency(o.salary_offered, {
+                    locale: tenant?.locale,
+                    currency: tenant?.currency,
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }), cellClassName: "num" },
+                  { key: "status", header: "Status", accessor: (o) => <StatusPill status={o.status} /> },
+                  { key: "actions", header: "Actions", accessor: (o) => (
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <Button variant="ghost" disabled={busy === `l${o.id}`}
+                        onClick={() => run(`l${o.id}`, () => api.post(`/offers/${o.id}/letter`), "Offer letter generated")}>
+                        Letter
+                      </Button>
+                      <Button variant="ghost" disabled={busy === `a${o.id}`}
+                        onClick={() => run(`a${o.id}`, () => api.post(`/offers/${o.id}/accept`), "Offer accepted")}>
+                        Accept
+                      </Button>
+                      <Button variant="ghost" disabled={busy === `h${o.id}`}
+                        onClick={() => setHireOfferId(o.id)}>
+                        Hire
+                      </Button>
+                      {o.letter_url && (
+                        <a className="action-link text-text-secondary" href={fileUrl(o.letter_url)}
+                          target="_blank" rel="noreferrer">
+                          PDF
+                        </a>
+                      )}
+                    </div>
+                  ) },
+                ]}
+                data={offers}
+                keyAccessor={(o) => o.id}
+                caption="All offers"
+                sortable={false}
+              />
             )}
           </SectionCard>
         )}

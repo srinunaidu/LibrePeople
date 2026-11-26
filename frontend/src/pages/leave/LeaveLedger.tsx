@@ -20,6 +20,7 @@ import {Alert,
   LoadingRegion,
   PageHeader,
   SectionCard,
+  Table,
   TableSkeleton, RetryableAlert} from "@/components/ui"
 import { Input, Select } from "@/components/ui/inputs"
 import { StatusPill } from "@/components/ui/status-pill"
@@ -292,35 +293,24 @@ export default function LeaveLedger() {
                 {ledger.length === 0 ? (
                   <div className="p-5 text-sm text-text-secondary">No ledger entries for this employee — an entitlement or a leave movement has not yet been recorded.</div>
                 ) : (
-                  <div className="table-scroll">
-                    <table className="table-base w-full text-sm">
-                      <caption className="sr-only">Leave ledger for the selected employee</caption>
-                      <thead>
-                        <tr>
-                          <th scope="col">Date</th>
-                          <th scope="col">Entry type</th>
-                          <th scope="col">Leave type</th>
-                          <th scope="col" className="num">Days</th>
-                          <th scope="col" className="num">Balance after</th>
-                          <th scope="col">Reason / description</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {ledger.map((entry) => (
-                          <tr key={entry.id}>
-                            <td className="whitespace-nowrap">{fmtDateTime(entry.created_at)}</td>
-                            <td><StatusPill status={entry.entry_type} /></td>
-                            <td>{leaveTypeName(entry.leave_type_id)} <span className="text-xs text-text-secondary">({entry.entitlement_year})</span></td>
-                            <td className={`num tabular-nums font-medium ${entry.signed_days < 0 ? "text-error-text" : entry.signed_days > 0 ? "text-success-text" : ""}`}>
-                              {entry.signed_days > 0 ? `+${entry.signed_days}` : String(entry.signed_days)}
-                            </td>
-                            <td className="num tabular-nums font-semibold">{entry.running_balance}</td>
-                            <td className="max-w-[260px] truncate text-xs text-text-secondary" title={entry.description ?? ""}>{entry.description ?? "—"}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                  <Table
+                    columns={[
+                      { key: "date", header: "Date", accessor: (entry) => <span className="whitespace-nowrap">{fmtDateTime(entry.created_at)}</span> },
+                      { key: "type", header: "Entry type", accessor: (entry) => <StatusPill status={entry.entry_type} /> },
+                      { key: "leavetype", header: "Leave type", accessor: (entry) => <span>{leaveTypeName(entry.leave_type_id)} <span className="text-xs text-text-secondary">({entry.entitlement_year})</span></span> },
+                      { key: "days", header: "Days", accessor: (entry) => (
+                        <span className={`num tabular-nums font-medium ${entry.signed_days < 0 ? "text-error-text" : entry.signed_days > 0 ? "text-success-text" : ""}`}>
+                          {entry.signed_days > 0 ? `+${entry.signed_days}` : String(entry.signed_days)}
+                        </span>
+                      ) },
+                      { key: "balance", header: "Balance after", accessor: (entry) => entry.running_balance, cellClassName: "num tabular-nums font-semibold" },
+                      { key: "reason", header: "Reason / description", accessor: (entry) => <span className="max-w-[260px] truncate text-xs text-text-secondary" title={entry.description ?? ""}>{entry.description ?? "\u2014"}</span> },
+                    ]}
+                    data={ledger}
+                    keyAccessor={(entry) => entry.id}
+                    caption="Leave ledger for the selected employee"
+                    sortable={false}
+                  />
                 )}
               </>
             )}
@@ -404,35 +394,23 @@ export default function LeaveLedger() {
                 {reconciliation.rows.length === 0 ? (
                   <p className="text-sm text-text-secondary">No balances matched the current filter.</p>
                 ) : (
-                  <div className="table-scroll">
-                    <table className="table-base w-full text-sm">
-                      <caption className="sr-only">Leave reconciliation rows</caption>
-                      <thead>
-                        <tr>
-                          <th scope="col">Employee</th>
-                          <th scope="col">Leave type</th>
-                          <th scope="col" className="num">Year</th>
-                          <th scope="col" className="num">Cached</th>
-                          <th scope="col" className="num">Ledger</th>
-                          <th scope="col" className="num">Difference</th>
-                          <th scope="col">State</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {reconciliation.rows.map((r) => (
-                          <tr key={r.balance_id}>
-                            <td>{employeeName(r.employee_id)}</td>
-                            <td>{r.leave_type_name ?? `#${r.leave_type_id}`}</td>
-                            <td className="num">{r.entitlement_year}</td>
-                            <td className="num tabular-nums">{r.cached_available_days}</td>
-                            <td className="num tabular-nums">{r.ledger_available_days}</td>
-                            <td className={`num tabular-nums font-medium ${r.difference_days !== 0 ? "text-error-text" : ""}`}>{r.difference_days}</td>
-                            <td><StatusPill status={r.state} /></td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                  <Table
+                    columns={[
+                      { key: "employee", header: "Employee", accessor: (r) => employeeName(r.employee_id) },
+                      { key: "type", header: "Leave type", accessor: (r) => r.leave_type_name ?? `#${r.leave_type_id}` },
+                      { key: "year", header: "Year", accessor: (r) => r.entitlement_year, cellClassName: "num" },
+                      { key: "cached", header: "Cached", accessor: (r) => r.cached_available_days, cellClassName: "num tabular-nums" },
+                      { key: "ledger", header: "Ledger", accessor: (r) => r.ledger_available_days, cellClassName: "num tabular-nums" },
+                      { key: "diff", header: "Difference", accessor: (r) => (
+                        <span className={`num tabular-nums font-medium ${r.difference_days !== 0 ? "text-error-text" : ""}`}>{r.difference_days}</span>
+                      ) },
+                      { key: "state", header: "State", accessor: (r) => <StatusPill status={r.state} /> },
+                    ]}
+                    data={reconciliation.rows}
+                    keyAccessor={(r) => r.balance_id}
+                    caption="Leave reconciliation rows"
+                    sortable={false}
+                  />
                 )}
                 {reconciliation.year && <p className="text-xs text-text-secondary">Year {reconciliation.year}</p>}
               </div>
@@ -508,31 +486,19 @@ export default function LeaveLedger() {
                 {payrollInput.entries.length === 0 ? (
                   <p className="text-sm text-text-secondary">No approved leave falls inside this period.</p>
                 ) : (
-                  <div className="table-scroll">
-                    <table className="table-base w-full text-sm">
-                      <caption className="sr-only">Approved leave for the payroll period</caption>
-                      <thead>
-                        <tr>
-                          <th scope="col">Employee</th>
-                          <th scope="col">Leave type</th>
-                          <th scope="col">Dates</th>
-                          <th scope="col" className="num">Quantity</th>
-                          <th scope="col">Paid</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {payrollInput.entries.map((e) => (
-                          <tr key={e.leave_request_id}>
-                            <td>{employeeName(e.employee_id)}</td>
-                            <td className="font-mono text-xs">{e.leave_type_code}</td>
-                            <td className="whitespace-nowrap">{fmtDate(e.start_date)} → {fmtDate(e.end_date)}</td>
-                            <td className="num tabular-nums font-medium">{e.quantity_days}d</td>
-                            <td>{e.is_paid ? <span className="badge badge-green">Paid</span> : <span className="badge badge-slate">Unpaid</span>}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                  <Table
+                    columns={[
+                      { key: "employee", header: "Employee", accessor: (e) => employeeName(e.employee_id) },
+                      { key: "type", header: "Leave type", accessor: (e) => <span className="font-mono text-xs">{e.leave_type_code}</span> },
+                      { key: "dates", header: "Dates", accessor: (e) => <span className="whitespace-nowrap">{fmtDate(e.start_date)} {"\u2192"} {fmtDate(e.end_date)}</span> },
+                      { key: "qty", header: "Quantity", accessor: (e) => `${e.quantity_days}d`, cellClassName: "num tabular-nums font-medium" },
+                      { key: "paid", header: "Paid", accessor: (e) => e.is_paid ? <span className="badge badge-green">Paid</span> : <span className="badge badge-slate">Unpaid</span> },
+                    ]}
+                    data={payrollInput.entries}
+                    keyAccessor={(e) => e.leave_request_id}
+                    caption="Approved leave for the payroll period"
+                    sortable={false}
+                  />
                 )}
               </div>
             )}

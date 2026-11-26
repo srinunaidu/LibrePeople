@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { Layout } from "@/components/Layout"
 import {
   Button,
+  Table,
   Alert,
   EmptyState,
   LoadingRegion,
@@ -241,38 +242,27 @@ export default function Assets() {
               {assets.length === 0 ? (
                 <EmptyState title="No assets" description={isAdmin ? "Register the first asset above." : "Nothing is in your custody yet."} />
               ) : (
-                <div className="table-scroll max-h-[420px] overflow-y-auto">
-                  <table className="table-base table-striped">
-                    <caption className="sr-only">Asset register</caption>
-                    <thead>
-                      <tr>
-                        <th scope="col">Tag</th>
-                        <th scope="col">Name</th>
-                        <th scope="col">Status</th>
-                        <th scope="col">Holder</th>
-                        {isAdmin && <th scope="col"><span className="sr-only">Actions</span></th>}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {assets.map((a) => (
-                        <tr key={a.id}>
-                          <td className="font-mono">{a.tag}</td>
-                          <td>{a.name}</td>
-                          <td><StatusPill status={ASSET_STATUS_LABELS[a.status] ?? a.status} /></td>
-                          <td>{holderOf(a.id)}</td>
-                          {isAdmin && (
-                            <td>
-                              <Button variant="secondary" size="sm" type="button"
-                                onClick={() => { setSelected(a); setHolderId(""); setCondition("good") }}>
-                                Manage
-                              </Button>
-                            </td>
-                          )}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <Table
+                  className="max-h-[420px] overflow-y-auto"
+                  columns={[
+                    { key: "tag", header: "Tag", accessor: (a) => <span className="font-mono">{a.tag}</span> },
+                    { key: "name", header: "Name", accessor: (a) => a.name },
+                    { key: "status", header: "Status", accessor: (a) => <StatusPill status={ASSET_STATUS_LABELS[a.status] ?? a.status} /> },
+                    { key: "holder", header: "Holder", accessor: (a) => holderOf(a.id) },
+                    ...(isAdmin ? [{
+                      key: "actions", header: "", accessor: (a: AssetRow) => (
+                        <Button variant="secondary" size="sm" type="button"
+                          onClick={() => { setSelected(a); setHolderId(""); setCondition("good") }}>
+                          Manage
+                        </Button>
+                      ),
+                    }] : []),
+                  ]}
+                  data={assets}
+                  keyAccessor={(a) => a.id}
+                  caption="Asset register"
+                  sortable={false}
+                />
               )}
             </SectionCard>
 

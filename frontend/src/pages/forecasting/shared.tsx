@@ -19,6 +19,7 @@ import type {
 import api, { errorMessage } from "@/lib/api"
 import { saveBlob } from "@/lib/imports"
 import { Button } from "@/components/ui/button"
+import { Table } from "@/components/ui"
 import { Input } from "@/components/ui/inputs"
 
 /** The roles the backend allows on every forecasting endpoint
@@ -316,38 +317,18 @@ export function SimpleTable({
   empty?: string
 }) {
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm text-left">
-        <caption className="sr-only">{caption}</caption>
-        <thead className="border-b border-border">
-          <tr>
-            {columns.map((c) => (
-              <th key={c} scope="col" className="px-3 py-2 text-text-secondary">
-                {c}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row, i) => (
-            <tr key={i} className="border-b border-border">
-              {row.map((cell, j) => (
-                <td key={j} className="px-3 py-2">
-                  {cell}
-                </td>
-              ))}
-            </tr>
-          ))}
-          {rows.length === 0 && empty && (
-            <tr>
-              <td colSpan={columns.length} className="px-3 py-6 text-center text-text-secondary">
-                {empty}
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-    </div>
+    <Table
+      columns={columns.map((c, j) => ({
+        key: `${j}-${c}`,
+        header: c,
+        accessor: (row: { key: number; cells: React.ReactNode[] }) => row.cells[j],
+      }))}
+      data={rows.map((cells, i) => ({ key: i, cells }))}
+      keyAccessor={(row) => row.key}
+      caption={caption}
+      sortable={false}
+      {...(empty ? { emptyMessage: empty } : {})}
+    />
   )
 }
 

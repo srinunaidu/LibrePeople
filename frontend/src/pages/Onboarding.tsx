@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { Layout } from "@/components/Layout"
 import {
   Button,
+  Table,
   Alert,
   EmptyState,
   LoadingRegion,
@@ -208,66 +209,55 @@ export default function Onboarding() {
                   }
                 />
               ) : (
-                <div
-                  className="table-scroll max-h-[420px] overflow-y-auto"
-                  tabIndex={0}
-                  role="region"
-                  aria-label="Onboarding checklist tasks"
-                >
-                  <table className="table-base table-striped">
-                    <caption className="sr-only">Onboarding checklist tasks</caption>
-                    <thead>
-                      <tr>
-                        <th scope="col">Task</th>
-                        <th scope="col">Category</th>
-                        <th scope="col">Due</th>
-                        <th scope="col">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {tasks.map((t) => (
-                        <tr key={t.id}>
-                          <td>
-                            <span className="font-medium">{t.title}</span>
-                            {t.description && (
-                              <span className="block text-xs text-text-secondary mt-0.5">
-                                {t.description}
-                              </span>
-                            )}
-                          </td>
-                          <td className="text-text-secondary">{t.category}</td>
-                          <td className="whitespace-nowrap text-text-secondary">{t.due_date || "—"}</td>
-                          <td>
-                            <label htmlFor={`task-status-${t.id}`} className="text-xs text-fg-muted leading-none mb-1 block">
-                              Status for {t.title}
-                            </label>
-                            {isAdmin ? (
-                              /* PUT /onboarding/tasks/{id} is ADMIN_ROLES
-                                 (onboarding.py:297) */
-                              <select
-                                id={`task-status-${t.id}`}
-                                className="input py-1.5 text-xs w-32"
-                                value={t.status}
-                                disabled={busy === `t${t.id}`}
-                                onChange={(e) =>
-                                  act(`t${t.id}`, () => api.put(`/onboarding/tasks/${t.id}`, {
-                                    status: e.target.value,
-                                  }), "Task updated")
-                                }
-                              >
-                                {["Pending", "InProgress", "Completed"].map((s) => (
-                                  <option key={s}>{s}</option>
-                                ))}
-                              </select>
-                            ) : (
-                              <StatusPill status={t.status} />
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <Table
+                  className="max-h-[420px] overflow-y-auto"
+                  columns={[
+                    { key: "task", header: "Task", accessor: (t) => (
+                      <span>
+                        <span className="font-medium">{t.title}</span>
+                        {t.description && (
+                          <span className="block text-xs text-text-secondary mt-0.5">
+                            {t.description}
+                          </span>
+                        )}
+                      </span>
+                    ) },
+                    { key: "category", header: "Category", accessor: (t) => <span className="text-text-secondary">{t.category}</span> },
+                    { key: "due", header: "Due", accessor: (t) => <span className="whitespace-nowrap text-text-secondary">{t.due_date || "—"}</span> },
+                    { key: "status", header: "Status", accessor: (t) => (
+                      <>
+                        <label htmlFor={`task-status-${t.id}`} className="text-xs text-fg-muted leading-none mb-1 block">
+                          Status for {t.title}
+                        </label>
+                        {isAdmin ? (
+                          /* PUT /onboarding/tasks/{id} is ADMIN_ROLES
+                             (onboarding.py:297) */
+                          <select
+                            id={`task-status-${t.id}`}
+                            className="input py-1.5 text-xs w-32"
+                            value={t.status}
+                            disabled={busy === `t${t.id}`}
+                            onChange={(e) =>
+                              act(`t${t.id}`, () => api.put(`/onboarding/tasks/${t.id}`, {
+                                status: e.target.value,
+                              }), "Task updated")
+                            }
+                          >
+                            {["Pending", "InProgress", "Completed"].map((s) => (
+                              <option key={s}>{s}</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <StatusPill status={t.status} />
+                        )}
+                      </>
+                    ) },
+                  ]}
+                  data={tasks}
+                  keyAccessor={(t) => t.id}
+                  caption="Onboarding checklist tasks"
+                  sortable={false}
+                />
               )}
             </SectionCard>
 
@@ -331,36 +321,27 @@ export default function Onboarding() {
                   }
                 />
               ) : (
-                <div className="table-scroll max-h-[320px] overflow-y-auto">
-                  <table className="table-base table-striped">
-                    <caption className="sr-only">Uploaded onboarding documents</caption>
-                    <thead>
-                      <tr>
-                        <th scope="col">Type</th>
-                        <th scope="col">File</th>
-                        <th scope="col">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {documents.map((d) => (
-                        <tr key={d.id}>
-                          <td className="font-medium">{d.document_type}</td>
-                          <td>
-                            <a
-                              className="action-link"
-                              href={fileUrl(d.storage_url)}
-                              target="_blank"
-                              rel="noreferrer"
-                            >
-                              {d.file_name}
-                            </a>
-                          </td>
-                          <td><StatusPill status={d.status} /></td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <Table
+                  className="max-h-[320px] overflow-y-auto"
+                  columns={[
+                    { key: "type", header: "Type", accessor: (d) => <span className="font-medium">{d.document_type}</span> },
+                    { key: "file", header: "File", accessor: (d) => (
+                      <a
+                        className="action-link"
+                        href={fileUrl(d.storage_url)}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {d.file_name}
+                      </a>
+                    ) },
+                    { key: "status", header: "Status", accessor: (d) => <StatusPill status={d.status} /> },
+                  ]}
+                  data={documents}
+                  keyAccessor={(d) => d.id}
+                  caption="Uploaded onboarding documents"
+                  sortable={false}
+                />
               )}
             </SectionCard>
           </div>

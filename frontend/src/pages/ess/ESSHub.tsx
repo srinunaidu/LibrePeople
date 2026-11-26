@@ -27,7 +27,7 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from "react"
 import { Layout } from "@/components/Layout"
-import {Alert, EmptyState, LoadingRegion, PageHeader, SectionCard, TableSkeleton, RetryableAlert} from "@/components/ui"
+import {Alert, EmptyState, LoadingRegion, PageHeader, SectionCard, Table, TableSkeleton, RetryableAlert} from "@/components/ui"
 import { Button } from "@/components/ui/button"
 import { Checkbox, Input, Select, Textarea } from "@/components/ui/inputs"
 import { StatusPill } from "@/components/ui/status-pill"
@@ -850,23 +850,21 @@ export default function ESSHub() {
                 <EmptyState title="No profile yet — create one" description="No ESS profile exists for the selected employee. Fill the form below to create it." />
               </div>
             ) : profile ? (
-              <div className="table-scroll">
-                <table className="table-base w-full text-sm">
-                  <caption className="sr-only">ESS profile</caption>
-                  <thead><tr><th scope="col">Employee</th><th scope="col">Preferred name</th><th scope="col">Emergency contact</th><th scope="col">Bank</th><th scope="col">Language</th><th scope="col">Theme</th><th scope="col">Direct deposit</th></tr></thead>
-                  <tbody>
-                    <tr>
-                      <td>{employeeName(profile.employee_id)}</td>
-                      <td>{profile.preferred_name ?? "—"}</td>
-                      <td>{profile.emergency_contact_name ? `${profile.emergency_contact_name} · ${profile.emergency_contact_phone ?? ""} (${profile.emergency_contact_relation ?? ""})` : "—"}</td>
-                      <td>{profile.bank_name ?? "—"}{profile.bank_account ? " · On file" : ""}</td>
-                      <td>{profile.language}</td>
-                      <td>{profile.theme_preference}</td>
-                      <td>{profile.direct_deposit_enabled ? "Yes" : "No"}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                columns={[
+                  { key: "employee", header: "Employee", accessor: (pr) => employeeName(pr.employee_id) },
+                  { key: "preferred", header: "Preferred name", accessor: (pr) => pr.preferred_name ?? "\u2014" },
+                  { key: "emergency", header: "Emergency contact", accessor: (pr) => pr.emergency_contact_name ? `${pr.emergency_contact_name} \u00b7 ${pr.emergency_contact_phone ?? ""} (${pr.emergency_contact_relation ?? ""})` : "\u2014" },
+                  { key: "bank", header: "Bank", accessor: (pr) => <>{pr.bank_name ?? "\u2014"}{pr.bank_account ? " \u00b7 On file" : ""}</> },
+                  { key: "language", header: "Language", accessor: (pr) => pr.language },
+                  { key: "theme", header: "Theme", accessor: (pr) => pr.theme_preference },
+                  { key: "dd", header: "Direct deposit", accessor: (pr) => pr.direct_deposit_enabled ? "Yes" : "No" },
+                ]}
+                data={[profile]}
+                keyAccessor={(pr) => pr.employee_id}
+                caption="ESS profile"
+                sortable={false}
+              />
             ) : (
               <div className="p-5 text-sm text-text-secondary">Select an employee and load the profile.</div>
             )}
@@ -934,25 +932,25 @@ export default function ESSHub() {
             {notifications.length === 0 ? (
               <div className="p-5 text-sm text-text-secondary">No notifications.</div>
             ) : (
-              <div className="table-scroll">
-                <table className="table-base w-full text-sm">
-                  <caption className="sr-only">Notifications</caption>
-                  <thead><tr><th scope="col">Title</th><th scope="col">Recipient</th><th scope="col">Type</th><th scope="col">Category</th><th scope="col">Read</th><th scope="col">Created</th><th scope="col">Actions</th></tr></thead>
-                  <tbody>
-                    {notifications.map((n) => (
-                      <tr key={n.id}>
-                        <td className="font-medium">{n.title}<div className="text-xs text-text-secondary truncate max-w-[260px]" title={n.message}>{n.message}</div></td>
-                        <td>{employeeName(n.recipient_id)}</td>
-                        <td><StatusPill status={n.notification_type} /></td>
-                        <td>{n.category}</td>
-                        <td>{n.is_read ? <span className="badge badge-green">Read</span> : <span className="badge badge-amber">Unread</span>}</td>
-                        <td>{fmtDateTime(n.created_at)}</td>
-                        <td>{!n.is_read && <Button size="xs" variant="secondary" loading={busy === `read-${n.id}`} onClick={() => handleMarkRead(n.id)}>Mark read</Button>}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                columns={[
+                  { key: "title", header: "Title", accessor: (n) => (
+                    <span className="font-medium">{n.title}<div className="text-xs text-text-secondary truncate max-w-[260px]" title={n.message}>{n.message}</div></span>
+                  ) },
+                  { key: "recipient", header: "Recipient", accessor: (n) => employeeName(n.recipient_id) },
+                  { key: "type", header: "Type", accessor: (n) => <StatusPill status={n.notification_type} /> },
+                  { key: "category", header: "Category", accessor: (n) => n.category },
+                  { key: "read", header: "Read", accessor: (n) => n.is_read ? <span className="badge badge-green">Read</span> : <span className="badge badge-amber">Unread</span> },
+                  { key: "created", header: "Created", accessor: (n) => fmtDateTime(n.created_at) },
+                  { key: "actions", header: "Actions", accessor: (n) => (
+                    !n.is_read ? <Button size="xs" variant="secondary" loading={busy === `read-${n.id}`} onClick={() => handleMarkRead(n.id)}>Mark read</Button> : <></>
+                  ) },
+                ]}
+                data={notifications}
+                keyAccessor={(n) => n.id}
+                caption="Notifications"
+                sortable={false}
+              />
             )}
           </>
         )}
@@ -989,24 +987,20 @@ export default function ESSHub() {
             {files.length === 0 ? (
               <div className="p-5 text-sm text-text-secondary">No files.</div>
             ) : (
-              <div className="table-scroll">
-                <table className="table-base w-full text-sm">
-                  <caption className="sr-only">Employee files</caption>
-                  <thead><tr><th scope="col">Employee</th><th scope="col">Document type</th><th scope="col">File name</th><th scope="col">Status</th><th scope="col">Expiry</th><th scope="col">Version</th></tr></thead>
-                  <tbody>
-                    {files.map((f) => (
-                      <tr key={f.id}>
-                        <td>{employeeName(f.employee_id)}</td>
-                        <td>{f.document_type}</td>
-                        <td><a href={f.storage_url} target="_blank" rel="noreferrer" className="text-brand-600 hover:underline">{f.file_name}</a></td>
-                        <td><StatusPill status={f.status} /></td>
-                        <td>{fmtDate(f.expiry_date)}</td>
-                        <td>{f.version ?? "—"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                columns={[
+                  { key: "employee", header: "Employee", accessor: (f) => employeeName(f.employee_id) },
+                  { key: "doctype", header: "Document type", accessor: (f) => f.document_type },
+                  { key: "file", header: "File name", accessor: (f) => <a href={f.storage_url} target="_blank" rel="noreferrer" className="text-brand-600 hover:underline">{f.file_name}</a> },
+                  { key: "status", header: "Status", accessor: (f) => <StatusPill status={f.status} /> },
+                  { key: "expiry", header: "Expiry", accessor: (f) => fmtDate(f.expiry_date) },
+                  { key: "version", header: "Version", accessor: (f) => f.version ?? "\u2014" },
+                ]}
+                data={files}
+                keyAccessor={(f) => f.id}
+                caption="Employee files"
+                sortable={false}
+              />
             )}
           </>
         )}
@@ -1039,24 +1033,20 @@ export default function ESSHub() {
             {directory.length === 0 ? (
               <div className="p-5 text-sm text-text-secondary">No directory entries.</div>
             ) : (
-              <div className="table-scroll">
-                <table className="table-base w-full text-sm">
-                  <caption className="sr-only">Directory</caption>
-                  <thead><tr><th scope="col">Name</th><th scope="col">Email</th><th scope="col">Department</th><th scope="col">Job title</th><th scope="col">Location</th><th scope="col">Phone</th></tr></thead>
-                  <tbody>
-                    {directory.map((d) => (
-                      <tr key={d.id}>
-                        <td className="font-medium">{d.full_name}</td>
-                        <td>{d.email}</td>
-                        <td>{d.department ?? "—"}</td>
-                        <td>{d.job_title ?? "—"}</td>
-                        <td>{d.location ?? "—"}</td>
-                        <td>{d.phone ?? "—"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                columns={[
+                  { key: "name", header: "Name", accessor: (d) => <span className="font-medium">{d.full_name}</span> },
+                  { key: "email", header: "Email", accessor: (d) => d.email },
+                  { key: "dept", header: "Department", accessor: (d) => d.department ?? "\u2014" },
+                  { key: "title", header: "Job title", accessor: (d) => d.job_title ?? "\u2014" },
+                  { key: "loc", header: "Location", accessor: (d) => d.location ?? "\u2014" },
+                  { key: "phone", header: "Phone", accessor: (d) => d.phone ?? "\u2014" },
+                ]}
+                data={directory}
+                keyAccessor={(d) => d.id}
+                caption="Directory"
+                sortable={false}
+              />
             )}
           </>
         )}
@@ -1081,22 +1071,20 @@ export default function ESSHub() {
             {orgNodes.length === 0 ? (
               <div className="p-5 text-sm text-text-secondary">No org nodes. An admin can rebuild the chart from employee manager relationships.</div>
             ) : (
-              <div className="table-scroll">
-                <table className="table-base w-full text-sm">
-                  <caption className="sr-only">Org chart</caption>
-                  <thead><tr><th scope="col">Employee</th><th scope="col">Manager</th><th scope="col">Depth</th><th scope="col">Path</th></tr></thead>
-                  <tbody>
-                    {orgNodes.map((n) => (
-                      <tr key={n.employee_id}>
-                        <td style={{ paddingLeft: `${Math.min(n.depth * 16, 64) + 8}px` }}>{employeeName(n.employee_id)}</td>
-                        <td>{n.manager_id ? employeeName(n.manager_id) : "—"}</td>
-                        <td>{n.depth}</td>
-                        <td className="font-mono text-xs">{n.path ?? "—"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                columns={[
+                  { key: "employee", header: "Employee", accessor: (n) => (
+                    <span style={{ paddingLeft: `${Math.min(n.depth * 16, 64) + 8}px` }}>{employeeName(n.employee_id)}</span>
+                  ) },
+                  { key: "manager", header: "Manager", accessor: (n) => n.manager_id ? employeeName(n.manager_id) : "\u2014" },
+                  { key: "depth", header: "Depth", accessor: (n) => n.depth },
+                  { key: "path", header: "Path", accessor: (n) => <span className="font-mono text-xs">{n.path ?? "\u2014"}</span> },
+                ]}
+                data={orgNodes}
+                keyAccessor={(n) => n.employee_id}
+                caption="Org chart"
+                sortable={false}
+              />
             )}
           </>
         )}
@@ -1128,22 +1116,18 @@ export default function ESSHub() {
             {goalAlignments.length === 0 ? (
               <div className="p-5 text-sm text-text-secondary">No goal alignments.</div>
             ) : (
-              <div className="table-scroll">
-                <table className="table-base w-full text-sm">
-                  <caption className="sr-only">Goal alignments</caption>
-                  <thead><tr><th scope="col">ID</th><th scope="col">Goal</th><th scope="col">Parent goal</th><th scope="col">Created</th></tr></thead>
-                  <tbody>
-                    {goalAlignments.map((g) => (
-                      <tr key={g.id}>
-                        <td>{g.id}</td>
-                        <td>#{g.goal_id}</td>
-                        <td>{g.parent_goal_id ?? "—"}</td>
-                        <td>{fmtDateTime(g.created_at)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                columns={[
+                  { key: "id", header: "ID", accessor: (g) => g.id },
+                  { key: "goal", header: "Goal", accessor: (g) => `#${g.goal_id}` },
+                  { key: "parent", header: "Parent goal", accessor: (g) => g.parent_goal_id ?? "\u2014" },
+                  { key: "created", header: "Created", accessor: (g) => fmtDateTime(g.created_at) },
+                ]}
+                data={goalAlignments}
+                keyAccessor={(g) => g.id}
+                caption="Goal alignments"
+                sortable={false}
+              />
             )}
           </>
         )}
@@ -1174,24 +1158,20 @@ export default function ESSHub() {
             {continuousFeedback.length === 0 ? (
               <div className="p-5 text-sm text-text-secondary">No feedback yet.</div>
             ) : (
-              <div className="table-scroll">
-                <table className="table-base w-full text-sm">
-                  <caption className="sr-only">Continuous feedback</caption>
-                  <thead><tr><th scope="col">From</th><th scope="col">To</th><th scope="col">Type</th><th scope="col">Message</th><th scope="col">Private</th><th scope="col">Created</th></tr></thead>
-                  <tbody>
-                    {continuousFeedback.map((fb) => (
-                      <tr key={fb.id}>
-                        <td>{employeeName(fb.from_employee_id)}</td>
-                        <td>{employeeName(fb.to_employee_id)}</td>
-                        <td><StatusPill status={fb.feedback_type} /></td>
-                        <td className="max-w-[260px] truncate" title={fb.message}>{fb.message}</td>
-                        <td>{fb.is_private ? "Yes" : "No"}</td>
-                        <td>{fmtDateTime(fb.created_at)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                columns={[
+                  { key: "from", header: "From", accessor: (fb) => employeeName(fb.from_employee_id) },
+                  { key: "to", header: "To", accessor: (fb) => employeeName(fb.to_employee_id) },
+                  { key: "type", header: "Type", accessor: (fb) => <StatusPill status={fb.feedback_type} /> },
+                  { key: "message", header: "Message", accessor: (fb) => <span className="max-w-[260px] truncate" title={fb.message}>{fb.message}</span> },
+                  { key: "private", header: "Private", accessor: (fb) => fb.is_private ? "Yes" : "No" },
+                  { key: "created", header: "Created", accessor: (fb) => fmtDateTime(fb.created_at) },
+                ]}
+                data={continuousFeedback}
+                keyAccessor={(fb) => fb.id}
+                caption="Continuous feedback"
+                sortable={false}
+              />
             )}
           </>
         )}
@@ -1234,30 +1214,28 @@ export default function ESSHub() {
             {announcements.length === 0 ? (
               <div className="p-5 text-sm text-text-secondary">No announcements.</div>
             ) : (
-              <div className="table-scroll">
-                <table className="table-base w-full text-sm">
-                  <caption className="sr-only">Announcements</caption>
-                  <thead><tr><th scope="col">Title</th><th scope="col">Category</th><th scope="col">Priority</th><th scope="col">Audience</th><th scope="col">Published</th><th scope="col">Created</th>{canAdmin && <th scope="col">Actions</th>}</tr></thead>
-                  <tbody>
-                    {announcements.map((a) => (
-                      <tr key={a.id}>
-                        <td className="font-medium">{a.title}<div className="text-xs text-text-secondary max-w-[260px] truncate" title={a.content}>{a.content}</div></td>
-                        <td>{a.category}</td>
-                        <td><StatusPill status={a.priority} /></td>
-                        <td>{a.target_audience}{a.target_value ? ` · ${a.target_value}` : ""}</td>
-                        <td>{a.published ? <span className="badge badge-green">Published</span> : <span className="badge badge-slate">Draft</span>}</td>
-                        <td>{fmtDateTime(a.created_at)}</td>
-                        {canAdmin && (
-                          <td>
-                            {!a.published && <Button size="xs" loading={busy === `publish-${a.id}`} onClick={() => handlePublishAnnouncement(a.id)}>Publish</Button>}
-                            {a.published && <span className="text-xs text-text-secondary">{fmtDateTime(a.published_at)}</span>}
-                          </td>
-                        )}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                columns={[
+                  { key: "title", header: "Title", accessor: (a) => (
+                    <span className="font-medium">{a.title}<div className="text-xs text-text-secondary max-w-[260px] truncate" title={a.content}>{a.content}</div></span>
+                  ) },
+                  { key: "category", header: "Category", accessor: (a) => a.category },
+                  { key: "priority", header: "Priority", accessor: (a) => <StatusPill status={a.priority} /> },
+                  { key: "audience", header: "Audience", accessor: (a) => <>{a.target_audience}{a.target_value ? ` \u00b7 ${a.target_value}` : ""}</> },
+                  { key: "published", header: "Published", accessor: (a) => a.published ? <span className="badge badge-green">Published</span> : <span className="badge badge-slate">Draft</span> },
+                  { key: "created", header: "Created", accessor: (a) => fmtDateTime(a.created_at) },
+                  ...(canAdmin ? [{
+                    key: "actions", header: "Actions", accessor: (a: (typeof announcements)[number]) => (
+                      !a.published ? <Button size="xs" loading={busy === `publish-${a.id}`} onClick={() => handlePublishAnnouncement(a.id)}>Publish</Button>
+                      : <span className="text-xs text-text-secondary">{fmtDateTime(a.published_at)}</span>
+                    ),
+                  }] : []),
+                ]}
+                data={announcements}
+                keyAccessor={(a) => a.id}
+                caption="Announcements"
+                sortable={false}
+              />
             )}
           </>
         )}
@@ -1277,22 +1255,18 @@ export default function ESSHub() {
             {complianceChecks.length === 0 ? (
               <div className="p-5 text-sm text-text-secondary">No compliance checks yet. Run the checks to evaluate active rules.</div>
             ) : (
-              <div className="table-scroll">
-                <table className="table-base w-full text-sm">
-                  <caption className="sr-only">Compliance checks</caption>
-                  <thead><tr><th scope="col">Rule</th><th scope="col">Passed</th><th scope="col">Details</th><th scope="col">Run at</th></tr></thead>
-                  <tbody>
-                    {complianceChecks.map((c) => (
-                      <tr key={c.id}>
-                        <td>#{c.rule_id}</td>
-                        <td>{c.passed ? <span className="badge badge-green">Passed</span> : <span className="badge badge-rose">Failed</span>}</td>
-                        <td className="max-w-[320px] truncate" title={c.details ?? ""}>{c.details ?? "—"}</td>
-                        <td>{fmtDateTime(c.run_at)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                columns={[
+                  { key: "rule", header: "Rule", accessor: (c) => `#${c.rule_id}` },
+                  { key: "passed", header: "Passed", accessor: (c) => c.passed ? <span className="badge badge-green">Passed</span> : <span className="badge badge-rose">Failed</span> },
+                  { key: "details", header: "Details", accessor: (c) => <span className="max-w-[320px] truncate" title={c.details ?? ""}>{c.details ?? "\u2014"}</span> },
+                  { key: "runat", header: "Run at", accessor: (c) => fmtDateTime(c.run_at) },
+                ]}
+                data={complianceChecks}
+                keyAccessor={(c) => c.id}
+                caption="Compliance checks"
+                sortable={false}
+              />
             )}
           </>
         )}
@@ -1314,24 +1288,20 @@ export default function ESSHub() {
             {payslips.length === 0 ? (
               <div className="p-5 text-sm text-text-secondary">No payslips found for your employee record.</div>
             ) : (
-              <div className="table-scroll">
-                <table className="table-base w-full text-sm">
-                  <caption className="sr-only">Payslips</caption>
-                  <thead><tr><th scope="col">Pay run</th><th scope="col">Gross pay</th><th scope="col">Deductions</th><th scope="col">Net pay</th><th scope="col">Status</th><th scope="col">Date</th></tr></thead>
-                  <tbody>
-                    {payslips.map((p) => (
-                      <tr key={p.id}>
-                        <td>#{p.pay_run_id}</td>
-                        <td>{String(p.gross_pay)}</td>
-                        <td>{String(p.total_deductions)}</td>
-                        <td className="font-medium">{String(p.net_pay)}</td>
-                        <td><StatusPill status={p.status} /></td>
-                        <td>{fmtDate(p.created_at)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                columns={[
+                  { key: "run", header: "Pay run", accessor: (p) => `#${p.pay_run_id}` },
+                  { key: "gross", header: "Gross pay", accessor: (p) => String(p.gross_pay) },
+                  { key: "ded", header: "Deductions", accessor: (p) => String(p.total_deductions) },
+                  { key: "net", header: "Net pay", accessor: (p) => <span className="font-medium">{String(p.net_pay)}</span> },
+                  { key: "status", header: "Status", accessor: (p) => <StatusPill status={p.status} /> },
+                  { key: "date", header: "Date", accessor: (p) => fmtDate(p.created_at) },
+                ]}
+                data={payslips}
+                keyAccessor={(p) => p.id}
+                caption="Payslips"
+                sortable={false}
+              />
             )}
           </>
         )}
@@ -1370,23 +1340,19 @@ export default function ESSHub() {
               {leaveBalances.length === 0 ? (
                 <div className="p-4 text-sm text-text-secondary">No leave balances found for the current year.</div>
               ) : (
-                <div className="table-scroll">
-                  <table className="table-base w-full text-sm">
-                    <caption className="sr-only">Leave balances</caption>
-                    <thead><tr><th scope="col">Leave type</th><th scope="col">Year</th><th scope="col">Entitled</th><th scope="col">Used</th><th scope="col">Remaining</th></tr></thead>
-                    <tbody>
-                      {leaveBalances.map((b) => (
-                        <tr key={b.id}>
-                          <td>{b.leave_type_name ?? "—"}</td>
-                          <td>{b.entitlement_year}</td>
-                          <td>{String(b.entitled_days)}</td>
-                          <td>{String(b.used_days)}</td>
-                          <td className="font-medium">{String(b.available_days)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <Table
+                columns={[
+                  { key: "type", header: "Leave type", accessor: (b) => b.leave_type_name ?? "\u2014" },
+                  { key: "year", header: "Year", accessor: (b) => b.entitlement_year },
+                  { key: "entitled", header: "Entitled", accessor: (b) => String(b.entitled_days) },
+                  { key: "used", header: "Used", accessor: (b) => String(b.used_days) },
+                  { key: "remaining", header: "Remaining", accessor: (b) => <span className="font-medium">{String(b.available_days)}</span> },
+                ]}
+                data={leaveBalances}
+                keyAccessor={(b) => b.id}
+                caption="Leave balances"
+                sortable={false}
+              />
               )}
             </div>
 
@@ -1395,24 +1361,20 @@ export default function ESSHub() {
               {leaveRequests.length === 0 ? (
                 <div className="p-4 text-sm text-text-secondary">No leave requests yet.</div>
               ) : (
-                <div className="table-scroll">
-                  <table className="table-base w-full text-sm">
-                    <caption className="sr-only">Leave requests</caption>
-                    <thead><tr><th scope="col">Leave type</th><th scope="col">From</th><th scope="col">To</th><th scope="col">Days</th><th scope="col">Status</th><th scope="col">Decided</th></tr></thead>
-                    <tbody>
-                      {leaveRequests.map((r) => (
-                        <tr key={r.id}>
-                          <td>{leaveTypes.find((t) => t.id === r.leave_type_id)?.name ?? "—"}</td>
-                          <td>{fmtDate(r.start_date)}</td>
-                          <td>{fmtDate(r.end_date)}</td>
-                          <td>{String(r.working_days)}</td>
-                          <td><StatusPill status={r.status} /></td>
-                          <td>{fmtDate(r.decided_at)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <Table
+                columns={[
+                  { key: "type", header: "Leave type", accessor: (r) => leaveTypes.find((t) => t.id === r.leave_type_id)?.name ?? "\u2014" },
+                  { key: "from", header: "From", accessor: (r) => fmtDate(r.start_date) },
+                  { key: "to", header: "To", accessor: (r) => fmtDate(r.end_date) },
+                  { key: "days", header: "Days", accessor: (r) => String(r.working_days) },
+                  { key: "status", header: "Status", accessor: (r) => <StatusPill status={r.status} /> },
+                  { key: "decided", header: "Decided", accessor: (r) => fmtDate(r.decided_at) },
+                ]}
+                data={leaveRequests}
+                keyAccessor={(r) => r.id}
+                caption="Leave requests"
+                sortable={false}
+              />
               )}
             </div>
           </>

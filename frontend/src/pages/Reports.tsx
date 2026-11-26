@@ -2,6 +2,7 @@ import { useEffect, useState, type ChangeEvent } from "react"
 import { Layout } from "@/components/Layout"
 import {
   Button,
+  Table,
   Alert,
   CardSkeleton,
   EmptyState,
@@ -361,34 +362,17 @@ export default function Reports() {
             <EmptyState title="No headcount data"
               description="Headcount appears once employees are assigned to departments." />
           ) : (
-            <div
-              className="table-scroll"
-              role="region"
-              aria-label="Headcount by department"
-              tabIndex={0}
-            >
-              <table className="table-base table-striped">
-                <caption className="sr-only">Headcount by department</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Department</th>
-                    <th scope="col" className="num">Employees</th>
-                    <th scope="col" className="num">Share</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {deptRows.map((r) => (
-                    <tr key={r.department || "none"}>
-                      <td>{r.department || "(none)"}</td>
-                      <td className="num font-semibold">{r.employees}</td>
-                      <td className="num">
-                        <Bar value={Number(r.employees) || 0} max={maxDept} />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table
+              columns={[
+                { key: "dept", header: "Department", accessor: (r) => r.department || "(none)" },
+                { key: "employees", header: "Employees", accessor: (r) => r.employees, cellClassName: "num font-semibold" },
+                { key: "share", header: "Share", accessor: (r) => <Bar value={Number(r.employees) || 0} max={maxDept} />, cellClassName: "num" },
+              ]}
+              data={deptRows}
+              keyAccessor={(r) => r.department || "none"}
+              caption="Headcount by department"
+              sortable={false}
+            />
           )}
         </SectionCard>
 
@@ -563,46 +547,27 @@ export default function Reports() {
                 : `The audit trail requires the SuperAdmin or HR role; your role is ${user?.role || "unknown"}. The workforce reports above are unaffected.`
             }
           />
+        ) : audit.length === 0 ? (
+          <EmptyState title="No activity yet"
+            description="Recorded actions will appear here." />
         ) : (
-          <div
-            className="table-scroll"
-            role="region"
-            aria-label="Audit trail of the 25 most recent actions"
-            tabIndex={0}
-          >
-            <table className="table-base table-striped">
-              <caption className="sr-only">Audit trail of the 25 most recent actions</caption>
-              <thead>
-                <tr>
-                  <th scope="col">When</th>
-                  <th scope="col">Actor</th>
-                  <th scope="col">Action</th>
-                  <th scope="col">Entity</th>
-                </tr>
-              </thead>
-              <tbody>
-                {audit.map((a) => (
-                  <tr key={a.id}>
-                    <td className="whitespace-nowrap text-text-secondary">{formatTimestamp(a.created_at, localeOpts)}</td>
-                    <td className="font-medium">{a.actor_name || "—"}</td>
-                    <td>{a.action}</td>
-                    <td className="text-text-secondary">
-                      {a.entity_type}
-                      {a.entity_id ? ` #${a.entity_id}` : ""}
-                    </td>
-                  </tr>
-                ))}
-                {audit.length === 0 && (
-                  <tr>
-                    <td colSpan={4}>
-                      <EmptyState title="No activity yet"
-                        description="Recorded actions will appear here." />
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-            </div>
+          <Table
+            columns={[
+              { key: "when", header: "When", accessor: (a) => <span className="whitespace-nowrap text-text-secondary">{formatTimestamp(a.created_at, localeOpts)}</span> },
+              { key: "actor", header: "Actor", accessor: (a) => <span className="font-medium">{a.actor_name || "—"}</span> },
+              { key: "action", header: "Action", accessor: (a) => a.action },
+              { key: "entity", header: "Entity", accessor: (a) => (
+                <span className="text-text-secondary">
+                  {a.entity_type}
+                  {a.entity_id ? ` #${a.entity_id}` : ""}
+                </span>
+              ) },
+            ]}
+            data={audit}
+            keyAccessor={(a) => a.id}
+            caption="Audit trail of the 25 most recent actions"
+            sortable={false}
+          />
           )}
       </SectionCard>
         </>

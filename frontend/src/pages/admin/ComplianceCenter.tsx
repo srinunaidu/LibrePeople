@@ -22,6 +22,7 @@ import {
   RetryableAlert,
   SectionCard,
   TableSkeleton,
+  Table,
 } from "@/components/ui"
 import { PendingVerificationAlert } from "@/components/ui/PendingVerificationAlert"
 import { Button } from "@/components/ui/button"
@@ -449,39 +450,28 @@ export default function ComplianceCenter() {
               ) : rules.length === 0 ? (
                 <EmptyState title="No rules" description="No compliance rules are configured yet. Create one above — it will appear here and in the audit trail." />
               ) : (
-                <div className="table-scroll overflow-x-auto">
-                  <table className="table-base table-compact w-full text-sm" style={{ borderCollapse: "collapse" }}>
-                    <caption className="sr-only">Compliance rules</caption>
-                    <thead>
-                      <tr className="border-b border-[color:var(--border)] text-left">
-                        <th scope="col" className="px-3 py-2 text-xs font-semibold text-[color:var(--fg-muted)]">Code</th>
-                        <th scope="col" className="px-3 py-2 text-xs font-semibold text-[color:var(--fg-muted)]">Name</th>
-                        <th scope="col" className="px-3 py-2 text-xs font-semibold text-[color:var(--fg-muted)]">Category</th>
-                        <th scope="col" className="px-3 py-2 text-xs font-semibold text-[color:var(--fg-muted)]">Severity</th>
-                        <th scope="col" className="px-3 py-2 text-xs font-semibold text-[color:var(--fg-muted)]">Status</th>
-                        <th scope="col" className="px-3 py-2 text-xs font-semibold text-[color:var(--fg-muted)]">Created</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {rules.map((r) => (
-                        <tr key={r.id} className="border-b border-[color:var(--border)] hover:bg-[color:var(--surface-hover)]">
-                          <td className="px-3 py-2 font-mono text-xs tabular-nums">{r.code}</td>
-                          <td className="px-3 py-2 text-xs font-medium max-w-[240px] truncate" title={r.name}>
-                            {r.name}
-                          </td>
-                          <td className="px-3 py-2 text-xs">{r.category}</td>
-                          <td className="px-3 py-2">
-                            <StatusPill status={r.severity} tone={severityTone(r.severity)} />
-                          </td>
-                          <td className="px-3 py-2">
-                            <StatusPill status={r.is_active ? "Active" : "Inactive"} />
-                          </td>
-                          <td className="px-3 py-2 text-xs tabular-nums whitespace-nowrap">{fmtDate(r.created_at)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <Table
+                  columns={[
+                    { key: "code", header: "Code", accessor: (r) => <span className="font-mono text-xs tabular-nums">{r.code}</span> },
+                    { key: "name", header: "Name", accessor: (r) => (
+                      <span className="font-medium max-w-[240px] truncate" title={r.name}>
+                        {r.name}
+                      </span>
+                    ) },
+                    { key: "category", header: "Category", accessor: (r) => <span className="text-xs">{r.category}</span> },
+                    { key: "severity", header: "Severity", accessor: (r) => (
+                      <StatusPill status={r.severity} tone={severityTone(r.severity)} />
+                    ) },
+                    { key: "status", header: "Status", accessor: (r) => (
+                      <StatusPill status={r.is_active ? "Active" : "Inactive"} />
+                    ) },
+                    { key: "created", header: "Created", accessor: (r) => <span className="whitespace-nowrap">{fmtDate(r.created_at)}</span> },
+                  ]}
+                  data={rules}
+                  keyAccessor={(r) => r.id}
+                  caption="Compliance rules"
+                  sortable={false}
+                />
               )}
             </SectionCard>
           </TabsContent>
@@ -570,60 +560,45 @@ export default function ComplianceCenter() {
               ) : violations.length === 0 ? (
                 <EmptyState title="No violations" description="No violations have been recorded. Create one above — open violations become queue items instead of memos." />
               ) : (
-                <div className="table-scroll overflow-x-auto">
-                  <table className="table-base table-compact w-full text-sm" style={{ borderCollapse: "collapse" }}>
-                    <caption className="sr-only">Compliance violations</caption>
-                    <thead>
-                      <tr className="border-b border-[color:var(--border)] text-left">
-                        <th scope="col" className="px-3 py-2 text-xs font-semibold text-[color:var(--fg-muted)]">ID</th>
-                        <th scope="col" className="px-3 py-2 text-xs font-semibold text-[color:var(--fg-muted)]">Rule</th>
-                        <th scope="col" className="px-3 py-2 text-xs font-semibold text-[color:var(--fg-muted)]">Employee</th>
-                        <th scope="col" className="px-3 py-2 text-xs font-semibold text-[color:var(--fg-muted)]">Status</th>
-                        <th scope="col" className="px-3 py-2 text-xs font-semibold text-[color:var(--fg-muted)]">Detected</th>
-                        <th scope="col" className="px-3 py-2 text-xs font-semibold text-[color:var(--fg-muted)]">Resolved</th>
-                        <th scope="col" className="px-3 py-2 text-xs font-semibold text-[color:var(--fg-muted)]">Notes</th>
-                        <th scope="col" className="px-3 py-2 text-xs font-semibold text-[color:var(--fg-muted)]">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {violations.map((v) => (
-                        <tr key={v.id} className="border-b border-[color:var(--border)] hover:bg-[color:var(--surface-hover)]">
-                          <td className="px-3 py-2 font-mono text-xs tabular-nums">#{v.id}</td>
-                          <td className="px-3 py-2 font-mono text-xs tabular-nums">#{v.rule_id}</td>
-                          <td className="px-3 py-2 text-xs tabular-nums">{v.employee_id ? `#${v.employee_id}` : "—"}</td>
-                          <td className="px-3 py-2">
-                            <StatusPill status={v.status} />
-                          </td>
-                          <td className="px-3 py-2 text-xs tabular-nums whitespace-nowrap">{fmtDate(v.detected_at)}</td>
-                          <td className="px-3 py-2 text-xs tabular-nums whitespace-nowrap">{fmtDate(v.resolved_at)}</td>
-                          <td className="px-3 py-2 text-xs max-w-[220px] truncate" title={v.notes ?? ""}>
-                            {v.notes || "—"}
-                          </td>
-                          <td className="px-3 py-2">
-                            {v.status !== "Resolved" && !v.resolved_at ? (
-                              resolveConfirm === v.id ? (
-                                <span className="inline-flex items-center gap-1">
-                                  <Button size="xs" variant="primary" loading={resolveMutation.isPending} onClick={() => resolveMutation.mutate(v.id)}>
-                                    Confirm
-                                  </Button>
-                                  <Button size="xs" variant="ghost" onClick={() => setResolveConfirm(null)}>
-                                    Cancel
-                                  </Button>
-                                </span>
-                              ) : (
-                                <Button size="xs" variant="secondary" onClick={() => setResolveConfirm(v.id)}>
-                                  Resolve
-                                </Button>
-                              )
-                            ) : (
-                              <span className="text-xs text-[color:var(--fg-muted)]">—</span>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <Table
+                  columns={[
+                    { key: "id", header: "ID", accessor: (v) => <span className="font-mono text-xs tabular-nums">#{v.id}</span> },
+                    { key: "rule", header: "Rule", accessor: (v) => <span className="font-mono text-xs tabular-nums">#{v.rule_id}</span> },
+                    { key: "employee", header: "Employee", accessor: (v) => <span className="text-xs tabular-nums">{v.employee_id ? `#${v.employee_id}` : "\u2014"}</span> },
+                    { key: "status", header: "Status", accessor: (v) => <StatusPill status={v.status} /> },
+                    { key: "detected", header: "Detected", accessor: (v) => <span className="whitespace-nowrap">{fmtDate(v.detected_at)}</span> },
+                    { key: "resolved", header: "Resolved", accessor: (v) => <span className="whitespace-nowrap">{fmtDate(v.resolved_at)}</span> },
+                    { key: "notes", header: "Notes", accessor: (v) => (
+                      <span className="text-xs max-w-[220px] truncate" title={v.notes ?? ""}>
+                        {v.notes || "\u2014"}
+                      </span>
+                    ) },
+                    { key: "action", header: "Action", accessor: (v) => (
+                      v.status !== "Resolved" && !v.resolved_at ? (
+                        resolveConfirm === v.id ? (
+                          <span className="inline-flex items-center gap-1">
+                            <Button size="xs" variant="primary" loading={resolveMutation.isPending} onClick={() => resolveMutation.mutate(v.id)}>
+                              Confirm
+                            </Button>
+                            <Button size="xs" variant="ghost" onClick={() => setResolveConfirm(null)}>
+                              Cancel
+                            </Button>
+                          </span>
+                        ) : (
+                          <Button size="xs" variant="secondary" onClick={() => setResolveConfirm(v.id)}>
+                            Resolve
+                          </Button>
+                        )
+                      ) : (
+                        <span className="text-xs text-[color:var(--fg-muted)]">{"\u2014"}</span>
+                      )
+                    ) },
+                  ]}
+                  data={violations}
+                  keyAccessor={(v) => v.id}
+                  caption="Compliance violations"
+                  sortable={false}
+                />
               )}
               {violations.length > 0 && (
                 <p className="text-xs text-[color:var(--fg-muted)] mt-3 px-1">PUT /compliance/compliance-violations/{"{id}"}/resolve marks a violation resolved and writes <code className="font-mono text-xs">resolve_compliance_violation</code> to the audit trail.</p>
@@ -649,9 +624,25 @@ export default function ComplianceCenter() {
                   </div>
                   <SectionCard compact title={`Payroll Register — ${payrollReports.payroll_register_count} payslips`} description="All payslips with statutory columns (BASIC, TAX_*, REBATE_87A, PF/ESI EE, PT_{STATE}) from deductions_json/earnings_json">
                     <div className="table-scroll overflow-x-auto">
-                      <table className="table-base table-compact w-full text-sm"><thead><tr><th>Payslip</th><th>Employee</th><th className="num">Gross</th><th className="num">Net</th><th className="num">BASIC</th><th className="num">TAX</th><th className="num">Rebate</th><th className="num">PF EE</th><th className="num">ESI EE</th><th>PT</th><th>Currency</th></tr></thead><tbody>
-                        {(payrollReports.payroll_register || []).map((r:any)=>(<tr key={r.payslip_id}><td>#{r.payslip_id}</td><td>#{r.employee_id}</td><td className="num tabular-nums">{r.gross}</td><td className="num tabular-nums">{r.net}</td><td className="num tabular-nums">{r.basic}</td><td className="num tabular-nums">{r.tax}</td><td className="num tabular-nums">{r.rebate_87a}</td><td className="num tabular-nums">{r.pf_ee}</td><td className="num tabular-nums">{r.esi_ee}</td><td>{r.pt_state ? `${r.pt_state}: ${r.pt_amount}` : "—"}</td><td>{r.currency || "INR"}</td></tr>))}
-                      </tbody></table>
+                      <Table
+                        columns={[
+                          { key: "payslip", header: "Payslip", accessor: (r: any) => `#${r.payslip_id}` },
+                          { key: "employee", header: "Employee", accessor: (r: any) => `#${r.employee_id}` },
+                          { key: "gross", header: "Gross", accessor: (r: any) => r.gross, cellClassName: "num tabular-nums" },
+                          { key: "net", header: "Net", accessor: (r: any) => r.net, cellClassName: "num tabular-nums" },
+                          { key: "basic", header: "BASIC", accessor: (r: any) => r.basic, cellClassName: "num tabular-nums" },
+                          { key: "tax", header: "TAX", accessor: (r: any) => r.tax, cellClassName: "num tabular-nums" },
+                          { key: "rebate", header: "Rebate", accessor: (r: any) => r.rebate_87a, cellClassName: "num tabular-nums" },
+                          { key: "pf", header: "PF EE", accessor: (r: any) => r.pf_ee, cellClassName: "num tabular-nums" },
+                          { key: "esi", header: "ESI EE", accessor: (r: any) => r.esi_ee, cellClassName: "num tabular-nums" },
+                          { key: "pt", header: "PT", accessor: (r: any) => r.pt_state ? `${r.pt_state}: ${r.pt_amount}` : "\u2014" },
+                          { key: "currency", header: "Currency", accessor: (r: any) => r.currency || "INR" },
+                        ]}
+                        data={payrollReports.payroll_register || []}
+                        keyAccessor={(r: any) => r.payslip_id}
+                        caption={`Payroll Register — ${payrollReports.payroll_register_count} payslips`}
+                        sortable={false}
+                      />
                     </div>
                   </SectionCard>
                   <div className="grid sm:grid-cols-3 gap-4">

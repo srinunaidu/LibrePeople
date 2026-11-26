@@ -21,6 +21,7 @@ import { useCallback, useEffect, useState, type FormEvent } from "react"
 import { Layout } from "@/components/Layout"
 import {Alert,
   Button,
+  Table,
   EmptyState,
   LoadingRegion,
   PageHeader,
@@ -672,82 +673,66 @@ export default function PerformanceHub() {
             {goals.length === 0 ? (
               <div className="p-5 text-sm text-text-secondary">No goals recorded yet.</div>
             ) : (
-              <div className="table-scroll">
-                <table className="table-base w-full text-sm">
-                  <caption className="sr-only">Performance goals of this deployment</caption>
-                  <thead>
-                    <tr>
-                      <th scope="col">Title</th>
-                      <th scope="col">Employee</th>
-                      <th scope="col">Progress</th>
-                      <th scope="col">Status</th>
-                      <th scope="col">Weight</th>
-                      <th scope="col">Due</th>
-                      {canManager && <th scope="col">Update</th>}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {goals.map((g) => (
-                      <tr key={g.id}>
-                        <td className="font-medium">{g.title}</td>
-                        <td>{employeeName(g.employee_id)}</td>
-                        <td className="min-w-[160px]">
-                          <Meter percent={Number(g.progress) || 0} label={`${g.progress ?? 0}%`} />
-                        </td>
-                        <td>
-                          <StatusPill status={g.status} dot />
-                        </td>
-                        <td className="tabular-nums">{g.weight ?? "—"}</td>
-                        <td>{fmtDate(g.due_date, tenantDateOpts)}</td>
-                        {canManager && (
-                          <td>
-                            <div className="flex items-center gap-1">
-                              <Input
-                                aria-label={`Progress for goal ${g.id}`}
-                                type="number"
-                                min="0"
-                                max="100"
-                                step="1"
-                                className="w-20"
-                                value={goalEdits[g.id]?.progress ?? String(g.progress ?? 0)}
-                                onChange={(e) =>
-                                  setGoalEdits((m) => ({
-                                    ...m,
-                                    [g.id]: { progress: e.target.value, status: m[g.id]?.status ?? g.status },
-                                  }))
-                                }
-                              />
-                              <Select
-                                aria-label={`Status for goal ${g.id}`}
-                                className="w-36"
-                                value={goalEdits[g.id]?.status ?? g.status}
-                                onChange={(e) =>
-                                  setGoalEdits((m) => ({
-                                    ...m,
-                                    [g.id]: { progress: m[g.id]?.progress ?? String(g.progress ?? 0), status: e.target.value },
-                                  }))
-                                }
-                              >
-                                <option value="Not Started">Not Started</option>
-                                <option value="In Progress">In Progress</option>
-                                <option value="Completed">Completed</option>
-                                <option value="Cancelled">Cancelled</option>
-                              </Select>
-                              <Button
-                                size="xs"
-                                onClick={() => handleUpdateGoal(g.id)}
-                                loading={busy === `goal-${g.id}`}
-                              >
-                                Save
-                              </Button>
-                            </div>
-                          </td>
-                        )}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                columns={[
+                  { key: "title", header: "Title", accessor: (g) => <span className="font-medium">{g.title}</span> },
+                  { key: "employee", header: "Employee", accessor: (g) => employeeName(g.employee_id) },
+                  { key: "progress", header: "Progress", accessor: (g) => (
+                    <span className="min-w-[160px]"><Meter percent={Number(g.progress) || 0} label={`${g.progress ?? 0}%`} /></span>
+                  ) },
+                  { key: "status", header: "Status", accessor: (g) => <StatusPill status={g.status} dot /> },
+                  { key: "weight", header: "Weight", accessor: (g) => g.weight ?? "\u2014", cellClassName: "tabular-nums" },
+                  { key: "due", header: "Due", accessor: (g) => fmtDate(g.due_date, tenantDateOpts) },
+                  ...(canManager ? [{
+                    key: "update", header: "Update", accessor: (g: (typeof goals)[number]) => (
+                      <div className="flex items-center gap-1">
+                        <Input
+                          aria-label={`Progress for goal ${g.id}`}
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="1"
+                          className="w-20"
+                          value={goalEdits[g.id]?.progress ?? String(g.progress ?? 0)}
+                          onChange={(e) =>
+                            setGoalEdits((m) => ({
+                              ...m,
+                              [g.id]: { progress: e.target.value, status: m[g.id]?.status ?? g.status },
+                            }))
+                          }
+                        />
+                        <Select
+                          aria-label={`Status for goal ${g.id}`}
+                          className="w-36"
+                          value={goalEdits[g.id]?.status ?? g.status}
+                          onChange={(e) =>
+                            setGoalEdits((m) => ({
+                              ...m,
+                              [g.id]: { progress: m[g.id]?.progress ?? String(g.progress ?? 0), status: e.target.value },
+                            }))
+                          }
+                        >
+                          <option value="Not Started">Not Started</option>
+                          <option value="In Progress">In Progress</option>
+                          <option value="Completed">Completed</option>
+                          <option value="Cancelled">Cancelled</option>
+                        </Select>
+                        <Button
+                          size="xs"
+                          onClick={() => handleUpdateGoal(g.id)}
+                          loading={busy === `goal-${g.id}`}
+                        >
+                          Save
+                        </Button>
+                      </div>
+                    ),
+                  }] : []),
+                ]}
+                data={goals}
+                keyAccessor={(g) => g.id}
+                caption="Performance goals of this deployment"
+                sortable={false}
+              />
             )}
           </>
         )}
@@ -888,51 +873,35 @@ export default function PerformanceHub() {
             {reviews.length === 0 ? (
               <div className="p-5 text-sm text-text-secondary">No reviews recorded yet.</div>
             ) : (
-              <div className="table-scroll">
-                <table className="table-base w-full text-sm">
-                  <caption className="sr-only">Performance reviews of this deployment</caption>
-                  <thead>
-                    <tr>
-                      <th scope="col">Period</th>
-                      <th scope="col">Employee</th>
-                      <th scope="col">Reviewer</th>
-                      <th scope="col">Status</th>
-                      <th scope="col" className="num">Rating</th>
-                      <th scope="col">Finalized</th>
-                      {canManager && <th scope="col">Actions</th>}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {reviews.map((r) => (
-                      <tr key={r.id}>
-                        <td className="font-medium">{r.period}</td>
-                        <td>{employeeName(r.employee_id)}</td>
-                        <td>{r.reviewer_id ? employeeName(r.reviewer_id) : "—"}</td>
-                        <td>
-                          <StatusPill status={r.status} dot />
-                        </td>
-                        <td className="num tabular-nums">{r.overall_rating ?? "—"}</td>
-                        <td>{fmtDateTime(r.finalized_at, tenantDateOpts)}</td>
-                        {canManager && (
-                          <td>
-                            {r.status === "Finalized" || r.finalized_at ? (
-                              <span className="text-xs text-text-secondary">Finalized</span>
-                            ) : (
-                              <Button
-                                size="xs"
-                                loading={finalizing === r.id}
-                                onClick={() => handleFinalizeReview(r.id)}
-                              >
-                                Finalize
-                              </Button>
-                            )}
-                          </td>
-                        )}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                columns={[
+                  { key: "period", header: "Period", accessor: (r) => <span className="font-medium">{r.period}</span> },
+                  { key: "employee", header: "Employee", accessor: (r) => employeeName(r.employee_id) },
+                  { key: "reviewer", header: "Reviewer", accessor: (r) => r.reviewer_id ? employeeName(r.reviewer_id) : "\u2014" },
+                  { key: "status", header: "Status", accessor: (r) => <StatusPill status={r.status} dot /> },
+                  { key: "rating", header: "Rating", accessor: (r) => r.overall_rating ?? "\u2014", cellClassName: "num tabular-nums" },
+                  { key: "finalized", header: "Finalized", accessor: (r) => fmtDateTime(r.finalized_at, tenantDateOpts) },
+                  ...(canManager ? [{
+                    key: "actions", header: "Actions", accessor: (r: (typeof reviews)[number]) => (
+                      r.status === "Finalized" || r.finalized_at ? (
+                        <span className="text-xs text-text-secondary">Finalized</span>
+                      ) : (
+                        <Button
+                          size="xs"
+                          loading={finalizing === r.id}
+                          onClick={() => handleFinalizeReview(r.id)}
+                        >
+                          Finalize
+                        </Button>
+                      )
+                    ),
+                  }] : []),
+                ]}
+                data={reviews}
+                keyAccessor={(r) => r.id}
+                caption="Performance reviews of this deployment"
+                sortable={false}
+              />
             )}
           </>
         )}
@@ -1049,35 +1018,24 @@ export default function PerformanceHub() {
             {feedback.length === 0 ? (
               <div className="p-5 text-sm text-text-secondary">No feedback recorded yet.</div>
             ) : (
-              <div className="table-scroll">
-                <table className="table-base w-full text-sm">
-                  <caption className="sr-only">Feedback on performance reviews</caption>
-                  <thead>
-                    <tr>
-                      <th scope="col">Review</th>
-                      <th scope="col">From</th>
-                      <th scope="col">Type</th>
-                      <th scope="col" className="num">Rating</th>
-                      <th scope="col">Comments</th>
-                      <th scope="col">Created</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {feedback.map((fb) => (
-                      <tr key={fb.id}>
-                        <td>#{fb.review_id}</td>
-                        <td>{fb.from_employee_id ? employeeName(fb.from_employee_id) : "—"}</td>
-                        <td>{fb.feedback_type}</td>
-                        <td className="num tabular-nums">{fb.rating ?? "—"}</td>
-                        <td className="max-w-[260px] truncate" title={fb.comments ?? ""}>
-                          {fb.comments ?? "—"}
-                        </td>
-                        <td>{fmtDate(fb.created_at, tenantDateOpts)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                columns={[
+                  { key: "review", header: "Review", accessor: (fb) => `#${fb.review_id}` },
+                  { key: "from", header: "From", accessor: (fb) => fb.from_employee_id ? employeeName(fb.from_employee_id) : "\u2014" },
+                  { key: "type", header: "Type", accessor: (fb) => fb.feedback_type },
+                  { key: "rating", header: "Rating", accessor: (fb) => fb.rating ?? "\u2014", cellClassName: "num tabular-nums" },
+                  { key: "comments", header: "Comments", accessor: (fb) => (
+                    <span className="max-w-[260px] truncate" title={fb.comments ?? ""}>
+                      {fb.comments ?? "\u2014"}
+                    </span>
+                  ) },
+                  { key: "created", header: "Created", accessor: (fb) => fmtDate(fb.created_at, tenantDateOpts) },
+                ]}
+                data={feedback}
+                keyAccessor={(fb) => fb.id}
+                caption="Feedback on performance reviews"
+                sortable={false}
+              />
             )}
           </>
         )}
@@ -1200,33 +1158,20 @@ export default function PerformanceHub() {
             {bands.length === 0 ? (
               <div className="p-5 text-sm text-text-secondary">No compensation bands exist yet.</div>
             ) : (
-              <div className="table-scroll">
-                <table className="table-base w-full text-sm">
-                  <caption className="sr-only">Compensation bands of this deployment</caption>
-                  <thead>
-                    <tr>
-                      <th scope="col">Job</th>
-                      <th scope="col">Level</th>
-                      <th scope="col" className="num">Min</th>
-                      <th scope="col" className="num">Mid</th>
-                      <th scope="col" className="num">Max</th>
-                      <th scope="col">Currency</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {bands.map((b) => (
-                      <tr key={b.id}>
-                        <td>{jobName(b.job_id)}</td>
-                        <td>{b.level}</td>
-                        <td className="num tabular-nums">{money(b.min_salary, { locale: tenantLocale, currency: b.currency || tenantCurrency })}</td>
-                        <td className="num tabular-nums">{money(b.mid_salary, { locale: tenantLocale, currency: b.currency || tenantCurrency })}</td>
-                        <td className="num tabular-nums">{money(b.max_salary, { locale: tenantLocale, currency: b.currency || tenantCurrency })}</td>
-                        <td>{b.currency}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                columns={[
+                  { key: "job", header: "Job", accessor: (b) => jobName(b.job_id) },
+                  { key: "level", header: "Level", accessor: (b) => b.level },
+                  { key: "min", header: "Min", accessor: (b) => money(b.min_salary, { locale: tenantLocale, currency: b.currency || tenantCurrency }), cellClassName: "num tabular-nums" },
+                  { key: "mid", header: "Mid", accessor: (b) => money(b.mid_salary, { locale: tenantLocale, currency: b.currency || tenantCurrency }), cellClassName: "num tabular-nums" },
+                  { key: "max", header: "Max", accessor: (b) => money(b.max_salary, { locale: tenantLocale, currency: b.currency || tenantCurrency }), cellClassName: "num tabular-nums" },
+                  { key: "currency", header: "Currency", accessor: (b) => b.currency },
+                ]}
+                data={bands}
+                keyAccessor={(b) => b.id}
+                caption="Compensation bands of this deployment"
+                sortable={false}
+              />
             )}
           </>
         )}
@@ -1344,35 +1289,20 @@ export default function PerformanceHub() {
             {cycles.length === 0 ? (
               <div className="p-5 text-sm text-text-secondary">No merit cycles exist yet.</div>
             ) : (
-              <div className="table-scroll">
-                <table className="table-base w-full text-sm">
-                  <caption className="sr-only">Merit cycles of this deployment</caption>
-                  <thead>
-                    <tr>
-                      <th scope="col">Name</th>
-                      <th scope="col">Year</th>
-                      <th scope="col" className="num">Budget %</th>
-                      <th scope="col">Starts</th>
-                      <th scope="col">Ends</th>
-                      <th scope="col">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {cycles.map((c) => (
-                      <tr key={c.id}>
-                        <td className="font-medium">{c.name}</td>
-                        <td>{c.year}</td>
-                        <td className="num tabular-nums">{c.budget_percent ?? "—"}</td>
-                        <td>{fmtDate(c.start_date, tenantDateOpts)}</td>
-                        <td>{fmtDate(c.end_date, tenantDateOpts)}</td>
-                        <td>
-                          <StatusPill status={c.status} dot />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                columns={[
+                  { key: "name", header: "Name", accessor: (c) => <span className="font-medium">{c.name}</span> },
+                  { key: "year", header: "Year", accessor: (c) => c.year },
+                  { key: "budget", header: "Budget %", accessor: (c) => c.budget_percent ?? "\u2014", cellClassName: "num tabular-nums" },
+                  { key: "starts", header: "Starts", accessor: (c) => fmtDate(c.start_date, tenantDateOpts) },
+                  { key: "ends", header: "Ends", accessor: (c) => fmtDate(c.end_date, tenantDateOpts) },
+                  { key: "status", header: "Status", accessor: (c) => <StatusPill status={c.status} dot /> },
+                ]}
+                data={cycles}
+                keyAccessor={(c) => c.id}
+                caption="Merit cycles of this deployment"
+                sortable={false}
+              />
             )}
           </>
         )}
@@ -1507,37 +1437,20 @@ export default function PerformanceHub() {
             {allocations.length === 0 ? (
               <div className="p-5 text-sm text-text-secondary">No merit allocations exist yet.</div>
             ) : (
-              <div className="table-scroll">
-                <table className="table-base w-full text-sm">
-                  <caption className="sr-only">Merit allocations of this deployment</caption>
-                  <thead>
-                    <tr>
-                      <th scope="col">Cycle</th>
-                      <th scope="col">Employee</th>
-                      <th scope="col" className="num">Current</th>
-                      <th scope="col" className="num">Proposed</th>
-                      <th scope="col" className="num">Increase %</th>
-                      <th scope="col">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {allocations.map((a) => (
-                      <tr key={a.id}>
-                        <td>
-                          {cycles.find((c) => c.id === a.cycle_id)?.name ?? `Cycle #${a.cycle_id}`}
-                        </td>
-                        <td>{employeeName(a.employee_id)}</td>
-                        <td className="num tabular-nums">{money(a.current_salary, { locale: tenantLocale, currency: tenantCurrency })}</td>
-                        <td className="num tabular-nums">{money(a.proposed_salary, { locale: tenantLocale, currency: tenantCurrency })}</td>
-                        <td className="num tabular-nums">{a.increase_percent ?? "—"}</td>
-                        <td>
-                          <StatusPill status={a.status} dot />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                columns={[
+                  { key: "cycle", header: "Cycle", accessor: (a) => cycles.find((c) => c.id === a.cycle_id)?.name ?? `Cycle #${a.cycle_id}` },
+                  { key: "employee", header: "Employee", accessor: (a) => employeeName(a.employee_id) },
+                  { key: "current", header: "Current", accessor: (a) => money(a.current_salary, { locale: tenantLocale, currency: tenantCurrency }), cellClassName: "num tabular-nums" },
+                  { key: "proposed", header: "Proposed", accessor: (a) => money(a.proposed_salary, { locale: tenantLocale, currency: tenantCurrency }), cellClassName: "num tabular-nums" },
+                  { key: "increase", header: "Increase %", accessor: (a) => a.increase_percent ?? "\u2014", cellClassName: "num tabular-nums" },
+                  { key: "status", header: "Status", accessor: (a) => <StatusPill status={a.status} dot /> },
+                ]}
+                data={allocations}
+                keyAccessor={(a) => a.id}
+                caption="Merit allocations of this deployment"
+                sortable={false}
+              />
             )}
           </>
         )}

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { Layout } from "@/components/Layout"
 import {
   Button,
+  Table,
   Alert,
   EmptyState,
   LoadingRegion,
@@ -257,38 +258,20 @@ export default function TimeAttendance() {
               description="Clock this employee in to start recording daily hours."
             />
           ) : (
-            <div
-              className="table-scroll"
-              tabIndex={0}
-              role="region"
-              aria-label="Time entries for the selected employee"
-            >
-              <table className="table-base table-striped table-compact">
-                <caption className="sr-only">Time entries for the selected employee</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Date</th>
-                    <th scope="col">Clock in</th>
-                    <th scope="col">Clock out</th>
-                    <th scope="col" className="num">Hours</th>
-                    <th scope="col" className="num">OT</th>
-                    <th scope="col">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {entries.map((t) => (
-                    <tr key={t.id}>
-                      <td className="whitespace-nowrap">{fmtDate(t.work_date)}</td>
-                      <td className="text-text-secondary whitespace-nowrap">{fmt(t.clock_in)}</td>
-                      <td className="text-text-secondary whitespace-nowrap">{fmt(t.clock_out)}</td>
-                      <td className="num font-medium">{t.worked_hours}</td>
-                      <td className="num">{t.overtime_hours || "—"}</td>
-                      <td><StatusPill status={t.status} /></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table
+              columns={[
+                { key: "date", header: "Date", accessor: (t) => <span className="whitespace-nowrap">{fmtDate(t.work_date)}</span> },
+                { key: "in", header: "Clock in", accessor: (t) => <span className="text-text-secondary whitespace-nowrap">{fmt(t.clock_in)}</span> },
+                { key: "out", header: "Clock out", accessor: (t) => <span className="text-text-secondary whitespace-nowrap">{fmt(t.clock_out)}</span> },
+                { key: "hours", header: "Hours", accessor: (t) => t.worked_hours, cellClassName: "num font-medium" },
+                { key: "ot", header: "OT", accessor: (t) => t.overtime_hours || "—", cellClassName: "num" },
+                { key: "status", header: "Status", accessor: (t) => <StatusPill status={t.status} /> },
+              ]}
+              data={entries}
+              keyAccessor={(t) => t.id}
+              caption="Time entries for the selected employee"
+              sortable={false}
+            />
           )}
         </SectionCard>
 
@@ -306,61 +289,46 @@ export default function TimeAttendance() {
               description="Generate a timesheet using the period dates above."
             />
           ) : (
-            <div
-              className="table-scroll"
-              tabIndex={0}
-              role="region"
-              aria-label="Timesheets for the selected employee"
-            >
-              <table className="table-base table-striped table-compact">
-                <caption className="sr-only">Timesheets for the selected employee</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Period</th>
-                    <th scope="col" className="num">Hours</th>
-                    <th scope="col" className="num">OT</th>
-                    <th scope="col">Status</th>
-                    <th scope="col">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {timesheets.map((t) => (
-                    <tr key={t.id}>
-                      <td className="whitespace-nowrap">
-                        {fmtDate(t.period_start)} → {fmtDate(t.period_end)}
-                      </td>
-                      <td className="num font-medium">{t.total_hours}</td>
-                      <td className="num">{t.overtime_hours || "—"}</td>
-                      <td><StatusPill status={t.status} /></td>
-                      <td>
-                        <div className="flex items-center gap-3">
-                          {t.status === "Draft" && (
-                            <Button variant="ghost" disabled={busy === `s${t.id}`}
-                              onClick={() => act(`s${t.id}`, () => api.post(`/time/timesheets/${t.id}/submit`), "Submitted")}>
-                              Submit
-                            </Button>
-                          )}
-                          {t.status === "Submitted" &&
-                            (isManager ? (
-                              /* POST /time/timesheets/{id}/approve is
-                                 MANAGER_ROLES (time_attendance.py:223) */
-                              <Button variant="ghost" disabled={busy === `a${t.id}`}
-                                onClick={() => act(`a${t.id}`, () => api.post(`/time/timesheets/${t.id}/approve`), "Approved")}>
-                                Approve
-                              </Button>
-                            ) : (
-                              <span className="text-xs text-text-secondary">Awaiting manager approval</span>
-                            ))}
-                          {t.status !== "Draft" && t.status !== "Submitted" && (
-                            <span className="text-xs text-text-secondary">Complete</span>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table
+              columns={[
+                { key: "period", header: "Period", accessor: (t) => (
+                  <span className="whitespace-nowrap">
+                    {fmtDate(t.period_start)} → {fmtDate(t.period_end)}
+                  </span>
+                ) },
+                { key: "hours", header: "Hours", accessor: (t) => t.total_hours, cellClassName: "num font-medium" },
+                { key: "ot", header: "OT", accessor: (t) => t.overtime_hours || "—", cellClassName: "num" },
+                { key: "status", header: "Status", accessor: (t) => <StatusPill status={t.status} /> },
+                { key: "actions", header: "Actions", accessor: (t) => (
+                  <div className="flex items-center gap-3">
+                    {t.status === "Draft" && (
+                      <Button variant="ghost" disabled={busy === `s${t.id}`}
+                        onClick={() => act(`s${t.id}`, () => api.post(`/time/timesheets/${t.id}/submit`), "Submitted")}>
+                        Submit
+                      </Button>
+                    )}
+                    {t.status === "Submitted" &&
+                      (isManager ? (
+                        /* POST /time/timesheets/{id}/approve is
+                           MANAGER_ROLES (time_attendance.py:223) */
+                        <Button variant="ghost" disabled={busy === `a${t.id}`}
+                          onClick={() => act(`a${t.id}`, () => api.post(`/time/timesheets/${t.id}/approve`), "Approved")}>
+                          Approve
+                        </Button>
+                      ) : (
+                        <span className="text-xs text-text-secondary">Awaiting manager approval</span>
+                      ))}
+                    {t.status !== "Draft" && t.status !== "Submitted" && (
+                      <span className="text-xs text-text-secondary">Complete</span>
+                    )}
+                  </div>
+                ) },
+              ]}
+              data={timesheets}
+              keyAccessor={(t) => t.id}
+              caption="Timesheets for the selected employee"
+              sortable={false}
+            />
           )}
         </SectionCard>
       </div>
@@ -436,57 +404,44 @@ export default function TimeAttendance() {
               description="Request a fix above when a clock record is wrong."
             />
           ) : (
-            <div
-              className="table-scroll"
-              tabIndex={0}
-              role="region"
-              aria-label="Time correction requests for the selected employee"
-            >
-              <table className="table-base table-striped table-compact">
-                <caption className="sr-only">Time correction requests for the selected employee</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Date</th>
-                    <th scope="col">Requested</th>
-                    <th scope="col">Status</th>
-                    <th scope="col">Decision</th>
-                    <th scope="col">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {corrections.map((c) => (
-                    <tr key={c.id}>
-                      <td className="whitespace-nowrap">{fmtDate(c.work_date)}</td>
-                      <td className="text-text-secondary whitespace-nowrap">
-                        {fmt(c.requested_clock_in)} → {fmt(c.requested_clock_out)}
-                      </td>
-                      <td><StatusPill status={c.status} /></td>
-                      <td className="text-text-secondary whitespace-nowrap">
-                        {c.decided_at ? fmt(c.decided_at) : "—"}
-                      </td>
-                      <td>
-                        {c.status === "Pending" && isManager ? (
-                          <div className="flex items-center gap-3">
-                            <Button variant="ghost" disabled={busy === `ca${c.id}`}
-                              onClick={() => act(`ca${c.id}`, () => api.post(`/time/corrections/${c.id}/approve`), "Correction approved")}>
-                              Approve
-                            </Button>
-                            <Button variant="ghost" disabled={busy === `cr${c.id}`}
-                              onClick={() => act(`cr${c.id}`, () => api.post(`/time/corrections/${c.id}/reject`), "Correction rejected")}>
-                              Reject
-                            </Button>
-                          </div>
-                        ) : c.status === "Pending" ? (
-                          <span className="text-xs text-text-secondary">Awaiting manager decision</span>
-                        ) : (
-                          <span className="text-xs text-text-secondary">Decided</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table
+              columns={[
+                { key: "date", header: "Date", accessor: (c) => <span className="whitespace-nowrap">{fmtDate(c.work_date)}</span> },
+                { key: "requested", header: "Requested", accessor: (c) => (
+                  <span className="text-text-secondary whitespace-nowrap">
+                    {fmt(c.requested_clock_in)} → {fmt(c.requested_clock_out)}
+                  </span>
+                ) },
+                { key: "status", header: "Status", accessor: (c) => <StatusPill status={c.status} /> },
+                { key: "decision", header: "Decision", accessor: (c) => (
+                  <span className="text-text-secondary whitespace-nowrap">
+                    {c.decided_at ? fmt(c.decided_at) : "—"}
+                  </span>
+                ) },
+                { key: "actions", header: "Actions", accessor: (c) => (
+                  c.status === "Pending" && isManager ? (
+                    <div className="flex items-center gap-3">
+                      <Button variant="ghost" disabled={busy === `ca${c.id}`}
+                        onClick={() => act(`ca${c.id}`, () => api.post(`/time/corrections/${c.id}/approve`), "Correction approved")}>
+                        Approve
+                      </Button>
+                      <Button variant="ghost" disabled={busy === `cr${c.id}`}
+                        onClick={() => act(`cr${c.id}`, () => api.post(`/time/corrections/${c.id}/reject`), "Correction rejected")}>
+                        Reject
+                      </Button>
+                    </div>
+                  ) : c.status === "Pending" ? (
+                    <span className="text-xs text-text-secondary">Awaiting manager decision</span>
+                  ) : (
+                    <span className="text-xs text-text-secondary">Decided</span>
+                  )
+                ) },
+              ]}
+              data={corrections}
+              keyAccessor={(c) => c.id}
+              caption="Time correction requests for the selected employee"
+              sortable={false}
+            />
           )}
         </SectionCard>
 

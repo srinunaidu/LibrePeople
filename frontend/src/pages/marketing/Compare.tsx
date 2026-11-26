@@ -1,6 +1,7 @@
 import { Link, useParams } from "react-router-dom"
 import { PublicLayout } from "@/components/PublicLayout"
 import { PageHero } from "@/components/marketing/PageHero"
+import { Table } from "@/components/ui"
 
 type Cell = "yes" | "partial" | "no"
 
@@ -126,32 +127,18 @@ export default function Compare() {
       <section className="max-w-container mx-auto px-4 sm:px-6 lg:px-8 pb-8">
         <h2 className="mk-h2 font-semibold text-fg mb-4 mk-reveal">Module comparison</h2>
         <div className="mk-card mk-reveal overflow-hidden">
-          <div className="table-scroll">
-            <table className="table-base">
-              <thead>
-                <tr>
-                  <th>Module</th>
-                  <th>LibrePeople</th>
-                  <th>{label}</th>
-                  <th>Notes</th>
-                </tr>
-              </thead>
-              <tbody>
-                {MODULES.map((r) => (
-                  <tr key={r.module}>
-                    <td>{r.module}</td>
-                    <td>
-                      <CellBadge value={r.karmathy} />
-                    </td>
-                    <td>
-                      <CellBadge value={r.bamboohr} />
-                    </td>
-                    <td className="text-fg-subtle text-xs">{r.note ?? ""}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table
+              columns={[
+                { key: "module", header: "Module", accessor: (r) => r.module },
+                { key: "libre", header: "LibrePeople", accessor: (r) => <CellBadge value={r.karmathy} /> },
+                { key: "other", header: label, accessor: (r) => <CellBadge value={r.bamboohr} /> },
+                { key: "notes", header: "Notes", accessor: (r) => <span className="text-fg-subtle text-xs">{r.note ?? ""}</span> },
+              ]}
+              data={MODULES}
+              keyAccessor={(r) => r.module}
+              caption="Module comparison"
+              sortable={false}
+            />
         </div>
         <p className="text-xs text-fg-subtle mt-2">
           Based on publicly available product information as of Oct 2026. Capabilities vary by plan and region.

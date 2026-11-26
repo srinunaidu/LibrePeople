@@ -16,6 +16,7 @@ import {Alert,
   LoadingRegion,
   PageHeader,
   SectionCard,
+  Table,
   TableSkeleton, RetryableAlert} from "@/components/ui"
 import { Input, Select } from "@/components/ui/inputs"
 import { StatusPill } from "@/components/ui/status-pill"
@@ -392,29 +393,18 @@ export default function IntegrationsHub() {
             {ssoRows.length === 0 ? (
               <div className="p-5 text-sm text-text-secondary">No SSO configs exist.</div>
             ) : (
-              <div className="table-scroll">
-                <table className="table-base table-compact w-full text-sm">
-                  <caption className="sr-only">SSO configurations</caption>
-                  <thead>
-                    <tr>
-                      <th scope="col">Provider</th>
-                      <th scope="col">Domain / entity ID</th>
-                      <th scope="col">Active</th>
-                      <th scope="col">Created</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {ssoRows.map((row) => (
-                      <tr key={row.id}>
-                        <td>{row.provider}</td>
-                        <td>{row.entity_id || row.domain || "—"}</td>
-                        <td>{row.is_active ? "Yes" : "No"}</td>
-                        <td>{fmtDate(row.created_at)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                columns={[
+                  { key: "provider", header: "Provider", accessor: (row) => row.provider },
+                  { key: "entity", header: "Domain / entity ID", accessor: (row) => row.entity_id || row.domain || "\u2014" },
+                  { key: "active", header: "Active", accessor: (row) => row.is_active ? "Yes" : "No" },
+                  { key: "created", header: "Created", accessor: (row) => fmtDate(row.created_at) },
+                ]}
+                data={ssoRows}
+                keyAccessor={(row) => row.id}
+                caption="SSO configurations"
+                sortable={false}
+              />
             )}
           </>
         )}
@@ -487,64 +477,53 @@ export default function IntegrationsHub() {
             {webhooks.length === 0 ? (
               <div className="p-5 text-sm text-text-secondary">No webhooks exist.</div>
             ) : (
-              <div className="table-scroll">
-                <table className="table-base table-compact w-full text-sm">
-                  <caption className="sr-only">Webhooks</caption>
-                  <thead>
-                    <tr>
-                      <th scope="col">URL</th>
-                      <th scope="col">Events</th>
-                      <th scope="col">Active</th>
-                      <th scope="col">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {webhooks.map((wh) => (
-                      <tr key={wh.id}>
-                        <td>
-                          <span title={wh.url} className="font-mono text-xs">
-                            {truncateUrl(wh.url)}
-                          </span>{" "}
-                          <button
-                            type="button"
-                            onClick={() => void copyUrl(wh.url)}
-                            className="text-xs text-brand-700 hover:underline ml-1"
-                          >
-                            Copy
-                          </button>
-                        </td>
-                        <td className="max-w-[240px] truncate" title={wh.events}>
-                          {wh.events}
-                        </td>
-                        <td>
-                          <span className={wh.is_active ? "text-success-text" : "text-text-secondary"}>
-                            {wh.is_active ? "Yes" : "No"}
-                          </span>
-                        </td>
-                        <td>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              loading={busy === `deliver-${wh.id}`}
-                              onClick={() => void deliverWebhook(wh.id)}
-                            >
-                              Deliver
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => void fetchDeliveries(wh.id)}
-                            >
-                              Deliveries
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                columns={[
+                  { key: "url", header: "URL", accessor: (wh) => (
+                    <span>
+                      <span title={wh.url} className="font-mono text-xs">
+                        {truncateUrl(wh.url)}
+                      </span>{" "}
+                      <button
+                        type="button"
+                        onClick={() => void copyUrl(wh.url)}
+                        className="text-xs text-brand-700 hover:underline ml-1"
+                      >
+                        Copy
+                      </button>
+                    </span>
+                  ) },
+                  { key: "events", header: "Events", accessor: (wh) => <span className="max-w-[240px] truncate" title={wh.events}>{wh.events}</span> },
+                  { key: "active", header: "Active", accessor: (wh) => (
+                    <span className={wh.is_active ? "text-success-text" : "text-text-secondary"}>
+                      {wh.is_active ? "Yes" : "No"}
+                    </span>
+                  ) },
+                  { key: "actions", header: "Actions", accessor: (wh) => (
+                    <div className="flex gap-2">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        loading={busy === `deliver-${wh.id}`}
+                        onClick={() => void deliverWebhook(wh.id)}
+                      >
+                        Deliver
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => void fetchDeliveries(wh.id)}
+                      >
+                        Deliveries
+                      </Button>
+                    </div>
+                  ) },
+                ]}
+                data={webhooks}
+                keyAccessor={(wh) => wh.id}
+                caption="Webhooks"
+                sortable={false}
+              />
             )}
 
             {/* Deliveries sub-tables */}
@@ -559,30 +538,17 @@ export default function IntegrationsHub() {
                   ) : deliveriesByWebhook[wh.id].length === 0 ? (
                     <p className="text-sm text-text-secondary">No deliveries yet.</p>
                   ) : (
-                    <div className="table-scroll">
-                      <table className="table-base table-compact w-full text-sm">
-                        <thead>
-                          <tr>
-                            <th scope="col">Event</th>
-                            <th scope="col">Status</th>
-                            <th scope="col">Code</th>
-                            <th scope="col">Attempted at</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {deliveriesByWebhook[wh.id].map((d) => (
-                            <tr key={d.id}>
-                              <td>{d.event}</td>
-                              <td>
-                                <StatusPill status={d.status} />
-                              </td>
-                              <td>{d.response_code ?? "—"}</td>
-                              <td>{fmtDate(d.created_at ?? d.attempted_at)}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+                    <Table
+                      columns={[
+                        { key: "event", header: "Event", accessor: (d) => d.event },
+                        { key: "status", header: "Status", accessor: (d) => <StatusPill status={d.status} /> },
+                        { key: "code", header: "Code", accessor: (d) => d.response_code ?? "\u2014" },
+                        { key: "at", header: "Attempted at", accessor: (d) => fmtDate(d.created_at ?? d.attempted_at) },
+                      ]}
+                      data={deliveriesByWebhook[wh.id]}
+                      keyAccessor={(d) => d.id}
+                      sortable={false}
+                    />
                   )}
                 </div>
               ) : null
@@ -652,46 +618,32 @@ export default function IntegrationsHub() {
             {checks.length === 0 ? (
               <div className="p-5 text-sm text-text-secondary">No background checks.</div>
             ) : (
-              <div className="table-scroll">
-                <table className="table-base table-compact w-full text-sm">
-                  <caption className="sr-only">Background checks</caption>
-                  <thead>
-                    <tr>
-                      <th scope="col">Candidate</th>
-                      <th scope="col">Provider</th>
-                      <th scope="col">Status</th>
-                      <th scope="col">Result</th>
-                      <th scope="col">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {checks.map((row) => (
-                      <tr key={row.id}>
-                        <td>Candidate #{row.candidate_id}</td>
-                        <td>{row.provider}</td>
-                        <td>
-                          <StatusPill status={row.status} />
-                        </td>
-                        <td>{row.result ?? "—"}</td>
-                        <td>
-                          {row.status !== "Clear" && row.status !== "Signed" ? (
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              loading={busy === `complete-${row.id}`}
-                              onClick={() => void completeCheck(row.id)}
-                            >
-                              Complete
-                            </Button>
-                          ) : (
-                            <span className="text-xs text-text-secondary">—</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                columns={[
+                  { key: "candidate", header: "Candidate", accessor: (row) => `Candidate #${row.candidate_id}` },
+                  { key: "provider", header: "Provider", accessor: (row) => row.provider },
+                  { key: "status", header: "Status", accessor: (row) => <StatusPill status={row.status} /> },
+                  { key: "result", header: "Result", accessor: (row) => row.result ?? "\u2014" },
+                  { key: "actions", header: "Actions", accessor: (row) => (
+                    row.status !== "Clear" && row.status !== "Signed" ? (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        loading={busy === `complete-${row.id}`}
+                        onClick={() => void completeCheck(row.id)}
+                      >
+                        Complete
+                      </Button>
+                    ) : (
+                      <span className="text-xs text-text-secondary">{"\u2014"}</span>
+                    )
+                  ) },
+                ]}
+                data={checks}
+                keyAccessor={(row) => row.id}
+                caption="Background checks"
+                sortable={false}
+              />
             )}
           </>
         )}
@@ -780,47 +732,36 @@ export default function IntegrationsHub() {
             {sigs.length === 0 ? (
               <div className="p-5 text-sm text-text-secondary">No e-signature requests.</div>
             ) : (
-              <div className="table-scroll">
-                <table className="table-base table-compact w-full text-sm">
-                  <caption className="sr-only">E-signature requests</caption>
-                  <thead>
-                    <tr>
-                      <th scope="col">Document type</th>
-                      <th scope="col">Signer</th>
-                      <th scope="col">Status</th>
-                      <th scope="col">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sigs.map((row) => (
-                      <tr key={row.id}>
-                        <td>{row.document_type}</td>
-                        <td>
-                          {row.signer_name ? `${row.signer_name} · ` : ""}
-                          <span className="font-mono text-xs">{row.signer_email}</span>
-                        </td>
-                        <td>
-                          <StatusPill status={row.status} />
-                        </td>
-                        <td>
-                          {row.status !== "Signed" ? (
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              loading={busy === `sign-${row.id}`}
-                              onClick={() => void signDoc(row.id)}
-                            >
-                              Sign
-                            </Button>
-                          ) : (
-                            <span className="text-xs text-text-secondary">—</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                columns={[
+                  { key: "doc", header: "Document type", accessor: (row) => row.document_type },
+                  { key: "signer", header: "Signer", accessor: (row) => (
+                    <span>
+                      {row.signer_name ? `${row.signer_name} \u00b7 ` : ""}
+                      <span className="font-mono text-xs">{row.signer_email}</span>
+                    </span>
+                  ) },
+                  { key: "status", header: "Status", accessor: (row) => <StatusPill status={row.status} /> },
+                  { key: "actions", header: "Actions", accessor: (row) => (
+                    row.status !== "Signed" ? (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        loading={busy === `sign-${row.id}`}
+                        onClick={() => void signDoc(row.id)}
+                      >
+                        Sign
+                      </Button>
+                    ) : (
+                      <span className="text-xs text-text-secondary">{"\u2014"}</span>
+                    )
+                  ) },
+                ]}
+                data={sigs}
+                keyAccessor={(row) => row.id}
+                caption="E-signature requests"
+                sortable={false}
+              />
             )}
           </>
             )}

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react"
 import { Layout } from "@/components/Layout"
-import {Alert, EmptyState, PageHeader, SectionCard, StatusPill, TableSkeleton, LoadingRegion, RetryableAlert} from "@/components/ui"
+import {Alert, EmptyState, PageHeader, SectionCard, StatusPill, Table, TableSkeleton, LoadingRegion, RetryableAlert} from "@/components/ui"
 import { Button } from "@/components/ui/button"
 import { Input, Select, Checkbox, Textarea } from "@/components/ui/inputs"
 import { useAuth } from "@/context/AuthContext"
@@ -358,24 +358,20 @@ export default function LearningHub() {
             {courses.length === 0 ? (
               <div className="p-5"><EmptyState title="No courses" description="No courses exist yet." /></div>
             ) : (
-              <div className="table-scroll">
-                <table className="table-base w-full text-sm">
-                  <caption className="sr-only">Learning courses</caption>
-                  <thead><tr><th scope="col">Code</th><th scope="col">Title</th><th scope="col">Category</th><th scope="col" className="num">Duration</th><th scope="col">Mandatory</th><th scope="col">Active</th></tr></thead>
-                  <tbody>
-                    {courses.map((c) => (
-                      <tr key={c.id}>
-                        <td className="font-mono text-xs">{c.code}</td>
-                        <td>{c.title}</td>
-                        <td>{c.category}</td>
-                        <td className="num tabular-nums">{c.duration_hours}</td>
-                        <td>{c.is_mandatory ? <span className="badge badge-amber">Mandatory</span> : <span className="badge badge-slate">Optional</span>}</td>
-                        <td>{c.is_active ? <span className="badge badge-green">Active</span> : <span className="badge badge-slate">Inactive</span>}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                columns={[
+                  { key: "code", header: "Code", accessor: (c) => <span className="font-mono text-xs">{c.code}</span> },
+                  { key: "title", header: "Title", accessor: (c) => c.title },
+                  { key: "category", header: "Category", accessor: (c) => c.category },
+                  { key: "duration", header: "Duration", accessor: (c) => c.duration_hours, cellClassName: "num tabular-nums" },
+                  { key: "mandatory", header: "Mandatory", accessor: (c) => c.is_mandatory ? <span className="badge badge-amber">Mandatory</span> : <span className="badge badge-slate">Optional</span> },
+                  { key: "active", header: "Active", accessor: (c) => c.is_active ? <span className="badge badge-green">Active</span> : <span className="badge badge-slate">Inactive</span> },
+                ]}
+                data={courses}
+                keyAccessor={(c) => c.id}
+                caption="Learning courses"
+                sortable={false}
+              />
             )}
           </>
         )}
@@ -423,32 +419,28 @@ export default function LearningHub() {
             {canWorkforce && enrollments.length === 0 ? (
               <div className="p-5"><EmptyState title="No enrollments" description="No course enrollments recorded yet." /></div>
             ) : canWorkforce && enrollments.length > 0 ? (
-              <div className="table-scroll">
-                <table className="table-base w-full text-sm">
-                  <caption className="sr-only">Course enrollments</caption>
-                  <thead><tr><th scope="col">Employee</th><th scope="col">Course</th><th scope="col">Status</th><th scope="col">Score</th><th scope="col">Started</th><th scope="col">Completed</th>{canWorkforce && <th scope="col">Actions</th>}</tr></thead>
-                  <tbody>
-                    {enrollments.map((en) => (
-                      <tr key={en.id}>
-                        <td>{employeeName(en.employee_id)}</td>
-                        <td>{courseTitle(en.course_id)}</td>
-                        <td><StatusPill status={en.status} /></td>
-                        <td>{en.score ?? "—"}</td>
-                        <td>{fmtDateTime(en.started_at)}</td>
-                        <td>{fmtDateTime(en.completed_at)}</td>
-                        {canWorkforce && (
-                          <td>
-                            <div className="flex items-center gap-2">
-                              <Input aria-label={`Score for enrollment ${en.id}`} type="number" step="0.01" placeholder="Score" className="w-20" value={completeScores[en.id] ?? ""} onChange={(e) => setCompleteScores((s) => ({ ...s, [en.id]: e.target.value }))} />
-                              <Button size="xs" variant="secondary" loading={busy === `complete-${en.id}`} disabled={en.status === "Completed"} onClick={() => completeEnrollment(en.id)}>Complete</Button>
-                            </div>
-                          </td>
-                        )}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                columns={[
+                  { key: "employee", header: "Employee", accessor: (en) => employeeName(en.employee_id) },
+                  { key: "course", header: "Course", accessor: (en) => courseTitle(en.course_id) },
+                  { key: "status", header: "Status", accessor: (en) => <StatusPill status={en.status} /> },
+                  { key: "score", header: "Score", accessor: (en) => en.score ?? "\u2014" },
+                  { key: "started", header: "Started", accessor: (en) => fmtDateTime(en.started_at) },
+                  { key: "completed", header: "Completed", accessor: (en) => fmtDateTime(en.completed_at) },
+                  ...(canWorkforce ? [{
+                    key: "actions", header: "Actions", accessor: (en: (typeof enrollments)[number]) => (
+                      <div className="flex items-center gap-2">
+                        <Input aria-label={`Score for enrollment ${en.id}`} type="number" step="0.01" placeholder="Score" className="w-20" value={completeScores[en.id] ?? ""} onChange={(e) => setCompleteScores((s) => ({ ...s, [en.id]: e.target.value }))} />
+                        <Button size="xs" variant="secondary" loading={busy === `complete-${en.id}`} disabled={en.status === "Completed"} onClick={() => completeEnrollment(en.id)}>Complete</Button>
+                      </div>
+                    ),
+                  }] : []),
+                ]}
+                data={enrollments}
+                keyAccessor={(en) => en.id}
+                caption="Course enrollments"
+                sortable={false}
+              />
             ) : null}
           </>
         )}
@@ -501,23 +493,19 @@ export default function LearningHub() {
             {canWorkforce && certifications.length === 0 ? (
               <div className="p-5"><EmptyState title="No certifications" description="No certifications recorded yet." /></div>
             ) : canWorkforce && certifications.length > 0 ? (
-              <div className="table-scroll">
-                <table className="table-base w-full text-sm">
-                  <caption className="sr-only">Certifications</caption>
-                  <thead><tr><th scope="col">Employee</th><th scope="col">Name</th><th scope="col">Issuer</th><th scope="col">Issued</th><th scope="col">Expiry</th></tr></thead>
-                  <tbody>
-                    {certifications.map((c) => (
-                      <tr key={c.id}>
-                        <td>{employeeName(c.employee_id)}</td>
-                        <td>{c.name}</td>
-                        <td>{c.issuer ?? "—"}</td>
-                        <td>{fmtDate(c.issued_date)}</td>
-                        <td>{fmtDate(c.expiry_date)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                columns={[
+                  { key: "employee", header: "Employee", accessor: (c) => employeeName(c.employee_id) },
+                  { key: "name", header: "Name", accessor: (c) => c.name },
+                  { key: "issuer", header: "Issuer", accessor: (c) => c.issuer ?? "\u2014" },
+                  { key: "issued", header: "Issued", accessor: (c) => fmtDate(c.issued_date) },
+                  { key: "expiry", header: "Expiry", accessor: (c) => fmtDate(c.expiry_date) },
+                ]}
+                data={certifications}
+                keyAccessor={(c) => c.id}
+                caption="Certifications"
+                sortable={false}
+              />
             ) : null}
           </>
         )}
@@ -584,20 +572,16 @@ export default function LearningHub() {
             {canManager && pools.length === 0 ? (
               <div className="p-5"><EmptyState title="No talent pools" description="No talent pools exist yet." /></div>
             ) : canManager && pools.length > 0 ? (
-              <div className="table-scroll">
-                <table className="table-base w-full text-sm">
-                  <caption className="sr-only">Talent pools</caption>
-                  <thead><tr><th scope="col">Name</th><th scope="col">Description</th></tr></thead>
-                  <tbody>
-                    {pools.map((p) => (
-                      <tr key={p.id}>
-                        <td>{p.name}</td>
-                        <td>{p.description ?? "—"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                columns={[
+                  { key: "name", header: "Name", accessor: (p) => p.name },
+                  { key: "desc", header: "Description", accessor: (p) => p.description ?? "\u2014" },
+                ]}
+                data={pools}
+                keyAccessor={(p) => p.id}
+                caption="Talent pools"
+                sortable={false}
+              />
             ) : null}
           </>
         )}
@@ -658,23 +642,19 @@ export default function LearningHub() {
             {canManager && succession.length === 0 ? (
               <div className="p-5"><EmptyState title="No succession plans" description="No succession plans exist yet." /></div>
             ) : canManager && succession.length > 0 ? (
-              <div className="table-scroll">
-                <table className="table-base w-full text-sm">
-                  <caption className="sr-only">Succession plans</caption>
-                  <thead><tr><th scope="col">Position</th><th scope="col">Primary</th><th scope="col">Backup</th><th scope="col">Readiness</th><th scope="col">Notes</th></tr></thead>
-                  <tbody>
-                    {succession.map((s) => (
-                      <tr key={s.id}>
-                        <td>{positionLabel(s.position_id)}</td>
-                        <td>{s.primary_successor_id ? employeeName(s.primary_successor_id) : "—"}</td>
-                        <td>{s.backup_successor_id ? employeeName(s.backup_successor_id) : "—"}</td>
-                        <td>{s.readiness}</td>
-                        <td>{s.notes ?? "—"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                columns={[
+                  { key: "position", header: "Position", accessor: (x) => positionLabel(x.position_id) },
+                  { key: "primary", header: "Primary", accessor: (x) => x.primary_successor_id ? employeeName(x.primary_successor_id) : "\u2014" },
+                  { key: "backup", header: "Backup", accessor: (x) => x.backup_successor_id ? employeeName(x.backup_successor_id) : "\u2014" },
+                  { key: "readiness", header: "Readiness", accessor: (x) => x.readiness },
+                  { key: "notes", header: "Notes", accessor: (x) => x.notes ?? "\u2014" },
+                ]}
+                data={succession}
+                keyAccessor={(x) => x.id}
+                caption="Succession plans"
+                sortable={false}
+              />
             ) : null}
           </>
         )}
