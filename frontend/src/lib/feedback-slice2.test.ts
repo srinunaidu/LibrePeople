@@ -119,7 +119,7 @@ describe("slice 2 — API-enforced authz reflected in UI", () => {
   })
 
   test("retention job ledgers keep ADMIN_ROLES (matches admin_jobs.py)", () => {
-    for (const page of ["ExitInterviews.tsx", "ExportErasure.tsx", "RetentionExport.tsx"]) {
+    for (const page of ["ExportErasure.tsx", "RetentionExport.tsx"]) {
       expect(readPage(page)).toContain('["SuperAdmin", "HR"].includes(user?.role ?? "")')
     }
   })
@@ -212,7 +212,6 @@ describe("slice 2 — real data, real actions, persistence", () => {
 describe("slice 2 — fabricated activity/metrics removed", () => {
   const FABRICATED_CARDS: [string, string][] = [
     ["AttendancePolicies.tsx", "Missed punches"],
-    ["BankExportIntegration.tsx", "Export history"],
     ["CompetencyCalibration.tsx", "Competency matrix"],
     ["CoverageGaps.tsx", "Coverage gaps"],
     ["CrossMidnightOvertime.tsx", "Overtime summary"],

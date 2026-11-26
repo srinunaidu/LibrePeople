@@ -1,5 +1,6 @@
-/* AN-01 — Headcount/hiring/turnover/labour-cost (depends HR-01)
- * HR-01 (Employee master) shipped R2.
+/* Unified Headcount (AN-01 + BN-01 + AN-03) — headcount/hiring/turnover/labour-cost
+ * (depends HR-01). Canonical survivor of the 4 headcount-shim merge
+ * (HeadcountCost/Entity/Hiring/Turnover were identical flag-backed forms).
  * Uses real /clients/{id}/feature-flags endpoint for headcount config.
  * No fabricated headcount data; reads actual seeded configuration.
  */
@@ -68,7 +69,7 @@ export default function HeadcountCost() {
 
   return (
       <>
-    <PageHeader compact title="Headcount + Hiring + Turnover + Labour Cost" description="AN-01 · headcount/hiring/turnover/labour-cost · depends HR-01 (shipped R2) · reads /clients/:slug/feature-flags; AD-07 audit on save." />
+    <PageHeader compact title="Headcount" description="Unified headcount + hiring + turnover + labour-cost (AN-01/BN-01/AN-03) · depends HR-01 (shipped R2) · reads /clients/:slug/feature-flags; AD-07 audit on save." />
       <div className="max-w-3xl mx-auto px-6 py-10 space-y-8">
         {notice && <Alert tone="success">{notice}</Alert>}
         {actionError && <Alert tone="error">{actionError}</Alert>}
