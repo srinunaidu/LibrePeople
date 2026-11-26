@@ -107,12 +107,14 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
             return bcrypt.checkpw(_prehash(plain_password), stored.encode("utf-8"))
         # Legacy hash: raw bcrypt over the truncated password.
         return bcrypt.checkpw(_legacy_bytes(plain_password), hashed_password.encode("utf-8"))
-    except (ValueError, TypeError):
+    except (ValueError, TypeError, AttributeError):
         return False
 
 
 def password_hash_needs_upgrade(hashed_password: str) -> bool:
     """True when a stored hash uses a superseded scheme."""
+    if not isinstance(hashed_password, str):
+        return True
     return not hashed_password.startswith(_PASSWORD_SCHEME_PREFIX)
 
 
