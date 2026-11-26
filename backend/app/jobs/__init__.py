@@ -5,7 +5,7 @@ exponential backoff and jitter, maximum attempts, and a dead-letter view
 for admins with retry and discard actions.
 
 Job types: csv_import, forecast_run, roster_solve, payroll_process,
-document_render, webhook_deliver, retention_run, erasure_run.
+document_render, webhook_deliver, retention_run, erasure_run, leave_accrual.
 """
 from __future__ import annotations
 
@@ -23,6 +23,7 @@ from app.jobs.handlers import (  # noqa: F401
     webhook_deliver,
     retention_run,
     erasure_run,
+    leave_accrual,
 )
 
 __all__ = ["JobState", "JobType", "JobQueue"]

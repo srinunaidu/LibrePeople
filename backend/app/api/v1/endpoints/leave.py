@@ -32,8 +32,12 @@ from app.core.visibility import (
 )
 from app.crud import crud_leave as crud
 from app.crud.crud_employee import get_employee
+from app.jobs.queue import JobQueueService
+from app.models.job_queue import JobType
 from app.models.user import User
 from app.schemas.leave import (
+    AccrualRunOut,
+    AccrualRunRequest,
     EntitlementCreate,
     LeaveBalanceOut,
     LeaveLedgerEntryOut,
@@ -285,6 +289,41 @@ def assign_entitlements(
     )
     db.commit()
     return {"created": len(created)}
+
+
+@router.post("/accrual/run", response_model=AccrualRunOut, status_code=202, operation_id="leaveRunAccrual")
+def run_accrual(
+    payload: AccrualRunRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles(*ADMIN_ROLES)),
+) -> Any:
+    """Enqueue one month's leave accrual (and the January carry-over).
+
+    The work runs on the job queue — the worker picks up the
+    ``leave_accrual`` type generically — so this call only queues it and
+    answers with the job. Enqueuing the same ``(year, month)`` twice is a
+    no-op: the queue returns the job that already succeeded.
+    """
+    job = JobQueueService(db).enqueue(
+        JobType.LEAVE_ACCRUAL,
+        {
+            "year": payload.year,
+            "month": payload.month,
+            "leave_type_id": payload.leave_type_id,
+            "created_by": current_user.id,
+        },
+    )
+    record_audit(
+        db,
+        current_user,
+        "run_leave_accrual",
+        "JobQueue",
+        job.id,
+        details=f"accrual for {payload.year}-{payload.month:02d}",
+    )
+    db.commit()
+    db.refresh(job)
+    return {"job_id": job.id, "job_type": job.job_type, "state": job.state}
 
 
 # --- Requests --------------------------------------------------------------- #
