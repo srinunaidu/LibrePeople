@@ -9,9 +9,10 @@ Gated on verified pack — reuse resolve_rule_pack gate pattern.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import re
-from datetime import date
+from datetime import date, datetime, timezone
 from decimal import Decimal
 from typing import Any
 
@@ -19,7 +20,14 @@ from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy.orm import Session
 
 from app.api.deps import REPORTS_ROLES, get_db, require_roles
-from app.core.errors import ApiError, ErrorCategory
+from app.core.audit import record_audit
+from app.core.errors import ApiError, ErrorCategory, not_found
+from app.models.audit import AuditLog
+from app.models.filing_record import (
+    FILING_STATUSES,
+    FILING_TRANSITIONS,
+    FilingRecord,
+)
 from app.models.user import User
 
 router = APIRouter()
@@ -264,6 +272,152 @@ def _filing_pt_content(db: Session, slips, period: str, state: str | None) -> st
     return "\n".join(lines) + "\n"
 
 
+# ---------------------------------------------------------------------------
+# Filing records (filing-persistence)
+#
+# Saving a generated filing, listing it with its submission history, and
+# moving it through Draft → Submitted → Accepted / Rejected → Resubmitted.
+# Generation below only *calls* the helpers above — the txt bytes are
+# unchanged (rollback removes these routes and the stored hashes still
+# match what GET regenerates). Only the SHA-256 and a filename reference
+# persist; no binary storage, no authority upload, no new calculations.
+# ---------------------------------------------------------------------------
+
+#: Aliases accepted at the boundary, normalised to the canonical persisted
+#: value (``24q`` → ``24q_quarterly``, ``form16`` → ``form16_annual``,
+#: ``pt_return`` → ``pt_challan``).
+_FILING_TYPE_ALIASES = {
+    "24q": "24q_quarterly",
+    "24q_quarterly": "24q_quarterly",
+    "form16": "form16_annual",
+    "form16_annual": "form16_annual",
+    "pf_ecr": "pf_ecr",
+    "esi_return": "esi_return",
+    "pt_challan": "pt_challan",
+    "pt_return": "pt_challan",
+}
+
+#: ``content_ref`` is a reference only (≤10MB convention); anything larger
+#: is refused rather than persisted.
+_MAX_FILING_BYTES = 10 * 1024 * 1024
+
+
+def _canonical_filing_type(filing_type: str) -> str:
+    ft = (filing_type or "").strip().lower()
+    if ft not in _FILING_TYPE_ALIASES:
+        raise ApiError(code="validation_error", message=f"filing type must be one of {sorted(_FILING_TYPES)}", category=ErrorCategory.VALIDATION, status_code=422)
+    return _FILING_TYPE_ALIASES[ft]
+
+
+def _generate_for_record(
+    db: Session,
+    canonical: str,
+    period: str,
+    state: str | None,
+    jurisdiction: str,
+) -> tuple[str, str, str]:
+    """Generate filing bytes exactly as the download endpoint would.
+
+    Returns ``(content, effective_period, content_ref)``. The annual Form 16
+    re-scopes a ``YYYY-MM`` period to its year, mirroring the GET branch, so
+    a saved record always hashes the same bytes GET would stream.
+    """
+    jur = (jurisdiction or "IN").strip().upper()
+    period_clean = (period or "").strip()
+    if not (_PERIOD_RE.match(period_clean) or _PERIOD_YEAR_RE.match(period_clean)):
+        raise ApiError(code="validation_error", message="period must be YYYY-MM or YYYY", category=ErrorCategory.VALIDATION, status_code=422)
+    _gate_or_409(jur, _parse_period(period_clean))
+
+    slips = _slips_for_period(db, period_clean, jurisdiction=jur)
+    effective = period_clean
+    if canonical == "24q_quarterly":
+        content = _filing_24q_content(db, slips, period_clean)
+        ref = f"IN_24Q_QUARTERLY_{period_clean}.txt"
+    elif canonical == "form16_annual":
+        if _PERIOD_RE.match(period_clean):
+            effective = period_clean.split("-")[0]
+            slips = _slips_for_period(db, effective, jurisdiction=jur)
+        content = _filing_form16_content(db, slips, effective)
+        ref = f"IN_FORM16_ANNUAL_{effective}.txt"
+    elif canonical == "pf_ecr":
+        content = _filing_pf_ecr_content(db, slips, period_clean)
+        ref = f"IN_PF_ECR_{period_clean}.txt"
+    elif canonical == "esi_return":
+        content = _filing_esi_content(db, slips, period_clean)
+        ref = f"IN_ESI_RETURN_{period_clean}.txt"
+    else:
+        content = _filing_pt_content(db, slips, period_clean, state)
+        ref = f"IN_PT_CHALLAN_{period_clean}.txt" if not state else f"IN_PT_CHALLAN_{state.strip().upper()}_{period_clean}.txt"
+    if len(content.encode("utf-8")) > _MAX_FILING_BYTES:
+        raise ApiError(code="validation_error", message="generated filing exceeds the 10MB reference limit", category=ErrorCategory.VALIDATION, status_code=422)
+    return content, effective, ref
+
+
+def _record_out(rec: FilingRecord) -> dict[str, Any]:
+    return {
+        "id": rec.id,
+        "filing_type": rec.filing_type,
+        "period": rec.period,
+        "state": rec.state,
+        "status": rec.status,
+        "content_hash": rec.content_hash,
+        "content_ref": rec.content_ref,
+        "version": rec.version,
+        "supersedes_id": rec.supersedes_id,
+        "submitted_by": rec.submitted_by,
+        "submitted_at": rec.submitted_at.isoformat() if rec.submitted_at else None,
+        "retention_until": rec.retention_until.isoformat() if rec.retention_until else None,
+        "created_at": rec.created_at.isoformat() if rec.created_at else None,
+        "updated_at": rec.updated_at.isoformat() if rec.updated_at else None,
+    }
+
+
+def _record_history(db: Session, record_id: int) -> list[dict[str, Any]]:
+    rows = (
+        db.query(AuditLog)
+        .filter(AuditLog.entity_type == "FilingRecord", AuditLog.entity_id == record_id)
+        .order_by(AuditLog.id.asc())
+        .all()
+    )
+    return [
+        {
+            "id": r.id,
+            "action": r.action,
+            "actor_id": r.actor_id,
+            "actor_name": r.actor_name,
+            "details": r.details,
+            "created_at": r.created_at.isoformat() if r.created_at else None,
+        }
+        for r in rows
+    ]
+
+
+@router.get("/filings/records", operation_id="reportsListFilingRecords")
+def list_filing_records(
+    type_: str | None = Query(default=None, alias="type"),
+    period: str | None = Query(default=None),
+    status: str | None = Query(default=None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles(*REPORTS_ROLES)),
+):
+    """List saved filing records, newest first, each with submission history."""
+    q = db.query(FilingRecord)
+    if type_ is not None:
+        q = q.filter(FilingRecord.filing_type == _canonical_filing_type(type_))
+    if period is not None:
+        q = q.filter(FilingRecord.period == period.strip())
+    if status is not None:
+        s = status.strip()
+        if s not in FILING_STATUSES:
+            raise ApiError(code="validation_error", message=f"status must be one of {list(FILING_STATUSES)}", category=ErrorCategory.VALIDATION, status_code=422)
+        q = q.filter(FilingRecord.status == s)
+    rows = q.order_by(FilingRecord.id.desc()).all()
+    return {
+        "records": [{**_record_out(r), "history": _record_history(db, r.id)} for r in rows],
+        "count": len(rows),
+    }
+
+
 @router.get("/filings/{filing_type}", operation_id="reportsGetFilings")
 def get_filing(
     filing_type: str,
@@ -329,3 +483,154 @@ def get_filing(
     filename = f"IN_{filename_type}_{period_clean}.txt"
 
     return Response(content=content, media_type="text/plain", headers={"Content-Disposition": f'attachment; filename="{filename}"'})
+
+
+@router.post("/filings/{filing_type}/records", status_code=201, operation_id="reportsCreateFilingRecord")
+def create_filing_record(
+    filing_type: str,
+    period: str = Query(..., description="YYYY-MM for monthly or YYYY for annual Form16"),
+    state: str | None = Query(default=None, description="PT state (KA/MH/TN/TG/WB) for pt_challan"),
+    jurisdiction: str = Query(default="IN", description="ISO 3166-1 alpha-2, e.g. IN"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles(*REPORTS_ROLES)),
+):
+    """Persist a generated filing (type/period/content-hash) as version 1.
+
+    An identical repeat POST (same type, period, state and content-hash) is
+    a ``409`` duplicate — the first row stands.
+    """
+    canonical = _canonical_filing_type(filing_type)
+    st = (state.strip().upper() if state else None) or None
+    content, effective, ref = _generate_for_record(db, canonical, period, st, jurisdiction)
+    digest = hashlib.sha256(content.encode("utf-8")).hexdigest()
+
+    dup_q = db.query(FilingRecord).filter(
+        FilingRecord.filing_type == canonical,
+        FilingRecord.period == effective,
+        FilingRecord.content_hash == digest,
+    )
+    dup_q = dup_q.filter(FilingRecord.state == st) if st else dup_q.filter(FilingRecord.state.is_(None))
+    if dup_q.first() is not None:
+        raise ApiError(
+            code="duplicate_filing_record",
+            message=f"Filing {canonical} for period {effective} with identical content is already recorded.",
+            category=ErrorCategory.CONFLICT,
+            status_code=409,
+            details={"filing_type": canonical, "period": effective, "state": st},
+        )
+
+    rec = FilingRecord(
+        filing_type=canonical,
+        period=effective,
+        state=st,
+        status="Draft",
+        content_hash=digest,
+        content_ref=ref,
+        version=1,
+        supersedes_id=None,
+        retention_until=None,
+    )
+    db.add(rec)
+    db.flush()
+    record_audit(
+        db, current_user, "filing_record_created", "FilingRecord", rec.id,
+        details=f"filing_type={canonical} period={effective} version=1",
+    )
+    db.commit()
+    db.refresh(rec)
+    return _record_out(rec)
+
+
+@router.post("/filings/records/{record_id}/{action}", operation_id="reportsTransitionFilingRecord")
+def transition_filing_record(
+    record_id: int,
+    action: str,
+    jurisdiction: str = Query(default="IN", description="ISO 3166-1 alpha-2, e.g. IN"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles(*REPORTS_ROLES)),
+):
+    """Move a filing record through its lifecycle.
+
+    ``submit`` (Draft→Submitted), ``accept``/``reject``
+    (Submitted→Accepted/Rejected); ``resubmit`` (Rejected→Resubmitted on the
+    old row plus a new Draft row at version N+1 linked via ``supersedes_id``).
+    Anything else — including any move out of Accepted or Resubmitted — is
+    ``422`` and writes no audit row. The original row's content columns are
+    never mutated.
+    """
+    now = datetime.now(timezone.utc)
+    a = (action or "").strip().lower()
+    rec = db.query(FilingRecord).filter(FilingRecord.id == record_id).first()
+    if rec is None:
+        raise not_found("FilingRecord")
+
+    if a in ("submit", "accept", "reject"):
+        want_from, want_to = FILING_TRANSITIONS[a]
+        if rec.status != want_from:
+            raise ApiError(
+                code="illegal_filing_transition",
+                message=f"Cannot {a} a filing record in status {rec.status}.",
+                category=ErrorCategory.VALIDATION,
+                status_code=422,
+                details={"id": rec.id, "status": rec.status, "action": a},
+            )
+        rec.status = want_to
+        if a == "submit":
+            rec.submitted_by = current_user.id
+            rec.submitted_at = now
+        rec.updated_at = now
+        db.flush()
+        _PAST = {"submit": "submitted", "accept": "accepted", "reject": "rejected"}
+        record_audit(
+            db, current_user, f"filing_record_{_PAST[a]}",
+            "FilingRecord", rec.id,
+            details=f"filing_type={rec.filing_type} period={rec.period} version={rec.version} status={want_to}",
+        )
+        db.commit()
+        db.refresh(rec)
+        return {**_record_out(rec), "history": _record_history(db, rec.id)}
+
+    if a == "resubmit":
+        if rec.status != "Rejected":
+            raise ApiError(
+                code="illegal_filing_transition",
+                message=f"Cannot resubmit a filing record in status {rec.status}; only Rejected rows resubmit.",
+                category=ErrorCategory.VALIDATION,
+                status_code=422,
+                details={"id": rec.id, "status": rec.status, "action": a},
+            )
+        content, _, ref = _generate_for_record(db, rec.filing_type, rec.period, rec.state, jurisdiction)
+        digest = hashlib.sha256(content.encode("utf-8")).hexdigest()
+        new = FilingRecord(
+            filing_type=rec.filing_type,
+            period=rec.period,
+            state=rec.state,
+            status="Draft",
+            content_hash=digest,
+            content_ref=ref,
+            version=rec.version + 1,
+            supersedes_id=rec.id,
+            retention_until=rec.retention_until,
+        )
+        rec.status = "Resubmitted"
+        rec.updated_at = now
+        db.add(new)
+        db.flush()
+        record_audit(
+            db, current_user, "filing_record_resubmitted", "FilingRecord", rec.id,
+            details=f"filing_type={rec.filing_type} period={rec.period} new_version_id={new.id} version={new.version}",
+        )
+        record_audit(
+            db, current_user, "filing_record_created", "FilingRecord", new.id,
+            details=f"filing_type={new.filing_type} period={new.period} version={new.version} supersedes_id={rec.id}",
+        )
+        db.commit()
+        db.refresh(new)
+        return {**_record_out(new), "history": _record_history(db, new.id)}
+
+    raise ApiError(
+        code="validation_error",
+        message="action must be one of submit, accept, reject, resubmit",
+        category=ErrorCategory.VALIDATION,
+        status_code=422,
+    )
