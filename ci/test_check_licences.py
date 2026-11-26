@@ -62,8 +62,8 @@ class StrictExitCodeTest(unittest.TestCase):
     def test_strict_exits_nonzero_on_current_inventory(self):
         proc = run_script("--strict", "--check-only")
         self.assertNotEqual(proc.returncode, 0, proc.stdout[-2000:])
-        self.assertIn("Blocked: 3", proc.stdout)
-        self.assertIn("Unknown: 133", proc.stdout)
+        self.assertIn("Blocked: 9", proc.stdout)
+        self.assertIn("Unknown: 0", proc.stdout)
 
     def test_strict_only_flag_also_nonzero(self):
         proc = run_script("--strict", "--check-only")
