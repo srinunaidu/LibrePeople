@@ -48,6 +48,9 @@ const Forecasting = lazy(() => import("@/pages/Forecasting"))
 const ForecastRunDetail = lazy(() => import("@/pages/ForecastRunDetail"))
 const Leave = lazy(() => import("@/pages/Leave"))
 const LeaveLedger = lazy(() => import("@/pages/leave/LeaveLedger"))
+const Expenses = lazy(() => import("@/pages/expenses/Expenses"))
+const ExpenseDetail = lazy(() => import("@/pages/expenses/ExpenseDetail"))
+const ExpenseNew = lazy(() => import("@/pages/expenses/ExpenseNew"))
 const OnboardingConfig = lazy(() => import("@/pages/onboarding/OnboardingConfig"))
 const Offboarding = lazy(() => import("@/pages/Offboarding"))
 const Assets = lazy(() => import("@/pages/Assets"))
@@ -394,6 +397,11 @@ function AppRoutes() {
       <Route path="/admin/break-glass" element={<ProtectedRoute roles={["SuperAdmin"]}><BreakGlass /></ProtectedRoute>} />
       <Route path="/admin/compliance" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><ComplianceCenter /></ProtectedRoute>} />
 
+      {/* LP-EXP-001/002/003 — expenses (employee + approver UI, server-scoped) */}
+      <Route path="/expenses" element={<ProtectedRoute><Expenses /></ProtectedRoute>} />
+      <Route path="/expenses/new" element={<ProtectedRoute><ExpenseNew /></ProtectedRoute>} />
+      <Route path="/expenses/:id" element={<ProtectedRoute><ExpenseDetail /></ProtectedRoute>} />
+
       {/* Tenant-scoped workplace routes */}
       <Route path="/t/:slug/*" element={<ProtectedRoute><TenantLayout /></ProtectedRoute>}>
         <Route index element={<Dashboard />} />
@@ -412,6 +420,9 @@ function AppRoutes() {
         <Route path="leave" element={<Leave />} />
         <Route path="leave/ledger" element={<LeaveLedger />} />
         <Route path="leave/ledger/:employeeId" element={<LeaveLedger />} />
+        <Route path="expenses" element={<Expenses />} />
+        <Route path="expenses/new" element={<ExpenseNew />} />
+        <Route path="expenses/:id" element={<ExpenseDetail />} />
         <Route path="onboarding-config" element={<OnboardingConfig />} />
         <Route path="offboarding" element={<Offboarding />} />
         <Route path="assets" element={<Assets />} />
