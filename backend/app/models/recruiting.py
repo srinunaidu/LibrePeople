@@ -73,3 +73,40 @@ class Offer(Base):
     created_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     application = relationship("Application", back_populates="offers")
+
+
+class Interview(Base):
+    """A scheduled interview for a candidate, optionally tied to a requisition.
+
+    ``interviewers`` stores a JSON array of names or emails as text: the
+    roster of who is in the room is data, not a relation, and a plain
+    ``Text`` column keeps the migration free of dialect-specific types.
+    ``status`` is a plain string checked by the service (Scheduled ->
+    Completed | Cancelled | NoShow; a decided interview is terminal and only
+    its feedback may still change), never a database enum.
+    """
+
+    __tablename__ = "interviews"
+
+    id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
+    tenant_id: Mapped[str | None] = mapped_column(String(60), nullable=True, index=True)
+    candidate_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("candidates.id"), nullable=False, index=True
+    )
+    requisition_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("job_requisitions.id"), nullable=True, index=True
+    )
+    stage: Mapped[str] = mapped_column(String(50), nullable=False, default="Screening")
+    scheduled_at: Mapped[DateTime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    interviewers: Mapped[str | None] = mapped_column(Text, nullable=True)
+    status: Mapped[str] = mapped_column(String(20), default="Scheduled")
+    feedback: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[DateTime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+    candidate = relationship("Candidate")
+    requisition = relationship("JobRequisition")

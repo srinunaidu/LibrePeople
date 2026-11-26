@@ -8,7 +8,7 @@ from .custom_field import CustomFieldDef, CustomFieldValue
 
 from .core_hr import LegalEntity, Location, CostCenter, Position, EmployeeDocument, DocumentVersion, DocumentAck, DocumentAccessLog, HRCase, CaseComment
 
-from .recruiting import JobRequisition, Candidate, Application, Offer
+from .recruiting import JobRequisition, Candidate, Application, Offer, Interview
 
 from .onboarding import OnboardingTask, OnboardingDocument, TenantPresetState
 from .offboarding import Termination, OffboardingTask, OffboardingItem

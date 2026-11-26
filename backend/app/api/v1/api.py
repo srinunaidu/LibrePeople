@@ -8,6 +8,7 @@ from app.api.v1.endpoints import (
     candidates,
     applications,
     offers,
+    interviews,
     onboarding,
     time_attendance,
     scheduling,
@@ -49,6 +50,7 @@ api_router.include_router(
     applications.router, prefix="/applications", tags=["applications"]
 )
 api_router.include_router(offers.router, prefix="/offers", tags=["offers"])
+api_router.include_router(interviews.router, prefix="/interviews", tags=["interviews"])
 api_router.include_router(onboarding.router, prefix="/onboarding", tags=["onboarding"])
 api_router.include_router(time_attendance.router, prefix="/time", tags=["time"])
 api_router.include_router(scheduling.router, prefix="/scheduling", tags=["scheduling"])
