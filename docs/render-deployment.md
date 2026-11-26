@@ -4,6 +4,17 @@ Dated, append-only record of Render testing-deploy observations.
 (Karmathy-era history lives in `docs/DEPLOYMENT.md`; this file starts
 with the LibrePeople `librepeople-backend` service.)
 
+## 2026-11-26 — deploy dep-dc3ob78ae00c73cnpf8g LIVE @ 8c12425 (D1 TenantSwitcher fix)
+
+- Branch: `agent/ops/render-watch-2` from `8c12425`.
+  Deploy `dep-dc3ob78ae00c73cnpf8g`, `live` 01:06:09Z, commit `8c12425`
+  — matches. **Not stale.**
+- Live confirmation: `GET /health` → 200 (0.3 s); `GET
+  /api/v1/employees` as existing `e2e_employee` → 200 (0.5 s, login 200,
+  no new accounts created).
+- Full smoke NOT re-run: unchanged since last green smoke (b1f1168);
+  noted explicitly per scope.
+
 ## 2026-11-25 — free-tier fix: MIGRATE_ON_STARTUP true (no release step on free tier)
 
 - `render.yaml`: `MIGRATE_ON_STARTUP` `false` → `true` (+ comment).
