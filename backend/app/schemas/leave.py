@@ -55,6 +55,26 @@ class EntitlementCreate(BaseModel):
     carried_over_days: float = 0
 
 
+class AccrualRunRequest(BaseModel):
+    """Enqueue one month's leave accrual as a background job.
+
+    The job posts ``round(max_days_per_year / 12, 2)`` per active employee
+    and leave type, plus the January carry-over of the prior year's unused
+    balance in full (no cap field exists on the leave type). Re-running for
+    the same month is a no-op: the queue returns the succeeded job.
+    """
+
+    year: int = Field(ge=2000, le=2100)
+    month: int = Field(ge=1, le=12)
+    leave_type_id: Optional[int] = None
+
+
+class AccrualRunOut(BaseModel):
+    job_id: int
+    job_type: str
+    state: str
+
+
 class LeaveBalanceOut(BaseModel):
     """A leave balance, and the cache it is derived from.
 

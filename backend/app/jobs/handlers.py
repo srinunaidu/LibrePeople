@@ -20,7 +20,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any, Dict
 
-from app.jobs.errors import JobCancelled, JobNotImplemented
+from app.jobs.errors import JobCancelled, JobInputInvalid, JobNotImplemented
 from app.jobs.registry import register
 from app.models.job_queue import JobQueue, JobState, JobType
 
@@ -481,3 +481,63 @@ def erasure_run(job: JobQueue, input_data: Dict[str, Any]) -> Dict[str, Any]:
         "erasure_run is not implemented: erasure, retention schedules and "
         "legal hold are not built (HR-12)"
     )
+
+
+@register(JobType.LEAVE_ACCRUAL)
+def leave_accrual(job: JobQueue, input_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Post one month's leave accrual (and January carry-over).
+
+    The input carries ``year`` and ``month``, optionally ``leave_type_id``
+    to accrue a single type, and ``created_by`` for the ledger rows. The
+    math lives in :mod:`app.services.leave_accrual` — this handler only
+    opens the session, commits the staged rows, and reports the counts —
+    so the endpoint path and the queue path cannot disagree about what an
+    accrual is. A bad payload raises
+    :class:`~app.jobs.errors.JobInputInvalid` (retrying cannot fix it),
+    anything else propagates so the queue retries with backoff.
+    """
+    from app.core.database import SessionLocal
+    from app.services import leave_accrual as accrual
+
+    year = input_data.get("year")
+    month = input_data.get("month")
+    if (
+        isinstance(year, bool)
+        or isinstance(month, bool)
+        or not isinstance(year, int)
+        or not isinstance(month, int)
+        or not 1 <= month <= 12
+    ):
+        raise JobInputInvalid(
+            "a leave accrual needs an integer 'year' and a 'month' "
+            f"between 1 and 12, got year={year!r} month={month!r}"
+        )
+    leave_type_id = input_data.get("leave_type_id")
+    if leave_type_id is not None and (
+        isinstance(leave_type_id, bool) or not isinstance(leave_type_id, int)
+    ):
+        raise JobInputInvalid(
+            "a leave accrual's 'leave_type_id' must be an integer, "
+            f"got {leave_type_id!r}"
+        )
+
+    db = SessionLocal()
+    try:
+        try:
+            report = accrual.run_accrual(
+                db,
+                year,
+                month,
+                leave_type_id=leave_type_id,
+                created_by=input_data.get("created_by"),
+            )
+        except ValueError as exc:
+            raise JobInputInvalid(str(exc)) from None
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    finally:
+        db.close()
+    report.update({"job_id": job.id, "state": JobState.SUCCEEDED})
+    return report

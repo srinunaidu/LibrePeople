@@ -159,3 +159,50 @@ class HireRequest(BaseModel):
 class HireResult(BaseModel):
     employee: EmployeeOut
     onboarding_tasks_created: int
+
+
+# ---------- Interview ----------
+#: The interview lifecycle. ``status`` is a plain string on the row,
+#: checked here and in the CRUD layer — never a database enum.
+INTERVIEW_STATUSES = ("Scheduled", "Completed", "Cancelled", "NoShow")
+
+#: A decided interview is terminal: only its feedback may still change.
+INTERVIEW_TERMINAL_STATUSES = ("Completed", "Cancelled", "NoShow")
+
+
+class InterviewBase(BaseModel):
+    candidate_id: int
+    requisition_id: Optional[int] = None
+    stage: str = "Screening"
+    scheduled_at: Optional[datetime] = None
+    interviewers: Optional[list[str]] = None
+    # `status` is a workflow state owned by the server (Scheduled ->
+    # Completed/Cancelled/NoShow). It is not accepted from the client on
+    # create; an interview is born Scheduled.
+
+
+class InterviewCreate(InterviewBase):
+    pass
+
+
+class InterviewUpdate(BaseModel):
+    stage: Optional[str] = None
+    scheduled_at: Optional[datetime] = None
+    interviewers: Optional[list[str]] = None
+    status: Optional[str] = None
+    feedback: Optional[str] = None
+
+
+class InterviewOut(BaseModel):
+    id: int
+    candidate_id: int
+    requisition_id: Optional[int] = None
+    stage: str
+    scheduled_at: Optional[datetime] = None
+    interviewers: list[str] = []
+    status: str = "Scheduled"
+    feedback: Optional[str] = None
+    created_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True

@@ -43,6 +43,7 @@ class JobType(str, Enum):
     NOTIFICATION_DELIVER = "notification_deliver"
     RETENTION_RUN = "retention_run"
     ERASURE_RUN = "erasure_run"
+    LEAVE_ACCRUAL = "leave_accrual"
 
 
 class JobQueue(Base):
