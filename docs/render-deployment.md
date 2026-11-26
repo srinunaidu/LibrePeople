@@ -4,6 +4,52 @@ Dated, append-only record of Render testing-deploy observations.
 (Karmathy-era history lives in `docs/DEPLOYMENT.md`; this file starts
 with the LibrePeople `librepeople-backend` service.)
 
+## 2026-11-26 — admin recovery via Neon least-privilege role + E2E provisioning complete
+
+- Branch: `agent/ops/admin-recovery` from `072c86c`. No code/migration changes.
+- Method: read repo hash scheme (`$krb1$` = bcrypt(12) over
+  SHA-256/base64 pre-hash, `security.py:get_password_hash`); generated
+  strong temp password in memory, hashed with the repo function
+  (verified round-trip). Neon API: created temp role
+  `recovery_tmp_20261126` (201) + least-privilege grants only
+  (`CONNECT`, `USAGE public`, `SELECT, UPDATE ON users`). Single-row
+  `UPDATE users SET hashed_password=<redacted-hash>,
+  mfa_secret_hash=NULL, recovery_codes_hash=NULL, mfa_enabled=false,
+  must_change_password=false WHERE id=1 AND username='admin'` →
+  `UPDATE 1`. Pre-check: exactly 1 `admin` row (3 users total incl. the
+  two synthetics). Fresh-session SELECT verified, then role dropped via
+  Neon API (DELETE 200; direct DROP refused — owner lacks CREATEROLE,
+  documented); `pg_roles` + grants both 0 afterwards. Local DNS could
+  not resolve Neon hosts (REFUSED) — connected via DoH-resolved
+  `hostaddr` with hostname TLS verification intact.
+- Admin login 200 (2 attempts used: 1 cold-start timeout, 1 success —
+  within budget). MFA re-enrolled+confirmed (required for privileged
+  endpoints). Created 6/6 accounts (201 each): `e2e_hradmin` (HR),
+  `e2e_hrexec` (HR), `e2e_payroll` (PayrollViewer), `e2e_manager`
+  (Manager), `e2e_employee` (Associate), `e2e_readonly`
+  (PayrollViewer). Set 12 Render env vars
+  (`E2E_<HRADMIN|HREXEC|PAYROLL|MANAGER|EMPLOYEE|READONLY>_USERNAME|PASSWORD`,
+  all PUT 200). Login-verify: 6/6 → 200.
+- Custody: `BOOTSTRAP_ADMIN_PASSWORD` set in Render env (PUT 200) to the
+  current admin password — documented secret store. Rotation: login →
+  `POST /mfa/disable` (password suffices) → `POST /password` →
+  re-enroll/confirm → update the env var. Never stored elsewhere; local
+  secret files shredded.
+- Deviation (test-env only): MFA was cleared then re-enrolled on the
+  synthetic admin; enrollment secret/recovery codes from this session
+  are gone, but password-alone disable keeps recovery self-service.
+  Production MUST enforce MFA with held credentials — re-enroll before
+  any prod-like use.
+
+### Smoke table
+
+| Check | Result |
+|---|---|
+| Admin login (recovered) | 200 + JWT |
+| 6 E2E logins | all 200 + JWT |
+| 12 Render env vars | all PUT 200 |
+| Temp role lifecycle | created → grants → UPDATE 1 → dropped → verified gone |
+
 ## 2026-11-26 — cloud backup rehearsal: dump + restore-to-new-DB, all counts match
 
 - Branch: `agent/ops/cloud-backup-rehearsal` from `552e2af`. No code,
@@ -73,6 +119,7 @@ with the LibrePeople `librepeople-backend` service.)
   no new accounts created).
 - Full smoke NOT re-run: unchanged since last green smoke (b1f1168);
   noted explicitly per scope.
+
 
 ## 2026-11-25 — free-tier fix: MIGRATE_ON_STARTUP true (no release step on free tier)
 
