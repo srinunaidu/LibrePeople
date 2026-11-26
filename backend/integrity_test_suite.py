@@ -12,8 +12,8 @@ employment, approval and audit history:
 5. **Append-only**: ``audit_logs`` refuses UPDATE and DELETE at the
    database level (the trigger, not the API).
 6. **Legacy adopt + quarantine**: a database migrated to 0042 holding
-   legacy violations upgrades to head (0043); every violation is
-   quarantined with its old values and repaired — none silently
+   legacy violations upgrades to head (quarantine applied by 0043);
+   every violation is quarantined with its old values and repaired — none silently
    discarded, none left violating — and the quarantine survives a
    downgrade/upgrade round trip.
 7. **Catalog discipline**: every 0043 name fits Oracle's 30-character
@@ -518,6 +518,19 @@ def _revision(db_path: str) -> str | None:
         conn.close()
 
 
+def _head_revision() -> str:
+    """The single current head, asked of the migration tree (fails loudly)."""
+    from alembic.config import Config
+    from alembic.script import ScriptDirectory
+
+    cfg = Config(str(BACKEND_DIR / "alembic.ini"))
+    cfg.set_main_option("script_location", str(BACKEND_DIR / "migrations"))
+    heads = ScriptDirectory.from_config(cfg).get_heads()
+    if len(heads) != 1:
+        raise RuntimeError(f"expected exactly one migration head, got: {heads}")
+    return heads[0]
+
+
 try:
     os.remove(MIG_DB)
 except FileNotFoundError:
@@ -613,8 +626,9 @@ CLAIM_COUNT_BEFORE = ms.query(ExpenseClaim).count()
 ms.close()
 
 _run_migrations(MIG_DB, "head")
+HEAD_REVISION = _head_revision()
 check("upgrade to head succeeds with violations present",
-      _revision(MIG_DB) == "0043_integrity_expand", str(_revision(MIG_DB)))
+      _revision(MIG_DB) == HEAD_REVISION, str(_revision(MIG_DB)))
 
 conn = sqlite3.connect(MIG_DB)
 try:
@@ -814,7 +828,9 @@ finally:
     conn.close()
 
 # The quarantine survives the way back: evidence is retained, and the
-# way forward works again afterwards.
+# way forward works again afterwards. Note: downgrade -1 steps head→head-1
+# (0048→0047 when this was written), so the retention check below only
+# requires the quarantine table to survive that one step, whatever head is.
 import subprocess as _sp  # noqa: E402
 
 env = dict(os.environ)
@@ -831,7 +847,7 @@ finally:
     conn.close()
 _run_migrations(MIG_DB, "head")
 check("re-upgrade to head succeeds (idempotent)",
-      _revision(MIG_DB) == "0043_integrity_expand", str(_revision(MIG_DB)))
+      _revision(MIG_DB) == HEAD_REVISION, str(_revision(MIG_DB)))
 
 print()
 print("=" * 68)
