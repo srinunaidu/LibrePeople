@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { useTenantNav } from "@/lib/tenantPath"
 import { Layout } from "@/components/Layout"
 import {
   Alert,
@@ -7,18 +9,15 @@ import {
   PageHeader,
   SectionCard,
   KPICard,
-  StatCard,
 } from "@/components/ui"
 import { NeedsAction, type NeedItem } from "@/components/home/NeedsAction"
 import {
   IconBuilding,
   IconChart,
-  IconExit,
   IconGrid,
   IconInbox,
   IconShield,
   IconTarget,
-  IconUsers,
 } from "@/components/icons"
 import api from "@/lib/api"
 
@@ -27,11 +26,12 @@ interface Integration { id: number; name: string; kind: string; status: string; 
 interface FeatureFlag { id: number; key: string; enabled: boolean }
 interface AuditEntry { id: number; actor_name?: string; action: string; entity_type: string; created_at?: string }
 
-const mockSparklineData = [12, 15, 13, 17, 19, 16, 20, 18, 22, 21, 24, 23]
-const mockClientSparkline = [5, 8, 7, 10, 9, 12, 11, 14, 13, 16, 15, 18]
-const mockFlagSparkline = [20, 25, 23, 28, 26, 30, 28, 32, 30, 35, 33, 38]
+// D3 (portals-completion): no sparkline/trend props on portal KPIs — there is
+// no backend aggregation for deltas, so every KPI shows a live value + hint.
 
 export default function SuperAdminHome() {
+  const navigate = useNavigate()
+  const tenantNav = useTenantNav()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [clients, setClients] = useState<Client[]>([])
@@ -89,10 +89,10 @@ export default function SuperAdminHome() {
   const disabledFlags = flags.filter((f) => !f.enabled).length
 
   const needs: NeedItem[] = [
-    { id: "cases", label: "Open HR cases", count: openCases, description: "Employee cases needing resolution", actionLabel: "Review", onAction: () => { window.location.href = "/platform" }, tone: "rose" },
-    { id: "requisitions", label: "Open requisitions", count: openReqs, description: "Roles awaiting candidates", actionLabel: "View", onAction: () => { window.location.href = "/recruiting" }, tone: "brand" },
-    { id: "violations", label: "Compliance violations", count: openViolations, description: "Policy or rule violations", actionLabel: "Review", onAction: () => { window.location.href = "/platform" }, tone: "rose" },
-    { id: "integrations", label: "Failed integrations", count: failedIntegrations, description: "Integration connections that need attention", actionLabel: "Fix", onAction: () => { window.location.href = "/client-onboarding" }, tone: "rose" },
+    { id: "cases", label: "Open HR cases", count: openCases, description: "Employee cases needing resolution", actionLabel: "Review", onAction: () => { navigate(tenantNav.to("/admin/er-cases")) }, tone: "rose" },
+    { id: "requisitions", label: "Open requisitions", count: openReqs, description: "Roles awaiting candidates", actionLabel: "View", onAction: () => { navigate(tenantNav.to("/recruiting")) }, tone: "brand" },
+    { id: "violations", label: "Compliance violations", count: openViolations, description: "Policy or rule violations", actionLabel: "Review", onAction: () => { navigate(tenantNav.to("/platform/compliance")) }, tone: "rose" },
+    { id: "integrations", label: "Failed integrations", count: failedIntegrations, description: "Integration connections that need attention", actionLabel: "Fix", onAction: () => { navigate(tenantNav.to("/platform/integrations")) }, tone: "rose" },
   ]
 
   if (loading) {
@@ -128,9 +128,6 @@ export default function SuperAdminHome() {
           hint={`${clients.filter((c) => c.status === "active").length} active`}
           icon={<IconBuilding className="w-5 h-5" />}
           tone="brand"
-          sparklineData={mockClientSparkline}
-          trendValue={12}
-          trendLabel="vs last quarter"
         />
         <KPICard
           label="Feature Flags"
@@ -138,9 +135,6 @@ export default function SuperAdminHome() {
           hint={`${disabledFlags} disabled`}
           icon={<IconGrid className="w-5 h-5" />}
           tone="green"
-          sparklineData={mockFlagSparkline}
-          trendValue={8}
-          trendLabel="new this month"
         />
         <KPICard
           label="Integrations"
@@ -148,9 +142,6 @@ export default function SuperAdminHome() {
           hint={`${failedIntegrations} failed`}
           icon={<IconTarget className="w-5 h-5" />}
           tone="teal"
-          sparklineData={mockSparklineData}
-          trendValue={failedIntegrations ? -failedIntegrations * 10 : 0}
-          trendLabel="health score"
         />
         <KPICard
           label="HR Cases"
@@ -158,10 +149,15 @@ export default function SuperAdminHome() {
           hint={`${openCases} open`}
           icon={<IconInbox className="w-5 h-5" />}
           tone="violet"
-          sparklineData={mockSparklineData}
-          trendValue={openCases ? -openCases * 5 : 0}
-          trendLabel="resolution rate"
         />
+      </div>
+
+      <div className="card p-4 text-xs text-fg-muted flex flex-wrap items-center gap-x-4 gap-y-2">
+        <span className="font-semibold text-fg">Administration</span>
+        <button className="action-link" onClick={() => { navigate(tenantNav.to("/admin/users")) }}>Users</button>
+        <button className="action-link" onClick={() => { navigate(tenantNav.to("/admin/entitlements")) }}>Module entitlements</button>
+        <button className="action-link" onClick={() => { navigate(tenantNav.to("/admin/branding")) }}>Tenant branding</button>
+        <button className="action-link" onClick={() => { navigate(tenantNav.to("/admin/feature-flags")) }}>Feature flags</button>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-0">
@@ -196,6 +192,9 @@ export default function SuperAdminHome() {
               </table>
             </div>
           )}
+          <div className="flex justify-end px-5 py-3">
+            <button className="action-link" onClick={() => { navigate(tenantNav.to("/client-onboarding")) }}>Open client onboarding</button>
+          </div>
         </SectionCard>
 
         {/* Feature flags */}

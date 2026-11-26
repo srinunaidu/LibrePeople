@@ -110,7 +110,7 @@ export default function ModuleEntitlements() {
             ))}
           </div>
           <div className="mt-4 flex items-center gap-4 text-xs text-fg-muted">
-            <span>SuperAdmin / HR writable · CF-02 module-graph enforced · AD-01 tenant branding feeds here.</span>
+            <span>SuperAdmin writable · CF-02 module-graph enforced · AD-01 tenant branding feeds here.</span>
           </div>
           <div className="mt-3 flex gap-3">
             <Button onClick={save} disabled={!canWrite || saving || !clientId}>{saving ? "Saving flags…" : "Save entitlements"}</Button>
