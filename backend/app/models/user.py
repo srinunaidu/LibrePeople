@@ -49,6 +49,11 @@ class User(Base):
         nullable=False,
     )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    #: SCIM provisioning external identifier (``externalId``). Nullable: only
+    #: SCIM-provisioned rows carry one. Uniqueness is enforced in the SCIM
+    #: router (idempotent create on ``externalId``), not by a DB constraint,
+    #: so a pre-existing database with ad-hoc values still migrates.
+    external_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
     employee_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("employees.id"), unique=True, nullable=True)
     created_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 

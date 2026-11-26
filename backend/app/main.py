@@ -8,6 +8,7 @@ from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.api.deps import get_current_active_user, get_db, require_roles
+from app.api.scim import router as scim_router
 from app.api.v1.api import api_router
 from app.models.user import User
 from app.core.database import engine, Base
@@ -105,6 +106,11 @@ app.add_exception_handler(RequestValidationError, validation_error_handler)
 from app.core.idempotency import IdempotencyRecord  # noqa: E402,F401
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
+
+# SCIM 2.0 provisioning surface (scim-provisioning slice). Top-level — not
+# under /api/v1 — so external identity providers meet the standard path.
+# Auth is the SCIM bearer token, never the JWT.
+app.include_router(scim_router, prefix="/scim/v2", tags=["scim"])
 
 
 # --------------------------------------------------------------------------
