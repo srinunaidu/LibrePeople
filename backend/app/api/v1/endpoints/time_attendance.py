@@ -30,8 +30,9 @@ from app.schemas.time_attendance import (
     TimeEntryUpdate,
     TimesheetGenerate,
     TimesheetOut,
+    WorkingTimeViolationOut,
 )
-from app.models.time_attendance import TimeCorrectionRequest, TimeEntry, Timesheet
+from app.models.time_attendance import TimeCorrectionRequest, TimeEntry, Timesheet, WorkingTimeViolation
 
 router = APIRouter()
 
@@ -411,3 +412,51 @@ def period_lock_status(
         "period_end": period_end,
         "is_locked": crud.period_is_locked(db, period_start, period_end),
     }
+
+
+# --- Working time violations (read-only) ------------------------------------ #
+
+# Violations are written by the roster-deviation detector
+# (GET /scheduling/rosters/{id}/attendance/deviations); this surface only
+# reads them, with the same visibility rules as the other time reads:
+# the caller's reporting line, and 404 for anything outside it.
+
+
+@router.get("/violations", response_model=list[WorkingTimeViolationOut], operation_id="timeListViolations")
+def list_violations(
+    employee_id: int | None = None,
+    start: date | None = None,
+    end: date | None = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles(*WORKFORCE_ROLES)),
+) -> Any:
+    q = db.query(WorkingTimeViolation)
+    if employee_id:
+        ensure_can_view_employee(db, current_user, employee_id)
+        q = q.filter(WorkingTimeViolation.employee_id == employee_id)
+    else:
+        q = apply_visibility(q, WorkingTimeViolation.employee_id, current_user, db)
+    if start:
+        q = q.filter(WorkingTimeViolation.work_date >= start)
+    if end:
+        q = q.filter(WorkingTimeViolation.work_date <= end)
+    return q.order_by(
+        WorkingTimeViolation.work_date.desc(), WorkingTimeViolation.id.desc()
+    ).all()
+
+
+@router.get("/violations/{violation_id}", response_model=WorkingTimeViolationOut, operation_id="timeGetViolation")
+def get_violation(
+    violation_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles(*WORKFORCE_ROLES)),
+) -> Any:
+    violation = (
+        db.query(WorkingTimeViolation)
+        .filter(WorkingTimeViolation.id == violation_id)
+        .first()
+    )
+    if not violation:
+        raise HTTPException(status_code=404, detail="Working time violation not found")
+    ensure_can_view_employee(db, current_user, violation.employee_id)
+    return violation
