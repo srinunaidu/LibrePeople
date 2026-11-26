@@ -86,11 +86,9 @@ const CandidateStages = lazy(() => import("@/pages/admin/CandidateStages"))
 const AI04Summarisation = lazy(() => import("@/pages/admin/AI04Summarisation"))
 const AIDrafting = lazy(() => import("@/pages/admin/AIDrafting"))
 const AnnouncementsDirectory = lazy(() => import("@/pages/admin/AnnouncementsDirectory"))
-const ApprovalWorkflows = lazy(() => import("@/pages/admin/ApprovalWorkflows"))
 const AttendancePolicies = lazy(() => import("@/pages/admin/AttendancePolicies"))
 const AvailabilityLeave = lazy(() => import("@/pages/admin/AvailabilityLeave"))
 const BankExport = lazy(() => import("@/pages/admin/BankExport"))
-const BankExportIntegration = lazy(() => import("@/pages/admin/BankExportIntegration"))
 const Certifications = lazy(() => import("@/pages/admin/Certifications"))
 const CompetencyCalibration = lazy(() => import("@/pages/admin/CompetencyCalibration"))
 const ContingentWorkers = lazy(() => import("@/pages/admin/ContingentWorkers"))
@@ -109,7 +107,6 @@ const ERCases = lazy(() => import("@/pages/er/ERCases"))
 const EmployerContributions = lazy(() => import("@/pages/admin/EmployerContributions"))
 const EmploymentStatus = lazy(() => import("@/pages/admin/EmploymentStatus"))
 const EquipmentAccess = lazy(() => import("@/pages/admin/EquipmentAccess"))
-const ExitInterviews = lazy(() => import("@/pages/admin/ExitInterviews"))
 const ExportErasure = lazy(() => import("@/pages/admin/ExportErasure"))
 const ExternalIntegration = lazy(() => import("@/pages/admin/ExternalIntegration"))
 const ForecastException = lazy(() => import("@/pages/admin/ForecastException"))
@@ -119,9 +116,6 @@ const GoalsOKR = lazy(() => import("@/pages/admin/GoalsOKR"))
 const HRHelpCases = lazy(() => import("@/pages/admin/HRHelpCases"))
 const HardConstraints = lazy(() => import("@/pages/admin/HardConstraints"))
 const HeadcountCost = lazy(() => import("@/pages/admin/HeadcountCost"))
-const HeadcountEntity = lazy(() => import("@/pages/admin/HeadcountEntity"))
-const HeadcountHiring = lazy(() => import("@/pages/admin/HeadcountHiring"))
-const HeadcountTurnover = lazy(() => import("@/pages/admin/HeadcountTurnover"))
 const HiringPlans = lazy(() => import("@/pages/admin/HiringPlans"))
 const HistoricalRecord = lazy(() => import("@/pages/admin/HistoricalRecord"))
 const ImprovementPlans = lazy(() => import("@/pages/admin/ImprovementPlans"))
@@ -141,7 +135,6 @@ const ModelVersioning = lazy(() => import("@/pages/admin/ModelVersioning"))
 const MultiLocationAssignments = lazy(() => import("@/pages/admin/MultiLocationAssignments"))
 const OfferApprovals = lazy(() => import("@/pages/admin/OfferApprovals"))
 const OrgChart = lazy(() => import("@/pages/admin/OrgChart"))
-const PM02Goals = lazy(() => import("@/pages/admin/PM02Goals"))
 const PaySchedule = lazy(() => import("@/pages/admin/PaySchedule"))
 const PlanReconciliation = lazy(() => import("@/pages/admin/PlanReconciliation"))
 const PlannedVsActual = lazy(() => import("@/pages/admin/PlannedVsActual"))
@@ -265,21 +258,11 @@ function AppRoutes() {
       <Route path="/admin/project-status" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><ProjectStatus /></ProtectedRoute>} />
       <Route path="/admin/design-gallery" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><DesignGallery /></ProtectedRoute>} />
       <Route path="/admin/theme" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><ThemeStudio /></ProtectedRoute>} />
-      <Route path="/admin/solutions" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><Solutions /></ProtectedRoute>} />
-      <Route path="/admin/resources" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><Resources /></ProtectedRoute>} />
-      <Route path="/admin/about" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><About /></ProtectedRoute>} />
-      <Route path="/admin/careers" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><Careers /></ProtectedRoute>} />
-      <Route path="/admin/contact" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><Contact /></ProtectedRoute>} />
-      <Route path="/admin/privacy" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><Privacy /></ProtectedRoute>} />
-      <Route path="/admin/terms" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><Terms /></ProtectedRoute>} />
-      <Route path="/admin/docs" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><Documentation /></ProtectedRoute>} />
-      <Route path="/admin/pricing" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><Pricing /></ProtectedRoute>} />
-      <Route path="/admin/security" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><Security /></ProtectedRoute>} />
-      <Route path="/admin/faq" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><FAQ /></ProtectedRoute>} />
-      <Route path="/admin/industry-detail" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><IndustryDetail /></ProtectedRoute>} />
-      <Route path="/admin/compare" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><Compare /></ProtectedRoute>} />
+      {/* Marketing aliases removed (admin-cleanup): same components reachable at
+          /solutions /resources /about /careers /contact /privacy /terms /docs
+          /pricing /security /faq /industries/:slug /compare/:competitor /design.
+          /admin/platform-showcase kept — no non-admin route renders it. */
       <Route path="/admin/platform-showcase" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><PlatformShowcase /></ProtectedRoute>} />
-      <Route path="/admin/design-showcase" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><DesignShowcase /></ProtectedRoute>} />
 
       {/* R6/R7/R8 Features */}
       <Route path="/admin/ad-03" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><LocaleConfig /></ProtectedRoute>} />
@@ -302,12 +285,10 @@ function AppRoutes() {
       <Route path="/admin/ai-04" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><AI04Summarisation /></ProtectedRoute>} />
       <Route path="/admin/ai-03" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><AIDrafting /></ProtectedRoute>} />
       <Route path="/admin/announcements-directory" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><AnnouncementsDirectory /></ProtectedRoute>} />
-      <Route path="/admin/approval-workflows" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><ApprovalWorkflows /></ProtectedRoute>} />
       <Route path="/admin/attendance-policies" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><AttendancePolicies /></ProtectedRoute>} />
       <Route path="/admin/availability-leave" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><AvailabilityLeave /></ProtectedRoute>} />
       <Route path="/admin/backup-restore" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><BackupRestore /></ProtectedRoute>} />
       <Route path="/admin/bank-export" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><BankExport /></ProtectedRoute>} />
-      <Route path="/admin/bank-export-integration" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><BankExportIntegration /></ProtectedRoute>} />
       <Route path="/admin/certifications" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><Certifications /></ProtectedRoute>} />
       <Route path="/admin/competency-calibration" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><CompetencyCalibration /></ProtectedRoute>} />
       <Route path="/admin/contingent-workers" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><ContingentWorkers /></ProtectedRoute>} />
@@ -327,7 +308,6 @@ function AppRoutes() {
       <Route path="/admin/employer-contributions" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><EmployerContributions /></ProtectedRoute>} />
       <Route path="/admin/employment-status" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><EmploymentStatus /></ProtectedRoute>} />
       <Route path="/admin/equipment-access" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><EquipmentAccess /></ProtectedRoute>} />
-      <Route path="/admin/exit-interviews" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><ExitInterviews /></ProtectedRoute>} />
       <Route path="/admin/export-erasure" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><ExportErasure /></ProtectedRoute>} />
       <Route path="/admin/external-integration" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><ExternalIntegration /></ProtectedRoute>} />
       <Route path="/admin/forecast-exception" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><ForecastException /></ProtectedRoute>} />
@@ -337,9 +317,6 @@ function AppRoutes() {
       <Route path="/admin/hrhelp-cases" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><HRHelpCases /></ProtectedRoute>} />
       <Route path="/admin/hard-constraints" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><HardConstraints /></ProtectedRoute>} />
       <Route path="/admin/headcount-cost" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><HeadcountCost /></ProtectedRoute>} />
-      <Route path="/admin/headcount-entity" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><HeadcountEntity /></ProtectedRoute>} />
-      <Route path="/admin/headcount-hiring" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><HeadcountHiring /></ProtectedRoute>} />
-      <Route path="/admin/headcount-turnover" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><HeadcountTurnover /></ProtectedRoute>} />
       <Route path="/admin/hiring-plans" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><HiringPlans /></ProtectedRoute>} />
       <Route path="/admin/historical-record" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><HistoricalRecord /></ProtectedRoute>} />
       <Route path="/admin/improvement-plans" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><ImprovementPlans /></ProtectedRoute>} />
@@ -363,7 +340,6 @@ function AppRoutes() {
       <Route path="/admin/multi-location-assignments" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><MultiLocationAssignments /></ProtectedRoute>} />
       <Route path="/admin/offer-approvals" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><OfferApprovals /></ProtectedRoute>} />
       <Route path="/admin/org-chart" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><OrgChart /></ProtectedRoute>} />
-      <Route path="/admin/pm02goals" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><PM02Goals /></ProtectedRoute>} />
       <Route path="/admin/pay-schedule" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><PaySchedule /></ProtectedRoute>} />
       <Route path="/admin/plan-reconciliation" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><PlanReconciliation /></ProtectedRoute>} />
       <Route path="/admin/planned-vs-actual" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><PlannedVsActual /></ProtectedRoute>} />
