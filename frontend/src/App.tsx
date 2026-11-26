@@ -102,6 +102,7 @@ const DemandStaffing = lazy(() => import("@/pages/admin/DemandStaffing"))
 const DepartmentsCostCentres = lazy(() => import("@/pages/admin/DepartmentsCostCentres"))
 const DocumentClassification = lazy(() => import("@/pages/admin/DocumentClassification"))
 const DocumentsExpiry = lazy(() => import("@/pages/admin/DocumentsExpiry"))
+const DocumentsLibrary = lazy(() => import("@/pages/documents/DocumentsLibrary"))
 const ESSProfile = lazy(() => import("@/pages/admin/ESSProfile"))
 const EarningsDeductions = lazy(() => import("@/pages/admin/EarningsDeductions"))
 const EmployerContributions = lazy(() => import("@/pages/admin/EmployerContributions"))
@@ -318,6 +319,7 @@ function AppRoutes() {
       <Route path="/admin/departments-cost-centres" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><DepartmentsCostCentres /></ProtectedRoute>} />
       <Route path="/admin/document-classification" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><DocumentClassification /></ProtectedRoute>} />
       <Route path="/admin/documents-expiry" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><DocumentsExpiry /></ProtectedRoute>} />
+      <Route path="/admin/documents" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><DocumentsLibrary /></ProtectedRoute>} />
       <Route path="/admin/essprofile" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><ESSProfile /></ProtectedRoute>} />
       <Route path="/admin/earnings-deductions" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><EarningsDeductions /></ProtectedRoute>} />
       <Route path="/admin/employer-contributions" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><EmployerContributions /></ProtectedRoute>} />
