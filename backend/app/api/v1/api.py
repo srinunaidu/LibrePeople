@@ -35,6 +35,7 @@ from app.api.v1.endpoints import (
     admin_status,
     break_glass,
 )
+from app.workflows.router import router as workflows_router
 
 api_router = APIRouter()
 
@@ -83,6 +84,7 @@ api_router.include_router(
 )
 api_router.include_router(expenses.router, prefix="/expenses", tags=["expenses"])
 api_router.include_router(assets.router, prefix="/assets", tags=["assets"])
+api_router.include_router(workflows_router, prefix="/workflows", tags=["workflows"])
 api_router.include_router(admin_jobs.router, prefix="/admin/jobs", tags=["admin"])
 api_router.include_router(admin_audit.router, prefix="/admin/audit", tags=["admin"])
 api_router.include_router(admin_status.router, prefix="/admin/status", tags=["admin"])

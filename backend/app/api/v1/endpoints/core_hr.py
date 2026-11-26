@@ -22,6 +22,8 @@ from app.core.master_data import (
 )
 from app.core.rate_limit import limiter
 from app.core.visibility import apply_visibility, ensure_can_view_employee
+from app.services import notifications as notify
+from app.workflows import service as wf_service
 from app.models.core_hr import (
     CaseComment,
     CostCenter,
@@ -598,6 +600,13 @@ def acknowledge_document(document_id: int, db: Session = Depends(get_db), u: Use
         )
     db.refresh(ack)
     record_audit(db, u, "acknowledge_document", "DocumentAck", ack.id, details=f"document={doc.id}"); db.commit()
+    wf_service.record_mirror(
+        db, actor=u, entity_type="document", entity_id=doc.id,
+        action="APPROVE", stage="APPROVED",
+        comment=f"Acknowledged by {u.username}.",
+        recipient_user_id=notify.user_id_for_employee(db, doc.employee_id),
+        audit_action="workflow_mirror_document_ack",
+    )
     return ack
 
 
@@ -909,6 +918,15 @@ def update_case(case_id: int, payload: HRCaseUpdate, db: Session = Depends(get_d
         obj.resolved_at = datetime.now(timezone.utc)
     db.add(obj); db.commit(); db.refresh(obj)
     record_audit(db, u, "update_hr_case", "HRCase", obj.id); db.commit()
+    if changes.get("status") == "Resolved":
+        wf_service.record_mirror(
+            db, actor=u, entity_type="hr_case", entity_id=obj.id,
+            action="APPROVE", stage="APPROVED",
+            comment=(changes.get("resolution") or obj.resolution or "Case resolved.")[:500],
+            due_at=obj.sla_due,
+            recipient_user_id=notify.user_id_for_employee(db, obj.employee_id),
+            audit_action="workflow_mirror_hr_resolve",
+        )
     return obj
 
 

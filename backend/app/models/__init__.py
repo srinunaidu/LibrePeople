@@ -34,6 +34,8 @@ from .expenses import ExpenseCategory, ExpenseClaim, ExpenseReceipt
 
 from .assets import Asset, AssetAssignment
 
+from .workflow_step import WorkflowStep
+
 from .learning import Course, CourseEnrollment, Certification, TalentPool, TalentPoolMember, SuccessionPlan
 
 from .compliance import ComplianceRule, ComplianceViolation, HeadcountPlan, Scenario, ReportDefinition, SavedReport
@@ -69,6 +71,7 @@ __all__ = [
     "Goal", "PerformanceReview", "ReviewFeedback", "CompensationBand", "MeritCycle", "MeritAllocation",
     "BenefitPlan", "BenefitEnrollment", "LifeEvent", "LeaveOfAbsence",
     "ExpenseCategory", "ExpenseClaim", "ExpenseReceipt",
+    "WorkflowStep",
     "Course", "CourseEnrollment", "Certification", "TalentPool", "TalentPoolMember", "SuccessionPlan",
     "ComplianceRule", "ComplianceViolation", "HeadcountPlan", "Scenario", "ReportDefinition", "SavedReport",
     "AuditLog", "AuditChainHead", "IntegrityQuarantine", "SSOConfig", "SCIMToken", "Webhook", "WebhookDelivery", "BackgroundCheck", "ESignature",
