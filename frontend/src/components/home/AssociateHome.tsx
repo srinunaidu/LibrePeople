@@ -11,7 +11,7 @@ import {
   SectionCard,
   KPICard,
   Button,
-} from "@/components/ui"
+  StatusPill } from "@/components/ui"
 import { NeedsAction, type NeedItem } from "@/components/home/NeedsAction"
 import { formatCurrency } from "@/lib/format"
 import {
@@ -27,8 +27,6 @@ import {
 import api from "@/lib/api"
 import { useAuth } from "@/context/AuthContext"
 import { useTenant } from "@/context/TenantContext"
-import { StatusPill } from "@/components/ui/status-pill"
-
 interface LeaveBalance { available_days: number; leave_type_name?: string; entitlement_year: number }
 interface RosterEntry { id: number; work_date: string; start_time: string; end_time: string; status: string }
 interface Payslip { id: number; period_start: string; period_end: string; net_pay?: number; status: string }

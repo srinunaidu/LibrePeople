@@ -15,8 +15,7 @@ import {Alert,
   LoadingRegion,
   PageHeader,
   SectionCard,
-  TableSkeleton, RetryableAlert} from "@/components/ui"
-import { StatusPill } from "@/components/ui/status-pill"
+  TableSkeleton, RetryableAlert, StatusPill, Table } from "@/components/ui"
 import { useAuth } from "@/context/AuthContext"
 import { useTenant } from "@/context/TenantContext"
 import api, { errorMessage } from "@/lib/api"
@@ -162,29 +161,29 @@ export default function DataQuality() {
             />
           </div>
         ) : (
-          <div className="table-scroll">
-            <table className="table-base table-compact w-full text-sm">
-              <caption className="sr-only">Data-quality checks</caption>
-              <thead>
-                <tr>
-                  <th scope="col">Check (code)</th>
-                  <th scope="col">Severities</th>
-                  <th scope="col">Note</th>
-                </tr>
-              </thead>
-              <tbody>
-                {checksData.checks.map((code) => (
-                  <tr key={code}>
-                    <td className="font-mono text-xs">{code}</td>
-                    <td className="text-xs text-text-secondary">{checksData.severities.join(", ")}</td>
-                    <td className="text-xs text-text-secondary max-w-[320px] truncate" title={checksData.note}>
-                      {checksData.note}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table
+            columns={[
+              { key: "check", header: "Check (code)", accessor: (row) => <span className="font-mono text-xs">{row.code}</span> },
+              {
+                key: "severities",
+                header: "Severities",
+                accessor: () => <span className="text-xs text-text-secondary">{checksData.severities.join(", ")}</span>,
+              },
+              {
+                key: "note",
+                header: "Note",
+                accessor: () => (
+                  <span className="text-xs text-text-secondary max-w-[320px] truncate" title={checksData.note}>
+                    {checksData.note}
+                  </span>
+                ),
+              },
+            ]}
+            data={checksData.checks.map((code) => ({ code }))}
+            keyAccessor={(row) => row.code}
+            caption="Data-quality checks"
+            sortable={false}
+          />
           )
           }
 
@@ -225,43 +224,43 @@ export default function DataQuality() {
                 {fmtDate(issuesData.summary.checked_at)}
               </div>
             )}
-            <div className="table-scroll">
-              <table className="table-base table-compact w-full text-sm">
-                <caption className="sr-only">Data-quality issues</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Check / code</th>
-                    <th scope="col">Severity</th>
-                    <th scope="col">Entity</th>
-                    <th scope="col">Message</th>
-                    <th scope="col">Owner</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {issueRows.map((issue, idx) => (
-                    <tr key={`${issue.code}-${issue.entity_id ?? idx}`}>
-                      <td className="font-mono text-xs" title={issue.code}>
-                        {issue.code}
-                      </td>
-                      <td>
-                        <StatusPill status={issue.severity} tone={severityTone(issue.severity)} />
-                      </td>
-                      <td className="text-xs">
-                        {issue.entity_type}
-                        {issue.entity_id ? ` #${issue.entity_id}` : ""}
-                      </td>
-                      <td className="max-w-[360px]">
-                        <p className="font-medium text-xs">{issue.title}</p>
-                        <p className="text-xs text-text-secondary line-clamp-2" title={issue.explanation}>
-                          {issue.explanation}
-                        </p>
-                      </td>
-                      <td className="text-xs">{issue.owner_role}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table
+              columns={[
+                { key: "check", header: "Check / code", accessor: (issue) => <span className="font-mono text-xs" title={issue.code}>{issue.code}</span> },
+                {
+                  key: "severity",
+                  header: "Severity",
+                  accessor: (issue) => <StatusPill status={issue.severity} tone={severityTone(issue.severity)} />,
+                },
+                {
+                  key: "entity",
+                  header: "Entity",
+                  accessor: (issue) => (
+                    <span className="text-xs">
+                      {issue.entity_type}
+                      {issue.entity_id ? ` #${issue.entity_id}` : ""}
+                    </span>
+                  ),
+                },
+                {
+                  key: "message",
+                  header: "Message",
+                  accessor: (issue) => (
+                    <span className="max-w-[360px]">
+                      <p className="font-medium text-xs">{issue.title}</p>
+                      <p className="text-xs text-text-secondary line-clamp-2" title={issue.explanation}>
+                        {issue.explanation}
+                      </p>
+                    </span>
+                  ),
+                },
+                { key: "owner", header: "Owner", accessor: (issue) => <span className="text-xs">{issue.owner_role}</span> },
+              ]}
+              data={issueRows.map((issue, idx) => ({ ...issue, _rowKey: `${issue.code}-${issue.entity_id ?? idx}` }))}
+              keyAccessor={(row) => row._rowKey}
+              caption="Data-quality issues"
+              sortable={false}
+            />
           </>
         )}</SectionCard>
 

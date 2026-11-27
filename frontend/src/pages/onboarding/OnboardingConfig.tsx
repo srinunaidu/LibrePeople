@@ -19,8 +19,7 @@ import {
   PageHeader,
   SectionCard,
   Table,
-  TableSkeleton, RetryableAlert} from "@/components/ui"
-import { StatusPill } from "@/components/ui/status-pill"
+  TableSkeleton, RetryableAlert, StatusPill } from "@/components/ui"
 import { Meter } from "@/components/ui/feedback"
 
 import { useAuth } from "@/context/AuthContext"

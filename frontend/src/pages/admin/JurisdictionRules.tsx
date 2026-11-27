@@ -5,7 +5,7 @@
  */
 import { useCallback, useEffect, useState } from "react"
 import { Layout } from "@/components/Layout"
-import { PendingVerificationAlert, Input, Alert, Button, EmptyState, LoadingRegion, PageHeader, RetryableAlert, SectionCard, TableSkeleton } from "@/components/ui"
+import { PendingVerificationAlert, Input, Alert, Button, EmptyState, LoadingRegion, PageHeader, RetryableAlert, SectionCard, TableSkeleton, Table } from "@/components/ui"
 
 import { useAuth } from "@/context/AuthContext"
 import api, { getClientIdBySlug, errorMessage } from "@/lib/api"
@@ -121,19 +121,17 @@ export default function JurisdictionRules() {
           <p className="text-xs text-text-secondary mt-2">Payslip PDF: GET /payroll/payslips/{"{id}"}/pdf renders gross/net/deductions, statutory breakdown (BASIC, TAX_*, REBATE_87A, PF_EE/ER, ESI_EE/ER, PT_{"{STATE}"}) with watermark when pending; lineage (rule_pack_id + version/effective dates + inputs_json). US unchanged.</p>
         </SectionCard>
         <SectionCard compact title="Active jurisdiction config" description="The persisted per-tenant configuration — what the backend actually reads.">
-          <div className="table-scroll">
-            <table className="w-full text-sm">
-              <caption className="sr-only">Active jurisdiction configuration</caption>
-              <thead><tr className="border-b"><th scope="col" className="text-left">Jurisdiction</th><th scope="col" className="text-left">Rule version</th><th scope="col" className="text-left">Test fixtures</th></tr></thead>
-              <tbody>
-                <tr className="border-b">
-                  <td>{jurisdictionLabel} ({jurisdiction})</td>
-                  <td className="font-mono">{ruleVersion}</td>
-                  <td>{testFixtures ? "Enabled" : "Disabled"}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          <Table
+            columns={[
+              { key: "jurisdiction", header: "Jurisdiction", accessor: () => `${jurisdictionLabel} (${jurisdiction})` },
+              { key: "rule", header: "Rule version", accessor: () => <span className="font-mono">{ruleVersion}</span> },
+              { key: "fixtures", header: "Test fixtures", accessor: () => (testFixtures ? "Enabled" : "Disabled") },
+            ]}
+            data={[{}]}
+            keyAccessor={() => "config"}
+            caption="Active jurisdiction configuration"
+            sortable={false}
+          />
         </SectionCard>
         <div className="text-xs text-fg-muted">PY-09 · R5 · depends PY-08 + AD-07 + PY-01 · configuration shown is the persisted tenant config.</div>
       </div>

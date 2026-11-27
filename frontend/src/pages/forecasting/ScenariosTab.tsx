@@ -18,8 +18,7 @@ import {Alert,
   Input,
   LoadingRegion,
   SectionCard,
-  TableSkeleton, RetryableAlert} from "@/components/ui"
-import { StatusPill } from "@/components/ui/status-pill"
+  TableSkeleton, RetryableAlert, StatusPill } from "@/components/ui"
 import api, { isRetryable } from "@/lib/api" // RetryableAlert gate
 import type {
   ComparisonPeriod,

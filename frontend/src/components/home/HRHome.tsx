@@ -9,7 +9,7 @@ import {
   PageHeader,
   SectionCard,
   KPICard,
-} from "@/components/ui"
+  StatusPill } from "@/components/ui"
 import { NeedsAction, type NeedItem } from "@/components/home/NeedsAction"
 import {
   IconExit,
@@ -19,8 +19,6 @@ import {
   IconUsers,
 } from "@/components/icons"
 import api from "@/lib/api"
-import { StatusPill } from "@/components/ui/status-pill"
-
 interface HrCase { id: number; subject: string; status: string; priority: string; category: string }
 interface Requisition { id: number; req_number: string; title: string; status: string; openings: number }
 interface Termination { id: number; employee_id: number; status: string; last_working_date: string; termination_type: string }

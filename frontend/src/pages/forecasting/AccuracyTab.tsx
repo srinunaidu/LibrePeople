@@ -18,8 +18,7 @@ import {Alert,
   EmptyState,
   Input,
   SectionCard,
-  TableSkeleton, RetryableAlert} from "@/components/ui"
-import { StatusPill } from "@/components/ui/status-pill"
+  TableSkeleton, RetryableAlert, StatusPill } from "@/components/ui"
 import api from "@/lib/api"
 import type { ForecastAccuracyRecordOut, ForecastAccuracySyncResult, PaginatedForecastAccuracy } from "@/types"
 import {

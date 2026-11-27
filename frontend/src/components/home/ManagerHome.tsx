@@ -10,7 +10,7 @@ import {
   PageHeader,
   SectionCard,
   KPICard,
-} from "@/components/ui"
+  StatusPill } from "@/components/ui"
 import { NeedsAction, type NeedItem } from "@/components/home/NeedsAction"
 import {
   IconChart,
@@ -20,8 +20,6 @@ import {
   IconUsers,
 } from "@/components/icons"
 import api from "@/lib/api"
-import { StatusPill } from "@/components/ui/status-pill"
-
 interface LeaveReq { id: number; employee_id: number; status: string; working_days: number; start_date: string; end_date: string }
 interface Timesheet { id: number; employee_id: number; status: string; total_hours: number; period_start: string; period_end: string }
 interface ShiftSwap { id: number; requester_id: number; status: string; roster_entry_id: number }

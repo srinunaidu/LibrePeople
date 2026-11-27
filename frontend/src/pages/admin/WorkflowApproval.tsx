@@ -7,7 +7,7 @@
  */
 import { useCallback, useEffect, useState } from "react"
 import { Layout } from "@/components/Layout"
-import { Input,Alert, Button, EmptyState, LoadingRegion, PageHeader, SectionCard, RetryableAlert, TableSkeleton} from "@/components/ui"
+import { Input,Alert, Button, EmptyState, LoadingRegion, PageHeader, SectionCard, RetryableAlert, TableSkeleton, Table } from "@/components/ui"
 
 import { useAuth } from "@/context/AuthContext"
 import api, { getClientIdBySlug, errorMessage } from "@/lib/api"
@@ -98,28 +98,30 @@ export default function WorkflowApproval() {
         </SectionCard>
 
         <SectionCard compact title="Configured steps" description="Steps from GET /clients/:id/onboarding — complete marks a step done (audited).">
-          <div className="table-scroll">
-            <table className="w-full text-sm">
-              <caption className="sr-only">Configured workflow steps</caption>
-              <thead><tr className="border-b"><th scope="col" className="text-left py-2 font-medium">Title</th><th scope="col" className="text-left py-2 font-medium">Key</th><th scope="col" className="text-left py-2 font-medium">Owner</th><th scope="col" className="text-left py-2 font-medium">Status</th><th scope="col" className="text-left py-2 font-medium">Action</th></tr></thead>
-              <tbody>
-                {steps.length === 0 && <tr><td colSpan={5} className="py-3 text-fg-subtle italic">No steps configured yet — create one above.</td></tr>}
-                {steps.map(s => (
-                  <tr key={s.id} className="border-b">
-                    <td className="py-2">{s.title}</td>
-                    <td className="py-2 font-mono text-xs">{s.key}</td>
-                    <td className="py-2">{s.owner || "—"}</td>
-                    <td className="py-2">{s.completed ? "Complete" : "Pending"}</td>
-                    <td className="py-2">
-                      {!s.completed ? (
-                        <Button size="sm" variant="secondary" onClick={() => completeStep(s.id)} loading={completingId === s.id} disabled={!clientId}>Complete</Button>
-                      ) : <span className="text-xs text-fg-muted">—</span>}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table
+            columns={[
+              { key: "title", header: "Title", accessor: (s) => <span className="py-2">{s.title}</span> },
+              { key: "key", header: "Key", accessor: (s) => <span className="py-2 font-mono text-xs">{s.key}</span> },
+              { key: "owner", header: "Owner", accessor: (s) => <span className="py-2">{s.owner || "—"}</span> },
+              { key: "status", header: "Status", accessor: (s) => <span className="py-2">{s.completed ? "Complete" : "Pending"}</span> },
+              {
+                key: "action",
+                header: "Action",
+                accessor: (s) => (
+                  <span className="py-2">
+                    {!s.completed ? (
+                      <Button size="sm" variant="secondary" onClick={() => completeStep(s.id)} loading={completingId === s.id} disabled={!clientId}>Complete</Button>
+                    ) : <span className="text-xs text-fg-muted">—</span>}
+                  </span>
+                ),
+              },
+            ]}
+            data={steps}
+            keyAccessor={(s) => s.id}
+            caption="Configured workflow steps"
+            emptyMessage="No steps configured yet — create one above."
+            sortable={false}
+          />
         </SectionCard>
 
         <div className="text-xs text-fg-muted">AD-05 · depends AD-04 + AD-07 · feeds AD-06 (credentials), RC-01 · evidence: /clients/:id/onboarding endpoints + this screen.</div>

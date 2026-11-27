@@ -9,11 +9,10 @@ import {
   PageHeader,
   SectionCard,
   KPICard,
-} from "@/components/ui"
+  StatusPill } from "@/components/ui"
 import { NeedsAction, type NeedItem } from "@/components/home/NeedsAction"
 import { IconChart, IconFile, IconWallet } from "@/components/icons"
 import api from "@/lib/api"
-import { StatusPill } from "@/components/ui/status-pill"
 import { useTenant } from "@/context/TenantContext"
 import { formatCurrency } from "@/lib/format"
 

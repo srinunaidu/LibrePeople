@@ -5,9 +5,10 @@ export type Theme = "light" | "dark"
 interface ThemeState {
   theme: Theme
   toggle: () => void
+  setTheme: (t: Theme) => void
 }
 
-const ThemeContext = createContext<ThemeState>({ theme: "light", toggle: () => {} })
+const ThemeContext = createContext<ThemeState>({ theme: "light", toggle: () => {}, setTheme: () => {} })
 
 const STORAGE_KEY = "karmathy_theme"
 
@@ -37,7 +38,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const toggle = () => setTheme((t) => (t === "light" ? "dark" : "light"))
 
-  return <ThemeContext.Provider value={{ theme, toggle }}>{children}</ThemeContext.Provider>
+  return <ThemeContext.Provider value={{ theme, toggle, setTheme }}>{children}</ThemeContext.Provider>
 }
 
 export const useTheme = () => useContext(ThemeContext)

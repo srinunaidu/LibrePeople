@@ -27,12 +27,12 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from "react"
 import { Layout } from "@/components/Layout"
-import { Button, Checkbox, Input, Select, Textarea,Alert, EmptyState, LoadingRegion, PageHeader, SectionCard, Table, TableSkeleton, RetryableAlert} from "@/components/ui"
+import { Button, Checkbox, Input, Select, Textarea,Alert, EmptyState, LoadingRegion, PageHeader, SectionCard, Table, TableSkeleton, RetryableAlert, StatusPill } from "@/components/ui"
 
-import { StatusPill } from "@/components/ui/status-pill"
 import { Field } from "@/components/ui/layout"
 import { useAuth } from "@/context/AuthContext"
 import { useTenant } from "@/context/TenantContext"
+import { useTheme } from "@/context/ThemeContext"
 import { formatDate, formatDateTime } from "@/lib/format"
 import api, { errorMessage } from "@/lib/api"
 import { fetchAllEmployees } from "@/lib/employees"
@@ -65,6 +65,7 @@ const PROFILE_BASE = "/ess/ess/profile"
 export default function ESSHub() {
   const { user } = useAuth()
   const { tenant } = useTenant()
+  const { setTheme } = useTheme()
   const localeOpts = { locale: tenant?.locale, timeZone: tenant?.timezone }
   // Dates render in the tenant locale/timezone via format.ts —
   // never the browser default.
@@ -880,7 +881,7 @@ export default function ESSHub() {
                 <div className="min-w-[140px]"><Field label="Routing" htmlFor="profile-routing"><Input id="profile-routing" value={profileForm.bank_routing} onChange={(e) => setProfileForm((f) => ({ ...f, bank_routing: e.target.value }))} /></Field></div>
                 <div className="min-w-[140px]"><Field label="Tax ID" htmlFor="profile-tax"><Input id="profile-tax" value={profileForm.tax_id} onChange={(e) => setProfileForm((f) => ({ ...f, tax_id: e.target.value }))} /></Field></div>
                 <div className="min-w-[100px]"><Field label="Language" htmlFor="profile-language"><Select id="profile-language" value={profileForm.language} onChange={(e) => setProfileForm((f) => ({ ...f, language: e.target.value }))}><option value="en">en</option><option value="fr">fr</option><option value="es">es</option><option value="de">de</option></Select></Field></div>
-                <div className="min-w-[120px]"><Field label="Theme" htmlFor="profile-theme"><Select id="profile-theme" value={profileForm.theme_preference} onChange={(e) => setProfileForm((f) => ({ ...f, theme_preference: e.target.value }))}><option value="light">light</option><option value="dark">dark</option></Select></Field></div>
+                <div className="min-w-[120px]"><Field label="Theme" htmlFor="profile-theme"><Select id="profile-theme" value={profileForm.theme_preference} onChange={(e) => { const v = e.target.value === "dark" ? "dark" : "light"; setProfileForm((f) => ({ ...f, theme_preference: v })); setTheme(v) }}><option value="light">light</option><option value="dark">dark</option></Select></Field></div>
                 <Checkbox id="profile-dd" label="Direct deposit" checked={profileForm.direct_deposit_enabled} onChange={(e) => setProfileForm((f) => ({ ...f, direct_deposit_enabled: e.target.checked }))} />
                 <Checkbox id="profile-email" label="Email notifs" checked={profileForm.notification_email} onChange={(e) => setProfileForm((f) => ({ ...f, notification_email: e.target.checked }))} />
                 <Checkbox id="profile-sms" label="SMS notifs" checked={profileForm.notification_sms} onChange={(e) => setProfileForm((f) => ({ ...f, notification_sms: e.target.checked }))} />

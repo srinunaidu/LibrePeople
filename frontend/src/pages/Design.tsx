@@ -1,14 +1,10 @@
 import { Layout } from "@/components/Layout"
 import { Button, buttonVariants } from "@/components/ui/button"
-import { Card, SectionCard } from "@/components/ui/card"
-
 import { Badge, badgeVariants } from "@/components/ui/badge"
 import { Avatar } from "@/components/ui/avatar"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-import { StatusPill } from "@/components/ui/status-pill"
 import { Alert, EmptyState, Meter } from "@/components/ui/feedback"
-import { Input, Select, Textarea, Checkbox, Switch, RetryableAlert, showSuccess, showError, showInfo } from "@/components/ui"
-import { Skeleton, CardSkeleton, TableSkeleton, LoadingRegion } from "@/components/ui/skeleton"
+import { Input, Select, Textarea, Checkbox, Switch, RetryableAlert, showSuccess, showError, showInfo, Card, SectionCard, StatusPill, Skeleton, CardSkeleton, TableSkeleton, LoadingRegion } from "@/components/ui"
 import { PageHeader, Field, FormSection, Toolbar, Breadcrumb, SubmitBar } from "@/components/ui/layout"
 
 import { IconCheck, IconGrid, IconInbox, IconPlus, IconSparkle, IconX } from "@/components/icons"

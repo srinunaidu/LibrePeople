@@ -14,10 +14,9 @@ import {Alert,
   SectionCard,
   Select,
   Table,
-  TableSkeleton, RetryableAlert} from "@/components/ui"
+  TableSkeleton, RetryableAlert, StatusPill } from "@/components/ui"
 import { Badge } from "@/components/ui/badge"
 import { Field } from "@/components/ui/layout"
-import { StatusPill } from "@/components/ui/status-pill"
 import api, { errorMessage } from "@/lib/api"
 import {
   cancelImport,

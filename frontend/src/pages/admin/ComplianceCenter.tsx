@@ -27,11 +27,9 @@ import {
   RetryableAlert,
   SectionCard,
   TableSkeleton,
-  Table,
-} from "@/components/ui"
+  Table, StatusPill } from "@/components/ui"
 
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-import { StatusPill } from "@/components/ui/status-pill"
 import { useAuth } from "@/context/AuthContext"
 import { useTenant } from "@/context/TenantContext"
 import api, { errorMessage, getFiling, isPendingVerification } from "@/lib/api"

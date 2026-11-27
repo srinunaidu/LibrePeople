@@ -13,11 +13,10 @@ import {
   ModalTitle,
   PageHeader,
   SectionCard,
-  TableSkeleton, RetryableAlert} from "@/components/ui"
+  TableSkeleton, RetryableAlert, StatusPill, type StatusTone } from "@/components/ui"
 
 import { IconGrid, IconRefresh } from "@/components/icons"
 import type { PageMeta } from "@/types"
-import { StatusPill, type StatusTone } from "@/components/ui/status-pill"
 import api, { errorMessage } from "@/lib/api"
 import { useAuth } from "@/context/AuthContext"
 import { useTenant } from "@/context/TenantContext"
