@@ -1,7 +1,4 @@
-import * as DialogPrimitive from "@radix-ui/react-dialog"
-import { cn } from "@/lib/utils"
-import * as React from "react"
-import { X } from "lucide-react"
+import { Modal, ModalContent, ModalDescription, ModalTitle } from "@/components/ui"
 
 export function ErrorBox({
   title = "Error",
@@ -15,17 +12,17 @@ export function ErrorBox({
   onClose: () => void
 }) {
   return (
-    <DialogPrimitive.Root>
-      <DialogPrimitive.Overlay className="fixed inset-0 z-[1000] bg-black/40 backdrop-blur-sm" />
-      <DialogPrimitive.Content
-        className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg rounded-2xl bg-surface p-8 shadow-xl text-center border border-border"
-      >
-        <DialogPrimitive.Title className="text-2xl font-bold text-error mb-2">
+    <Modal open onOpenChange={(open) => { if (!open) onClose() }}>
+      <ModalContent size="md" className="text-center">
+        <ModalTitle className="text-2xl font-bold text-error mb-2">
           {title}
-        </DialogPrimitive.Title>
-        <DialogPrimitive.Description className="text-text-secondary mb-6 line-clamp-4">
+        </ModalTitle>
+        <ModalDescription className="mb-6 line-clamp-4">
           {description}
-        </DialogPrimitive.Description>
+        </ModalDescription>
+        {/* 44px exemption (documented): dense admin pattern keeps compact
+            buttons here; the dialog itself traps focus, closes on Escape /
+            overlay / X, and returns focus to the trigger. */}
         <div className="flex justify-between items-end">
           <button
             onClick={onClose}
@@ -42,7 +39,7 @@ export function ErrorBox({
             </button>
           )}
         </div>
-      </DialogPrimitive.Content>
-    </DialogPrimitive.Root>
+      </ModalContent>
+    </Modal>
   )
 }

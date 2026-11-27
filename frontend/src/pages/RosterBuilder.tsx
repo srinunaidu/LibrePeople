@@ -79,16 +79,16 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: "attendance", label: "Attendance" },
 ]
 
-const SEVERITY_TONE: Record<string, string> = {
-  critical: "badge-rose",
-  warning: "badge-amber",
-  info: "badge-slate",
+const SEVERITY_TONE: Record<string, "rose" | "amber" | "slate"> = {
+  critical: "rose",
+  warning: "amber",
+  info: "slate",
 }
 
-const DIFF_TONE: Record<string, string> = {
-  added: "badge-green",
-  removed: "badge-rose",
-  changed: "badge-amber",
+const DIFF_TONE: Record<string, "green" | "rose" | "amber"> = {
+  added: "green",
+  removed: "rose",
+  changed: "amber",
 }
 
 /** Read a displayable message out of any HTTP error the backend raises. */
@@ -991,9 +991,7 @@ export default function RosterBuilder() {
                       ) },
                       { key: "headcount", header: "Headcount", accessor: (u) => u.headcount, cellClassName: "num" },
                       { key: "cause", header: "Cause", accessor: (u) => (
-                        <span className="badge badge-amber" title={u.blocking_constraint ?? undefined}>
-                          {u.cause}
-                        </span>
+                        <StatusPill status={u.cause} tone="amber" title={u.blocking_constraint ?? undefined} />
                       ) },
                     ]}
                     data={draft.unfilled_slots.map((u, i) => ({ ...u, _k: `${u.slot_id}-${i}` }))}
@@ -1116,9 +1114,9 @@ export default function RosterBuilder() {
                       ) },
                       { key: "night", header: "Night", accessor: (e) => (
                         e.is_night ? (
-                          <span className="badge badge-violet">Night</span>
+                          <StatusPill status="Night" tone="violet" />
                         ) : (
-                          <span className="badge badge-slate">Day</span>
+                          <StatusPill status="Day" />
                         )
                       ) },
                       { key: "status", header: "Status", accessor: (e) => <StatusPill status={e.status} /> },
@@ -1141,7 +1139,7 @@ export default function RosterBuilder() {
                         { key: "date", header: "Date", accessor: (u) => <span className="whitespace-nowrap">{u.date}</span> },
                         { key: "slot", header: "Slot", accessor: (u) => <span className="font-mono text-xs">{u.slot_id}</span> },
                         { key: "headcount", header: "Headcount", accessor: (u) => u.headcount, cellClassName: "num" },
-                        { key: "cause", header: "Cause", accessor: (u) => <span className="badge badge-amber">{u.cause}</span> },
+                        { key: "cause", header: "Cause", accessor: (u) => <StatusPill status={u.cause} tone="amber" /> },
                       ]}
                       data={versionDetail.unfilled_slots.map((u, i) => ({ ...u, _k: `${u.slot_id}-${i}` }))}
                       keyAccessor={(u) => u._k}
@@ -1191,9 +1189,7 @@ export default function RosterBuilder() {
                 </h3>
                 <div className="px-4 py-2 flex flex-wrap gap-2">
                   {Object.entries(compare.summary).map(([k, v]) => (
-                    <span key={k} className={`badge ${DIFF_TONE[k] ?? "badge-slate"}`}>
-                      {k}: {v}
-                    </span>
+                    <StatusPill key={k} status={`${k}: ${v}`} tone={DIFF_TONE[k] ?? "slate"} />
                   ))}
                 </div>
                 {compare.added.length + compare.removed.length + compare.changed.length === 0 ? (
@@ -1208,9 +1204,7 @@ export default function RosterBuilder() {
                     className="max-h-[320px] overflow-y-auto"
                     columns={[
                       { key: "type", header: "Type", accessor: (d) => (
-                        <span className={`badge ${DIFF_TONE[d.type] ?? "badge-slate"}`}>
-                          {d.type}
-                        </span>
+                        <StatusPill status={d.type} tone={DIFF_TONE[d.type] ?? "slate"} />
                       ) },
                       { key: "employee", header: "Employee", accessor: (d) => employeeName(
                         d.type === "removed" ? d.base_entry?.employee_id : d.entry?.employee_id
@@ -1388,9 +1382,7 @@ export default function RosterBuilder() {
                   <>
                     <div className="px-4 py-2 flex flex-wrap gap-2">
                       {Object.entries(deviations.summary).map(([k, v]) => (
-                        <span key={k} className={`badge ${SEVERITY_TONE[k] ?? "badge-slate"}`}>
-                          {k}: {v}
-                        </span>
+                        <StatusPill key={k} status={`${k}: ${v}`} tone={SEVERITY_TONE[k] ?? "slate"} />
                       ))}
                     </div>
                     <Table
@@ -1413,13 +1405,11 @@ export default function RosterBuilder() {
                         { key: "violations", header: "Violations", accessor: (d) => (
                           <div className="flex flex-wrap gap-1.5">
                             {d.violations.map((v) => (
-                              <span
+                              <StatusPill
                                 key={v.id}
-                                className={`badge ${SEVERITY_TONE[v.severity] ?? "badge-slate"}`}
-                              >
-                                {v.kind}
-                                {v.minutes ? ` \u00b7 ${v.minutes}m` : ""}
-                              </span>
+                                status={`${v.kind}${v.minutes ? ` \u00b7 ${v.minutes}m` : ""}`}
+                                tone={SEVERITY_TONE[v.severity] ?? "slate"}
+                              />
                             ))}
                           </div>
                         ) },

@@ -894,7 +894,7 @@ export default function ESSHub() {
       </SectionCard>
 
       {/* Notifications */}
-      <SectionCard compact title="Notifications" description="Inbox for workforce roles. Mark as read is workforce; creating is limited to SuperAdmin and HR." actions={unreadCount > 0 ? <span className="badge badge-rose">{unreadCount} unread</span> : undefined}>
+      <SectionCard compact title="Notifications" description="Inbox for workforce roles. Mark as read is workforce; creating is limited to SuperAdmin and HR." actions={unreadCount > 0 ? <StatusPill status={`${unreadCount} unread`} tone="rose" /> : undefined}>
         {!canWorkforce ? (
           <div className="p-5"><EmptyState title="Notifications are available to SuperAdmin, HR, Manager and Associate" description="Your role does not read notifications." /></div>
         ) : loading ? (
@@ -940,7 +940,7 @@ export default function ESSHub() {
                   { key: "recipient", header: "Recipient", accessor: (n) => employeeName(n.recipient_id) },
                   { key: "type", header: "Type", accessor: (n) => <StatusPill status={n.notification_type} /> },
                   { key: "category", header: "Category", accessor: (n) => n.category },
-                  { key: "read", header: "Read", accessor: (n) => n.is_read ? <span className="badge badge-green">Read</span> : <span className="badge badge-amber">Unread</span> },
+                  { key: "read", header: "Read", accessor: (n) => <StatusPill status={n.is_read ? "Read" : "Unread"} tone={n.is_read ? "green" : "amber"} /> },
                   { key: "created", header: "Created", accessor: (n) => fmtDateTime(n.created_at) },
                   { key: "actions", header: "Actions", accessor: (n) => (
                     !n.is_read ? <Button size="xs" variant="secondary" loading={busy === `read-${n.id}`} onClick={() => handleMarkRead(n.id)}>Mark read</Button> : <></>
@@ -1222,7 +1222,7 @@ export default function ESSHub() {
                   { key: "category", header: "Category", accessor: (a) => a.category },
                   { key: "priority", header: "Priority", accessor: (a) => <StatusPill status={a.priority} /> },
                   { key: "audience", header: "Audience", accessor: (a) => <>{a.target_audience}{a.target_value ? ` \u00b7 ${a.target_value}` : ""}</> },
-                  { key: "published", header: "Published", accessor: (a) => a.published ? <span className="badge badge-green">Published</span> : <span className="badge badge-slate">Draft</span> },
+                  { key: "published", header: "Published", accessor: (a) => <StatusPill status={a.published ? "Published" : "Draft"} tone={a.published ? "green" : "slate"} /> },
                   { key: "created", header: "Created", accessor: (a) => fmtDateTime(a.created_at) },
                   ...(canAdmin ? [{
                     key: "actions", header: "Actions", accessor: (a: (typeof announcements)[number]) => (
@@ -1258,7 +1258,7 @@ export default function ESSHub() {
               <Table
                 columns={[
                   { key: "rule", header: "Rule", accessor: (c) => `#${c.rule_id}` },
-                  { key: "passed", header: "Passed", accessor: (c) => c.passed ? <span className="badge badge-green">Passed</span> : <span className="badge badge-rose">Failed</span> },
+                  { key: "passed", header: "Passed", accessor: (c) => <StatusPill status={c.passed ? "Passed" : "Failed"} tone={c.passed ? "green" : "rose"} /> },
                   { key: "details", header: "Details", accessor: (c) => <span className="max-w-[320px] truncate" title={c.details ?? ""}>{c.details ?? "\u2014"}</span> },
                   { key: "runat", header: "Run at", accessor: (c) => fmtDateTime(c.run_at) },
                 ]}

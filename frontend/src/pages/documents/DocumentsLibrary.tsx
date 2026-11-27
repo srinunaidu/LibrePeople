@@ -13,7 +13,7 @@
  */
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { Layout } from "@/components/Layout"
-import { Input, Alert, Button, LoadingRegion, PageHeader, SectionCard, RetryableAlert, TableSkeleton, EmptyState, StatusPill } from "@/components/ui"
+import { Input, Alert, Button, LoadingRegion, PageHeader, SectionCard, RetryableAlert, TableSkeleton, EmptyState, StatusPill, Table } from "@/components/ui"
 import { useAuth } from "@/context/AuthContext"
 import api, { errorMessage, fileUrl } from "@/lib/api"
 
@@ -264,35 +264,42 @@ export default function DocumentsLibrary() {
           {visible.length === 0 ? (
             <EmptyState title="No documents" description="No documents match — upload one below or clear the filters." />
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left">
-                    <th>Employee</th><th>Type</th><th>File</th><th>Version</th><th>Status</th><th>Expiry</th><th>Uploaded</th><th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {visible.map((d) => (
-                    <tr key={d.id}>
-                      <td className="font-mono">{d.employee_id}</td>
-                      <td className="font-medium">{d.document_type}</td>
-                      <td><a className="action-link" href={fileUrl(d.storage_url)} target="_blank" rel="noreferrer">{d.file_name}</a></td>
-                      <td className="font-mono">v{d.current_version}</td>
-                      <td><StatusPill status={d.status} /></td>
-                      <td>{d.expiry_date || "—"} <span className="text-xs text-fg-muted">({expiryBadge(d)})</span></td>
-                      <td className="font-mono">{d.uploaded_at || "—"}</td>
-                      <td>
-                        <div className="flex gap-2">
-                          <Button onClick={() => loadVersions(d.id)}>History</Button>
-                          <Button onClick={() => acknowledge(d.id)} disabled={acking === d.id}>{acking === d.id ? "Ack…" : "Acknowledge"}</Button>
-                        </div>
-                        {ackState[d.id] && <div className="text-xs text-fg-muted mt-1">{ackState[d.id]}</div>}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table
+              columns={[
+                { key: "employee", header: "Employee", accessor: (d) => <span className="font-mono">{d.employee_id}</span> },
+                { key: "type", header: "Type", accessor: (d) => <span className="font-medium">{d.document_type}</span> },
+                {
+                  key: "file",
+                  header: "File",
+                  accessor: (d) => <a className="action-link" href={fileUrl(d.storage_url)} target="_blank" rel="noreferrer">{d.file_name}</a>,
+                },
+                { key: "version", header: "Version", accessor: (d) => <span className="font-mono">v{d.current_version}</span> },
+                { key: "status", header: "Status", accessor: (d) => <StatusPill status={d.status} /> },
+                {
+                  key: "expiry",
+                  header: "Expiry",
+                  accessor: (d) => <>{d.expiry_date || "—"} <span className="text-xs text-fg-muted">({expiryBadge(d)})</span></>,
+                },
+                { key: "uploaded", header: "Uploaded", accessor: (d) => <span className="font-mono">{d.uploaded_at || "—"}</span> },
+                {
+                  key: "actions",
+                  header: "Actions",
+                  accessor: (d) => (
+                    <>
+                      <div className="flex gap-2">
+                        <Button onClick={() => loadVersions(d.id)}>History</Button>
+                        <Button onClick={() => acknowledge(d.id)} disabled={acking === d.id}>{acking === d.id ? "Ack…" : "Acknowledge"}</Button>
+                      </div>
+                      {ackState[d.id] && <div className="text-xs text-fg-muted mt-1">{ackState[d.id]}</div>}
+                    </>
+                  ),
+                },
+              ]}
+              data={visible}
+              keyAccessor={(d) => d.id}
+              caption="Employee documents"
+              sortable={false}
+            />
           )}
         </SectionCard>
 
@@ -319,19 +326,18 @@ export default function DocumentsLibrary() {
               : versionsError ? <RetryableAlert err={versionsError} title="Version history could not be read." fallback="Version history could not be read." onRetry={() => loadVersions(selectedId)} />
               : versions.length === 0 ? <EmptyState title="No versions" description="No versions recorded for this document yet." />
               : (
-                <table className="w-full text-sm mb-4">
-                  <thead><tr className="text-left"><th>Version</th><th>File</th><th>Uploaded by</th><th>Uploaded at</th></tr></thead>
-                  <tbody>
-                    {versions.map((v, i) => (
-                      <tr key={`${v.version_no}-${i}`}>
-                        <td className="font-mono">v{v.version_no}</td>
-                        <td className="font-medium">{v.file_name}</td>
-                        <td>{v.uploaded_by || "—"}</td>
-                        <td className="font-mono">{v.uploaded_at || "—"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <Table
+                  columns={[
+                    { key: "version", header: "Version", accessor: (v) => <span className="font-mono">v{v.version_no}</span> },
+                    { key: "file", header: "File", accessor: (v) => <span className="font-medium">{v.file_name}</span> },
+                    { key: "by", header: "Uploaded by", accessor: (v) => v.uploaded_by || "—" },
+                    { key: "at", header: "Uploaded at", accessor: (v) => <span className="font-mono">{v.uploaded_at || "—"}</span> },
+                  ]}
+                  data={versions.map((v, i) => ({ ...v, _rowKey: `${v.version_no}-${i}` }))}
+                  keyAccessor={(v) => v._rowKey}
+                  caption={`Version history for document ${selectedId}`}
+                  sortable={false}
+                />
               )}
             <div className="grid sm:grid-cols-2 gap-4">
               <div><label>New file name</label><Input value={renewFile.file_name} onChange={(e) => setRenewFile({ ...renewFile, file_name: e.target.value })} disabled={renewing} placeholder="contract-v2.pdf" /></div>

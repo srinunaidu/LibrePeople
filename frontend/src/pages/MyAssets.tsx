@@ -7,8 +7,7 @@ import {
   LoadingRegion,
   PageHeader,
   SectionCard,
-  StatusPill,
-} from "@/components/ui"
+  StatusPill, Table } from "@/components/ui"
 import { IconBriefcase, IconCheck, IconRefresh } from "@/components/icons"
 import api, { errorMessage } from "@/lib/api"
 import { ackable, ASSET_STATUS_LABELS, type AssetRow, type AssignmentRow } from "@/pages/Assets"
@@ -108,47 +107,38 @@ export default function MyAssets() {
             {open.length === 0 ? (
               <EmptyState title="Nothing assigned" description="You hold no company assets right now." />
             ) : (
-              <div className="table-scroll">
-                <table className="table-base table-striped">
-                  <caption className="sr-only">Assets currently in your custody</caption>
-                  <thead>
-                    <tr>
-                      <th scope="col">Tag</th>
-                      <th scope="col">Asset</th>
-                      <th scope="col">Assigned</th>
-                      <th scope="col">Receipt</th>
-                      <th scope="col"><span className="sr-only">Actions</span></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {open.map((a) => {
-                      const asset = assetOf(a.asset_id)
-                      return (
-                        <tr key={a.id}>
-                          <td className="font-mono">{asset?.tag ?? `#${a.asset_id}`}</td>
-                          <td>{asset?.name ?? "Asset"}</td>
-                          <td>{a.assigned_at ? a.assigned_at.slice(0, 10) : "—"}</td>
-                          <td>
-                            <StatusPill status={a.acknowledged_at ? "Acknowledged" : "Pending"} />
-                          </td>
-                          <td>
-                            {ackable(a) ? (
-                              <Button variant="primary" size="sm" type="button"
-                                disabled={busy === a.id}
-                                onClick={() => acknowledge(a)}>
-                                <IconCheck className="w-4 h-4" />
-                                {busy === a.id ? "Acknowledging…" : "Acknowledge receipt"}
-                              </Button>
-                            ) : (
-                              <span className="text-sm text-fg-muted">On record</span>
-                            )}
-                          </td>
-                        </tr>
+              <Table
+                columns={[
+                  { key: "tag", header: "Tag", accessor: (a) => <span className="font-mono">{assetOf(a.asset_id)?.tag ?? `#${a.asset_id}`}</span> },
+                  { key: "asset", header: "Asset", accessor: (a) => assetOf(a.asset_id)?.name ?? "Asset" },
+                  { key: "assigned", header: "Assigned", accessor: (a) => (a.assigned_at ? a.assigned_at.slice(0, 10) : "—") },
+                  {
+                    key: "receipt",
+                    header: "Receipt",
+                    accessor: (a) => <StatusPill status={a.acknowledged_at ? "Acknowledged" : "Pending"} />,
+                  },
+                  {
+                    key: "actions",
+                    header: "",
+                    accessor: (a) => (
+                      ackable(a) ? (
+                        <Button variant="primary" size="sm" type="button"
+                          disabled={busy === a.id}
+                          onClick={() => acknowledge(a)}>
+                          <IconCheck className="w-4 h-4" />
+                          {busy === a.id ? "Acknowledging…" : "Acknowledge receipt"}
+                        </Button>
+                      ) : (
+                        <span className="text-sm text-fg-muted">On record</span>
                       )
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                    ),
+                  },
+                ]}
+                data={open}
+                keyAccessor={(a) => a.id}
+                caption="Assets currently in your custody"
+                sortable={false}
+              />
             )}
           </SectionCard>
 
@@ -157,38 +147,27 @@ export default function MyAssets() {
             {history.length === 0 ? (
               <EmptyState title="No history" description="Past assignments will appear here." />
             ) : (
-              <div className="table-scroll max-h-[300px] overflow-y-auto">
-                <table className="table-base table-striped">
-                  <caption className="sr-only">Your past asset assignments</caption>
-                  <thead>
-                    <tr>
-                      <th scope="col">Tag</th>
-                      <th scope="col">Asset</th>
-                      <th scope="col">Closed</th>
-                      <th scope="col">How</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {history.map((a) => {
-                      const asset = assetOf(a.asset_id)
-                      return (
-                        <tr key={a.id}>
-                          <td className="font-mono">{asset?.tag ?? `#${a.asset_id}`}</td>
-                          <td>{asset?.name ?? "Asset"}</td>
-                          <td>{a.closed_at ? a.closed_at.slice(0, 10) : "—"}</td>
-                          <td>
-                            {a.close_reason === "returned"
-                              ? `Returned (${a.return_condition ?? "—"})`
-                              : a.close_reason === "transferred"
-                                ? "Transferred"
-                                : "Closed"}
-                          </td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                columns={[
+                  { key: "tag", header: "Tag", accessor: (a) => <span className="font-mono">{assetOf(a.asset_id)?.tag ?? `#${a.asset_id}`}</span> },
+                  { key: "asset", header: "Asset", accessor: (a) => assetOf(a.asset_id)?.name ?? "Asset" },
+                  { key: "closed", header: "Closed", accessor: (a) => (a.closed_at ? a.closed_at.slice(0, 10) : "—") },
+                  {
+                    key: "how",
+                    header: "How",
+                    accessor: (a) =>
+                      a.close_reason === "returned"
+                        ? `Returned (${a.return_condition ?? "—"})`
+                        : a.close_reason === "transferred"
+                          ? "Transferred"
+                          : "Closed",
+                  },
+                ]}
+                data={history}
+                keyAccessor={(a) => a.id}
+                caption="Your past asset assignments"
+                sortable={false}
+              />
             )}
           </SectionCard>
 

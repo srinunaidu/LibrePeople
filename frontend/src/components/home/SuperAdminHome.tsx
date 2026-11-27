@@ -8,8 +8,7 @@ import {
   LoadingRegion,
   PageHeader,
   SectionCard,
-  KPICard,
-} from "@/components/ui"
+  KPICard, StatusPill, Table } from "@/components/ui"
 import { NeedsAction, type NeedItem } from "@/components/home/NeedsAction"
 import {
   IconBuilding,
@@ -166,31 +165,17 @@ export default function SuperAdminHome() {
           {clients.length === 0 ? (
             <EmptyState title="No tenants" description="Create a tenant in Client Onboarding to get started." />
           ) : (
-            <div className="table-scroll">
-              <table className="table-base table-compact table-striped">
-                <caption className="sr-only">Tenant health overview</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Tenant</th>
-                    <th scope="col">Slug</th>
-                    <th scope="col">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {clients.map((c) => (
-                    <tr key={c.id}>
-                      <td className="font-medium">{c.name}</td>
-                      <td className="font-mono text-xs text-fg-muted">{c.slug}</td>
-                      <td>
-                        <span className={`badge ${c.status === "active" ? "badge-green" : "badge-slate"}`}>
-                          {c.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table
+              columns={[
+                { key: "tenant", header: "Tenant", accessor: (c) => <span className="font-medium">{c.name}</span> },
+                { key: "slug", header: "Slug", accessor: (c) => <span className="font-mono text-xs text-fg-muted">{c.slug}</span> },
+                { key: "status", header: "Status", accessor: (c) => <StatusPill status={c.status} tone={c.status === "active" ? "green" : "slate"} /> },
+              ]}
+              data={clients}
+              keyAccessor={(c) => c.id}
+              caption="Tenant health overview"
+              sortable={false}
+            />
           )}
           <div className="flex justify-end px-5 py-3">
             <button className="action-link" onClick={() => { navigate(tenantNav.to("/client-onboarding")) }}>Open client onboarding</button>
@@ -206,9 +191,7 @@ export default function SuperAdminHome() {
               {flags.slice(0, 10).map((f) => (
                 <li key={f.id} className="flex items-center justify-between px-5 py-2.5 hover:bg-surface-hover">
                   <span className="text-sm text-fg">{f.key}</span>
-                  <span className={`badge ${f.enabled ? "badge-green" : "badge-slate"}`}>
-                    {f.enabled ? "On" : "Off"}
-                  </span>
+                  <StatusPill status={f.enabled ? "On" : "Off"} tone={f.enabled ? "green" : "slate"} />
                 </li>
               ))}
             </ul>
@@ -242,9 +225,7 @@ export default function SuperAdminHome() {
                 <li key={i.id} className="flex items-center gap-3 px-5 py-2.5 hover:bg-surface-hover">
                   <span className="text-sm font-medium text-fg flex-1">{i.name}</span>
                   <span className="text-xs text-fg-muted">{i.kind}</span>
-                  <span className={`badge ${i.status === "active" ? "badge-green" : i.status === "failed" ? "badge-rose" : "badge-slate"}`}>
-                    {i.status}
-                  </span>
+                  <StatusPill status={i.status} tone={i.status === "active" ? "green" : i.status === "failed" ? "rose" : "slate"} />
                 </li>
               ))}
             </ul>
@@ -253,12 +234,12 @@ export default function SuperAdminHome() {
       </div>
 
       <div className="card p-4 text-xs text-fg-muted flex items-center gap-2">
-        <span className="badge badge-slate">SuperAdmin</span>
+        <StatusPill status="SuperAdmin" />
         You have full access to all modules. Use the workspace rail to navigate to any area.
       </div>
 
       <div className="card p-4 text-xs text-fg-muted flex flex-wrap items-center gap-x-3 gap-y-1">
-        <span className="badge badge-slate">v{__BUILD__.version}</span>
+        <StatusPill status={`v${__BUILD__.version}`} />
         <span>
           build <code className="text-fg">{__BUILD__.commit.slice(0, 7)}</code>
         </span>

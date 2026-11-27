@@ -9,7 +9,7 @@ import {
   PageHeader,
   SectionCard,
   KPICard,
-  StatusPill } from "@/components/ui"
+  StatusPill, Table } from "@/components/ui"
 import { NeedsAction, type NeedItem } from "@/components/home/NeedsAction"
 import { IconChart, IconFile, IconWallet } from "@/components/icons"
 import api from "@/lib/api"
@@ -132,31 +132,29 @@ export default function PayrollHome() {
           {runs.length === 0 ? (
             <EmptyState title="No pay runs" description="Create a pay run from payroll setup." />
           ) : (
-            <div className="table-scroll">
-              <table className="table-base table-compact table-striped">
-                <caption className="sr-only">Pay runs</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Run</th>
-                    <th scope="col">Status</th>
-                    <th scope="col" className="num">Gross</th>
-                    <th scope="col" className="num">Net</th>
-                    <th scope="col" className="num">Headcount</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {runs.slice(0, 8).map((r) => (
-                    <tr key={r.id}>
-                      <td className="font-medium"><Link className="action-link" to={tenantNav.to(`/platform/payroll/runs/${r.id}`)}>#{r.id}</Link></td>
-                      <td><StatusPill status={r.status} /></td>
-                      <td className="num">{formatCurrency(r.total_gross, { ...localeOpts, currency, minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                      <td className="num font-semibold">{formatCurrency(r.total_net, { ...localeOpts, currency, minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                      <td className="num">{r.headcount ?? "—"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table
+              columns={[
+                { key: "run", header: "Run", accessor: (r) => <span className="font-medium"><Link className="action-link" to={tenantNav.to(`/platform/payroll/runs/${r.id}`)}>#{r.id}</Link></span> },
+                { key: "status", header: "Status", accessor: (r) => <StatusPill status={r.status} /> },
+                {
+                  key: "gross",
+                  header: "Gross",
+                  accessor: (r) => formatCurrency(r.total_gross, { ...localeOpts, currency, minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                  cellClassName: "num",
+                },
+                {
+                  key: "net",
+                  header: "Net",
+                  accessor: (r) => formatCurrency(r.total_net, { ...localeOpts, currency, minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                  cellClassName: "num font-semibold",
+                },
+                { key: "headcount", header: "Headcount", accessor: (r) => r.headcount ?? "—", cellClassName: "num" },
+              ]}
+              data={runs.slice(0, 8)}
+              keyAccessor={(r) => r.id}
+              caption="Pay runs"
+              sortable={false}
+            />
           )}
           <div className="flex flex-wrap justify-end gap-x-4 gap-y-1 px-5 py-3">
             <button className="action-link" onClick={() => { navigate(tenantNav.to("/platform/payroll/runs")) }}>View all runs</button>
@@ -168,31 +166,22 @@ export default function PayrollHome() {
           {!labor?.by_department || labor.by_department.length === 0 ? (
             <EmptyState title="No labour cost data" description="Cost appears once payroll is processed." />
           ) : (
-            <div className="table-scroll">
-              <table className="table-base table-compact table-striped">
-                <caption className="sr-only">Labour cost by department</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Department</th>
-                    <th scope="col" className="num">Staff</th>
-                    <th scope="col" className="num">Monthly cost</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {labor.by_department.map((r: any) => (
-                    <tr key={r.department || "none"}>
-                      <td>{r.department || "(none)"}</td>
-                      <td className="num">{r.employees}</td>
-                      <td className="num font-medium">{formatCurrency(r.monthly_cost, { ...localeOpts, currency, minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                    </tr>
-                  ))}
-                  <tr className="bg-surface-sunken">
-                    <td className="font-semibold" colSpan={2}>Total</td>
-                    <td className="num font-bold">{formatCurrency(labor.monthly_payroll ?? 0, { ...localeOpts, currency, minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            <Table
+              columns={[
+                { key: "department", header: "Department", accessor: (r: any) => r.department || "(none)" },
+                { key: "staff", header: "Staff", accessor: (r: any) => r.employees, cellClassName: "num" },
+                {
+                  key: "cost",
+                  header: "Monthly cost",
+                  accessor: (r: any) => formatCurrency(r.monthly_cost, { ...localeOpts, currency, minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                  cellClassName: "num font-medium",
+                },
+              ]}
+              data={[...labor.by_department.map((r: any) => ({ ...r })), { department: "Total", employees: "", monthly_cost: labor.monthly_payroll ?? 0 }]}
+              keyAccessor={(r: any) => r.department || "none"}
+              caption="Labour cost by department"
+              sortable={false}
+            />
           )}
           <div className="flex justify-end px-5 py-3">
             <button className="action-link" onClick={() => { navigate(tenantNav.to("/platform/payroll/overview")) }}>Open payroll overview</button>
@@ -201,7 +190,7 @@ export default function PayrollHome() {
       </div>
 
       <div className="card p-4 text-xs text-fg-muted flex flex-wrap items-center gap-x-3 gap-y-1">
-        <span className="badge badge-slate">Payroll workspace</span>
+        <StatusPill status="Payroll workspace" />
         <span>Open a run to process, approve or finalize it (SuperAdmin and HR; PayrollViewer reads).</span>
         <button className="action-link" onClick={() => { navigate(tenantNav.to("/platform/payroll/runs")) }}>Open runs</button>
       </div>

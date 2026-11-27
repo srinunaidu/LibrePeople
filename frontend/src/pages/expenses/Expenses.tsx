@@ -14,8 +14,7 @@ import {
   PageHeader,
   RetryableAlert,
   SectionCard,
-  TableSkeleton,
-} from "@/components/ui"
+  TableSkeleton, Table } from "@/components/ui"
 import { useAuth } from "@/context/AuthContext"
 import api, { errorMessage } from "@/lib/api"
 import { CLAIM_STATUS_FILTERS, isManagerRole, statusLabel, type ExpenseClaim } from "./shared"
@@ -133,41 +132,28 @@ export default function Expenses() {
               }
             />
           ) : (
-            <div className="table-scroll max-h-[560px] overflow-y-auto">
-              <table className="table-base table-striped">
-                <caption className="sr-only">Expense claims</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Claim</th>
-                    <th scope="col">Date</th>
-                    <th scope="col">Amount</th>
-                    <th scope="col">Status</th>
-                    <th scope="col">Payment</th>
-                    <th scope="col">
-                      <span className="sr-only">Actions</span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {claims.map((c) => (
-                    <tr key={c.id}>
-                      <td className="font-mono">#{c.id}</td>
-                      <td>{c.expense_date}</td>
-                      <td>
-                        {c.amount} {c.currency}
-                      </td>
-                      <td>{statusLabel(c.status)}</td>
-                      <td>{c.payment_status}</td>
-                      <td>
-                        <Link to={`${c.id}`} className="btn btn-secondary btn-sm">
-                          View
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table
+              columns={[
+                { key: "claim", header: "Claim", accessor: (c) => <span className="font-mono">#{c.id}</span> },
+                { key: "date", header: "Date", accessor: (c) => c.expense_date },
+                { key: "amount", header: "Amount", accessor: (c) => <>{c.amount} {c.currency}</> },
+                { key: "status", header: "Status", accessor: (c) => statusLabel(c.status) },
+                { key: "payment", header: "Payment", accessor: (c) => c.payment_status },
+                {
+                  key: "actions",
+                  header: "",
+                  accessor: (c) => (
+                    <Link to={`${c.id}`} className="btn btn-secondary btn-sm">
+                      View
+                    </Link>
+                  ),
+                },
+              ]}
+              data={claims}
+              keyAccessor={(c) => c.id}
+              caption="Expense claims"
+              sortable={false}
+            />
           )}
         </SectionCard>
       )}

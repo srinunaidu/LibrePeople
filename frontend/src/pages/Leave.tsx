@@ -259,9 +259,7 @@ export default function Leave() {
                   { key: "name", header: "Name", accessor: (t) => t.name },
                   { key: "days", header: "Days/yr", accessor: (t) => t.max_days_per_year, cellClassName: "num" },
                   { key: "paid", header: "Paid", accessor: (t) => (
-                    <span className={`badge ${t.is_paid ? "badge-green" : "badge-slate"}`}>
-                      {t.is_paid ? "Paid" : "Unpaid"}
-                    </span>
+                    <StatusPill status={t.is_paid ? "Paid" : "Unpaid"} />
                   ) },
                 ]}
                 data={types}

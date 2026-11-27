@@ -4,7 +4,7 @@ import { Layout } from "@/components/Layout"
 
 import { PageHeader } from "@/components/ui/layout"
 import { Alert, EmptyState } from "@/components/ui/feedback"
-import { Button, RetryableAlert, StatusPill, Skeleton } from "@/components/ui"
+import { Button, RetryableAlert, StatusPill, Skeleton, Table } from "@/components/ui"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import api, { errorMessage } from "@/lib/api"
 import { useAuth } from "@/context/AuthContext"
@@ -646,7 +646,7 @@ export default function Platform() {
                     </p>
                     <div className="flex flex-wrap gap-2 mb-5">
                       {entities.map((e) => (
-                        <span key={e} className="badge badge-brand font-mono">{e}</span>
+                        <StatusPill key={e} status={e} tone="brand" className="font-mono" />
                       ))}
                     </div>
                   </>
@@ -655,35 +655,21 @@ export default function Platform() {
                     The entity list could not be loaded from the server.
                   </p>
                 )}
-                <div className="table-scroll">
-                  <table className="table-base">
-                    <caption className="sr-only">Import and export endpoints by operation</caption>
-                    <thead>
-                      <tr>
-                        <th scope="col">Operation</th>
-                        <th scope="col">Endpoint</th>
-                        <th scope="col">Format</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td>Export</td>
-                        <td><code className="font-mono text-xs">GET /api/v1/import-export/export/{"{entity}"}</code></td>
-                        <td>CSV download</td>
-                      </tr>
-                      <tr>
-                        <td>Import</td>
-                        <td><code className="font-mono text-xs">POST /api/v1/import-export/import/{"{entity}"}</code></td>
-                        <td>Multipart CSV upload</td>
-                      </tr>
-                      <tr>
-                        <td>List entities</td>
-                        <td><code className="font-mono text-xs">GET /api/v1/import-export/entities</code></td>
-                        <td>JSON</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
+                <Table
+                  columns={[
+                    { key: "operation", header: "Operation", accessor: (r) => r.operation },
+                    { key: "endpoint", header: "Endpoint", accessor: (r) => <code className="font-mono text-xs">{r.endpoint}</code> },
+                    { key: "format", header: "Format", accessor: (r) => r.format },
+                  ]}
+                  data={[
+                    { operation: "Export", endpoint: "GET /api/v1/import-export/export/{entity}", format: "CSV download" },
+                    { operation: "Import", endpoint: "POST /api/v1/import-export/import/{entity}", format: "Multipart CSV upload" },
+                    { operation: "List entities", endpoint: "GET /api/v1/import-export/entities", format: "JSON" },
+                  ]}
+                  keyAccessor={(r) => r.operation}
+                  caption="Import and export endpoints by operation"
+                  sortable={false}
+                />
               </div>
             )}
           </TabsContent>

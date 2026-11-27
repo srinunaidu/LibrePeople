@@ -43,7 +43,7 @@ function fmtDate(value?: string | null): string {
   return value.slice(0, 10)
 }
 
-function severityBadge(severity: string): string {
+function severityBadge(severity: string): "rose" | "amber" | "slate" {
   const s = severity.toLowerCase()
   if (s === "error" || s === "critical" || s === "high") return "rose"
   if (s === "warning" || s === "medium") return "amber"
@@ -442,7 +442,7 @@ export default function OnboardingConfig() {
             {readiness.findings.length > 0 ? (
               <Table
                 columns={[
-                  { key: "severity", header: "Severity", accessor: (f) => <span className={`badge badge-${severityBadge(f.severity)}`}>{f.severity}</span> },
+                  { key: "severity", header: "Severity", accessor: (f) => <StatusPill status={f.severity} tone={severityBadge(f.severity)} /> },
                   { key: "title", header: "Title / Message", accessor: (f) => (
                     <span className="max-w-[320px]">
                       <span className="font-medium">{f.title ?? f.message}</span>
@@ -501,7 +501,7 @@ export default function OnboardingConfig() {
                 columns={[
                   { key: "state", header: "State", accessor: (f) => <StatusPill status={f._state} /> },
                   { key: "title", header: "Title", accessor: (f) => <span className="font-medium">{f.title ?? f.message}</span> },
-                  { key: "severity", header: "Severity", accessor: (f) => <span className={`badge badge-${severityBadge(f.severity)}`}>{f.severity}</span> },
+                  { key: "severity", header: "Severity", accessor: (f) => <StatusPill status={f.severity} tone={severityBadge(f.severity)} /> },
                   { key: "rec", header: "Recommendation", accessor: (f) => <span className="text-xs max-w-[320px] truncate" title={f.recommendation ?? ""}>{f.recommendation ?? "\u2014"}</span> },
                 ]}
                 data={[...readiness.missing.map((f) => ({ ...f, _state: "Missing" })), ...readiness.inconsistent.map((f) => ({ ...f, _state: "Inconsistent" }))].map((f, i) => ({ ...f, _k: `${f.rule_id}-${i}` }))}

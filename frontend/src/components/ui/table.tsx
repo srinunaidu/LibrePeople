@@ -35,6 +35,8 @@ export interface TableProps<T> {
   selectionMode?: "none" | "single" | "multiple"
   selectedRows?: Set<string | number>
   onSelectionChange?: (selected: Set<string | number>) => void
+  /** Optional per-row class (e.g. selection highlight). Backward-compatible. */
+  rowClassName?: (row: T) => string
   className?: string
   caption?: string
 }
@@ -78,6 +80,7 @@ export function Table<T extends Record<string, any>>({
   selectionMode = "none",
   selectedRows = new Set(),
   onSelectionChange,
+  rowClassName,
   className,
   caption,
 }: TableProps<T>) {
@@ -241,9 +244,15 @@ export function Table<T extends Record<string, any>>({
                   "px-4 py-3 text-left font-semibold text-fg text-xs uppercase tracking-wide whitespace-nowrap",
                   "border-b border-border bg-surface-sunken",
                   sortable && col.sortable && "cursor-pointer hover:bg-surface-hover select-none",
+                  sortable && col.sortable && "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-600",
                   col.headerClassName
                 )}
                 onClick={() => col.sortable && handleSort(col.key)}
+                onKeyDown={(e) => {
+                  if (!col.sortable || !sortable) return
+                  if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleSort(col.key) }
+                }}
+                tabIndex={sortable && col.sortable ? 0 : undefined}
                 aria-sort={sortConfig?.key === col.key ? (sortConfig.direction === "asc" ? "ascending" : "descending") : "none"}
               >
                 <div className="flex items-center gap-1">
@@ -271,7 +280,8 @@ export function Table<T extends Record<string, any>>({
                   className={cn(
                     "transition-colors",
                     onRowClick && "cursor-pointer",
-                    isSelected && "bg-brand-50 dark:bg-brand-900/30"
+                    isSelected && "bg-brand-50 dark:bg-brand-900/30",
+                    rowClassName?.(row)
                   )}
                   onClick={() => onRowClick?.(row)}
                   onDoubleClick={() => onRowClick?.(row)}

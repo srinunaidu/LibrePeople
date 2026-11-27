@@ -10,7 +10,7 @@ import {
   PageHeader,
   SectionCard,
   KPICard,
-  StatusPill } from "@/components/ui"
+  StatusPill, Table } from "@/components/ui"
 import { NeedsAction, type NeedItem } from "@/components/home/NeedsAction"
 import {
   IconChart,
@@ -170,7 +170,7 @@ export default function ManagerHome() {
             <ul className="divide-y divide-border-subtle">
               {leaveReqs.filter((r) => r.status === "Pending").slice(0, 5).map((r) => (
                 <li key={`l-${r.id}`} className="flex items-center gap-3 px-5 py-3 hover:bg-surface-hover">
-                  <span className="badge badge-amber shrink-0">Leave</span>
+                  <StatusPill status="Leave" tone="amber" className="shrink-0" />
                   <span className="text-sm text-fg flex-1">Employee #{r.employee_id} · {r.working_days}d</span>
                   <Button size="xs" variant="secondary" disabled={!!busy} onClick={() => decide(`al-${r.id}`, () => api.post(`/leave/requests/${r.id}/approve`), `Leave request #${r.id} approved.`)}>Approve</Button>
                   <Button size="xs" variant="ghost" disabled={!!busy} onClick={() => decide(`rl-${r.id}`, () => api.post(`/leave/requests/${r.id}/reject`), `Leave request #${r.id} rejected.`)}>Reject</Button>
@@ -179,7 +179,7 @@ export default function ManagerHome() {
               ))}
               {timesheets.filter((t) => t.status === "Submitted").slice(0, 5).map((t) => (
                 <li key={`t-${t.id}`} className="flex items-center gap-3 px-5 py-3 hover:bg-surface-hover">
-                  <span className="badge badge-brand shrink-0">Timesheet</span>
+                  <StatusPill status="Timesheet" tone="brand" className="shrink-0" />
                   <span className="text-sm text-fg flex-1">Employee #{t.employee_id} · {t.total_hours}h</span>
                   <Button size="xs" variant="secondary" disabled={!!busy} onClick={() => decide(`at-${t.id}`, () => api.post(`/time/timesheets/${t.id}/approve`), `Timesheet #${t.id} approved.`)}>Approve</Button>
                   <button className="action-link" onClick={() => { navigate(tenantNav.to("/time")) }}>Review</button>
@@ -187,7 +187,7 @@ export default function ManagerHome() {
               ))}
               {swaps.filter((s) => s.status === "Pending").slice(0, 5).map((s) => (
                 <li key={`s-${s.id}`} className="flex items-center gap-3 px-5 py-3 hover:bg-surface-hover">
-                  <span className="badge badge-violet shrink-0">Swap</span>
+                  <StatusPill status="Swap" tone="violet" className="shrink-0" />
                   <span className="text-sm text-fg flex-1">Roster #{s.roster_entry_id}</span>
                   <Button size="xs" variant="secondary" disabled={!!busy} onClick={() => decide(`as-${s.id}`, () => api.post(`/scheduling/swaps/${s.id}/approve`), `Swap #${s.id} approved.`)}>Approve</Button>
                   <Button size="xs" variant="ghost" disabled={!!busy} onClick={() => decide(`rs-${s.id}`, () => api.post(`/scheduling/swaps/${s.id}/reject`), `Swap #${s.id} rejected.`)}>Reject</Button>

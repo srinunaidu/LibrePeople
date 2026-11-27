@@ -18,7 +18,7 @@ import {Alert,
   EmptyState,
   Input,
   SectionCard,
-  TableSkeleton, RetryableAlert, StatusPill } from "@/components/ui"
+  TableSkeleton, RetryableAlert, StatusPill, Table } from "@/components/ui"
 import api from "@/lib/api"
 import type { ForecastAccuracyRecordOut, ForecastAccuracySyncResult, PaginatedForecastAccuracy } from "@/types"
 import {
@@ -331,69 +331,59 @@ export default function AccuracyTab() {
                 {rows.length} of {total} row(s), page {page}
                 {" "}· thresholds in force: review ≤ {fmtPct(Number(reviewThreshold))}, degraded ≤ {fmtPct(Number(degradedThreshold))}
               </p>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left">
-                  <caption className="sr-only">
-                    Forecast-vs-actual accuracy rows with recomputed status
-                  </caption>
-                  <thead className="border-b border-border">
-                    <tr>
-                      <th scope="col" colSpan={9} className="px-3 py-2 text-xs text-text-secondary font-normal">
-                        Accuracy history — every row's status is recomputed for this request
-                      </th>
-                    </tr>
-                    <tr>
-                      <th scope="col" className="px-3 py-2 text-text-secondary">Run</th>
-                      <th scope="col" className="px-3 py-2 text-text-secondary">Period</th>
-                      <th scope="col" className="px-3 py-2 text-text-secondary">Model version</th>
-                      <th scope="col" className="px-3 py-2 text-text-secondary">Method</th>
-                      <th scope="col" className="px-3 py-2 text-text-secondary">Forecast h</th>
-                      <th scope="col" className="px-3 py-2 text-text-secondary">Actual h</th>
-                      <th scope="col" className="px-3 py-2 text-text-secondary">MAPE</th>
-                      <th scope="col" className="px-3 py-2 text-text-secondary">MAE / bias</th>
-                      <th scope="col" className="px-3 py-2 text-text-secondary">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rows.map((row) => {
-                      const degraded = row.status === "degraded"
+              <Table
+                columns={[
+                  { key: "run", header: "Run", accessor: (row) => `#${row.forecast_run_id}` },
+                  { key: "period", header: "Period", accessor: (row) => <span className="font-mono text-xs">{row.period}</span> },
+                  { key: "model", header: "Model version", accessor: (row) => <span className="text-xs">{row.model_version}</span> },
+                  { key: "method", header: "Method", accessor: (row) => <span className="text-xs">{row.method_used}</span> },
+                  { key: "forecast", header: "Forecast h", accessor: (row) => fmtNum(row.forecast_hours) },
+                  { key: "actual", header: "Actual h", accessor: (row) => fmtNum(row.actual_hours) },
+                  {
+                    key: "mape",
+                    header: "MAPE",
+                    accessor: (row) => {
                       const missing = explainMissingMape(row)
                       return (
-                        <tr
-                          key={row.id}
-                          className={`border-b ${degraded ? "bg-error-light" : "border-b border-border"}`}
-                        >
-                          <td className="px-3 py-2">#{row.forecast_run_id}</td>
-                          <td className="px-3 py-2 font-mono text-xs">{row.period}</td>
-                          <td className="px-3 py-2 text-xs">{row.model_version}</td>
-                          <td className="px-3 py-2 text-xs">{row.method_used}</td>
-                          <td className="px-3 py-2">{fmtNum(row.forecast_hours)}</td>
-                          <td className="px-3 py-2">{fmtNum(row.actual_hours)}</td>
-                          <td className="px-3 py-2">
-                            {row.mape == null ? (
-                              <span className="text-text-secondary">—</span>
-                            ) : (
-                              fmtPct(row.mape)
-                            )}
-                            {missing && (
-                              <p className="text-xs text-warning-text mt-0.5 max-w-64" role="note">
-                                {missing}
-                              </p>
-                            )}
-                          </td>
-                          <td className="px-3 py-2 text-xs">
-                            {fmtNum(row.mae)} / {fmtNum(row.bias)}
-                            <span className="block text-text-secondary">{row.sample_size} pairs</span>
-                          </td>
-                          <td className="px-3 py-2">
-                            <StatusPill status={row.status} tone={statusToneOf(row.status)} dot />
-                          </td>
-                        </tr>
+                        <>
+                          {row.mape == null ? (
+                            <span className="text-text-secondary">—</span>
+                          ) : (
+                            fmtPct(row.mape)
+                          )}
+                          {missing && (
+                            <p className="text-xs text-warning-text mt-0.5 max-w-64" role="note">
+                              {missing}
+                            </p>
+                          )}
+                        </>
                       )
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                    },
+                  },
+                  {
+                    key: "mae",
+                    header: "MAE / bias",
+                    accessor: (row) => (
+                      <span className="text-xs">
+                        {fmtNum(row.mae)} / {fmtNum(row.bias)}
+                        <span className="block text-text-secondary">{row.sample_size} pairs</span>
+                      </span>
+                    ),
+                  },
+                  {
+                    key: "status",
+                    header: "Status",
+                    accessor: (row) => (
+                      <StatusPill status={row.status} tone={statusToneOf(row.status)} dot />
+                    ),
+                  },
+                ]}
+                data={rows}
+                keyAccessor={(row) => row.id}
+                caption="Forecast-vs-actual accuracy rows with recomputed status — accuracy history"
+                sortable={false}
+                rowClassName={(row) => (row.status === "degraded" ? "bg-error-light" : "")}
+              />
               <div className="flex items-center gap-3">
                 <Button variant="secondary" size="sm" disabled={page <= 1} onClick={() => changePage(page - 1)}>
                   Previous

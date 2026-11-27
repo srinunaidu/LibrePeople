@@ -5,7 +5,7 @@ import { useTenantNav } from "@/lib/tenantPath"
 import { ThemeToggle } from "./ThemeToggle"
 import { IconLogout, IconMenu, IconSearch } from "@/components/icons"
 import { cn } from "@/lib/utils"
-import { showSuccess } from "@/components/ui"
+import { showSuccess, StatusPill } from "@/components/ui"
 
 export interface TopBarBreadcrumbItem {
   label: string
@@ -160,7 +160,7 @@ export function TopBar({
             <span className="hidden md:block text-xs font-medium text-fg max-w-[110px] truncate">
               {user?.username || "User"}
             </span>
-            <span className="badge badge-slate !px-1.5 !text-[10px] hidden sm:inline-flex">{role}</span>
+            <span className="hidden sm:inline-flex"><StatusPill status={role} className="!px-1.5 !text-[10px]" /></span>
           </button>
 
           {menuOpen && (
