@@ -10,17 +10,32 @@ import {Alert, Button, EmptyState, LoadingRegion, PageHeader, SectionCard, Retry
 import { useAuth } from "@/context/AuthContext"
 import api, { getClientIdBySlug, errorMessage } from "@/lib/api"
 
-/* Mirrors GOTO_AREAS in components/shell/WorkspaceRail.tsx and the single-key
- * shortcuts in lib/keyboard.ts. Keep in sync when the shell changes. */
+/* Mirrors GOTO_ENTRIES in lib/nav.ts (registered by components/shell/
+ * WorkspaceRail.tsx) and the single-key shortcuts in lib/keyboard.ts.
+ * Keep in sync when the shell changes. */
 const KEYBOARD_SHORTCUTS = [
-  { key: "g h", label: "Go to Home" },
+  { key: "g h", label: "Go to Overview" },
   { key: "g p", label: "Go to People" },
-  { key: "g t", label: "Go to Time" },
-  { key: "g s", label: "Go to Scheduling" },
-  { key: "g g", label: "Go to Forecast" },
+  { key: "g o", label: "Go to Org" },
+  { key: "g r", label: "Go to Recruit" },
+  { key: "g b", label: "Go to Onboard" },
+  { key: "g t", label: "Go to Attendance+Time" },
   { key: "g l", label: "Go to Leave" },
-  { key: "g r", label: "Go to Recruiting" },
+  { key: "g c", label: "Go to Comp" },
   { key: "g y", label: "Go to Payroll" },
+  { key: "g x", label: "Go to Expenses" },
+  { key: "g d", label: "Go to Documents" },
+  { key: "g k", label: "Go to Assets" },
+  { key: "g v", label: "Go to ER" },
+  { key: "g f", label: "Go to Performance" },
+  { key: "g n", label: "Go to Learning" },
+  { key: "g i", label: "Go to Helpdesk" },
+  { key: "g e", label: "Go to Reports" },
+  { key: "g w", label: "Go to Workflows" },
+  { key: "g u", label: "Go to Integrations" },
+  { key: "g a", label: "Go to Admin" },
+  { key: "g s", label: "Go to Scheduling" },
+  { key: "g g", label: "Go to Forecasting" },
   { key: "⌘K / Ctrl+K", label: "Command palette" },
   { key: "?", label: "Shortcut help" },
   { key: "t", label: "Toggle theme" },

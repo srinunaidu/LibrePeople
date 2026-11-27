@@ -1,19 +1,13 @@
 import { useEffect, useState } from "react"
-import { cn } from "@/lib/utils"
-
-interface Shortcut {
-  label: string
-  keys: string
-  description: string
-  group: string
-  run?: () => void
-}
+import { GOTO_ENTRIES } from "@/lib/nav"
 
 /**
  * Keyboard shortcut help sheet.
  *
- * Opens on the `?` key or from the user menu. Lists all registered shortcuts
- * grouped by category. Dismiss with Escape.
+ * Opens on the `?` key or from the user menu. The Navigation group renders
+ * from the same "g <letter>" registry the rail registers (lib/nav.ts
+ * GOTO_ENTRIES), so the sheet can never drift from the working shortcuts.
+ * Dismiss with Escape.
  */
 export function ShortcutHelp() {
   const [open, setOpen] = useState(false)
@@ -45,18 +39,10 @@ export function ShortcutHelp() {
     },
     {
       name: "Navigation",
-      items: [
-        { keys: "g h", description: "Go to Dashboard" },
-        { keys: "g p", description: "Go to People" },
-        { keys: "g t", description: "Go to Time & Attendance" },
-        { keys: "g l", description: "Go to Leave" },
-        { keys: "g r", description: "Go to Recruiting" },
-        { keys: "g y", description: "Go to Payroll" },
-        { keys: "g f", description: "Go to Performance" },
-        { keys: "g n", description: "Go to Learning" },
-        { keys: "g e", description: "Go to Reports" },
-        { keys: "g a", description: "Go to Admin" },
-      ],
+      items: GOTO_ENTRIES.map((entry) => ({
+        keys: `g ${entry.gKey}`,
+        description: `Go to ${entry.label}`,
+      })),
     },
   ]
 

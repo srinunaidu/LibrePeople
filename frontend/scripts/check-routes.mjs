@@ -207,36 +207,43 @@ for (const f of SHELL_FILES) {
 }
 
 // Navigation completeness: every core area must be reachable from the
-// persistent chrome (desktop rail or mobile drawer). A page that is
-// registered but that no menu item reaches reads to the user as
-// "the menu is missing" or "the link is a dummy".
+// persistent chrome (desktop rail or mobile drawer), both driven by
+// lib/nav.ts in Phase C. A page that is registered but that no menu item
+// reaches reads to the user as "the menu is missing" or "the link is a dummy".
 const NAV_EXPECTED = [
-  ["/dashboard", "Home"],
+  ["/dashboard", "Overview"],
   ["/people", "People"],
-  ["/time", "Time & Attendance"],
+  ["/time", "Attendance+Time"],
   ["/scheduling", "Scheduling"],
-  ["/forecasting", "Forecast"],
+  ["/forecasting", "Forecasting"],
   ["/leave", "Leave"],
-  ["/recruiting", "Recruiting"],
+  ["/recruiting", "Recruit"],
   ["/platform/payroll", "Payroll"],
   ["/reports", "Reports"],
   ["/import", "Import / Export"],
   ["/client-onboarding", "Admin"],
 ]
+// Phase C: the rail and drawer render lib/nav.ts (sections + subs), so the
+// config is the persistent chrome. A literal in either shell file also counts.
+let navSrc = ""
+try {
+  navSrc = readFileSync(join(SRC, "lib/nav.ts"), "utf8")
+} catch {
+  /* nav config must exist; dead-target checks above cover it */
+}
 for (const [path, label] of NAV_EXPECTED) {
   let inRail = false
   let inDrawer = false
   try {
-    inRail = readFileSync(join(SRC, "components/shell/WorkspaceRail.tsx"), "utf8").includes(
-      `to: "${path}"`,
-    )
+    const railSrc = readFileSync(join(SRC, "components/shell/WorkspaceRail.tsx"), "utf8")
+    inRail = railSrc.includes(`to: "${path}"`) || navSrc.includes(`to: "${path}"`)
   } catch {
     /* rail must exist; dead-target checks above cover it */
   }
   try {
-    inDrawer = readFileSync(join(SRC, "components/Layout.tsx"), "utf8").includes(
-      `tenantNav.to("${path}")`,
-    )
+    const layoutSrc = readFileSync(join(SRC, "components/Layout.tsx"), "utf8")
+    inDrawer =
+      layoutSrc.includes(`tenantNav.to("${path}")`) || navSrc.includes(`to: "${path}"`)
   } catch {
     /* layout must exist at this point */
   }

@@ -10,6 +10,20 @@ import "@testing-library/jest-dom/vitest"
 import { MemoryRouter, Routes, Route, useLocation } from "react-router-dom"
 import { TenantRedirect } from "@/App"
 import { WorkspaceRail } from "@/components/shell/WorkspaceRail"
+import {
+  ADMIN_ALIASES,
+  ADMIN_GROUPS,
+  GOTO_ENTRIES,
+  NAV_SECTIONS,
+  allAdminTargets,
+  paletteItemsFor,
+} from "@/lib/nav"
+
+const authBox = vi.hoisted(() => ({ user: { id: 1, username: "u", role: "SuperAdmin" } as { role: string } }))
+
+function setRole(role: string) {
+  authBox.user = { id: 1, username: "u", role } as { role: string }
+}
 
 vi.mock("@/context/TenantContext", () => ({
   useTenant: () => ({
@@ -30,7 +44,7 @@ vi.mock("@/context/TenantContext", () => ({
 }))
 
 vi.mock("@/context/AuthContext", () => ({
-  useAuth: () => ({ user: { role: "SuperAdmin" } }),
+  useAuth: () => ({ user: authBox.user }),
 }))
 
 function LocationProbe() {
@@ -75,6 +89,7 @@ describe("AC-1 legacy /t/:slug redirect", () => {
 describe("AC-2 workspace switcher absent", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    setRole("SuperAdmin")
   })
 
   test("the rail renders no switcher control or workspace menu", () => {
@@ -95,5 +110,60 @@ describe("AC-2 workspace switcher absent", () => {
     // The shell itself still renders: brand + admin console entry point.
     expect(screen.getByText("Acme")).toBeTruthy()
     expect(screen.getByText("Admin console")).toBeTruthy()
+  })
+})
+
+describe("AC-1b Phase C: no /t/ targets anywhere in the nav", () => {
+  beforeEach(() => {
+    setRole("SuperAdmin")
+  })
+
+  test("nav config points at bare paths only (sections, subs, console, palette, gotos)", () => {
+    const targets = [
+      ...NAV_SECTIONS.map((s) => s.to),
+      ...NAV_SECTIONS.flatMap((s) => (s.sub ?? []).map((sub) => sub.to)),
+      ...allAdminTargets(),
+      ...paletteItemsFor("SuperAdmin").map((i) => i.to),
+      ...GOTO_ENTRIES.map((g) => g.to),
+      ...Object.values(ADMIN_ALIASES),
+    ]
+    expect(targets.length).toBeGreaterThan(100)
+    for (const t of targets) expect(t, t).not.toMatch(/^\/t\//)
+  })
+
+  test("alias table covers legacy paths but is never linked from the nav", () => {
+    const aliasPaths = Object.keys(ADMIN_ALIASES)
+    expect(aliasPaths.length).toBeGreaterThan(20)
+    const linked = new Set([
+      ...NAV_SECTIONS.map((s) => s.to),
+      ...NAV_SECTIONS.flatMap((s) => (s.sub ?? []).map((sub) => sub.to)),
+      ...allAdminTargets(),
+    ])
+    for (const a of aliasPaths) expect(linked.has(a), a).toBe(false)
+  })
+
+  test("the rail renders no /t/ link for a restricted role either", () => {
+    setRole("Associate")
+    render(
+      <MemoryRouter initialEntries={["/dashboard"]}>
+        <WorkspaceRail />
+      </MemoryRouter>
+    )
+    for (const a of screen.getAllByRole("link")) {
+      expect((a as HTMLAnchorElement).getAttribute("href") ?? "").not.toMatch(/^\/t\//)
+    }
+  })
+
+  test("admin group names are the contract's eight (never a flat list)", () => {
+    expect(ADMIN_GROUPS.map((g) => g.name)).toEqual([
+      "Organization",
+      "Talent",
+      "Time & Scheduling",
+      "Leave",
+      "Pay & Benefits",
+      "Performance & Learning",
+      "Platform",
+      "Compliance & Audit",
+    ])
   })
 })

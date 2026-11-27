@@ -197,7 +197,10 @@ describe("slice 2 — real data, real actions, persistence", () => {
     const src = readPage("SavedViews.tsx")
     expect(src).toContain('"g h"')
     expect(src).toContain('"g p"')
-    expect(src).not.toContain('"g d"')
+    // Phase C D4: g d = Documents, g o = Org, g w = Workflows.
+    expect(src).toContain('"g d"')
+    expect(src).toContain('"g o"')
+    expect(src).toContain('"g w"')
     expect(src).not.toContain('"g m"')
     expect(src).toContain("feature-flags/saved_view")
     expect(src).toContain("feature-flags/keyboard_nav")

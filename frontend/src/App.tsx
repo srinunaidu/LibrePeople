@@ -266,7 +266,7 @@ function AppRoutes() {
       <Route path="/admin/users" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><UserAdmin /></ProtectedRoute>} />
       <Route path="/admin/branding" element={<ProtectedRoute roles={["SuperAdmin"]}><TenantBranding /></ProtectedRoute>} />
       <Route path="/admin/entitlements" element={<ProtectedRoute roles={["SuperAdmin"]}><ModuleEntitlements /></ProtectedRoute>} />
-      <Route path="/admin/workflow" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><WorkflowApproval /></ProtectedRoute>} />
+      <Route path="/admin/workflow" element={<ProtectedRoute roles={["SuperAdmin", "HR", "Manager"]}><WorkflowApproval /></ProtectedRoute>} />
       <Route path="/admin/integrations" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><IntegrationCredentials /></ProtectedRoute>} />
       <Route path="/admin/backup" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><BackupRestore /></ProtectedRoute>} />
       <Route path="/admin/updates" element={<ProtectedRoute roles={["SuperAdmin"]}><Updates /></ProtectedRoute>} />
@@ -274,40 +274,42 @@ function AppRoutes() {
       <Route path="/admin/locale" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><LocaleConfig /></ProtectedRoute>} />
       <Route path="/admin/retention-export" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><RetentionExport /></ProtectedRoute>} />
       <Route path="/admin/candidate-stages" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><CandidateStages /></ProtectedRoute>} />
-      <Route path="/admin/rc-03" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><CandidateStages /></ProtectedRoute>} />
-      <Route path="/admin/project-status" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><ProjectStatus /></ProtectedRoute>} />
-      <Route path="/admin/design-gallery" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><DesignGallery /></ProtectedRoute>} />
-      <Route path="/admin/theme" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><ThemeStudio /></ProtectedRoute>} />
+      <Route path="/admin/rc-03" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><Navigate to="/admin/candidate-stages" replace /></ProtectedRoute>} />
+      <Route path="/admin/project-status" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><Navigate to="/project-status" replace /></ProtectedRoute>} />
+      <Route path="/admin/design-gallery" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><Navigate to="/design-gallery" replace /></ProtectedRoute>} />
+      <Route path="/admin/theme" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><Navigate to="/theme" replace /></ProtectedRoute>} />
       {/* Marketing aliases removed (admin-cleanup): same components reachable at
           /solutions /resources /about /careers /contact /privacy /terms /docs
           /pricing /security /faq /industries/:slug /compare/:competitor /design.
           /admin/platform-showcase kept — no non-admin route renders it. */}
       <Route path="/admin/platform-showcase" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><PlatformShowcase /></ProtectedRoute>} />
 
-      {/* R6/R7/R8 Features */}
-      <Route path="/admin/ad-03" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><LocaleConfig /></ProtectedRoute>} />
-      <Route path="/admin/ad-09" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><RetentionExport /></ProtectedRoute>} />
-      <Route path="/admin/hr-01" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><People /></ProtectedRoute>} />
-      <Route path="/admin/hr-05" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><MultiLocationAssignments /></ProtectedRoute>} />
-      <Route path="/admin/lv-01" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><LeaveTypes /></ProtectedRoute>} />
-      <Route path="/admin/rc-05" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><OfferApprovals /></ProtectedRoute>} />
-      <Route path="/admin/sc-04" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><HardConstraints /></ProtectedRoute>} />
-      <Route path="/admin/sc-07" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><CoverageGaps /></ProtectedRoute>} />
-      <Route path="/admin/sc-10" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><PlannedVsActual /></ProtectedRoute>} />
-      <Route path="/admin/tm-02" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><AttendancePolicies /></ProtectedRoute>} />
-      <Route path="/admin/tm-03" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><CrossMidnightOvertime /></ProtectedRoute>} />
-      <Route path="/admin/tm-04" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><ShiftBasedAttendance /></ProtectedRoute>} />
-      <Route path="/admin/tm-05" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><TimesheetLock /></ProtectedRoute>} />
-      <Route path="/admin/an-06" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><PlanReconciliation /></ProtectedRoute>} />
-      <Route path="/admin/bn-02" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><EmployerContributions /></ProtectedRoute>} />
-      <Route path="/admin/ai-02" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><DocumentClassification /></ProtectedRoute>} />
-      <Route path="/admin/ob-04" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><ProbationTracking /></ProtectedRoute>} />
+      {/* R6/R7/R8 Features — code-named aliases below are guarded Navigate
+          redirects to their canonical screen (Phase C: one screen per
+          function; old bookmarks keep working). */}
+      <Route path="/admin/ad-03" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><Navigate to="/admin/locale" replace /></ProtectedRoute>} />
+      <Route path="/admin/ad-09" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><Navigate to="/admin/retention-export" replace /></ProtectedRoute>} />
+      <Route path="/admin/hr-01" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><Navigate to="/people" replace /></ProtectedRoute>} />
+      <Route path="/admin/hr-05" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><Navigate to="/admin/multi-location-assignments" replace /></ProtectedRoute>} />
+      <Route path="/admin/lv-01" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><Navigate to="/admin/leave-types" replace /></ProtectedRoute>} />
+      <Route path="/admin/rc-05" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><Navigate to="/admin/offer-approvals" replace /></ProtectedRoute>} />
+      <Route path="/admin/sc-04" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><Navigate to="/admin/hard-constraints" replace /></ProtectedRoute>} />
+      <Route path="/admin/sc-07" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><Navigate to="/admin/coverage-gaps" replace /></ProtectedRoute>} />
+      <Route path="/admin/sc-10" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><Navigate to="/admin/planned-vs-actual" replace /></ProtectedRoute>} />
+      <Route path="/admin/tm-02" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><Navigate to="/admin/attendance-policies" replace /></ProtectedRoute>} />
+      <Route path="/admin/tm-03" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><Navigate to="/admin/cross-midnight-overtime" replace /></ProtectedRoute>} />
+      <Route path="/admin/tm-04" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><Navigate to="/admin/shift-based-attendance" replace /></ProtectedRoute>} />
+      <Route path="/admin/tm-05" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><Navigate to="/admin/timesheet-lock" replace /></ProtectedRoute>} />
+      <Route path="/admin/an-06" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><Navigate to="/admin/plan-reconciliation" replace /></ProtectedRoute>} />
+      <Route path="/admin/bn-02" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><Navigate to="/admin/employer-contributions" replace /></ProtectedRoute>} />
+      <Route path="/admin/ai-02" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><Navigate to="/admin/document-classification" replace /></ProtectedRoute>} />
+      <Route path="/admin/ob-04" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><Navigate to="/admin/probation-tracking" replace /></ProtectedRoute>} />
       <Route path="/admin/ai-04" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><AI04Summarisation /></ProtectedRoute>} />
       <Route path="/admin/ai-03" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><AIDrafting /></ProtectedRoute>} />
       <Route path="/admin/announcements-directory" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><AnnouncementsDirectory /></ProtectedRoute>} />
       <Route path="/admin/attendance-policies" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><AttendancePolicies /></ProtectedRoute>} />
       <Route path="/admin/availability-leave" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><AvailabilityLeave /></ProtectedRoute>} />
-      <Route path="/admin/backup-restore" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><BackupRestore /></ProtectedRoute>} />
+      <Route path="/admin/backup-restore" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><Navigate to="/admin/backup" replace /></ProtectedRoute>} />
       <Route path="/admin/bank-export" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><BankExport /></ProtectedRoute>} />
       <Route path="/admin/certifications" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><Certifications /></ProtectedRoute>} />
       <Route path="/admin/competency-calibration" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><CompetencyCalibration /></ProtectedRoute>} />
@@ -315,16 +317,16 @@ function AppRoutes() {
       <Route path="/admin/coverage-gaps" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><CoverageGaps /></ProtectedRoute>} />
       <Route path="/admin/cross-midnight-overtime" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><CrossMidnightOvertime /></ProtectedRoute>} />
       <Route path="/admin/custom-fields" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><CustomFields /></ProtectedRoute>} />
-      <Route path="/admin/data-quality" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><DataQuality /></ProtectedRoute>} />
+      <Route path="/admin/data-quality" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><Navigate to="/data-quality" replace /></ProtectedRoute>} />
       <Route path="/admin/demand-forecasting" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><DemandForecasting /></ProtectedRoute>} />
       <Route path="/admin/demand-staffing" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><DemandStaffing /></ProtectedRoute>} />
       <Route path="/admin/departments-cost-centres" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><DepartmentsCostCentres /></ProtectedRoute>} />
       <Route path="/admin/document-classification" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><DocumentClassification /></ProtectedRoute>} />
       <Route path="/admin/documents-expiry" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><DocumentsExpiry /></ProtectedRoute>} />
-      <Route path="/admin/documents" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><DocumentsLibrary /></ProtectedRoute>} />
+      <Route path="/admin/documents" element={<ProtectedRoute roles={["SuperAdmin", "HR", "Manager", "Associate"]}><DocumentsLibrary /></ProtectedRoute>} />
       <Route path="/admin/essprofile" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><ESSProfile /></ProtectedRoute>} />
       <Route path="/admin/earnings-deductions" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><EarningsDeductions /></ProtectedRoute>} />
-      <Route path="/admin/er-cases" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><ERCases /></ProtectedRoute>} />
+      <Route path="/admin/er-cases" element={<ProtectedRoute roles={["SuperAdmin", "HR", "Manager"]}><ERCases /></ProtectedRoute>} />
       <Route path="/admin/employer-contributions" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><EmployerContributions /></ProtectedRoute>} />
       <Route path="/admin/employment-status" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><EmploymentStatus /></ProtectedRoute>} />
       <Route path="/admin/equipment-access" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><EquipmentAccess /></ProtectedRoute>} />
@@ -334,14 +336,14 @@ function AppRoutes() {
       <Route path="/admin/funnel-analytics" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><FunnelAnalytics /></ProtectedRoute>} />
       <Route path="/admin/gap-detection" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><GapDetection /></ProtectedRoute>} />
       <Route path="/admin/goals-okr" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><GoalsOKR /></ProtectedRoute>} />
-      <Route path="/admin/hrhelp-cases" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><HRHelpCases /></ProtectedRoute>} />
+      <Route path="/admin/hrhelp-cases" element={<ProtectedRoute roles={["SuperAdmin", "HR", "Manager", "Associate"]}><HRHelpCases /></ProtectedRoute>} />
       <Route path="/admin/hard-constraints" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><HardConstraints /></ProtectedRoute>} />
       <Route path="/admin/headcount-cost" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><HeadcountCost /></ProtectedRoute>} />
       <Route path="/admin/hiring-plans" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><HiringPlans /></ProtectedRoute>} />
       <Route path="/admin/historical-record" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><HistoricalRecord /></ProtectedRoute>} />
       <Route path="/admin/improvement-plans" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><ImprovementPlans /></ProtectedRoute>} />
       <Route path="/admin/information-collection" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><InformationCollection /></ProtectedRoute>} />
-      <Route path="/admin/integration-credentials" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><IntegrationCredentials /></ProtectedRoute>} />
+      <Route path="/admin/integration-credentials" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><Navigate to="/admin/integrations" replace /></ProtectedRoute>} />
       <Route path="/admin/integrations-hub" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><IntegrationsHub /></ProtectedRoute>} />
       <Route path="/admin/interview-scheduling" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><InterviewScheduling /></ProtectedRoute>} />
       <Route path="/admin/jurisdiction-rules" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><JurisdictionRules /></ProtectedRoute>} />
@@ -350,16 +352,16 @@ function AppRoutes() {
       <Route path="/admin/learning-paths" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><LearningPaths /></ProtectedRoute>} />
       <Route path="/admin/leave-to-payroll" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><LeaveToPayroll /></ProtectedRoute>} />
       <Route path="/admin/leave-types" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><LeaveTypes /></ProtectedRoute>} />
-      <Route path="/admin/locale-config" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><LocaleConfig /></ProtectedRoute>} />
+      <Route path="/admin/locale-config" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><Navigate to="/admin/locale" replace /></ProtectedRoute>} />
       <Route path="/admin/manager-assignments" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><ManagerAssignments /></ProtectedRoute>} />
       <Route path="/admin/manager-availability" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><ManagerAvailability /></ProtectedRoute>} />
       <Route path="/admin/mentoring-development" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><MentoringDevelopment /></ProtectedRoute>} />
       <Route path="/admin/mobile-interaction" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><MobileInteraction /></ProtectedRoute>} />
       <Route path="/admin/model-versioning" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><ModelVersioning /></ProtectedRoute>} />
-      <Route path="/admin/module-entitlements" element={<ProtectedRoute roles={["SuperAdmin"]}><ModuleEntitlements /></ProtectedRoute>} />
+      <Route path="/admin/module-entitlements" element={<ProtectedRoute roles={["SuperAdmin"]}><Navigate to="/admin/entitlements" replace /></ProtectedRoute>} />
       <Route path="/admin/multi-location-assignments" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><MultiLocationAssignments /></ProtectedRoute>} />
       <Route path="/admin/offer-approvals" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><OfferApprovals /></ProtectedRoute>} />
-      <Route path="/admin/org-chart" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><OrgChart /></ProtectedRoute>} />
+      <Route path="/admin/org-chart" element={<ProtectedRoute roles={["SuperAdmin", "HR", "Manager", "Associate"]}><OrgChart /></ProtectedRoute>} />
       <Route path="/admin/pay-schedule" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><PaySchedule /></ProtectedRoute>} />
       <Route path="/admin/plan-reconciliation" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><PlanReconciliation /></ProtectedRoute>} />
       <Route path="/admin/planned-vs-actual" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><PlannedVsActual /></ProtectedRoute>} />
@@ -386,14 +388,14 @@ function AppRoutes() {
       <Route path="/admin/team-availability" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><TeamAvailability /></ProtectedRoute>} />
       <Route path="/admin/templates-drafts-publish" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><TemplatesDraftsPublish /></ProtectedRoute>} />
       <Route path="/admin/ten-step-journey" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><TenStepJourney /></ProtectedRoute>} />
-      <Route path="/admin/tenant-branding" element={<ProtectedRoute roles={["SuperAdmin"]}><TenantBranding /></ProtectedRoute>} />
+      <Route path="/admin/tenant-branding" element={<ProtectedRoute roles={["SuperAdmin"]}><Navigate to="/admin/branding" replace /></ProtectedRoute>} />
       <Route path="/admin/timesheet-lock" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><TimesheetLock /></ProtectedRoute>} />
       <Route path="/admin/timesheets" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><Timesheets /></ProtectedRoute>} />
       <Route path="/admin/training-assignments" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><TrainingAssignments /></ProtectedRoute>} />
       <Route path="/admin/transfer-promotion" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><TransferPromotion /></ProtectedRoute>} />
-      <Route path="/admin/user-admin" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><UserAdmin /></ProtectedRoute>} />
+      <Route path="/admin/user-admin" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><Navigate to="/admin/users" replace /></ProtectedRoute>} />
       <Route path="/admin/validation-duplicates" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><ValidationDuplicates /></ProtectedRoute>} />
-      <Route path="/admin/workflow-approval" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><WorkflowApproval /></ProtectedRoute>} />
+      <Route path="/admin/workflow-approval" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><Navigate to="/admin/workflow" replace /></ProtectedRoute>} />
       <Route path="/admin/break-glass" element={<ProtectedRoute roles={["SuperAdmin"]}><BreakGlass /></ProtectedRoute>} />
       <Route path="/admin/compliance" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><ComplianceCenter /></ProtectedRoute>} />
 
