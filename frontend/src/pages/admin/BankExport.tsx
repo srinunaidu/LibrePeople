@@ -6,7 +6,7 @@
  */
 import { useState } from "react"
 import { Layout } from "@/components/Layout"
-import { Input, Alert, Button, PageHeader, SectionCard } from "@/components/ui"
+import { Input, Alert, Button, PageHeader, SectionCard, Select } from "@/components/ui"
 
 import { useAuth } from "@/context/AuthContext"
 import api, { errorMessage } from "@/lib/api"
@@ -54,12 +54,12 @@ export default function BankExport() {
             </div>
             <div>
               <label htmlFor="bx-format">Format</label>
-              <select id="bx-format" value={payFormat} onChange={e => setPayFormat(e.target.value as "nacha" | "neft")} className="w-full rounded border px-3 py-2" disabled={!canWrite || saving}>
+              <Select id="bx-format" value={payFormat} onChange={e => setPayFormat(e.target.value as "nacha" | "neft")} disabled={!canWrite || saving}>
                 <option value="nacha">NACHA (US)</option>
                 <option value="neft">NEFT/RTGS (IN)</option>
-              </select>
+              </Select>
             </div>
-            <div className="flex items-end"><Button onClick={exportPayrollFile} disabled={!canWrite || saving}>{saving ? "Generating…" : "Download payroll file"}</Button></div>
+            <div className="flex items-end"><Button onClick={exportPayrollFile} disabled={!canWrite || saving} loading={saving}>{saving ? "Generating…" : "Download payroll file"}</Button></div>
           </div>
           {!canWrite && <p className="text-xs text-fg-muted mt-2">Payment-file export requires SuperAdmin or HR; your role is {user?.role || "unknown"}.</p>}
           <p className="text-xs text-text-secondary mt-2">Default is nacha for backwards compat; IN auto-selects neft when format absent. Raw PAN/IFSC/account only in server export, never in DOM; list shows masked.</p>

@@ -70,7 +70,7 @@ export default function LocaleConfig() {
   if (error && !clientId) {
     return (
       <Layout>
-        <SectionCard title="Company not resolved" description="Could not resolve the company. Check the server connection and retry.">
+        <SectionCard compact title="Company not resolved" description="Could not resolve the company. Check the server connection and retry.">
           <EmptyState title="Could not resolve the company" description="Could not resolve the company. Check the server connection and retry." />
           <div className="mt-4">
             <Button onClick={() => load()}>Retry</Button>
@@ -80,22 +80,23 @@ export default function LocaleConfig() {
     )
   }
   return (
-      <>
-    <PageHeader compact title="Locale & Working Week" description="AD-03 · locale / TZ / currency / working-start; depends AD-01 (company branding verified)" />
+    <Layout>
+      <PageHeader compact title="Locale & Working Week" description="AD-03 · locale / TZ / currency / working-start; depends AD-01 (company branding verified)" />
       <div className="max-w-3xl mx-auto px-6 py-10 space-y-8">
         {notice && <Alert tone="success">{notice}</Alert>}
         {actionError && <Alert tone="error">{actionError}</Alert>}
         {!!error && <RetryableAlert err={error} title="The locale & working week could not be read." fallback="The locale & working week could not be read." onRetry={load} />}
         <SectionCard compact title="Settings" description="Per-tenant from /clients/:slug/settings; no fabricated locale packs.">
           <div className="grid sm:grid-cols-2 gap-4">
-            <div><label>Locale</label><Input value={locale} onChange={e => setLocale(e.target.value)} disabled={!canWrite || saving || !clientId} /></div>
-            <div><label>Time zone</label><Input value={tz} onChange={e => setTz(e.target.value)} disabled={!canWrite || saving || !clientId} /></div>
-            <div><label>Currency</label><Input value={currency} onChange={e => setCurrency(e.target.value)} disabled={!canWrite || saving || !clientId} /></div>
-            <div><label>Week starts</label><Input value={weekStart} onChange={e => setWeekStart(e.target.value)} disabled={!canWrite || saving || !clientId} /></div>
+            <div><label htmlFor="lc-locale">Locale</label><Input id="lc-locale" value={locale} onChange={e => setLocale(e.target.value)} disabled={!canWrite || saving || !clientId} /></div>
+            <div><label htmlFor="lc-tz">Time zone</label><Input id="lc-tz" value={tz} onChange={e => setTz(e.target.value)} disabled={!canWrite || saving || !clientId} /></div>
+            <div><label htmlFor="lc-currency">Currency</label><Input id="lc-currency" value={currency} onChange={e => setCurrency(e.target.value)} disabled={!canWrite || saving || !clientId} /></div>
+            <div><label htmlFor="lc-week">Week starts</label><Input id="lc-week" value={weekStart} onChange={e => setWeekStart(e.target.value)} disabled={!canWrite || saving || !clientId} /></div>
           </div>
           <Button onClick={save} disabled={!canWrite || saving || !clientId} className="mt-4">{saving ? "Saving…" : "Save locale"}</Button>
         </SectionCard>
         <div className="text-xs text-fg-muted">AD-03 · R2 · depends AD-01 · feeds PY-08 / PY-09 / SC-01.</div>
       </div>
-  </>)
+    </Layout>
+  )
 }

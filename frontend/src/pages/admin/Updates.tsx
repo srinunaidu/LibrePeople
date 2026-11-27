@@ -6,7 +6,7 @@
  */
 import { useCallback, useEffect, useState } from "react"
 import { Layout } from "@/components/Layout"
-import { Alert, Button, EmptyState, LoadingRegion, PageHeader, SectionCard, RetryableAlert } from "@/components/ui"
+import { Alert, Button, EmptyState, LoadingRegion, PageHeader, SectionCard, RetryableAlert, StatusPill } from "@/components/ui"
 import { useAuth } from "@/context/AuthContext"
 import api, { errorMessage } from "@/lib/api"
 
@@ -106,7 +106,7 @@ export default function Updates() {
   if (!canView) {
     return (
       <Layout>
-        <PageHeader title="Updates" description="Platform version management" />
+        <PageHeader compact title="Updates" description="Platform version management" />
         <EmptyState title="SuperAdmin only" description="Upgrade state is a platform-operator concern." />
       </Layout>
     )
@@ -115,7 +115,7 @@ export default function Updates() {
   if (loading) {
     return (
       <Layout>
-        <PageHeader title="Updates" description="Consent-gated manual updates — the system never pulls code by itself" />
+        <PageHeader compact title="Updates" description="Consent-gated manual updates — the system never pulls code by itself" />
         <LoadingRegion label="Updates">Loading update status…</LoadingRegion>
       </Layout>
     )
@@ -126,6 +126,7 @@ export default function Updates() {
   return (
     <Layout>
       <PageHeader
+        compact
         title="Updates"
         description="Consent-gated manual updates — the system never pulls code by itself"
         actions={<Button onClick={load}>Refresh</Button>}
@@ -133,7 +134,7 @@ export default function Updates() {
       {notice && <Alert tone="success">{notice}</Alert>}
       {!!error && <RetryableAlert err={error} title="The update status could not be read." onRetry={load} />}
       {devWarning && <Alert tone="warning">{devWarning}</Alert>}
-        <SectionCard title="Installed version">
+        <SectionCard compact title="Installed version">
           {current ? (
             <dl>
               <dt>Application</dt><dd>{String(current.app_version)} ({String(current.project)})</dd>
@@ -146,7 +147,7 @@ export default function Updates() {
           )}
         </SectionCard>
 
-        <SectionCard title="Available release (local manifest)">
+        <SectionCard compact title="Available release (local manifest)">
           {manifest ? (
             <>
               <p>Version {manifest.version} ({manifest.channel}) — released {manifest.released_at}</p>
@@ -168,6 +169,7 @@ export default function Updates() {
         </SectionCard>
 
         <SectionCard
+          compact
           title="Pre-install gates"
           actions={
             <>
@@ -189,7 +191,7 @@ export default function Updates() {
             <ul>
               {gates.map((g) => (
                 <li key={g.gate}>
-                  {g.passed ? "✓" : "✗"} {g.gate}
+                  <StatusPill status={g.passed ? "Pass" : "Fail"} tone={g.passed ? "green" : "rose"} /> {g.gate}
                   {!g.passed && g.remediation && <p>{g.remediation}</p>}
                   {g.passed && g.plan && <p>{g.plan}</p>}
                 </li>
@@ -198,7 +200,7 @@ export default function Updates() {
           )}
         </SectionCard>
 
-        <SectionCard title="Install history">
+        <SectionCard compact title="Install history">
           {history.length === 0 ? (
             <EmptyState title="No attempts yet" description="Install attempts are recorded here and in the audit chain." />
           ) : (
