@@ -1,0 +1,19 @@
+{
+  "version": "1.0.0",
+  "channel": "rc",
+  "released_at": "2026-11-27T01:09:35.064722+00:00",
+  "git_sha": "a0ae511d57651d9216533eca9cb0e52498ebb9be",
+  "app_version": "1.0.0",
+  "db_head_revision": "0055_scim_external_id",
+  "min_version": "1.0.0",
+  "breaking_changes": [],
+  "notes_url": "https://github.com/librepeople/librepeople/releases/tag/v1.0.0",
+  "changelog": "NOT A PRODUCTION RELEASE \u2014 synthetic dev seed manifest for the update-system slice. Production manifests carry an owner-held minisign signature.",
+  "artifacts": [],
+  "manifest_sha256": "a7b284e81df24115b489a41b364871891226275e21ff7ff9fa8aa678910e5679",
+  "signature": {
+    "alg": "ephemeral-dev",
+    "key_id": "dev-ephemeral",
+    "sig": "a7b284e81df24115b489a41b364871891226275e21ff7ff9fa8aa678910e5679"
+  }
+}

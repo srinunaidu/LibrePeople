@@ -35,6 +35,7 @@ from app.api.v1.endpoints import (
     admin_jobs,
     admin_audit,
     admin_status,
+    admin_updates,
     break_glass,
 )
 from app.workflows.router import router as workflows_router
@@ -93,6 +94,7 @@ api_router.include_router(workflows_router, prefix="/workflows", tags=["workflow
 api_router.include_router(admin_jobs.router, prefix="/admin/jobs", tags=["admin"])
 api_router.include_router(admin_audit.router, prefix="/admin/audit", tags=["admin"])
 api_router.include_router(admin_status.router, prefix="/admin/status", tags=["admin"])
+api_router.include_router(admin_updates.router, prefix="/admin/updates", tags=["admin"])
 api_router.include_router(
     break_glass.router, prefix="/break-glass", tags=["break-glass"]
 )
