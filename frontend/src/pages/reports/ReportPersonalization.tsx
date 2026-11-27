@@ -362,19 +362,19 @@ export function SavedViewsSection() {
             {creating || views.length === 0 ? (
               <form className="flex flex-wrap items-end gap-2" aria-label="Save a view"
                 onSubmit={(e) => { e.preventDefault(); create() }}>
-                <label className="text-xs">Name
-                  <input className="input" aria-label="View name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Q1 joiners" />
+                <label htmlFor="rp-view-name" className="text-xs">Name
+                  <input id="rp-view-name" className="input" aria-label="View name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Q1 joiners" />
                 </label>
-                <label className="text-xs">Report
-                  <select className="input" aria-label="Report" value={reportKey} onChange={(e) => setReportKey(e.target.value as ReportKey)}>
+                <label htmlFor="rp-view-report" className="text-xs">Report
+                  <select id="rp-view-report" className="input" aria-label="Report" value={reportKey} onChange={(e) => setReportKey(e.target.value as ReportKey)}>
                     {REPORT_KEYS.map((k) => (
                       <option key={k} value={k}>{REPORT_KEY_LABELS[k]}</option>
                     ))}
                   </select>
                 </label>
                 {canShare && (
-                  <label className="text-xs flex items-center gap-1">Share with role
-                    <input type="checkbox" aria-label="Share with role" checked={share} onChange={(e) => setShare(e.target.checked)} />
+                  <label htmlFor="rp-view-share" className="text-xs flex items-center gap-1">Share with role
+                    <input id="rp-view-share" type="checkbox" aria-label="Share with role" checked={share} onChange={(e) => setShare(e.target.checked)} />
                   </label>
                 )}
                 <Button variant="primary" type="submit" disabled={!name.trim()}>{EMPTY_VIEWS_CTA}</Button>
@@ -527,28 +527,28 @@ export function SchedulesSection() {
             {creating || schedules.length === 0 ? (
               <form className="flex flex-wrap items-end gap-2" aria-label="Schedule a report"
                 onSubmit={(e) => { e.preventDefault(); create() }}>
-                <label className="text-xs">Report
-                  <select className="input" aria-label="Scheduled report" value={draft.report_key} onChange={set("report_key")}>
+                <label htmlFor="rp-sched-report" className="text-xs">Report
+                  <select id="rp-sched-report" className="input" aria-label="Scheduled report" value={draft.report_key} onChange={set("report_key")}>
                     {REPORT_KEYS.map((k) => (
                       <option key={k} value={k}>{REPORT_KEY_LABELS[k]}</option>
                     ))}
                   </select>
                 </label>
-                <label className="text-xs">Frequency
-                  <select className="input" aria-label="Frequency" value={draft.frequency} onChange={set("frequency")}>
+                <label htmlFor="rp-sched-freq" className="text-xs">Frequency
+                  <select id="rp-sched-freq" className="input" aria-label="Frequency" value={draft.frequency} onChange={set("frequency")}>
                     {FREQUENCIES.map((f) => (
                       <option key={f} value={f}>{f}</option>
                     ))}
                   </select>
                 </label>
-                <label className="text-xs">Timezone
-                  <input className="input" aria-label="Timezone" value={draft.timezone} onChange={set("timezone")} placeholder="Asia/Kolkata" />
+                <label htmlFor="rp-sched-tz" className="text-xs">Timezone
+                  <input id="rp-sched-tz" className="input" aria-label="Timezone" value={draft.timezone} onChange={set("timezone")} placeholder="Asia/Kolkata" />
                 </label>
-                <label className="text-xs">Recipient user ids
-                  <input className="input" aria-label="Recipient user ids" value={draft.recipient_user_ids} onChange={set("recipient_user_ids")} placeholder="12, 34" />
+                <label htmlFor="rp-sched-recipients" className="text-xs">Recipient user ids
+                  <input id="rp-sched-recipients" className="input" aria-label="Recipient user ids" value={draft.recipient_user_ids} onChange={set("recipient_user_ids")} placeholder="12, 34" />
                 </label>
-                <label className="text-xs">Format
-                  <select className="input" aria-label="Format" value={draft.output_format} onChange={set("output_format")}>
+                <label htmlFor="rp-sched-format" className="text-xs">Format
+                  <select id="rp-sched-format" className="input" aria-label="Format" value={draft.output_format} onChange={set("output_format")}>
                     {OUTPUT_FORMATS.map((f) => (
                       <option key={f} value={f}>{f}</option>
                     ))}

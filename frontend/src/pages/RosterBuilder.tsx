@@ -973,7 +973,7 @@ export default function RosterBuilder() {
                   </p>
                 )}
 
-                <h3 className="font-semibold px-4 mt-4">Unfilled slots</h3>
+                <h3 className="section-title px-4 mt-4">Unfilled slots</h3>
                 {draft.unfilled_slots.length === 0 ? (
                   <div className="px-4 pb-4">
                     {<Alert tone="success">All slots filled — no further action.</Alert>}
@@ -1130,7 +1130,7 @@ export default function RosterBuilder() {
 
                 {versionDetail.unfilled_slots && versionDetail.unfilled_slots.length > 0 && (
                   <div className="mt-2">
-                    <h4 className="font-semibold px-4">
+                    <h4 className="section-title px-4">
                       Unfilled slots of this version ({versionDetail.unfilled_slots.length})
                     </h4>
                     <Table

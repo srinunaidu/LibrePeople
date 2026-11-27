@@ -295,11 +295,13 @@ export default function PayRuns() {
           />
         ) : (
           <>
-            <div className="flex flex-wrap gap-2 p-3 border-b border-border text-xs">
-              <span className="text-text-secondary">Filter:</span>
-              <button onClick={() => setJurisFilter("")} className={`px-2 py-0.5 rounded border ${jurisFilter==="" ? "bg-brand-50 border-brand-200" : "bg-surface border-border"}`}>All</button>
-              <button onClick={() => setJurisFilter("IN")} className={`px-2 py-0.5 rounded border ${jurisFilter==="IN" ? "bg-[var(--warning-light)] border-[var(--warning-border)] text-[var(--warning-text)]" : "bg-surface border-border"}`}>IN (monthly · INR)</button>
-              <button onClick={() => setJurisFilter("US")} className={`px-2 py-0.5 rounded border ${jurisFilter==="US" ? "bg-slate-50 border-slate-200" : "bg-surface border-border"}`}>US</button>
+            <div className="flex flex-wrap items-center gap-2 p-3 border-b border-border text-xs">
+              <span className="text-text-secondary" id="payrun-juris-filter-label">Filter:</span>
+              <div className="flex flex-wrap gap-2" role="group" aria-labelledby="payrun-juris-filter-label">
+                <Button variant={jurisFilter==="" ? "primary" : "secondary"} size="sm" type="button" aria-pressed={jurisFilter===""} onClick={() => setJurisFilter("")}>All</Button>
+                <Button variant={jurisFilter==="IN" ? "primary" : "secondary"} size="sm" type="button" aria-pressed={jurisFilter==="IN"} onClick={() => setJurisFilter("IN")}>IN (monthly · INR)</Button>
+                <Button variant={jurisFilter==="US" ? "primary" : "secondary"} size="sm" type="button" aria-pressed={jurisFilter==="US"} onClick={() => setJurisFilter("US")}>US</Button>
+              </div>
               {jurisFilter==="IN" && <span className="text-warning-text">Showing India monthly runs — currency INR, PT column where applicable</span>}
             </div>
             <Table
@@ -347,7 +349,7 @@ export default function PayRuns() {
                   accessor: (run) => (
                     <Link
                       to={tenantNav.to(`/platform/payroll/runs/${run.id}`)}
-                      className="text-brand-700 hover:underline"
+                      className="text-primary hover:underline underline-offset-2"
                     >
                       Open run #{run.id}
                     </Link>
@@ -358,7 +360,7 @@ export default function PayRuns() {
                   header: "",
                   accessor: (run) => (
                     <span className="text-xs">
-                      <Link to={tenantNav.to(`/platform/payroll/runs/${run.id}`)} className="text-brand-700 hover:underline mr-2">Recon</Link>
+                      <Link to={tenantNav.to(`/platform/payroll/runs/${run.id}`)} className="text-primary hover:underline underline-offset-2 mr-2">Recon</Link>
                       {run.status === "Approved" && <span className="text-text-secondary">· {run.jurisdiction === "IN" ? "NEFT" : "NACHA"}</span>}
                     </span>
                   ),

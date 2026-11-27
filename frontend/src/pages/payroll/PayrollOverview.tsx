@@ -11,6 +11,7 @@ import { Layout } from "@/components/Layout"
 import {
   Button,
   EmptyState,
+  KPICard,
   LoadingRegion,
   PageHeader,
   RetryableAlert,
@@ -104,22 +105,10 @@ export default function PayrollOverview() {
         description="Aggregated from the served pay runs. Money is shown as the server recorded it, with no currency symbol."
       >
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="border border-border p-4 rounded-lg">
-            <dt className="text-xs text-text-secondary">Headcount</dt>
-            <dd className="text-[var(--font-size-2xl)] font-medium tabular-nums">{totals.headcount}</dd>
-          </div>
-          <div className="border border-border p-4 rounded-lg">
-            <dt className="text-xs text-text-secondary">Gross</dt>
-            <dd className="text-[var(--font-size-2xl)] font-medium tabular-nums">{money(totals.gross)}</dd>
-          </div>
-          <div className="border border-border p-4 rounded-lg">
-            <dt className="text-xs text-text-secondary">Deductions</dt>
-            <dd className="text-[var(--font-size-2xl)] font-medium tabular-nums">{money(totals.deductions)}</dd>
-          </div>
-          <div className="border border-border p-4 rounded-lg">
-            <dt className="text-xs text-text-secondary">Net</dt>
-            <dd className="text-[var(--font-size-2xl)] font-medium tabular-nums">{money(totals.net)}</dd>
-          </div>
+          <KPICard tone="brand" label="Headcount" value={totals.headcount} hint="summed over served runs" />
+          <KPICard tone="violet" label="Gross" value={money(totals.gross)} hint="summed over served runs" />
+          <KPICard tone="teal" label="Deductions" value={money(totals.deductions)} hint="summed over served runs" />
+          <KPICard tone="green" label="Net" value={money(totals.net)} hint="summed over served runs" />
         </div>
       </SectionCard>
 
@@ -162,7 +151,7 @@ export default function PayrollOverview() {
                 accessor: (run) => (
                   <Link
                     to={tenantNav.to(`/platform/payroll/runs/${run.id}`)}
-                    className="text-brand-700 hover:underline"
+                    className="text-primary hover:underline underline-offset-2"
                   >
                     Open run #{run.id}
                   </Link>
@@ -172,7 +161,7 @@ export default function PayrollOverview() {
                 key: "links",
                 header: "Links",
                 accessor: (run) => (
-                  <span className="text-xs"><Link to={tenantNav.to(`/platform/payroll/runs/${run.id}`)} className="text-brand-700 hover:underline">Recon</Link> {run.status === "Approved" ? <span className="text-text-secondary">· Export</span> : null}</span>
+                  <span className="text-xs"><Link to={tenantNav.to(`/platform/payroll/runs/${run.id}`)} className="text-primary hover:underline underline-offset-2">Recon</Link> {run.status === "Approved" ? <span className="text-text-secondary">· Export</span> : null}</span>
                 ),
               },
             ]}

@@ -5,7 +5,7 @@
  */
 import { useCallback, useEffect, useState } from "react"
 import { Layout } from "@/components/Layout"
-import { Alert, Button, EmptyState, Input, LoadingRegion, PageHeader, RetryableAlert, SectionCard, TableSkeleton, Table } from "@/components/ui"
+import { Alert, Button, EmptyState, Input, KPICard, LoadingRegion, PageHeader, RetryableAlert, SectionCard, TableSkeleton, Table } from "@/components/ui"
 import { useAuth } from "@/context/AuthContext"
 import api, { errorMessage } from "@/lib/api"
 
@@ -168,62 +168,70 @@ export default function ERCases() {
   return (
     <Layout>
       <PageHeader compact title="Employee Relations" description="Confidential grievance, discipline, investigation and whistleblowing cases. HR only — subjects cannot see cases about themselves." />
-      <div className="max-w-5xl mx-auto px-6 py-10 space-y-8">
+      <div className="space-y-4">
         {notice && <Alert tone="success">{notice}</Alert>}
         {actionError && <Alert tone="error">{actionError}</Alert>}
         {!!error && <RetryableAlert err={error} title="Employee Relations cases could not be read." fallback="Employee Relations cases could not be read." onRetry={load} />}
 
-        {summary && (
-          <SectionCard compact title="Queue summary" description="Aggregates only — no names or narratives.">
-            <div className="flex flex-wrap gap-4 text-sm">
-              <span>Total: <strong>{summary.total}</strong></span>
-              {Object.entries(summary.by_status).map(([s, n]) => (
-                <span key={s}>{s}: <strong>{n}</strong></span>
-              ))}
-            </div>
-          </SectionCard>
-        )}
+        <SectionCard compact title="Queue summary" description="Live counts from the case queue — aggregates only, no names or narratives.">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <KPICard tone="brand" label="Total cases" value={summary?.total ?? "—"} loading={!summary && !error} />
+            {summary ? (
+              Object.entries(summary.by_status).map(([s, n]) => (
+                <KPICard key={s} tone="slate" label={s} value={n} />
+              ))
+            ) : (
+              <KPICard tone="slate" label="By status" value="—" loading={!error} />
+            )}
+          </div>
+        </SectionCard>
 
         <SectionCard compact title="Open a case" description="Reporter is your signed-in account. No anonymous intake.">
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
-              <label>Case type</label>
-              <select value={newType} onChange={e => setNewType(e.target.value)} className="w-full rounded border px-3 py-2">
+              <label htmlFor="er-new-type" className="field-label">Case type</label>
+              <select id="er-new-type" value={newType} onChange={e => setNewType(e.target.value)} className="input">
                 {CASE_TYPES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
               </select>
             </div>
             <div>
-              <label>Severity</label>
-              <select value={newSeverity} onChange={e => setNewSeverity(e.target.value)} className="w-full rounded border px-3 py-2">
+              <label htmlFor="er-new-severity" className="field-label">Severity</label>
+              <select id="er-new-severity" value={newSeverity} onChange={e => setNewSeverity(e.target.value)} className="input">
                 {SEVERITIES.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
             <div>
-              <label>Subject employee id (optional)</label>
-              <Input value={newSubject} onChange={e => setNewSubject(e.target.value)} placeholder="e.g. 12" />
+              <label htmlFor="er-new-subject" className="field-label">Subject employee id (optional)</label>
+              <Input id="er-new-subject" value={newSubject} onChange={e => setNewSubject(e.target.value)} placeholder="e.g. 12" />
             </div>
             <div>
-              <label>Assign to (username, optional)</label>
-              <Input value={newAssignee} onChange={e => setNewAssignee(e.target.value)} placeholder="investigator username" />
+              <label htmlFor="er-new-assignee" className="field-label">Assign to (username, optional)</label>
+              <Input id="er-new-assignee" value={newAssignee} onChange={e => setNewAssignee(e.target.value)} placeholder="investigator username" />
             </div>
             <div className="sm:col-span-2">
-              <label>Classification</label>
-              <Input value={newClassification} onChange={e => setNewClassification(e.target.value)} placeholder="Short classification, no narrative in audit" />
+              <label htmlFor="er-new-classification" className="field-label">Classification</label>
+              <Input id="er-new-classification" value={newClassification} onChange={e => setNewClassification(e.target.value)} placeholder="Short classification, no narrative in audit" />
             </div>
           </div>
           <Button onClick={createCase} disabled={saving} className="mt-4">{saving ? "Opening…" : "Open case"}</Button>
         </SectionCard>
 
         <SectionCard compact title="Queue" description="HR-only. Filter by status or type.">
-          <div className="flex gap-4 mb-4">
-            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="rounded border px-3 py-2">
-              <option value="">All statuses</option>
-              {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
-            <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} className="rounded border px-3 py-2">
-              <option value="">All types</option>
-              {CASE_TYPES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-            </select>
+          <div className="flex flex-wrap items-end gap-2 mb-4">
+            <div className="field">
+              <label htmlFor="er-filter-status" className="field-label">Status</label>
+              <select id="er-filter-status" value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="input">
+                <option value="">All statuses</option>
+                {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+            <div className="field">
+              <label htmlFor="er-filter-type" className="field-label">Type</label>
+              <select id="er-filter-type" value={typeFilter} onChange={e => setTypeFilter(e.target.value)} className="input">
+                <option value="">All types</option>
+                {CASE_TYPES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+              </select>
+            </div>
           </div>
           {cases.length === 0 ? (
             <EmptyState title="No cases" description="No Employee Relations cases match the current filters." />
@@ -249,13 +257,13 @@ export default function ERCases() {
           <SectionCard compact title={`Case #${selected.id} — ${selected.case_type}`} description={`Status: ${selected.status} · Severity: ${selected.severity} · Reported by ${selected.reported_by}`}>
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
-                <label>Assign to (username)</label>
-                <Input value={assignee} onChange={e => setAssignee(e.target.value)} placeholder="investigator username" />
+                <label htmlFor="er-detail-assignee" className="field-label">Assign to (username)</label>
+                <Input id="er-detail-assignee" value={assignee} onChange={e => setAssignee(e.target.value)} placeholder="investigator username" />
                 <Button onClick={saveAssignment} disabled={saving} className="mt-2">Save assignment</Button>
               </div>
               <div>
-                <label>Outcome (required to resolve)</label>
-                <Input value={outcome} onChange={e => setOutcome(e.target.value)} placeholder="Recorded action / finding" />
+                <label htmlFor="er-detail-outcome" className="field-label">Outcome (required to resolve)</label>
+                <Input id="er-detail-outcome" value={outcome} onChange={e => setOutcome(e.target.value)} placeholder="Recorded action / finding" />
                 {NEXT_STATUS[selected.status] && (
                   <Button onClick={advance} disabled={saving} className="mt-2">
                     Move to {NEXT_STATUS[selected.status]}
@@ -264,14 +272,14 @@ export default function ERCases() {
               </div>
             </div>
             <div className="mt-6">
-              <h4 className="font-semibold mb-2">Investigation notes (append-only)</h4>
+              <h4 className="section-title mb-2">Investigation notes (append-only)</h4>
               {comments.length === 0 ? <p className="text-sm text-fg-muted">No notes yet.</p> : (
                 <ul className="space-y-2 text-sm">
                   {comments.map(m => <li key={m.id}><strong>{m.author}:</strong> {m.comment}</li>)}
                 </ul>
               )}
               <div className="flex gap-2 mt-3">
-                <Input value={newComment} onChange={e => setNewComment(e.target.value)} placeholder="Add an investigation note" />
+                <Input id="er-new-comment" value={newComment} onChange={e => setNewComment(e.target.value)} placeholder="Add an investigation note" aria-label="Add an investigation note" />
                 <Button onClick={addComment} disabled={saving || !newComment.trim()}>Add note</Button>
               </div>
             </div>
