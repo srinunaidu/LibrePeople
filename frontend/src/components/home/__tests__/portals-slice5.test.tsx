@@ -4,8 +4,10 @@
  * FAIL-CLOSED: App.tsx admits HR to UserAdmin only (backend users CRUD
  * allows ADMIN_ROLES=(SuperAdmin,HR), impersonate is SuperAdmin-only) while
  * branding/entitlements (+ aliases) are SuperAdmin-only to match the
- * SuperAdmin-only settings/flags backend (client_onboarding.py). WorkspaceRail
- * admin list has <20 entries and no double aliases.
+ * SuperAdmin-only settings/flags backend (client_onboarding.py). The admin
+ * console (lib/nav.ts ADMIN_GROUPS) lists every canonical /admin/* route in
+ * named groups with no double aliases; pure aliases are guarded Navigate
+ * redirects in App.tsx.
  */
 
 import { readFileSync } from "fs"
@@ -97,16 +99,25 @@ describe("slice 5 — SuperAdminHome + gates + rail", () => {
     }
   })
 
-  test("AC4: WorkspaceRail admin list de-duplicated (<20, no double aliases)", () => {
-    const src = read("src/components/shell/WorkspaceRail.tsx")
-    const start = src.indexOf("const ADMIN_ITEMS")
-    const block = src.slice(start, src.indexOf("\n]", start))
-    const tos = [...block.matchAll(/to: "(\/admin\/[a-z0-9-]+)"/g)].map((m) => m[1])
-    expect(tos.length).toBeGreaterThan(0)
-    expect(tos.length).toBeLessThan(20)
-    expect(new Set(tos).size).toBe(tos.length)
-    for (const alias of ["user-admin", "tenant-branding", "module-entitlements", "workflow-approval", "integration-credentials", "backup-restore", "locale-config", "ad-03", "ad-09", "project-status", "design-gallery", "platform-showcase", "hr-01", "data-quality"]) {
-      expect(tos.some((t) => t.includes(alias)), alias).toBe(false)
+  test("AC4: admin console lists every canonical admin route in named groups (never flat)", () => {
+    const nav = read("src/lib/nav.ts")
+    // Eight named groups per the contract.
+    for (const name of ["Organization", "Talent", "Time & Scheduling", "Leave", "Pay & Benefits", "Performance & Learning", "Platform", "Compliance & Audit"]) {
+      expect(nav, name).toContain(`name: "${name}"`)
+    }
+    // Full coverage: every canonical /admin/* App.tsx route appears in the
+    // groups; aliases appear only in the ADMIN_ALIASES redirect table.
+    const app = read("src/App.tsx")
+    const appAdmin = [...app.matchAll(/<Route path="(\/admin\/[^"]+)"/g)].map((m) => m[1])
+    const aliasBlock = nav.slice(nav.indexOf("ADMIN_ALIASES"), nav.indexOf("export interface AdminConsoleItem"))
+    const groupBlock = nav.slice(nav.indexOf("ADMIN_GROUPS"))
+    const canonical = appAdmin.filter((p) => !new RegExp(`"${p}":`).test(aliasBlock))
+    expect(canonical.length).toBeGreaterThanOrEqual(90)
+    for (const p of canonical) {
+      expect(groupBlock, p).toContain(`"${p}"`)
+    }
+    for (const alias of ["user-admin", "tenant-branding", "module-entitlements", "workflow-approval", "integration-credentials", "backup-restore", "locale-config", "ad-03", "ad-09", "project-status", "design-gallery", "hr-01", "data-quality"]) {
+      expect(groupBlock.includes(`"/admin/${alias}"`), alias).toBe(false)
     }
   })
 

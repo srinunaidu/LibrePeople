@@ -1,72 +1,39 @@
 import { Command } from "cmdk"
 import { useEffect, useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { useAuth } from "@/context/AuthContext"
 import { useTenantNav } from "@/lib/tenantPath"
 import { cn } from "@/lib/utils"
 import {
-  IconCalendar,
-  IconChart,
-  IconClock,
-  IconDashboard,
-  IconExit,
-  IconGrid,
-  IconPalm,
-  IconSearch,
-  IconTarget,
-  IconUsers,
-  IconWallet,
-} from "@/components/icons"
-
-interface PaletteItem {
-  id: string
-  label: string
-  description?: string
-  icon: React.ComponentType<{ className?: string }>
-  keywords: string[]
-  to: string
-  group: string
-}
-
-const ITEMS: PaletteItem[] = [
-  { id: "home", label: "Go to Dashboard", description: "Overview and recent activity", icon: IconDashboard, keywords: ["home", "dashboard", "overview"], to: "/dashboard", group: "Navigate" },
-  { id: "people", label: "Go to People", description: "Employees, directory, org chart", icon: IconUsers, keywords: ["people", "employees", "directory", "org"], to: "/people", group: "Navigate" },
-  { id: "roster", label: "Go to Roster Builder", description: "Generate, adjust and publish roster versions", icon: IconCalendar, keywords: ["roster", "schedule", "solver", "publish", "shift"], to: "/scheduling/roster", group: "Navigate" },
-  { id: "time", label: "Go to Time & Attendance", description: "Clock in/out, timesheets", icon: IconClock, keywords: ["time", "attendance", "clock", "timesheet"], to: "/time", group: "Navigate" },
-  { id: "leave", label: "Go to Leave", description: "Requests, balances, types", icon: IconPalm, keywords: ["leave", "balance", "request", "pto", "pending leaves", "show pending leaves", "my leave"], to: "/leave", group: "Navigate" },
-  { id: "recruiting", label: "Go to Recruiting", description: "Requisitions, candidates, offers", icon: IconTarget, keywords: ["recruiting", "candidates", "offers", "hiring"], to: "/recruiting", group: "Navigate" },
-  { id: "payroll", label: "Go to Payroll", description: "Pay runs, components, payslips", icon: IconWallet, keywords: ["payroll", "pay", "salary", "payslip", "show payslip", "my payslip"], to: "/platform/payroll", group: "Navigate" },
-  { id: "performance", label: "Go to Performance", description: "Goals, reviews, compensation", icon: IconChart, keywords: ["performance", "goals", "reviews", "compensation"], to: "/platform/performance", group: "Navigate" },
-  { id: "learning", label: "Go to Learning", description: "Courses, certifications, talent", icon: IconGrid, keywords: ["learning", "courses", "certifications", "training"], to: "/platform/learning", group: "Navigate" },
-  { id: "reports", label: "Go to Reports", description: "Headcount, leave, labour cost", icon: IconChart, keywords: ["reports", "analytics", "headcount", "audit"], to: "/reports", group: "Navigate" },
-  { id: "admin", label: "Go to Admin", description: "Compliance, client onboarding", icon: IconExit, keywords: ["admin", "compliance", "client", "onboarding"], to: "/client-onboarding", group: "Navigate" },
-  { id: "import", label: "Go to Import / Export", description: "CSV import, dry run, commit", icon: IconGrid, keywords: ["import", "export", "csv", "migration"], to: "/import", group: "Navigate" },
-  { id: "jobs", label: "Go to Background Jobs", description: "Queue monitoring and failures", icon: IconGrid, keywords: ["jobs", "queue", "background", "worker"], to: "/jobs", group: "Navigate" },
-  { id: "mfa", label: "Go to Security (MFA)", description: "Two-factor enrolment and recovery", icon: IconGrid, keywords: ["mfa", "2fa", "totp", "security", "password"], to: "/mfa", group: "Navigate" },
-  { id: "design", label: "Go to Design System", description: "Component showcase", icon: IconGrid, keywords: ["design", "components", "showcase"], to: "/design", group: "Navigate" },
-]
+  allPaletteItems,
+  paletteItemsFor,
+  type PaletteItem,
+} from "@/lib/nav"
 
 /** Natural-language routing: keyword phrases → palette item. Exported for unit testing. */
-export function parseConversationalQuery(query: string): PaletteItem | null {
+export function parseConversationalQuery(query: string, role?: string | null): PaletteItem | null {
+  const items = role ? paletteItemsFor(role) : allPaletteItems()
   const q = query.toLowerCase().trim()
   // Direct keyword matching for conversational phrases
   const mappings: Array<{ phrases: string[]; itemId: string }> = [
     { phrases: ["pending leaves", "show pending leaves", "my leave requests", "leave requests"], itemId: "leave" },
     { phrases: ["payslip", "show payslip", "my payslip", "pay slip", "salary slip"], itemId: "payroll" },
     { phrases: ["time", "clock in", "timesheet", "attendance"], itemId: "time" },
-    { phrases: ["roster", "my shifts", "upcoming shifts"], itemId: "roster" },
-    { phrases: ["dashboard", "overview", "home"], itemId: "home" },
+    { phrases: ["roster", "my shifts", "upcoming shifts"], itemId: "time" },
+    { phrases: ["dashboard", "overview", "home"], itemId: "overview" },
     { phrases: ["people", "directory", "employees"], itemId: "people" },
     { phrases: ["reports", "analytics"], itemId: "reports" },
   ]
   for (const m of mappings) {
     if (m.phrases.some((p) => q.includes(p))) {
-      return ITEMS.find((i) => i.id === m.itemId) ?? null
+      return items.find((i) => i.id === m.itemId) ?? null
     }
   }
-  // Fallback to regular keyword search
-  const hit = ITEMS.find(
+  // Fallback to regular keyword search (multi-character keywords only, so
+  // short section keys like "er" cannot match inside ordinary words).
+  const hit = items.find(
     (item) =>
-      item.keywords.some((k) => q.includes(k.toLowerCase())) ||
+      item.keywords.some((k) => k.length > 2 && q.includes(k.toLowerCase())) ||
       item.label.toLowerCase().includes(q) ||
       item.description?.toLowerCase().includes(q)
   )
@@ -77,15 +44,19 @@ export function parseConversationalQuery(query: string): PaletteItem | null {
  * ⌘K command palette.
  *
  * Opens on the global ⌘K / Ctrl+K shortcut (dispatched by lib/keyboard) or
- * via the top-bar search trigger. Searches navigation destinations and runs
- * the selected action. Fully keyboard-driven: arrows to move, enter to run,
- * escape to close.
+ * via the top-bar search trigger. Entries are exactly the current role's
+ * visible sections plus its canonical admin links (lib/nav.ts) — no
+ * aliases, no hidden-role items. Fully keyboard-driven: arrows to move,
+ * enter to run, escape to close.
  */
 export function CommandPalette() {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
   const navigate = useNavigate()
   const tenantNav = useTenantNav()
+  const { user } = useAuth()
+
+  const items = useMemo(() => paletteItemsFor(user?.role), [user?.role])
 
   useEffect(() => {
     const openHandler = () => setOpen(true)
@@ -94,15 +65,21 @@ export function CommandPalette() {
   }, [])
 
   const filtered = useMemo(() => {
-    if (!query.trim()) return ITEMS
+    if (!query.trim()) return items
+    // Conversational query first ("show pending leaves"), then substring.
+    const conversational = parseConversationalQuery(query, user?.role)
     const q = query.toLowerCase()
-    return ITEMS.filter(
+    const substring = items.filter(
       (item) =>
         item.label.toLowerCase().includes(q) ||
         item.description?.toLowerCase().includes(q) ||
         item.keywords.some((k) => k.includes(q))
     )
-  }, [query])
+    if (conversational && !substring.some((i) => i.id === conversational.id)) {
+      return [conversational, ...substring]
+    }
+    return substring
+  }, [query, items, user?.role])
 
   const run = (item: PaletteItem) => {
     setOpen(false)
@@ -118,7 +95,6 @@ export function CommandPalette() {
       className="fixed left-1/2 top-[15%] z-[1500] w-full max-w-xl -translate-x-1/2 rounded-xl border border-border bg-surface-raised shadow-2xl overflow-hidden"
     >
       <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
-        <IconSearch className="w-4 h-4 text-fg-subtle shrink-0" aria-hidden="true" />
         <Command.Input
           value={query}
           onValueChange={setQuery}
@@ -160,7 +136,7 @@ export function CommandPalette() {
         ))}
       </Command.List>
 
-      <div className="flex items-center justify-between px-4 py-2 border-t border-border bg-surface-sunken">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-surface-sunken">
         <span className="text-[11px] text-fg-muted">
           <kbd className="rounded border border-border px-1 py-0.5 text-[10px]">↑↓</kbd> navigate ·{" "}
           <kbd className="rounded border border-border px-1 py-0.5 text-[10px]">↵</kbd> select
