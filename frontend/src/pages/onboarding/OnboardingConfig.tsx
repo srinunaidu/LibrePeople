@@ -13,6 +13,7 @@
 import { Fragment, useCallback, useEffect, useState } from "react"
 import { Layout } from "@/components/Layout"
 import {
+  Button,
   Select,Alert,
   EmptyState,
   LoadingRegion,
@@ -273,6 +274,10 @@ export default function OnboardingConfig() {
           <div className="p-5 text-sm text-text-secondary">No presets are published yet.</div>
         ) : (
           <div className="table-scroll">
+            {/* KIT EXCLUSION (contract: design-system-finish) — expandable preset
+                rows render a second <tr> with a colSpan={6} detail panel.
+                Kit Table headers are string-only and rows are one-row-per-item,
+                so this pattern stays on a raw table by design. */}
             <table className="table-base table-compact w-full text-sm">
               <caption className="sr-only">Onboarding presets</caption>
               <thead>
@@ -295,14 +300,14 @@ export default function OnboardingConfig() {
                       <td><StatusPill status={p.status} /></td>
                       <td className="max-w-[360px] truncate" title={p.modules.join(", ")}>{p.modules.join(", ") || "—"}</td>
                       <td>
-                        <button
-                          type="button"
-                          className="action-link"
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           aria-expanded={expandedPreset === p.id}
                           onClick={() => void togglePreset(p.id)}
                         >
                           {expandedPreset === p.id ? "Hide" : "View"}
-                        </button>
+                        </Button>
                       </td>
                     </tr>
                     {expandedPreset === p.id && (

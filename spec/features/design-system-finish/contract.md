@@ -55,9 +55,11 @@ Per-duplicate decisions (canonical + why):
    all use the barrel.
 4. AC-04 — Zero deep `ui/skeleton` (6) + `ui/card` (6) imports; all use the
    barrel.
-5. AC-05 — Zero raw `<table` outside `ui/table.tsx` internals and marketing;
-   all migrated pages render kit `Table` (`sortable={false}`, captions
-   preserved). Marketing `ProductMockup.tsx:122` exempt.
+5. AC-05 — Zero raw `<table` outside `ui/table.tsx` internals, marketing,
+   and the two documented kit-table exclusions (OnboardingConfig expandable
+   presets table, ComplianceCenter filing-txt preview); all migrated pages
+   render kit `Table` (`sortable={false}`, captions preserved). Marketing
+   `ProductMockup.tsx:122` exempt.
 6. AC-06 — Zero `badge-*` class usage outside StatusPill internals (tests
    excluded); status chips render via `StatusPill`.
 7. AC-07 — Tokens: `.dark` safe-text fixed, `.dark` blocks deduped, tenant
@@ -82,6 +84,14 @@ Per-duplicate decisions (canonical + why):
   express a pattern, leave it untouched and list it as excluded with reason.
 - No marketing-kit files touched (`marketing/*` out of scope, incl.
   `ProductMockup.tsx:122`).
+- Kit-table exclusions (left raw by design, exclusion comment in code; the
+  kit cannot express these patterns):
+  - `pages/onboarding/OnboardingConfig.tsx` presets table — expandable rows
+    render a second `<tr>` with a `colSpan={6}` detail panel; kit Table
+    headers are string-only and rows are one-row-per-item.
+  - `pages/admin/ComplianceCenter.tsx` filing-txt preview table — rows are
+    comma-split at runtime with comment/header/body row kinds and a dynamic
+    column count, not tabular data with fixed string headers.
 - No screenshots committed to the repo (`/tmp/phase-b-finish/` only).
 - No push to remote; work stays on `agent/ux/phase-b-finish`.
 
@@ -98,7 +108,8 @@ After EACH batch (payroll, admin, rest):
 - `npm run build` — must succeed.
 - `npm run test:unit` — full suite must be 100% green; record exact count.
 - Grep gates: zero non-barrel Card/StatusPill defs; zero raw `<table>`
-  outside `ui/table` + marketing; zero `badge-*` outside StatusPill
+  outside `ui/table` + marketing + the two documented kit-table exclusions;
+  zero `badge-*` outside StatusPill
   internals; zero deep `ui/(card|status-pill|skeleton)` imports; zero
   `@radix-ui/react-dialog` outside `ui/modal`.
 
