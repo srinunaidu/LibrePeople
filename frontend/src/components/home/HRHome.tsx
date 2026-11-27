@@ -86,7 +86,7 @@ export default function HRHome() {
   if (loading) {
     return (
       <Layout>
-        <PageHeader icon={<IconUsers />} title="HR Command Center" description="Your workforce action inbox." />
+        <PageHeader compact icon={<IconUsers />} title="HR Command Center" description="Your workforce action inbox." />
         <LoadingRegion label="Loading HR data">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-0">
             {Array.from({ length: 8 }).map((_, i) => <div key={i} className="skeleton h-28" />)}
@@ -99,6 +99,7 @@ export default function HRHome() {
   return (
     <Layout>
       <PageHeader
+        compact
         icon={<IconUsers />}
         title="HR Command Center"
         description="Action inbox, headcount snapshot, and recent hires and exits."

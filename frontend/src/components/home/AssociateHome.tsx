@@ -136,7 +136,7 @@ export default function AssociateHome() {
   if (loading) {
     return (
       <Layout>
-        <PageHeader icon={<IconSparkle />} title="My Work" description="Your personal workspace." />
+        <PageHeader compact icon={<IconSparkle />} title="My Work" description="Your personal workspace." />
         <LoadingRegion label="Loading your workspace">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-0">
             {Array.from({ length: 8 }).map((_, i) => (
@@ -151,6 +151,7 @@ export default function AssociateHome() {
   return (
     <Layout>
       <PageHeader
+        compact
         icon={<IconSparkle />}
         title={`Good ${greeting()}, ${user?.username || "there"}`}
         description="Your personal workspace — clock, leave, shifts, payslips and tasks."
