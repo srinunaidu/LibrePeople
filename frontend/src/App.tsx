@@ -78,6 +78,7 @@ const ModuleEntitlements = lazy(() => import("@/pages/admin/ModuleEntitlements")
 const WorkflowApproval = lazy(() => import("@/pages/admin/WorkflowApproval"))
 const IntegrationCredentials = lazy(() => import("@/pages/admin/IntegrationCredentials"))
 const BackupRestore = lazy(() => import("@/pages/admin/BackupRestore"))
+const Updates = lazy(() => import("@/pages/admin/Updates"))
 const FeatureFlags = lazy(() => import("@/pages/admin/FeatureFlags"))
 const LocaleConfig = lazy(() => import("@/pages/admin/LocaleConfig"))
 const RetentionExport = lazy(() => import("@/pages/admin/RetentionExport"))
@@ -268,6 +269,7 @@ function AppRoutes() {
       <Route path="/admin/workflow" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><WorkflowApproval /></ProtectedRoute>} />
       <Route path="/admin/integrations" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><IntegrationCredentials /></ProtectedRoute>} />
       <Route path="/admin/backup" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><BackupRestore /></ProtectedRoute>} />
+      <Route path="/admin/updates" element={<ProtectedRoute roles={["SuperAdmin"]}><Updates /></ProtectedRoute>} />
       <Route path="/admin/feature-flags" element={<ProtectedRoute roles={["SuperAdmin"]}><FeatureFlags /></ProtectedRoute>} />
       <Route path="/admin/locale" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><LocaleConfig /></ProtectedRoute>} />
       <Route path="/admin/retention-export" element={<ProtectedRoute roles={["SuperAdmin", "HR"]}><RetentionExport /></ProtectedRoute>} />
