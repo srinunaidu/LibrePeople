@@ -62,25 +62,26 @@ export default function HRHelpCases() {
     } catch (e) { setActionError(errorMessage(e, "The action could not be completed.")) } finally { setSaving(false) }
   }
 
-  if (!canWrite) return <Layout><EmptyState title="Not visible for your role" description={`This screen requires SuperAdmin; your role is ${user?.role || "unknown"}.`} /></Layout>
+  if (!canWrite) return <Layout><PageHeader compact title="HR Help Desk" description="Help-desk configuration for this install." /><EmptyState title="Not visible for your role" description={`This screen requires SuperAdmin; your role is ${user?.role || "unknown"}.`} /></Layout>
 
-  if (loading) return <LoadingRegion label="HR Help/Cases"><TableSkeleton rows={4} cols={4} /></LoadingRegion>
+  if (loading) return <Layout><PageHeader compact title="HR Help Desk" description="Help-desk configuration for this install." /><LoadingRegion label="HR Help Desk"><TableSkeleton rows={4} cols={4} /></LoadingRegion></Layout>
 
   return (
-      <>
-    <PageHeader compact title="HR Help Desk + Cases + SLA + Escalation" description="BN-04 · HR help/cases + SLA + escalation · depends HR-01 (shipped R2) + AD-04 (shipped R1) · reads /clients/:slug/feature-flags; AD-07 audit on save." />
-      <div className="max-w-3xl mx-auto px-6 py-10 space-y-8">
+    <Layout>
+      <PageHeader compact title="HR Help Desk" description="Default case type and response-time target for employee help requests. Saved per install." />
+      <div className="space-y-4">
         {notice && <Alert tone="success">{notice}</Alert>}
         {actionError && <Alert tone="error">{actionError}</Alert>}
-        {!!error && <RetryableAlert err={error} title="The hr help desk + cases + sla + escalation could not be read." fallback="The hr help desk + cases + sla + escalation could not be read." onRetry={load} />}
-        <SectionCard compact title="Help desk configuration" description="Per-tenant from /clients/:slug/feature-flags.">
+        {!!error && <RetryableAlert err={error} title="The help-desk configuration could not be read." fallback="The help-desk configuration could not be read." onRetry={load} />}
+        <SectionCard compact title="Help desk configuration" description="Defaults applied to new help requests.">
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
-              <label>Case type</label>
+              <label htmlFor="hd-case-type" className="field-label">Case type</label>
               <select
+                id="hd-case-type"
                 value={caseType}
                 onChange={e => setCaseType(e.target.value)}
-                className="w-full rounded border px-3 py-2"
+                className="input"
               >
                 {CASE_TYPES.map(c => (
                   <option key={c.value} value={c.value}>{c.label}</option>
@@ -88,13 +89,13 @@ export default function HRHelpCases() {
               </select>
             </div>
             <div>
-              <label>SLA hours</label>
-              <Input value={slaHours} onChange={e => setSlaHours(Number(e.target.value) || 24)} disabled={!canWrite || saving || !clientId} className="font-mono" />
+              <label htmlFor="hd-sla-hours" className="field-label">SLA hours</label>
+              <Input id="hd-sla-hours" value={slaHours} onChange={e => setSlaHours(Number(e.target.value) || 24)} disabled={!canWrite || saving || !clientId} className="font-mono" inputMode="numeric" />
             </div>
           </div>
           <Button onClick={save} disabled={!canWrite || saving || !clientId} className="mt-4">{saving ? "Saving…" : "Save help desk config"}</Button>
         </SectionCard>
-        <div className="text-xs text-fg-muted">BN-04 · R3 · depends HR-01 + AD-04 · no fabricated help desk data.</div>
       </div>
-  </>)
+    </Layout>
+  )
 }

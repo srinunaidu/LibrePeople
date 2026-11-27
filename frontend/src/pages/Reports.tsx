@@ -4,9 +4,7 @@ import {
   Button,
   Table,
   Alert,
-  CardSkeleton,
   EmptyState,
-  LoadingRegion,
   PageHeader,
   SectionCard,
   KPICard,
@@ -154,14 +152,14 @@ function MovementSection({ teamOnly }: { teamOnly: boolean }) {
       }>
       <form className="flex flex-wrap gap-2 px-5 pt-4" onSubmit={(e) => { e.preventDefault(); apply() }}
         aria-label="Movement filters">
-        <label className="text-xs">From <input type="date" value={filters.from} onChange={set("from")} className="input" aria-label="From date" /></label>
-        <label className="text-xs">To <input type="date" value={filters.to} onChange={set("to")} className="input" aria-label="To date" /></label>
-        <label className="text-xs">Year <input type="number" min={1900} max={2100} value={filters.year} onChange={set("year")} className="input w-24" aria-label="Attrition year" placeholder="2026" /></label>
+        <label htmlFor="mv-from" className="text-xs">From <input id="mv-from" type="date" value={filters.from} onChange={set("from")} className="input" aria-label="From date" /></label>
+        <label htmlFor="mv-to" className="text-xs">To <input id="mv-to" type="date" value={filters.to} onChange={set("to")} className="input" aria-label="To date" /></label>
+        <label htmlFor="mv-year" className="text-xs">Year <input id="mv-year" type="number" min={1900} max={2100} value={filters.year} onChange={set("year")} className="input w-24" aria-label="Attrition year" placeholder="2026" /></label>
         {!teamOnly && (
           <>
-            <label className="text-xs">Entity ID <input type="number" value={filters.entity_id} onChange={set("entity_id")} className="input w-24" aria-label="Legal entity ID" /></label>
-            <label className="text-xs">Dept ID <input type="number" value={filters.department_id} onChange={set("department_id")} className="input w-24" aria-label="Department ID" /></label>
-            <label className="text-xs">Location ID <input type="number" value={filters.location_id} onChange={set("location_id")} className="input w-24" aria-label="Location ID" /></label>
+            <label htmlFor="mv-entity" className="text-xs">Entity ID <input id="mv-entity" type="number" value={filters.entity_id} onChange={set("entity_id")} className="input w-24" aria-label="Legal entity ID" /></label>
+            <label htmlFor="mv-dept" className="text-xs">Dept ID <input id="mv-dept" type="number" value={filters.department_id} onChange={set("department_id")} className="input w-24" aria-label="Department ID" /></label>
+            <label htmlFor="mv-loc" className="text-xs">Location ID <input id="mv-loc" type="number" value={filters.location_id} onChange={set("location_id")} className="input w-24" aria-label="Location ID" /></label>
           </>
         )}
         <Button variant="primary" className="self-end" type="submit" disabled={loading}>{loading ? "Loading…" : "Apply"}</Button>
@@ -169,16 +167,14 @@ function MovementSection({ teamOnly }: { teamOnly: boolean }) {
       <div className="px-5 py-4" aria-live="polite">
         {mvError ? (
           <RetryableAlert err={mvError} title="Movement reports unavailable" fallback="Movement reports unavailable." />
-        ) : loading ? (
-          <TableSkeleton rows={4} cols={3} />
         ) : (
           <>
             <div className="grid grid-cols-3 gap-4 mb-4">
-              <KPICard tone="green" label="Joiners" value={joiners?.length ?? 0} hint="Hired in range" />
-              <KPICard tone="amber" label="Leavers" value={leavers?.length ?? 0} hint="Terminated in range" />
-              <KPICard tone="brand" label="Attrition" value={attrition ? `${attrition.attrition_pct}%` : "—"} hint={attrition ? `${attrition.leavers} leavers · avg headcount ${attrition.average_headcount}` : "Annual"} />
+              <KPICard tone="green" label="Joiners" value={joiners?.length ?? 0} hint="Hired in range" loading={loading} />
+              <KPICard tone="amber" label="Leavers" value={leavers?.length ?? 0} hint="Terminated in range" loading={loading} />
+              <KPICard tone="brand" label="Attrition" value={attrition ? `${attrition.attrition_pct}%` : "—"} hint={attrition ? `${attrition.leavers} leavers · avg headcount ${attrition.average_headcount}` : "Annual"} loading={loading} />
             </div>
-            {(joiners?.length ?? 0) + (leavers?.length ?? 0) === 0 && (
+            {!loading && (joiners?.length ?? 0) + (leavers?.length ?? 0) === 0 && (
               <EmptyState title="No movement in range" description="Nobody joined or left under these filters in the selected period." />
             )}
           </>
@@ -332,24 +328,12 @@ export default function Reports() {
         <>
       {status === "error" && !!error && <RetryableAlert err={error} title="The report could not be read" fallback="The report could not be read." onRetry={() => window.location.reload()} />}
 
-      {status === "loading" && (
-        <LoadingRegion label="Loading reports">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <CardSkeleton key={i} />
-            ))}
-          </div>
-        </LoadingRegion>
-      )}
-
-      {status === "ready" && dash && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
-          <KPICard tone="brand" icon={<IconUsers />} label="Active employees" value={dash.employees.active} hint={`${dash.employees.total} total records`} />
-          <KPICard tone="violet" label="Open requisitions" value={dash.recruiting.open_requisitions} hint={`${dash.recruiting.candidates} candidates · ${dash.recruiting.offers} offers`} />
-          <KPICard tone="amber" label="Pending approvals" value={dash.approvals.pending_leave + dash.approvals.pending_timesheets + dash.approvals.pending_shift_swaps} hint="Leave, timesheets and swaps" />
-          <KPICard tone="green" label="Present today" value={dash.attendance_today.present} hint={`${dash.attendance_today.total_hours || 0}h logged`} />
-        </div>
-      )}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
+        <KPICard tone="brand" icon={<IconUsers />} label="Active employees" value={dash?.employees.active ?? "—"} hint={dash ? `${dash.employees.total} total records` : "Live from the dashboard report"} loading={status === "loading"} />
+        <KPICard tone="violet" label="Open requisitions" value={dash?.recruiting.open_requisitions ?? "—"} hint={dash ? `${dash.recruiting.candidates} candidates · ${dash.recruiting.offers} offers` : "Live from the dashboard report"} loading={status === "loading"} />
+        <KPICard tone="amber" label="Pending approvals" value={dash ? dash.approvals.pending_leave + dash.approvals.pending_timesheets + dash.approvals.pending_shift_swaps : "—"} hint="Leave, timesheets and swaps" loading={status === "loading"} />
+        <KPICard tone="green" label="Present today" value={dash?.attendance_today.present ?? "—"} hint={dash ? `${dash.attendance_today.total_hours || 0}h logged` : "Live from the dashboard report"} loading={status === "loading"} />
+      </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-5 mb-5">
         <SectionCard compact icon={<IconUsers />} title="Headcount by department"

@@ -348,7 +348,8 @@ export default function Assets() {
       ) : (
         <>
           {isAdmin && (
-            <section className="card mb-5" aria-label="Register an asset">
+            <SectionCard compact icon={<IconBriefcase />} title="Register a new asset"
+              description="Tag and name are required; the asset starts In stock.">
               <div className="toolbar">
                 <div className="field">
                   <label htmlFor="ast-tag" className="field-label">Tag (required, unique)</label>
@@ -380,7 +381,7 @@ export default function Assets() {
                   {busy === "create" ? "Registering…" : "Register asset"}
                 </Button>
               </div>
-            </section>
+            </SectionCard>
           )}
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 mb-5">
@@ -506,7 +507,7 @@ export default function Assets() {
                         onChange={(e) => setRetireReason(e.target.value)}
                         placeholder="e.g. end of life, beyond repair" />
                     </div>
-                    <label className="flex items-center gap-2 text-sm">
+                    <label htmlFor="ast-retire-confirm" className="flex items-center gap-2 text-sm">
                       <input id="ast-retire-confirm" type="checkbox" checked={retireConfirm}
                         onChange={(e) => setRetireConfirm(e.target.checked)} />
                       I confirm retirement is final
@@ -536,7 +537,7 @@ export default function Assets() {
                   <Button variant="secondary" onClick={() => setSelected(null)}>Close</Button>
                 </div>
                 <div className="mt-4 border-t pt-3">
-                  <h4 className="font-medium mb-2">Metadata (status is never editable)</h4>
+                  <h4 className="section-title mb-2">Metadata (status is never editable)</h4>
                   <div className="toolbar mb-2">
                     <div className="field">
                       <label htmlFor="ast-edit-tag" className="field-label">Tag</label>
@@ -572,7 +573,7 @@ export default function Assets() {
                   </div>
                 </div>
                 <div className="mt-4 border-t pt-3">
-                  <h4 className="font-medium mb-2">Custody history</h4>
+                  <h4 className="section-title mb-2">Custody history</h4>
                   {historyLoading ? (
                     <p className="text-sm text-fg-muted">Loading history…</p>
                   ) : history.length === 0 ? (

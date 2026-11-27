@@ -280,7 +280,7 @@ export default function PayRunDetail() {
   }
 
   const backLink = (
-    <Link to={tenantNav.to("/platform/payroll/runs")} className="text-brand-700 hover:underline">
+    <Link to={tenantNav.to("/platform/payroll/runs")} className="text-primary hover:underline underline-offset-2">
       ← All pay runs
     </Link>
   )

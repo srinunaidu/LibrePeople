@@ -611,8 +611,8 @@ export default function ComplianceCenter() {
             <SectionCard compact title="India payroll compliance reports" description="GET /reports/payroll?jurisdiction=IN&period=YYYY-MM — Payroll Register (all payslips with statutory columns), TDS liability (tax+rebate), PF/ESI summary (EE/ER + ceilings 15000/21000), PT by state. Requires verified pack; pending shows rule_pack_not_verified gate (409). Unverified export refused like docs/PAYROLL.md §3.3.">
               <div className="flex flex-wrap gap-3 items-end">
                 <div>
-                  <label className="block text-xs font-medium mb-1">Period (YYYY-MM)</label>
-                  <Input value={payrollPeriod} onChange={e=>setPayrollPeriod(e.target.value)} placeholder="e.g. 2025-10" style={{ width: 160 }} />
+                  <label htmlFor="cc-payroll-period" className="block text-xs font-medium mb-1">Period (YYYY-MM)</label>
+                  <Input id="cc-payroll-period" value={payrollPeriod} onChange={e=>setPayrollPeriod(e.target.value)} placeholder="e.g. 2025-10" style={{ width: 160 }} />
                 </div>
                 <Button onClick={loadPayrollReports} loading={payrollLoading}>Load IN reports</Button>
                 <span className="text-xs text-[color:var(--fg-muted)]">Jurisdiction=IN fixed · verified pack required · pending returns 409 rule_pack_not_verified</span>
@@ -676,10 +676,11 @@ export default function ComplianceCenter() {
 
                 <div className="flex flex-wrap gap-3 items-end">
                   <div>
-                    <label className="block text-xs font-medium mb-1">
+                    <label htmlFor="cc-filing-period" className="block text-xs font-medium mb-1">
                       Period {filingType === "form16_annual" ? "(YYYY or YYYY-MM)" : "(YYYY-MM)"}
                     </label>
                     <Input
+                      id="cc-filing-period"
                       value={filingPeriod}
                       onChange={(e) => setFilingPeriod(e.target.value)}
                       placeholder={filingType === "form16_annual" ? "e.g. 2025 or 2025-10" : "e.g. 2025-10"}
@@ -689,8 +690,9 @@ export default function ComplianceCenter() {
                   </div>
                   {filingType === "pt_challan" && (
                     <div>
-                      <label className="block text-xs font-medium mb-1">PT state</label>
+                      <label htmlFor="cc-filing-state" className="block text-xs font-medium mb-1">PT state</label>
                       <Select
+                        id="cc-filing-state"
                         value={filingState}
                         onChange={(e) => setFilingState(e.target.value)}
                         style={{ width: 140 }}

@@ -6,8 +6,6 @@ import {
   Table,
   Alert,
   EmptyState,
-  LoadingRegion,
-  Meter,
   PageHeader,
   SectionCard,
   KPICard,
@@ -173,26 +171,17 @@ export default function Scheduling() {
       )}
       {notice && <Alert tone="success">{notice}</Alert>}
 
-      {loading ? (
-        <LoadingRegion label="Loading scheduling data">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="skeleton h-24" />
-            ))}
-          </div>
-        </LoadingRegion>
-      ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
-          <KPICard tone="brand" label="Shift templates" value={templates.length} />
-          <KPICard tone="violet" label="Night shifts" value={nightShifts} />
-          <KPICard tone="teal" label="Scheduled people" value={scheduledPeople} hint={`${roster.length} roster entries`} />
-          <KPICard tone={pendingSwaps > 0 ? "amber" : "slate"} label="Pending swaps" value={pendingSwaps} />
-        </div>
-      )}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
+        <KPICard tone="brand" label="Shift templates" value={templates.length} loading={loading} />
+        <KPICard tone="violet" label="Night shifts" value={nightShifts} loading={loading} />
+        <KPICard tone="teal" label="Scheduled people" value={scheduledPeople} hint={`${roster.length} roster entries`} loading={loading} />
+        <KPICard tone={pendingSwaps > 0 ? "amber" : "slate"} label="Pending swaps" value={pendingSwaps} loading={loading} />
+      </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 mb-5">
         {/* Shift templates */}
-        <section className="card">
+        <SectionCard compact icon={<IconCalendar />} title="Shift templates"
+          description="Reusable shift definitions used across rosters.">
           {isAdmin ? (
             <div className="toolbar">
               <div className="field grow min-w-[140px]">
@@ -240,19 +229,11 @@ export default function Scheduling() {
               />
             </div>
           )}
-        </section>
+        </SectionCard>
 
         {/* Roster generation — the legacy single-shift generator */}
-        <section className="card">
-          <h2 className="px-5 pt-4 font-semibold">Roster generation (legacy single-shift)</h2>
-          <p className="px-5 pt-1 pb-2 text-xs text-text-secondary">
-            Expands one shift for one employee. Whole-team rosters are generated with the
-            constraint solver in the{" "}
-            <Link to="/scheduling/roster" className="text-primary underline underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600">
-              Roster Builder
-            </Link>{" "}
-            — prefer that screen for real schedules.
-          </p>
+        <SectionCard compact icon={<IconCalendar />} title="Roster generation (legacy single-shift)"
+          description="Expands one shift for one employee. Whole-team rosters are generated with the constraint solver in the Roster Builder — prefer that screen for real schedules.">
           {isAdmin ? (
             <div className="toolbar">
               <div className="field min-w-[160px]">
@@ -303,11 +284,11 @@ export default function Scheduling() {
             </p>
           )}
           {isAdmin && (
-            <div className="px-5 py-4 text-sm text-text-secondary border-t border-border">
+            <p className="px-5 py-4 text-sm text-text-secondary border-t border-border">
               Roster generation expands the selected shift across the date range for the chosen employee.
-            </div>
+            </p>
           )}
-        </section>
+        </SectionCard>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">

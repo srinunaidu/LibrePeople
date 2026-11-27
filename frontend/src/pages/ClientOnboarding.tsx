@@ -178,7 +178,7 @@ export default function ClientOnboarding() {
                   aria-current={selected === c.id ? "true" : undefined}
                   className={`w-full text-left px-3 py-2.5 rounded-md text-sm transition-colors ${
                     selected === c.id
-                      ? "bg-[rgba(37,99,235,0.12)] text-primary"
+                      ? "bg-brand-50 text-primary"
                       : "hover:bg-surface-inset text-fg"
                   }`}
                 >

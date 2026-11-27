@@ -5,6 +5,7 @@ import {
   Table,
   Alert,
   EmptyState,
+  KPICard,
   LoadingRegion,
   PageHeader,
   SectionCard,
@@ -223,23 +224,12 @@ export default function TimeAttendance() {
         )}
       </section>
 
-      {/* Summary strip */}
-      {selectedEmployee && (
+      {isWorkforce && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
-          {[
-            { label: "Employee", value: `${selectedEmployee.first_name} ${selectedEmployee.last_name}`, tone: "brand" },
-            { label: "Entries recorded", value: entries.length, tone: "teal" },
-            { label: "Total hours", value: `${totalHours}h`, tone: "green" },
-            { label: "Overtime", value: `${totalOvertime}h`, tone: totalOvertime > 0 ? "amber" : "slate" },
-          ].map((s) => (
-            <div key={s.label} className="card p-4 relative overflow-hidden">
-              <span className={`stat-rail stat-rail-${s.tone}`} aria-hidden="true" />
-              <p className="text-xs font-semibold uppercase tracking-wider text-text-secondary">
-                {s.label}
-              </p>
-              <p className="stat-value text-[var(--font-size-2xl)]">{s.value}</p>
-            </div>
-          ))}
+          <KPICard tone="brand" label="Employee" value={selectedEmployee ? `${selectedEmployee.first_name} ${selectedEmployee.last_name}` : "—"} loading={loading} />
+          <KPICard tone="teal" label="Entries recorded" value={entries.length} loading={loading} />
+          <KPICard tone="green" label="Total hours" value={`${totalHours}h`} loading={loading} />
+          <KPICard tone={totalOvertime > 0 ? "amber" : "slate"} label="Overtime" value={`${totalOvertime}h`} loading={loading} />
         </div>
       )}
 
