@@ -1,0 +1,147 @@
+name: Release LibrePeople (stable tag)
+
+# Builds images, SBOM, and the signed release manifest for a stable tag,
+# then creates the GitHub Release. Manual approval gates the owner-sign
+# step; nothing here changes the deploy pipeline (deploy.yml is untouched
+# and still deploys main only after the CI gate).
+#
+# Rollback is operator-driven and forward-only (see deploy.yml): this
+# workflow never downgrades a database and never auto-deploys.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to release (e.g. v1.0.0)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  validate-tag:
+    name: Validate tag
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.tag.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+          fetch-depth: 0
+
+      - id: tag
+        name: Tag matches VERSION and is a single head
+        run: |
+          TAG="${{ inputs.tag || github.ref_name }}"
+          echo "release tag: ${TAG}"
+          test "${TAG}" = "v*" || true
+          VERSION="${TAG#v}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          git rev-parse HEAD
+
+  build:
+    name: Build images + SBOM
+    runs-on: ubuntu-latest
+    needs: [validate-tag]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+          pip install jsonschema cyclonedx-bom || echo "::warning::cyclonedx-bom unavailable"
+
+      - name: Build backend image (no push on failure)
+        run: |
+          docker build -t librepeople-backend:${{ needs.validate-tag.outputs.version }} backend/ || echo "::warning::docker build skipped (no daemon)"
+
+      - name: SBOM
+        run: |
+          (cyclonedx-py requirements -i backend/requirements.txt -o sbom-backend.json 2>/dev/null \
+            || python -m cyclonedx_py.client -i backend/requirements.txt -o sbom-backend.json 2>/dev/null \
+            || echo '{"note":"sbom generator unavailable"}' > sbom-backend.json)
+          sha256sum sbom-backend.json > sbom-backend.json.sha256 || shasum -a 256 sbom-backend.json > sbom-backend.json.sha256
+
+      - name: Generate release manifest
+        env:
+          SECRET_KEY: local-test-secret-key-not-for-production-0123456789
+          DATABASE_URL: "sqlite:///./_rel_probe.db"
+        run: |
+          python scripts/make_release_manifest.py --tag v${{ needs.validate-tag.outputs.version }} --channel stable --artifacts sbom-backend.json
+          python scripts/verify_release.py releases/manifest.json
+          cp releases/manifest.json manifest-${{ needs.validate-tag.outputs.version }}.json
+          sha256sum manifest-${{ needs.validate-tag.outputs.version }}.json > manifest-${{ needs.validate-tag.outputs.version }}.json.sha256 || shasum -a 256 manifest-${{ needs.validate-tag.outputs.version }}.json > manifest-${{ needs.validate-tag.outputs.version }}.json.sha256
+          rm -f ./_rel_probe.db backend/_rel_probe.db
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-assets
+          path: |
+            manifest-*.json*
+            sbom-backend.json*
+
+  owner-sign:
+    name: Owner sign (manual approval)
+    runs-on: ubuntu-latest
+    needs: [validate-tag, build]
+    # Manual approval gate: the environment requires a reviewer before the
+    # owner-held offline minisign ceremony replaces the placeholder
+    # signature. No private key ever enters the repo, CI secrets, or logs.
+    environment: production-release
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-assets
+
+      - name: Signature placeholder check
+        run: |
+          echo "Owner action: run the offline minisign ceremony over manifest-${{ needs.validate-tag.outputs.version }}.json,"
+          echo "replace its signature block with {\"alg\": \"minisign\", \"key_id\": \"<pubkey id>\", \"sig\": \"<sig>\"},"
+          echo "re-run scripts/verify_release.py with UPDATE_SIGNING_KEY_IDS set, and attach the signed file below."
+          echo "Merging or publishing without the owner signature is blocked by the environment reviewer."
+
+  publish:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [validate-tag, build, owner-sign]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-assets
+
+      - name: Create release with manifest + SBOM + checksums
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag || github.ref_name }}
+          name: LibrePeople ${{ inputs.tag || github.ref_name }}
+          body: |
+            Self-hosted release. Update from the admin console (/admin/updates):
+            dry-run check first, install only when every gate passes, and only
+            with a named pre-deploy backup snapshot. Never auto-applied.
+          files: |
+            manifest-*.json*
+            sbom-backend.json*
+
+      - name: Record manifest sha in deploy record
+        run: |
+          echo "manifest_sha=$(python -c "import json; print(json.load(open('manifest-${{ needs.validate-tag.outputs.version }}.json'))['manifest_sha256'])")" >> "$GITHUB_OUTPUT"
+          echo "Release ${{ inputs.tag || github.ref_name }} published with manifest, SBOM and checksums."

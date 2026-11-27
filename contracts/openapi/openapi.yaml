@@ -770,6 +770,147 @@ paths:
           $ref: '#/components/responses/InternalError'
         '503':
           $ref: '#/components/responses/DependencyUnavailable'
+  /admin/updates/available:
+    get:
+      operationId: adminGetUpdateAvailable
+      tags:
+      - admin
+      security:
+      - bearerAuth: []
+      summary: Read the local release manifest
+      description: Returns the local releases/manifest.json copy, verified before display (checksum chain
+        + signature key-id allow-list). A dev-ephemeral signature is flagged, never silent. Remote fetch
+        happens only with the owner double opt-in from a pinned host; both default off, so no egress.
+        SuperAdmin only. Read only.
+      x-lifecycle: released
+      responses:
+        '200':
+          description: The verified local release manifest.
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /admin/updates/check:
+    post:
+      operationId: adminPostUpdateCheck
+      tags:
+      - admin
+      security:
+      - bearerAuth: []
+      summary: Run the pre-install gates
+      description: Runs the fail-closed pre-install gates (compat, single head, disk space, backup freshness,
+        migration plan) and stages an audit row. Any failed gate answers 409 with a named remediation
+        per gate. SuperAdmin only. Changes nothing else.
+      x-lifecycle: released
+      responses:
+        '200':
+          description: Every gate passed.
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /admin/updates/current:
+    get:
+      operationId: adminGetUpdateCurrent
+      tags:
+      - admin
+      security:
+      - bearerAuth: []
+      summary: Read the installed version
+      description: Returns the installed application version and the migration state (current revision
+        vs codebase head). SuperAdmin only. Read only.
+      x-lifecycle: released
+      responses:
+        '200':
+          description: The installed version and migration state.
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /admin/updates/history:
+    get:
+      operationId: adminGetUpdateHistory
+      tags:
+      - admin
+      security:
+      - bearerAuth: []
+      summary: List install attempts
+      description: Lists the install attempts recorded by this process. The audit chain is the durable
+        record. SuperAdmin only. Read only.
+      x-lifecycle: released
+      responses:
+        '200':
+          description: The recorded install attempts.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  entries:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UpdateHistoryEntry'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /admin/updates/install:
+    post:
+      operationId: adminPostUpdateInstall
+      tags:
+      - admin
+      security:
+      - bearerAuth: []
+      summary: Record an update install attempt
+      description: 'Re-runs the gates non-dry-run against the pinned manifest_sha256, records update_history
+        (in-memory + audit row), and refuses on any gate fail. The actual code deploy stays operator-driven;
+        this process never overwrites its own code. SuperAdmin only. Forward-only: no auto-downgrade.'
+      x-lifecycle: released
+      responses:
+        '200':
+          description: The install attempt was accepted and staged.
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
   /applications:
     get:
       operationId: recruitingListApplications
@@ -15274,3 +15415,42 @@ components:
             type: array
             items:
               $ref: '#/components/schemas/ForecastAccuracyRecord'
+    UpdateGate:
+      type: object
+      description: 'One fail-closed pre-install gate: name, pass/fail, and the named remediation when
+        it fails. All gates must pass before an install.'
+      required:
+      - gate
+      - passed
+      - remediation
+      properties:
+        gate:
+          type: string
+        passed:
+          type: boolean
+        remediation:
+          type: string
+        plan:
+          type: string
+          nullable: true
+    UpdateHistoryEntry:
+      type: object
+      description: One recorded install attempt (in-process log; the audit chain is the durable record).
+      properties:
+        version:
+          type: string
+        manifest_sha256:
+          type: string
+        actor:
+          type: string
+        dry_run:
+          type: boolean
+        accepted:
+          type: boolean
+        gates:
+          type: array
+          items:
+            $ref: '#/components/schemas/UpdateGate'
+        recorded_at:
+          type: string
+          format: date-time

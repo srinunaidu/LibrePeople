@@ -327,3 +327,58 @@ jobs:
           name: load-smoke-result
           path: agents/PROGRESS.md
           retention-days: 30
+
+  update-system:
+    name: Update system — manifest, SBOM, signatures
+    runs-on: ubuntu-latest
+    # Additive gate: validates the release-manifest chain without touching
+    # the backend, contracts, frontend or journeys jobs above.
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Assert Python 3.11
+        run: |
+          python --version
+          python -c "import sys; assert sys.version_info[:2] == (3, 11), f'CI requires Python 3.11, got {sys.version}'"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+          pip install jsonschema
+
+      # Manifest-validate: schema + checksum chain on releases/manifest.json.
+      - name: Manifest validate (schema + checksums)
+        run: python scripts/verify_release.py releases/manifest.json
+
+      # SBOM: best-effort CycloneDX SBOM for the backend dependency set.
+      # Advisory only (continue-on-error): a missing generator must not
+      # block merging — triage it instead.
+      - name: SBOM (backend dependencies)
+        continue-on-error: true
+        run: |
+          pip install cyclonedx-bom || echo "::warning::cyclonedx-bom unavailable, SBOM skipped"
+          (cyclonedx-py requirements -i backend/requirements.txt -o sbom-backend.json 2>/dev/null \
+            || python -m cyclonedx_py.client -i backend/requirements.txt -o sbom-backend.json 2>/dev/null \
+            || echo '{"note":"sbom generator unavailable"}' > sbom-backend.json)
+          ls -la sbom-backend.json
+
+      # Sign-verify: dev-signature round-trip — regenerate a dev manifest
+      # for a scratch copy and verify it, proving make/verify agree.
+      # A dev-ephemeral signature passes only with a loud CI warning.
+      - name: Sign verify (dev-signature round-trip)
+        env:
+          SECRET_KEY: local-test-secret-key-not-for-production-0123456789
+          DATABASE_URL: "sqlite:///./_ci_sign_probe.db"
+        run: |
+          cp releases/manifest.json /tmp/manifest.keep.json
+          python scripts/make_release_manifest.py --tag v$(python -c "import sys; sys.path.insert(0, 'backend'); from app.core.config import Settings; print(Settings().VERSION)") --channel rc --dev | tee /tmp/sign-roundtrip.log
+          grep -q "NOT A PRODUCTION RELEASE" /tmp/sign-roundtrip.log
+          python scripts/verify_release.py releases/manifest.json 2>&1 | tee /tmp/verify.log
+          grep -q "dev-ephemeral" /tmp/verify.log
+          cp /tmp/manifest.keep.json releases/manifest.json
+          rm -f ./_ci_sign_probe.db backend/_ci_sign_probe.db
