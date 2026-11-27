@@ -72,9 +72,10 @@ export default function ProcessAutomation() {
         <SectionCard compact title="Process automation configuration" description="Per-tenant from /clients/:slug/feature-flags.">
           <div className="grid sm:grid-cols-3 gap-4">
             <div>
-              <label>Auto-escalate</label>
+              <label htmlFor="pa-escalate">Auto-escalate</label>
               <div className="flex items-center gap-2">
                 <input
+                  id="pa-escalate"
                   type="checkbox"
                   checked={autoEscalate}
                   onChange={e => setAutoEscalate(e.target.checked)}
@@ -84,13 +85,14 @@ export default function ProcessAutomation() {
               </div>
             </div>
             <div>
-              <label>Escalation timeout (hours)</label>
-              <Input value={escalationThreshold} onChange={e => setEscalationThreshold(Number(e.target.value) || 24)} disabled={!canWrite || saving || !clientId} className="font-mono" />
+              <label htmlFor="pa-timeout">Escalation timeout (hours)</label>
+              <Input id="pa-timeout" value={escalationThreshold} onChange={e => setEscalationThreshold(Number(e.target.value) || 24)} disabled={!canWrite || saving || !clientId} className="font-mono" />
             </div>
             <div>
-              <label>Auto-reassign</label>
+              <label htmlFor="pa-reassign">Auto-reassign</label>
               <div className="flex items-center gap-2">
                 <input
+                  id="pa-reassign"
                   type="checkbox"
                   checked={autoReassign}
                   onChange={e => setAutoReassign(e.target.checked)}

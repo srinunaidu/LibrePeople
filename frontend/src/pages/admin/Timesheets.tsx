@@ -6,7 +6,7 @@
  */
 import { useCallback, useEffect, useState } from "react"
 import { Layout } from "@/components/Layout"
-import { Input,Alert, Button, LoadingRegion, PageHeader, SectionCard, RetryableAlert, TableSkeleton, EmptyState} from "@/components/ui"
+import { Input,Alert, Button, LoadingRegion, PageHeader, SectionCard, RetryableAlert, Select, TableSkeleton, EmptyState} from "@/components/ui"
 
 import { useAuth } from "@/context/AuthContext"
 import { useTenant } from "@/context/TenantContext"
@@ -75,20 +75,20 @@ export default function GoalsOKR() {
         <SectionCard compact title="Goal / OKR settings" description="From /clients/:slug/feature-flags endpoint.">
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
-              <label>OKR Cycle</label>
-              <select
+              <label htmlFor="okr-cycle">OKR Cycle</label>
+              <Select
+                id="okr-cycle"
                 value={cycle}
                 onChange={e => setCycle(e.target.value)}
-                className="w-full rounded border px-3 py-2"
               >
                 {OKR_CYCLES.map(c => (
                   <option key={c.value} value={c.value}>{c.label}</option>
                 ))}
-              </select>
+              </Select>
             </div>
             <div>
-              <label>Key result</label>
-              <Input value={goal} onChange={e => setGoal(e.target.value)} disabled={!canWrite || saving || !clientId} placeholder="e.g. Increase NPS by 10pts" />
+              <label htmlFor="okr-goal">Key result</label>
+              <Input id="okr-goal" value={goal} onChange={e => setGoal(e.target.value)} disabled={!canWrite || saving || !clientId} placeholder="e.g. Increase NPS by 10pts" />
             </div>
           </div>
           <Button onClick={save} disabled={!canWrite || saving || !clientId} className="mt-4">{saving ? "Saving…" : "Save goal/OKR"}</Button>

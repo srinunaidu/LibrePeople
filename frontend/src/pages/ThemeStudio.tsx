@@ -8,9 +8,8 @@
 import { useEffect, useState } from "react"
 import { Layout } from "@/components/Layout"
 
+import { Alert, Button, PageHeader, RetryableAlert, SectionCard, StatusPill } from "@/components/ui"
 import { Badge } from "@/components/ui/badge"
-import { Alert } from "@/components/ui/feedback"
-import { Button,RetryableAlert, TableSkeleton, StatusPill } from "@/components/ui"
 import { useAuth } from "@/context/AuthContext"
 import { useTenant } from "@/context/TenantContext"
 import api from "@/lib/api"
@@ -287,24 +286,23 @@ export default function ThemeStudio() {
 
   return (
     <Layout>
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">Theme Studio</h1>
-          <p className="page-description">
-            10 predefined themes — pick one, the entire application follows. Each theme sets the brand, surfaces, radius and shadow globally via CSS variables on <code className="bg-surface-inset px-1 py-0.5 rounded text-xs">:root</code>.
-          </p>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <Button variant="secondary" size="sm" onClick={resetAll}>
-            Reset to default
-          </Button>
-          {isAdmin && tenant && (
-            <Button size="sm" onClick={saveTenantTheme} disabled={saving}>
-              {saving ? "Saving…" : saved ? "Saved ✓" : "Save as tenant theme"}
+      <PageHeader
+        compact
+        title="Theme Studio"
+        description="10 predefined themes — pick one, the entire application follows. Each theme sets the brand, surfaces, radius and shadow globally via CSS variables on :root."
+        actions={
+          <div className="flex items-center gap-2 shrink-0">
+            <Button variant="secondary" size="sm" onClick={resetAll}>
+              Reset to default
             </Button>
-          )}
-        </div>
-      </div>
+            {isAdmin && tenant && (
+              <Button size="sm" onClick={saveTenantTheme} disabled={saving}>
+                {saving ? "Saving…" : saved ? "Saved" : "Save as tenant theme"}
+              </Button>
+            )}
+          </div>
+        }
+      />
 
       {!isAdmin && (
         <Alert tone="info">You can preview themes. Saving as tenant theme requires SuperAdmin.</Alert>
@@ -318,22 +316,31 @@ export default function ThemeStudio() {
       )}
 
       {/* Active theme banner — real components in the applied theme */}
-      <div className="card p-4 mb-6 flex flex-wrap items-center gap-3" style={{ borderLeft: `4px solid ${active.vars["--brand-600"]}` }}>
-        <span className="h-3 w-3 rounded-full" style={{ background: active.vars["--brand-600"] }} />
-        <span className="text-sm font-semibold" style={{ color: active.vars["--brand-600"] as string }}>
-          Active: {active.name}
-        </span>
-        <span className="text-xs text-fg-muted">— {active.tagline}</span>
-        <span className="ml-auto flex flex-wrap items-center gap-2">
-          <Button size="sm" style={{ background: active.vars["--brand-600"], borderColor: active.vars["--brand-600"] as string }}>Primary</Button>
-          <Button variant="secondary" size="sm">Secondary</Button>
-          <Badge variant="brand">Brand</Badge>
-          <StatusPill status="Active" />
-          <StatusPill status="Pending" />
-        </span>
-      </div>
+      <SectionCard
+        compact
+        title={`Active: ${active.name}`}
+        description={active.tagline}
+        actions={
+          <span className="ml-auto flex flex-wrap items-center gap-2">
+            <Button size="sm" style={{ background: active.vars["--brand-600"], borderColor: active.vars["--brand-600"] as string }}>Primary</Button>
+            <Button variant="secondary" size="sm">Secondary</Button>
+            <Badge variant="brand">Brand</Badge>
+            <StatusPill status="Active" />
+            <StatusPill status="Pending" />
+          </span>
+        }
+      >
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="h-3 w-3 rounded-full" style={{ background: active.vars["--brand-600"] }} />
+          <span className="text-sm font-semibold" style={{ color: active.vars["--brand-600"] as string }}>
+            Previewing live
+          </span>
+          <span className="text-xs text-fg-muted">— every card, button, badge and table below follows this theme.</span>
+        </div>
+      </SectionCard>
 
       {/* 10 presets grid */}
+      <SectionCard compact title="Presets" description="Click a theme — its brand, surfaces, radius and shadow apply to the entire application.">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {PRESETS.map((preset) => {
           const isActive = preset.id === activeId
@@ -382,7 +389,7 @@ export default function ThemeStudio() {
 
                 <div className="mt-3">
                   {isActive ? (
-                    <span className="w-full inline-flex justify-center text-xs font-medium py-1.5 rounded-lg text-white" style={{ background: preset.vars["--brand-600"] as string }}>✓ Active</span>
+                    <span className="w-full inline-flex justify-center text-xs font-medium py-1.5 rounded-lg text-white" style={{ background: preset.vars["--brand-600"] as string }}>Active</span>
                   ) : (
                     <span className="w-full inline-flex justify-center text-xs font-medium py-1.5 rounded-lg border bg-surface hover:bg-surface-hover transition-colors" style={{ borderColor: preset.vars["--brand-600"] as string, color: preset.vars["--brand-600"] as string }}>Apply</span>
                   )}
@@ -392,9 +399,9 @@ export default function ThemeStudio() {
           )
         })}
       </div>
+      </SectionCard>
 
-      <div className="card p-4 mt-6">
-        <h2 className="font-semibold text-fg mb-1">How this works</h2>
+      <SectionCard compact title="How this works" description="One click re-themes the entire application.">
         <ul className="list-disc pl-5 text-sm text-text-secondary space-y-1">
           <li>Click any theme — its brand, surfaces, radius and shadow apply to <strong>the entire application</strong> via CSS variables on <code className="bg-surface-inset px-1 rounded text-xs">:root</code>. No page has its own colour.</li>
           <li>Each theme has a distinct <strong>loading style</strong> (shimmer, pulse, dots, bar, card, wave…) — the skeleton you see while data loads matches the theme's character.</li>
@@ -402,7 +409,7 @@ export default function ThemeStudio() {
           <li><strong>Save as tenant theme</strong> (SuperAdmin) persists the brand colour to the tenant — survives reloads for that workspace.</li>
           <li>Guarded by <code className="bg-surface-inset px-1 rounded text-xs">check:design</code> in <code className="bg-surface-inset px-1 rounded text-xs">npm run verify</code> — hard-coded colours fail the build.</li>
         </ul>
-      </div>
+      </SectionCard>
     </Layout>
   )
 }

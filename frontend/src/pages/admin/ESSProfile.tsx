@@ -5,7 +5,7 @@
  */
 import { useCallback, useEffect, useState } from "react"
 import { Layout } from "@/components/Layout"
-import { Input,Alert, Button, LoadingRegion, PageHeader, SectionCard, RetryableAlert, TableSkeleton, EmptyState} from "@/components/ui"
+import { Alert, Button, LoadingRegion, PageHeader, SectionCard, RetryableAlert, TableSkeleton, EmptyState } from "@/components/ui"
 
 import { useAuth } from "@/context/AuthContext"
 import { useTenant } from "@/context/TenantContext"
@@ -65,8 +65,8 @@ export default function ESSProfile() {
   if (loading) return <LoadingRegion label="ESS Profile"><TableSkeleton rows={4} cols={4} /></LoadingRegion>
 
   return (
-      <>
-    <PageHeader compact title="ESS Profile + Documents + Leaves + Payslips" description="UX-03 · ESS profile/documents/leave/time/payslips · depends HR-01 (shipped R2) + AD-04 (shipped R1) + IM-11 (not yet built) · reads /clients/:slug/settings; AD-07 audit on save." />
+    <Layout>
+      <PageHeader compact title="ESS Profile + Documents + Leaves + Payslips" description="UX-03 · ESS profile/documents/leave/time/payslips · depends HR-01 (shipped R2) + AD-04 (shipped R1) + IM-11 (not yet built) · reads /clients/:slug/settings; AD-07 audit on save." />
       <div className="max-w-3xl mx-auto px-6 py-10 space-y-6">
         {notice && <Alert tone="success">{notice}</Alert>}
         {actionError && <Alert tone="error">{actionError}</Alert>}
@@ -92,5 +92,6 @@ export default function ESSProfile() {
         </SectionCard>
         <div className="text-xs text-[var(--fg-muted)]">UX-03 · R3 · depends HR-01 + AD-04 · IM-11 deferred · no fabricated ESS data.</div>
       </div>
-  </>)
+    </Layout>
+  )
 }

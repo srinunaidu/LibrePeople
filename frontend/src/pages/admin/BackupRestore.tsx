@@ -68,7 +68,7 @@ export default function BackupRestore() {
   if (error && !clientId) {
     return (
       <Layout>
-        <SectionCard title="Company not resolved" description="Could not resolve the company. Check the server connection and retry.">
+        <SectionCard compact title="Company not resolved" description="Could not resolve the company. Check the server connection and retry.">
           <EmptyState title="Could not resolve the company" description="Could not resolve the company. Check the server connection and retry." />
           <div className="mt-4">
             <Button onClick={() => load()}>Retry</Button>
@@ -78,7 +78,7 @@ export default function BackupRestore() {
     )
   }
   return (
-      <>
+    <Layout>
     <PageHeader compact title="Backup & Restore" description="AD-08 · verification screen relying on AD-07 audit + AD-04 RBAC; no fabricated backup sources." />
       <div className="max-w-3xl mx-auto px-6 py-10 space-y-8">
         {notice && <Alert tone="success">{notice}</Alert>}
@@ -98,5 +98,6 @@ export default function BackupRestore() {
 
         <div className="text-xs text-fg-muted">AD-08 · depends AD-04 + AD-07; feeds AD-09 (retention) · no invented backup vendors or SOC-2 claims.</div>
       </div>
-  </>)
+    </Layout>
+  )
 }

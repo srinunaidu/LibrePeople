@@ -5,7 +5,7 @@
  */
 import { useCallback, useEffect, useState } from "react"
 import { Layout } from "@/components/Layout"
-import { Input,Alert, Button, LoadingRegion, PageHeader, SectionCard, RetryableAlert, TableSkeleton, EmptyState} from "@/components/ui"
+import { Input,Alert, Button, LoadingRegion, PageHeader, SectionCard, RetryableAlert, Select, TableSkeleton, EmptyState} from "@/components/ui"
 
 import { useAuth } from "@/context/AuthContext"
 import { useTenant } from "@/context/TenantContext"
@@ -87,20 +87,20 @@ export default function ScheduledReporting() {
         <SectionCard compact title="Schedule configuration" description="Per-tenant from /clients/:slug/feature-flags.">
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
-              <label>Schedule frequency</label>
-              <select
+              <label htmlFor="sr-freq">Schedule frequency</label>
+              <Select
+                id="sr-freq"
                 value={scheduleFrequency}
                 onChange={e => setScheduleFrequency(e.target.value)}
-                className="w-full rounded border px-3 py-2"
               >
                 {SCHEDULE_OPTIONS.map(o => (
                   <option key={o.value} value={o.value}>{o.label}</option>
                 ))}
-              </select>
+              </Select>
             </div>
             <div>
-              <label>Email recipients</label>
-              <Input value={emailRecipients} onChange={e => setEmailRecipients(e.target.value)} disabled={!canWrite || saving || !clientId} placeholder="admin@example.com" />
+              <label htmlFor="sr-recipients">Email recipients</label>
+              <Input id="sr-recipients" value={emailRecipients} onChange={e => setEmailRecipients(e.target.value)} disabled={!canWrite || saving || !clientId} placeholder="admin@example.com" />
             </div>
           </div>
           <div className="mt-4">
