@@ -14,6 +14,8 @@ interface KPICardProps {
   error?: boolean
   className?: string
   onClick?: () => void
+  /** Accessible name for the clickable card (no-op cards stay unlabeled). */
+  ariaLabel?: string
 }
 
 const toneClasses = {
@@ -39,6 +41,7 @@ export function KPICard({
   error,
   className,
   onClick,
+  ariaLabel,
 }: KPICardProps) {
   const [railClass, iconClass] = toneClasses[tone].split(" ")
 
@@ -86,6 +89,7 @@ export function KPICard({
       onClick={onClick}
       role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
+      aria-label={onClick ? (ariaLabel ?? label) : undefined}
       onKeyDown={onClick ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); } } : undefined}
     >
       <span className={`stat-rail ${railClass}`} aria-hidden="true" />

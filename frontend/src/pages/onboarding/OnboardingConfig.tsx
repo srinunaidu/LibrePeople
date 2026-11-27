@@ -13,14 +13,14 @@
 import { Fragment, useCallback, useEffect, useState } from "react"
 import { Layout } from "@/components/Layout"
 import {
+  Button,
   Select,Alert,
   EmptyState,
   LoadingRegion,
   PageHeader,
   SectionCard,
   Table,
-  TableSkeleton, RetryableAlert} from "@/components/ui"
-import { StatusPill } from "@/components/ui/status-pill"
+  TableSkeleton, RetryableAlert, StatusPill } from "@/components/ui"
 import { Meter } from "@/components/ui/feedback"
 
 import { useAuth } from "@/context/AuthContext"
@@ -44,7 +44,7 @@ function fmtDate(value?: string | null): string {
   return value.slice(0, 10)
 }
 
-function severityBadge(severity: string): string {
+function severityBadge(severity: string): "rose" | "amber" | "slate" {
   const s = severity.toLowerCase()
   if (s === "error" || s === "critical" || s === "high") return "rose"
   if (s === "warning" || s === "medium") return "amber"
@@ -274,6 +274,10 @@ export default function OnboardingConfig() {
           <div className="p-5 text-sm text-text-secondary">No presets are published yet.</div>
         ) : (
           <div className="table-scroll">
+            {/* KIT EXCLUSION (contract: design-system-finish) — expandable preset
+                rows render a second <tr> with a colSpan={6} detail panel.
+                Kit Table headers are string-only and rows are one-row-per-item,
+                so this pattern stays on a raw table by design. */}
             <table className="table-base table-compact w-full text-sm">
               <caption className="sr-only">Onboarding presets</caption>
               <thead>
@@ -296,14 +300,14 @@ export default function OnboardingConfig() {
                       <td><StatusPill status={p.status} /></td>
                       <td className="max-w-[360px] truncate" title={p.modules.join(", ")}>{p.modules.join(", ") || "—"}</td>
                       <td>
-                        <button
-                          type="button"
-                          className="action-link"
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           aria-expanded={expandedPreset === p.id}
                           onClick={() => void togglePreset(p.id)}
                         >
                           {expandedPreset === p.id ? "Hide" : "View"}
-                        </button>
+                        </Button>
                       </td>
                     </tr>
                     {expandedPreset === p.id && (
@@ -443,7 +447,7 @@ export default function OnboardingConfig() {
             {readiness.findings.length > 0 ? (
               <Table
                 columns={[
-                  { key: "severity", header: "Severity", accessor: (f) => <span className={`badge badge-${severityBadge(f.severity)}`}>{f.severity}</span> },
+                  { key: "severity", header: "Severity", accessor: (f) => <StatusPill status={f.severity} tone={severityBadge(f.severity)} /> },
                   { key: "title", header: "Title / Message", accessor: (f) => (
                     <span className="max-w-[320px]">
                       <span className="font-medium">{f.title ?? f.message}</span>
@@ -502,7 +506,7 @@ export default function OnboardingConfig() {
                 columns={[
                   { key: "state", header: "State", accessor: (f) => <StatusPill status={f._state} /> },
                   { key: "title", header: "Title", accessor: (f) => <span className="font-medium">{f.title ?? f.message}</span> },
-                  { key: "severity", header: "Severity", accessor: (f) => <span className={`badge badge-${severityBadge(f.severity)}`}>{f.severity}</span> },
+                  { key: "severity", header: "Severity", accessor: (f) => <StatusPill status={f.severity} tone={severityBadge(f.severity)} /> },
                   { key: "rec", header: "Recommendation", accessor: (f) => <span className="text-xs max-w-[320px] truncate" title={f.recommendation ?? ""}>{f.recommendation ?? "\u2014"}</span> },
                 ]}
                 data={[...readiness.missing.map((f) => ({ ...f, _state: "Missing" })), ...readiness.inconsistent.map((f) => ({ ...f, _state: "Inconsistent" }))].map((f, i) => ({ ...f, _k: `${f.rule_id}-${i}` }))}

@@ -363,8 +363,8 @@ export default function LearningHub() {
                   { key: "title", header: "Title", accessor: (c) => c.title },
                   { key: "category", header: "Category", accessor: (c) => c.category },
                   { key: "duration", header: "Duration", accessor: (c) => c.duration_hours, cellClassName: "num tabular-nums" },
-                  { key: "mandatory", header: "Mandatory", accessor: (c) => c.is_mandatory ? <span className="badge badge-amber">Mandatory</span> : <span className="badge badge-slate">Optional</span> },
-                  { key: "active", header: "Active", accessor: (c) => c.is_active ? <span className="badge badge-green">Active</span> : <span className="badge badge-slate">Inactive</span> },
+                  { key: "mandatory", header: "Mandatory", accessor: (c) => <StatusPill status={c.is_mandatory ? "Mandatory" : "Optional"} tone={c.is_mandatory ? "amber" : "slate"} /> },
+                  { key: "active", header: "Active", accessor: (c) => <StatusPill status={c.is_active ? "Active" : "Inactive"} /> },
                 ]}
                 data={courses}
                 keyAccessor={(c) => c.id}

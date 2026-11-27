@@ -13,11 +13,10 @@ import {
   ModalTitle,
   PageHeader,
   SectionCard,
-  TableSkeleton, RetryableAlert} from "@/components/ui"
+  TableSkeleton, RetryableAlert, StatusPill, type StatusTone, Table } from "@/components/ui"
 
 import { IconGrid, IconRefresh } from "@/components/icons"
 import type { PageMeta } from "@/types"
-import { StatusPill, type StatusTone } from "@/components/ui/status-pill"
 import api, { errorMessage } from "@/lib/api"
 import { useAuth } from "@/context/AuthContext"
 import { useTenant } from "@/context/TenantContext"
@@ -317,90 +316,86 @@ export default function BackgroundJobs() {
             description="Imports, forecasts and roster solves appear here when the queue runs them."
           />
         ) : (
-          <div className="table-scroll">
-            <table className="table-base table-striped">
-              <caption className="sr-only">
-                Background jobs with type, state, attempts, activity and actions
-              </caption>
-              <thead>
-                <tr>
-                  <th scope="col">Job</th>
-                  <th scope="col">Type</th>
-                  <th scope="col">State</th>
-                  <th scope="col">Attempts</th>
-                  <th scope="col">Last activity</th>
-                  <th scope="col">Error</th>
-                  {/* A visible header, like every other column. A
-                      visually-hidden span here was `position: absolute` with
-                      no positioned ancestor, so on a 360px screen it was
-                      placed at the far right of the 797px table — outside
-                      every scroll container — and pushed the whole document
-                      378px sideways. */}
-                  <th scope="col">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {jobs.map((job) => (
-                  <tr key={job.id}>
-                    <td className="font-mono text-xs whitespace-nowrap">#{job.id}</td>
-                    <td className="font-medium">{typeLabel(job.type)}</td>
-                    <td>
-                      <StatusPill
-                        status={stateLabel(job.state)}
-                        tone={STATE_TONE[job.state] ?? "slate"}
-                        dot
-                      />
-                    </td>
-                    <td className="num whitespace-nowrap">
-                      {job.attempts}/{job.max_attempts}
-                    </td>
-                    <td className="text-text-secondary whitespace-nowrap">
-                      {formatDate(job.updated_at)}
-                    </td>
-                    <td className="max-w-[16rem] truncate text-text-secondary" title={job.error_message || undefined}>
-                      {job.error_code || job.error_message || "—"}
-                    </td>
-                    <td className="whitespace-nowrap">
-                      <div className="flex flex-wrap gap-2">
-                        <Button
-                          variant="ghost"
-                          size="xs"
-                          onClick={() => openDetail(job)}
-                        >
-                          View
-                        </Button>
-                        {(job.state === "failed" || job.state === "dead") && (
-                          <Button
-                            variant="secondary"
-                            size="xs"
-                            loading={busyId === job.id}
-                            onClick={() => act(job, "retry")}
-                          >
-                            Retry
-                          </Button>
-                        )}
-                        {(job.state === "pending" ||
-                          job.state === "failed" ||
-                          job.state === "dead") && (
-                          <Button
-                            variant="danger"
-                            size="xs"
-                            disabled={busyId === job.id}
-                            onClick={() => {
-                              setReason("")
-                              setDiscarding(job)
-                            }}
-                          >
-                            Discard
-                          </Button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table
+          columns={[
+            { key: "job", header: "Job", accessor: (job) => <span className="font-mono text-xs whitespace-nowrap">#{job.id}</span> },
+            { key: "type", header: "Type", accessor: (job) => <span className="font-medium">{typeLabel(job.type)}</span> },
+            {
+              key: "state",
+              header: "State",
+              accessor: (job) => (
+                <StatusPill
+                  status={stateLabel(job.state)}
+                  tone={STATE_TONE[job.state] ?? "slate"}
+                  dot
+                />
+              ),
+            },
+            { key: "attempts", header: "Attempts", accessor: (job) => <span className="num whitespace-nowrap">{job.attempts}/{job.max_attempts}</span> },
+            {
+              key: "activity",
+              header: "Last activity",
+              accessor: (job) => (
+                <span className="text-text-secondary whitespace-nowrap">
+                  {formatDate(job.updated_at)}
+                </span>
+              ),
+            },
+            {
+              key: "error",
+              header: "Error",
+              accessor: (job) => (
+                <span className="max-w-[16rem] truncate text-text-secondary" title={job.error_message || undefined}>
+                  {job.error_code || job.error_message || "—"}
+                </span>
+              ),
+            },
+            {
+              key: "actions",
+              header: "Actions",
+              accessor: (job) => (
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="ghost"
+                    size="xs"
+                    onClick={() => openDetail(job)}
+                  >
+                    View
+                  </Button>
+                  {(job.state === "failed" || job.state === "dead") && (
+                    <Button
+                      variant="secondary"
+                      size="xs"
+                      loading={busyId === job.id}
+                      onClick={() => act(job, "retry")}
+                    >
+                      Retry
+                    </Button>
+                  )}
+                  {(job.state === "pending" ||
+                    job.state === "failed" ||
+                    job.state === "dead") && (
+                    <Button
+                      variant="danger"
+                      size="xs"
+                      disabled={busyId === job.id}
+                      onClick={() => {
+                        setReason("")
+                        setDiscarding(job)
+                      }}
+                    >
+                      Discard
+                    </Button>
+                  )}
+                </div>
+              ),
+            },
+          ]}
+          data={jobs}
+          keyAccessor={(job) => job.id}
+          caption="Background jobs with type, state, attempts, activity and actions"
+          sortable={false}
+        />
         )}
 
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3">

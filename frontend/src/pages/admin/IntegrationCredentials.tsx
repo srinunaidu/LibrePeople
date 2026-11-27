@@ -5,9 +5,8 @@
  */
 import { useCallback, useEffect, useState } from "react"
 import { Layout } from "@/components/Layout"
-import { Input,Alert, Button, EmptyState, LoadingRegion, PageHeader, SectionCard, RetryableAlert, TableSkeleton} from "@/components/ui"
+import { Input,Alert, Button, EmptyState, LoadingRegion, PageHeader, SectionCard, RetryableAlert, TableSkeleton, StatusPill, Table } from "@/components/ui"
 
-import { StatusPill } from "@/components/ui/status-pill"
 import { useAuth } from "@/context/AuthContext"
 import api, { getClientIdBySlug, errorMessage } from "@/lib/api"
 
@@ -99,24 +98,26 @@ export default function IntegrationCredentials() {
         </SectionCard>
 
         <SectionCard compact title="Current integrations" description="From /clients/:id/integrations — health status from the test endpoint.">
-          <div className="table-scroll">
-            <table className="w-full text-sm">
-              <caption className="sr-only">Current integrations</caption>
-              <thead><tr className="border-b"><th scope="col" className="text-left py-2">Name</th><th scope="col" className="text-left py-2">Kind</th><th scope="col" className="text-left py-2">Status</th><th scope="col" className="text-left py-2">Secret</th><th scope="col" className="text-left py-2">Actions</th></tr></thead>
-              <tbody>
-                {items.length === 0 && <tr><td colSpan={5} className="py-3 text-fg-subtle italic">No integrations yet.</td></tr>}
-                {items.map(i => (
-                  <tr key={i.id} className="border-b">
-                    <td className="py-2">{i.name}</td>
-                    <td className="py-2">{i.kind}</td>
-                    <td className="py-2"><StatusPill status={i.status} dot />{i.status}</td>
-                    <td className="py-2 text-xs">{i.has_secret ? "Yes" : "—"}</td>
-                    <td className="py-2"><Button size="sm" onClick={() => testInt(i.id)} loading={testingId === i.id} disabled={!clientId}>Test</Button></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table
+            columns={[
+              { key: "name", header: "Name", accessor: (i) => <span className="py-2">{i.name}</span> },
+              { key: "kind", header: "Kind", accessor: (i) => <span className="py-2">{i.kind}</span> },
+              { key: "status", header: "Status", accessor: (i) => <span className="py-2"><StatusPill status={i.status} dot />{i.status}</span> },
+              { key: "secret", header: "Secret", accessor: (i) => <span className="py-2 text-xs">{i.has_secret ? "Yes" : "—"}</span> },
+              {
+                key: "actions",
+                header: "Actions",
+                accessor: (i) => (
+                  <span className="py-2"><Button size="sm" onClick={() => testInt(i.id)} loading={testingId === i.id} disabled={!clientId}>Test</Button></span>
+                ),
+              },
+            ]}
+            data={items}
+            keyAccessor={(i) => i.id}
+            caption="Current integrations"
+            emptyMessage="No integrations yet."
+            sortable={false}
+          />
         </SectionCard>
 
         <div className="text-xs text-fg-muted">AD-06 · depends AD-04 (RBAC) + AD-07 (audit); feeds AD-08 (backup health) · evidence: /clients/:id/integrations endpoint + test endpoint.</div>

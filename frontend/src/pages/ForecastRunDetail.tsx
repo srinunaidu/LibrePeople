@@ -15,7 +15,7 @@ import {Alert,
   LoadingRegion,
   PageHeader,
   SectionCard,
-  StatCard,
+  KPICard,
   TableSkeleton, RetryableAlert} from "@/components/ui"
 import api, { isRetryable } from "@/lib/api" // RetryableAlert gate
 import { useTenantNav } from "@/lib/tenantPath"
@@ -280,14 +280,14 @@ export default function ForecastRunDetail() {
       {run && (
         <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 my-5">
-            <StatCard label="Status" value={run.status} />
-            <StatCard
+            <KPICard label="Status" value={run.status} />
+            <KPICard
               label="Backtest MAPE"
               value={fmtPct(run.backtest_mape)}
               hint={run.backtest_holdout_days != null ? `${run.backtest_holdout_days}-day holdout` : undefined}
             />
-            <StatCard label="Backtest MASE" value={fmtNum(run.backtest_mase)} />
-            <StatCard label="Created" value={fmtDateTime(run.created_at)} />
+            <KPICard label="Backtest MASE" value={fmtNum(run.backtest_mase)} />
+            <KPICard label="Created" value={fmtDateTime(run.created_at)} />
           </div>
 
           {/* Results */}

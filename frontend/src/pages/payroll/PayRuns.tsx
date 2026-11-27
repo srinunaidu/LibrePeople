@@ -30,10 +30,10 @@ import {
   RetryableAlert,
   PendingVerificationAlert,
   SectionCard,
+  StatusPill,
+  Table,
   TableSkeleton,
 } from "@/components/ui"
-
-import { StatusPill } from "@/components/ui/status-pill"
 import { useAuth } from "@/context/AuthContext"
 import { useTenant } from "@/context/TenantContext"
 import api, { errorMessage, isPendingVerification } from "@/lib/api"
@@ -302,66 +302,73 @@ export default function PayRuns() {
               <button onClick={() => setJurisFilter("US")} className={`px-2 py-0.5 rounded border ${jurisFilter==="US" ? "bg-slate-50 border-slate-200" : "bg-surface border-border"}`}>US</button>
               {jurisFilter==="IN" && <span className="text-warning-text">Showing India monthly runs — currency INR, PT column where applicable</span>}
             </div>
-            <div className="table-scroll">
-              <table className="table-base table-compact w-full text-sm">
-                <caption className="sr-only">Pay runs of this deployment</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Run</th>
-                    <th scope="col">Period</th>
-                    <th scope="col">Jurisdiction</th>
-                    <th scope="col">Rule pack</th>
-                    <th scope="col">Status</th>
-                    <th scope="col" className="num">Headcount</th>
-                    <th scope="col" className="num">Gross</th>
-                    <th scope="col" className="num">Net</th>
-                    <th scope="col">Currency</th>
-                    <th scope="col">Created</th>
-                    <th scope="col"><span className="sr-only">Open</span></th>
-                    <th scope="col"><span className="sr-only">Recon/Export</span></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(jurisFilter ? runs.filter(r => (r.jurisdiction||"").toUpperCase()===jurisFilter) : runs).map((run) => (
-                    <tr key={run.id}>
-                      <td>#{run.id}</td>
-                      <td>{periodName(run.period_id)}</td>
-                      <td>
-                        {run.jurisdiction ?? "—"}{" "}
-                        <span className="ml-1 inline-flex text-xs px-1.5 py-0.5 rounded border">{(run as any).run_type || "regular"}</span>
-                        {run.jurisdiction === "IN" && (
-                          <span className="ml-2 inline-flex text-xs px-1.5 py-0.5 rounded border border-[var(--warning-border)] bg-[var(--warning-light)] text-[var(--warning-text)]">
-                            pending_verification
-                          </span>
-                        )}
-                        {run.currency && <span className="ml-1 text-xs text-text-secondary">· {run.currency}</span>}
-                      </td>
-                      <td className="font-mono text-xs">{run.rule_pack_id ? `${run.rule_pack_id} v1.0.0` : "—"} {run.jurisdiction==="IN" && <span className="text-warning-text">· monthly</span>}</td>
-                      <td>
-                        <StatusPill status={run.status} dot />
-                      </td>
-                      <td className="num tabular-nums">{run.headcount}</td>
-                      <td className="num tabular-nums">{money(run.total_gross)}</td>
-                      <td className="num tabular-nums">{money(run.total_net)}</td>
-                      <td className="text-xs">{run.currency || tenantCurrency}{run.jurisdiction==="IN" && <span className="ml-1 text-warning-text">· PT where applicable</span>}</td>
-                      <td>{fmtDate(run.created_at)}</td>
-                      <td>
-                        <Link
-                          to={tenantNav.to(`/platform/payroll/runs/${run.id}`)}
-                          className="text-brand-700 hover:underline"
-                        >
-                          Open run #{run.id}
-                        </Link>
-                      </td>
-                      <td className="text-xs">
-                        <Link to={tenantNav.to(`/platform/payroll/runs/${run.id}`)} className="text-brand-700 hover:underline mr-2">Recon</Link>
-                        {run.status==="Approved" && <span className="text-text-secondary">· {run.jurisdiction==="IN" ? "NEFT" : "NACHA"}</span>}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table
+              columns={[
+                { key: "run", header: "Run", accessor: (run) => `#${run.id}` },
+                { key: "period", header: "Period", accessor: (run) => periodName(run.period_id) },
+                {
+                  key: "jurisdiction",
+                  header: "Jurisdiction",
+                  accessor: (run) => (
+                    <>
+                      {run.jurisdiction ?? "—"}{" "}
+                      <span className="ml-1 inline-flex text-xs px-1.5 py-0.5 rounded border">{(run as any).run_type || "regular"}</span>
+                      {run.jurisdiction === "IN" && (
+                        <span className="ml-2 inline-flex text-xs px-1.5 py-0.5 rounded border border-[var(--warning-border)] bg-[var(--warning-light)] text-[var(--warning-text)]">
+                          pending_verification
+                        </span>
+                      )}
+                      {run.currency && <span className="ml-1 text-xs text-text-secondary">· {run.currency}</span>}
+                    </>
+                  ),
+                },
+                {
+                  key: "pack",
+                  header: "Rule pack",
+                  accessor: (run) => (
+                    <span className="font-mono text-xs">{run.rule_pack_id ? `${run.rule_pack_id} v1.0.0` : "—"} {run.jurisdiction === "IN" && <span className="text-warning-text">· monthly</span>}</span>
+                  ),
+                },
+                { key: "status", header: "Status", accessor: (run) => <StatusPill status={run.status} dot /> },
+                { key: "headcount", header: "Headcount", accessor: (run) => run.headcount, cellClassName: "num tabular-nums" },
+                { key: "gross", header: "Gross", accessor: (run) => money(run.total_gross), cellClassName: "num tabular-nums" },
+                { key: "net", header: "Net", accessor: (run) => money(run.total_net), cellClassName: "num tabular-nums" },
+                {
+                  key: "currency",
+                  header: "Currency",
+                  accessor: (run) => (
+                    <span className="text-xs">{run.currency || tenantCurrency}{run.jurisdiction === "IN" && <span className="ml-1 text-warning-text">· PT where applicable</span>}</span>
+                  ),
+                },
+                { key: "created", header: "Created", accessor: (run) => fmtDate(run.created_at) },
+                {
+                  key: "open",
+                  header: "",
+                  accessor: (run) => (
+                    <Link
+                      to={tenantNav.to(`/platform/payroll/runs/${run.id}`)}
+                      className="text-brand-700 hover:underline"
+                    >
+                      Open run #{run.id}
+                    </Link>
+                  ),
+                },
+                {
+                  key: "links",
+                  header: "",
+                  accessor: (run) => (
+                    <span className="text-xs">
+                      <Link to={tenantNav.to(`/platform/payroll/runs/${run.id}`)} className="text-brand-700 hover:underline mr-2">Recon</Link>
+                      {run.status === "Approved" && <span className="text-text-secondary">· {run.jurisdiction === "IN" ? "NEFT" : "NACHA"}</span>}
+                    </span>
+                  ),
+                },
+              ]}
+              data={jurisFilter ? runs.filter(r => (r.jurisdiction || "").toUpperCase() === jurisFilter) : runs}
+              keyAccessor={(run) => run.id}
+              caption="Pay runs of this deployment"
+              sortable={false}
+            />
           </>
         )}
       </SectionCard>

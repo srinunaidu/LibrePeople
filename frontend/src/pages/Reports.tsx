@@ -9,7 +9,7 @@ import {
   LoadingRegion,
   PageHeader,
   SectionCard,
-  StatCard,
+  KPICard,
   TableSkeleton, RetryableAlert} from "@/components/ui"
 import { IconChart, IconRefresh, IconShield, IconUsers, IconWallet } from "@/components/icons"
 import api, { errorMessage } from "@/lib/api"
@@ -174,9 +174,9 @@ function MovementSection({ teamOnly }: { teamOnly: boolean }) {
         ) : (
           <>
             <div className="grid grid-cols-3 gap-4 mb-4">
-              <StatCard tone="green" label="Joiners" value={joiners?.length ?? 0} hint="Hired in range" />
-              <StatCard tone="amber" label="Leavers" value={leavers?.length ?? 0} hint="Terminated in range" />
-              <StatCard tone="brand" label="Attrition" value={attrition ? `${attrition.attrition_pct}%` : "—"} hint={attrition ? `${attrition.leavers} leavers · avg headcount ${attrition.average_headcount}` : "Annual"} />
+              <KPICard tone="green" label="Joiners" value={joiners?.length ?? 0} hint="Hired in range" />
+              <KPICard tone="amber" label="Leavers" value={leavers?.length ?? 0} hint="Terminated in range" />
+              <KPICard tone="brand" label="Attrition" value={attrition ? `${attrition.attrition_pct}%` : "—"} hint={attrition ? `${attrition.leavers} leavers · avg headcount ${attrition.average_headcount}` : "Annual"} />
             </div>
             {(joiners?.length ?? 0) + (leavers?.length ?? 0) === 0 && (
               <EmptyState title="No movement in range" description="Nobody joined or left under these filters in the selected period." />
@@ -344,10 +344,10 @@ export default function Reports() {
 
       {status === "ready" && dash && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
-          <StatCard tone="brand" icon={<IconUsers />} label="Active employees" value={dash.employees.active} hint={`${dash.employees.total} total records`} />
-          <StatCard tone="violet" label="Open requisitions" value={dash.recruiting.open_requisitions} hint={`${dash.recruiting.candidates} candidates · ${dash.recruiting.offers} offers`} />
-          <StatCard tone="amber" label="Pending approvals" value={dash.approvals.pending_leave + dash.approvals.pending_timesheets + dash.approvals.pending_shift_swaps} hint="Leave, timesheets and swaps" />
-          <StatCard tone="green" label="Present today" value={dash.attendance_today.present} hint={`${dash.attendance_today.total_hours || 0}h logged`} />
+          <KPICard tone="brand" icon={<IconUsers />} label="Active employees" value={dash.employees.active} hint={`${dash.employees.total} total records`} />
+          <KPICard tone="violet" label="Open requisitions" value={dash.recruiting.open_requisitions} hint={`${dash.recruiting.candidates} candidates · ${dash.recruiting.offers} offers`} />
+          <KPICard tone="amber" label="Pending approvals" value={dash.approvals.pending_leave + dash.approvals.pending_timesheets + dash.approvals.pending_shift_swaps} hint="Leave, timesheets and swaps" />
+          <KPICard tone="green" label="Present today" value={dash.attendance_today.present} hint={`${dash.attendance_today.total_hours || 0}h logged`} />
         </div>
       )}
 
@@ -385,38 +385,20 @@ export default function Reports() {
             <EmptyState title="Leave report unavailable"
               description="The leave report could not be loaded — use Reload to retry." />
           ) : (
-            <div
-              className="table-scroll"
-              role="region"
-              aria-label="Leave requests by status"
-              tabIndex={0}
-            >
-              <table className="table-base table-striped">
-                <caption className="sr-only">Leave requests by status</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Status</th>
-                    <th scope="col" className="num">Requests</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {leaveByStatus.map(([k, v]) => (
-                    <tr key={k}>
-                      <td>{k}</td>
-                      <td className="num font-semibold">{v}</td>
-                    </tr>
-                  ))}
-                  <tr className="bg-surface-inset">
-                    <td className="font-medium">Entitled days</td>
-                    <td className="num font-semibold">{leave?.entitled_days_total ?? 0}</td>
-                  </tr>
-                  <tr className="bg-surface-inset">
-                    <td className="font-medium">Used days</td>
-                    <td className="num font-semibold">{leave?.used_days_total ?? 0}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            <Table
+              columns={[
+                { key: "status", header: "Status", accessor: (r) => r.status },
+                { key: "requests", header: "Requests", accessor: (r) => r.requests, cellClassName: "num font-semibold" },
+              ]}
+              data={[
+                ...leaveByStatus.map(([k, v]) => ({ status: k, requests: v })),
+                { status: "Entitled days", requests: leave?.entitled_days_total ?? 0 },
+                { status: "Used days", requests: leave?.used_days_total ?? 0 },
+              ]}
+              keyAccessor={(r) => r.status}
+              caption="Leave requests by status"
+              sortable={false}
+            />
           )}
         </SectionCard>
 
@@ -431,42 +413,26 @@ export default function Reports() {
             <EmptyState title="No labour cost data"
               description="Cost appears once payroll is processed for a pay run." />
           ) : (
-            <div
-              className="table-scroll"
-              role="region"
-              aria-label="Monthly labour cost by department"
-              tabIndex={0}
-            >
-              <table className="table-base table-striped">
-                <caption className="sr-only">Monthly labour cost by department</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Department</th>
-                    <th scope="col" className="num">Staff</th>
-                    <th scope="col" className="num">Cost</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {laborRows.map((r) => (
-                    <tr key={r.department || "none"}>
-                      <td>{r.department || "(none)"}</td>
-                      <td className="num">{r.employees}</td>
-                      <td className="num">
-                        <span className="font-medium">
-                          {formatCurrency(r.monthly_cost, { ...localeOpts, currency, minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                  <tr className="bg-surface-inset">
-                    <td className="font-semibold" colSpan={2}>Total</td>
-                    <td className="num font-bold">
-                      {formatCurrency(labor?.monthly_payroll ?? 0, { ...localeOpts, currency, minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            <Table
+              columns={[
+                { key: "department", header: "Department", accessor: (r) => r.department || "(none)" },
+                { key: "staff", header: "Staff", accessor: (r) => r.employees, cellClassName: "num" },
+                {
+                  key: "cost",
+                  header: "Cost",
+                  accessor: (r) => (
+                    <span className="font-medium">
+                      {formatCurrency(r.monthly_cost, { ...localeOpts, currency, minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                  ),
+                  cellClassName: "num",
+                },
+              ]}
+              data={[...laborRows, { department: "Total", employees: "", monthly_cost: labor?.monthly_payroll ?? 0 }]}
+              keyAccessor={(r) => r.department || "none"}
+              caption="Monthly labour cost by department"
+              sortable={false}
+            />
           )}
         </SectionCard>
       </div>

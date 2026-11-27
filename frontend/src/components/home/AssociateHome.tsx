@@ -11,7 +11,7 @@ import {
   SectionCard,
   KPICard,
   Button,
-} from "@/components/ui"
+  StatusPill, Table } from "@/components/ui"
 import { NeedsAction, type NeedItem } from "@/components/home/NeedsAction"
 import { formatCurrency } from "@/lib/format"
 import {
@@ -27,8 +27,6 @@ import {
 import api from "@/lib/api"
 import { useAuth } from "@/context/AuthContext"
 import { useTenant } from "@/context/TenantContext"
-import { StatusPill } from "@/components/ui/status-pill"
-
 interface LeaveBalance { available_days: number; leave_type_name?: string; entitlement_year: number }
 interface RosterEntry { id: number; work_date: string; start_time: string; end_time: string; status: string }
 interface Payslip { id: number; period_start: string; period_end: string; net_pay?: number; status: string }
@@ -279,29 +277,22 @@ export default function AssociateHome() {
           {payslips.length === 0 ? (
             <EmptyState title="No payslips yet" description="Payslips appear after your first payroll run." />
           ) : (
-            <div className="table-scroll">
-              <table className="table-base table-compact table-striped">
-                <caption className="sr-only">Recent payslips</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Period</th>
-                    <th scope="col" className="num">Net pay</th>
-                    <th scope="col">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {payslips.slice(0, 5).map((p) => (
-                    <tr key={p.id}>
-                      <td className="whitespace-nowrap">{p.period_start} → {p.period_end}</td>
-                      <td className="num font-medium">
-                        {formatCurrency(p.net_pay, { ...localeOpts, currency, minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </td>
-                      <td><StatusPill status={p.status} /></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table
+              columns={[
+                { key: "period", header: "Period", accessor: (p) => <span className="whitespace-nowrap">{p.period_start} → {p.period_end}</span> },
+                {
+                  key: "net",
+                  header: "Net pay",
+                  accessor: (p) => formatCurrency(p.net_pay, { ...localeOpts, currency, minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                  cellClassName: "num font-medium",
+                },
+                { key: "status", header: "Status", accessor: (p) => <StatusPill status={p.status} /> },
+              ]}
+              data={payslips.slice(0, 5)}
+              keyAccessor={(p) => p.id}
+              caption="Recent payslips"
+              sortable={false}
+            />
           )}
         </SectionCard>
 

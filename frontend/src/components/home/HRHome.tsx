@@ -9,7 +9,7 @@ import {
   PageHeader,
   SectionCard,
   KPICard,
-} from "@/components/ui"
+  StatusPill, Table } from "@/components/ui"
 import { NeedsAction, type NeedItem } from "@/components/home/NeedsAction"
 import {
   IconExit,
@@ -19,8 +19,6 @@ import {
   IconUsers,
 } from "@/components/icons"
 import api from "@/lib/api"
-import { StatusPill } from "@/components/ui/status-pill"
-
 interface HrCase { id: number; subject: string; status: string; priority: string; category: string }
 interface Requisition { id: number; req_number: string; title: string; status: string; openings: number }
 interface Termination { id: number; employee_id: number; status: string; last_working_date: string; termination_type: string }
@@ -148,25 +146,16 @@ export default function HRHome() {
           {!headcount?.by_department || headcount.by_department.length === 0 ? (
             <EmptyState title="No headcount data" description="Headcount appears once employees are assigned to departments." />
           ) : (
-            <div className="table-scroll">
-              <table className="table-base table-compact table-striped">
-                <caption className="sr-only">Headcount by department</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Department</th>
-                    <th scope="col" className="num">Employees</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {headcount.by_department.map((r: any) => (
-                    <tr key={r.department || "none"}>
-                      <td>{r.department || "(none)"}</td>
-                      <td className="num font-semibold">{r.employees}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table
+              columns={[
+                { key: "department", header: "Department", accessor: (r: any) => r.department || "(none)" },
+                { key: "employees", header: "Employees", accessor: (r: any) => r.employees, cellClassName: "num font-semibold" },
+              ]}
+              data={headcount.by_department}
+              keyAccessor={(r: any) => r.department || "none"}
+              caption="Headcount by department"
+              sortable={false}
+            />
           )}
         </SectionCard>
 
@@ -192,29 +181,18 @@ export default function HRHome() {
           {terminations.length === 0 ? (
             <EmptyState title="No terminations" description="Exit records will appear here." />
           ) : (
-            <div className="table-scroll">
-              <table className="table-base table-compact table-striped">
-                <caption className="sr-only">Recent terminations</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Employee</th>
-                    <th scope="col">Last day</th>
-                    <th scope="col">Type</th>
-                    <th scope="col">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {terminations.slice(0, 6).map((t) => (
-                    <tr key={t.id}>
-                      <td>#{t.employee_id}</td>
-                      <td className="whitespace-nowrap">{t.last_working_date}</td>
-                      <td>{t.termination_type}</td>
-                      <td><StatusPill status={t.status} /></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table
+              columns={[
+                { key: "employee", header: "Employee", accessor: (t) => `#${t.employee_id}` },
+                { key: "lastday", header: "Last day", accessor: (t) => <span className="whitespace-nowrap">{t.last_working_date}</span> },
+                { key: "type", header: "Type", accessor: (t) => t.termination_type },
+                { key: "status", header: "Status", accessor: (t) => <StatusPill status={t.status} /> },
+              ]}
+              data={terminations.slice(0, 6)}
+              keyAccessor={(t) => t.id}
+              caption="Recent terminations"
+              sortable={false}
+            />
           )}
           <div className="flex justify-end px-5 py-3">
             <button className="action-link" onClick={() => { navigate(tenantNav.to("/offboarding")) }}>View all exits</button>

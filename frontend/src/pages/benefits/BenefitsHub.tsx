@@ -287,7 +287,7 @@ export default function BenefitsHub() {
                   { key: "provider", header: "Provider", accessor: (p) => p.provider ?? "\u2014" },
                   { key: "employer", header: "Employer", accessor: (p) => money(p.employer_contribution, { locale: tenantLocale, currency: tenantCurrency }), cellClassName: "num tabular-nums" },
                   { key: "employee", header: "Employee", accessor: (p) => money(p.employee_contribution, { locale: tenantLocale, currency: tenantCurrency }), cellClassName: "num tabular-nums" },
-                  { key: "active", header: "Active", accessor: (p) => p.is_active ? <span className="badge badge-green">Active</span> : <span className="badge badge-slate">Inactive</span> },
+                  { key: "active", header: "Active", accessor: (p) => <StatusPill status={p.is_active ? "Active" : "Inactive"} /> },
                 ]}
                 data={plans}
                 keyAccessor={(p) => p.id}

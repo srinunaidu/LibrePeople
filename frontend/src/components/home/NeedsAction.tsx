@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils"
 import { IconInbox } from "@/components/icons"
+import { StatusPill } from "@/components/ui"
 
 /**
  * "Needs your action" section used at the top of every role-based home.
@@ -44,7 +45,7 @@ export function NeedsAction({
           </div>
         </div>
         {visible.length > 0 && (
-          <span className="badge badge-amber">{visible.reduce((s, i) => s + i.count, 0)}</span>
+          <StatusPill status={String(visible.reduce((s, i) => s + i.count, 0))} tone="amber" />
         )}
       </div>
 

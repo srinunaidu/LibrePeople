@@ -23,9 +23,8 @@ import {
   PageHeader,
   SectionCard,
   Table,
-  TableSkeleton, RetryableAlert} from "@/components/ui"
+  TableSkeleton, RetryableAlert, StatusPill } from "@/components/ui"
 
-import { StatusPill } from "@/components/ui/status-pill"
 import { useAuth } from "@/context/AuthContext"
 import { useTenant } from "@/context/TenantContext"
 import { formatDate, formatDateTime } from "@/lib/format"
@@ -482,7 +481,7 @@ export default function LeaveLedger() {
                   <span className="text-sm">
                     Period {fmtDate(payrollInput.period_start)} → {fmtDate(payrollInput.period_end)}
                   </span>
-                  <span className="badge badge-slate">{payrollInput.total_days}d total</span>
+                  <StatusPill status={`${payrollInput.total_days}d total`} />
                   <span className="text-xs text-text-secondary">{payrollInput.entries.length} entries</span>
                 </div>
                 {payrollInput.entries.length === 0 ? (
@@ -494,7 +493,7 @@ export default function LeaveLedger() {
                       { key: "type", header: "Leave type", accessor: (e) => <span className="font-mono text-xs">{e.leave_type_code}</span> },
                       { key: "dates", header: "Dates", accessor: (e) => <span className="whitespace-nowrap">{fmtDate(e.start_date)} {"\u2192"} {fmtDate(e.end_date)}</span> },
                       { key: "qty", header: "Quantity", accessor: (e) => `${e.quantity_days}d`, cellClassName: "num tabular-nums font-medium" },
-                      { key: "paid", header: "Paid", accessor: (e) => e.is_paid ? <span className="badge badge-green">Paid</span> : <span className="badge badge-slate">Unpaid</span> },
+                      { key: "paid", header: "Paid", accessor: (e) => <StatusPill status={e.is_paid ? "Paid" : "Unpaid"} /> },
                     ]}
                     data={payrollInput.entries}
                     keyAccessor={(e) => e.leave_request_id}

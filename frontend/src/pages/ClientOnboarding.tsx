@@ -5,12 +5,8 @@ import {
   EmptyState,
   Meter,
 } from "@/components/ui/feedback"
-import { Button, Input, Select, Textarea, Checkbox, Switch, RetryableAlert, Table } from "@/components/ui"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Card, SectionCard } from "@/components/ui/card"
+import { Button, Input, Select, Textarea, Checkbox, Switch, RetryableAlert, Table, Skeleton, Card, SectionCard, StatusPill } from "@/components/ui"
 import { Badge } from "@/components/ui/badge"
-import { StatusPill } from "@/components/ui/status-pill"
-
 import { Field, PageHeader } from "@/components/ui/layout"
 import { IconBuilding, IconAlert, IconDownload, IconRefresh, IconFile, IconX } from "@/components/icons"
 import api from "@/lib/api"

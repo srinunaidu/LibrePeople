@@ -8,7 +8,7 @@
  */
 import { useCallback, useEffect, useState } from "react"
 import { Layout } from "@/components/Layout"
-import {Alert, Button, EmptyState, LoadingRegion, PageHeader, SectionCard, RetryableAlert, TableSkeleton} from "@/components/ui"
+import {Alert, Button, EmptyState, LoadingRegion, PageHeader, SectionCard, RetryableAlert, TableSkeleton, Table } from "@/components/ui"
 import { useAuth } from "@/context/AuthContext"
 import api, { errorMessage } from "@/lib/api"
 
@@ -64,35 +64,35 @@ export default function ExportErasure() {
           description="From /admin/jobs filtered to retention jobs. Retry requeues a failed job; discard removes it from the queue."
           actions={<Button variant="secondary" size="sm" onClick={() => load()} disabled={loading}>{loading ? "Refreshing…" : "Refresh"}</Button>}
         >
-          <div className="table-scroll">
-            <table className="w-full text-sm">
-              <caption className="sr-only">Retention jobs</caption>
-              <thead><tr className="border-b"><th scope="col" className="text-left">ID</th><th scope="col" className="text-left">Type</th><th scope="col" className="text-left">State</th><th scope="col" className="text-left">Actions</th></tr></thead>
-              <tbody>
-                {jobs.length === 0 && <tr><td colSpan={4} className="py-3 text-fg-subtle italic">No retention jobs visible.</td></tr>}
-                {jobs.map(j => (
-                  <tr key={j.id} className="border-b">
-                    <td className="font-mono text-xs">{j.id}</td>
-                    <td>{j.type}</td>
-                    <td>{j.state}</td>
-                    <td>
-                      <span className="inline-flex items-center gap-1">
-                        <Button size="sm" variant="secondary" onClick={() => act(j.id, "retry")} loading={busyId === j.id} disabled={!canWrite}>Retry</Button>
-                        {discardConfirm === j.id ? (
-                          <>
-                            <Button size="sm" variant="danger" onClick={() => act(j.id, "discard")} loading={busyId === j.id}>Confirm</Button>
-                            <Button size="sm" variant="ghost" onClick={() => setDiscardConfirm(null)}>Cancel</Button>
-                          </>
-                        ) : (
-                          <Button size="sm" variant="ghost" onClick={() => setDiscardConfirm(j.id)} disabled={!canWrite}>Discard</Button>
-                        )}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table
+            columns={[
+              { key: "id", header: "ID", accessor: (j) => <span className="font-mono text-xs">{j.id}</span> },
+              { key: "type", header: "Type", accessor: (j) => j.type },
+              { key: "state", header: "State", accessor: (j) => j.state },
+              {
+                key: "actions",
+                header: "Actions",
+                accessor: (j) => (
+                  <span className="inline-flex items-center gap-1">
+                    <Button size="sm" variant="secondary" onClick={() => act(j.id, "retry")} loading={busyId === j.id} disabled={!canWrite}>Retry</Button>
+                    {discardConfirm === j.id ? (
+                      <>
+                        <Button size="sm" variant="danger" onClick={() => act(j.id, "discard")} loading={busyId === j.id}>Confirm</Button>
+                        <Button size="sm" variant="ghost" onClick={() => setDiscardConfirm(null)}>Cancel</Button>
+                      </>
+                    ) : (
+                      <Button size="sm" variant="ghost" onClick={() => setDiscardConfirm(j.id)} disabled={!canWrite}>Discard</Button>
+                    )}
+                  </span>
+                ),
+              },
+            ]}
+            data={jobs}
+            keyAccessor={(j) => j.id}
+            caption="Retention jobs"
+            emptyMessage="No retention jobs visible."
+            sortable={false}
+          />
         </SectionCard>
         <div className="text-xs text-fg-muted">HR-12 · R3 · depends AD-07 + AD-09 · feeds HR-09 (manager assignments). Erasure triggering is not exposed by the backend yet.</div>
       </div>

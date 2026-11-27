@@ -5,7 +5,7 @@
  */
 import { useCallback, useEffect, useState } from "react"
 import { Layout } from "@/components/Layout"
-import {Alert, Button, EmptyState, LoadingRegion, PageHeader, SectionCard, RetryableAlert, TableSkeleton} from "@/components/ui"
+import {Alert, Button, EmptyState, LoadingRegion, PageHeader, SectionCard, RetryableAlert, TableSkeleton, Table } from "@/components/ui"
 import { useAuth } from "@/context/AuthContext"
 import api, { getClientIdBySlug, errorMessage } from "@/lib/api"
 
@@ -87,20 +87,16 @@ export default function TenStepJourney() {
         </SectionCard>
 
         <SectionCard compact title="Journey steps" description="The 10-step lifecycle reference.">
-          <div className="table-scroll">
-            <table className="w-full text-sm">
-              <caption className="sr-only">Journey step reference</caption>
-              <thead><tr className="border-b"><th scope="col" className="text-left">Step</th><th scope="col" className="text-center">Index</th></tr></thead>
-              <tbody>
-                {JOURNEY_STEPS.map((s, i) => (
-                  <tr key={s} className="border-b">
-                    <td>{s}</td>
-                    <td className="text-center">{i + 1}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table
+            columns={[
+              { key: "step", header: "Step", accessor: (s) => s.step },
+              { key: "index", header: "Index", accessor: (s) => s.index },
+            ]}
+            data={JOURNEY_STEPS.map((s, i) => ({ step: s, index: i + 1 }))}
+            keyAccessor={(s) => s.step}
+            caption="Journey step reference"
+            sortable={false}
+          />
         </SectionCard>
 
         <div className="text-xs text-fg-muted">CF-11 · R1 · depends CF-02 + CF-09 · resumable state is the persisted journey_step flag.</div>

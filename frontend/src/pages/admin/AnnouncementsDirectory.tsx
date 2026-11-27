@@ -7,7 +7,7 @@
  */
 import { useCallback, useEffect, useState } from "react"
 import { Layout } from "@/components/Layout"
-import { Input,Alert, Button, EmptyState, LoadingRegion, PageHeader, SectionCard, RetryableAlert, TableSkeleton} from "@/components/ui"
+import { Input,Alert, Button, EmptyState, LoadingRegion, PageHeader, SectionCard, RetryableAlert, TableSkeleton, Table } from "@/components/ui"
 
 import { useAuth } from "@/context/AuthContext"
 import api, { getClientIdBySlug, errorMessage } from "@/lib/api"
@@ -96,21 +96,17 @@ export default function AnnouncementsDirectory() {
           {announcements.length === 0 ? (
             <EmptyState title="No announcements" description="No announcements have been published for this tenant yet. Add one above." />
           ) : (
-            <div className="table-scroll">
-              <table className="w-full text-sm">
-                <caption className="sr-only">Tenant announcements</caption>
-                <thead><tr className="border-b"><th scope="col" className="text-left">Date</th><th scope="col" className="text-left">Title</th><th scope="col" className="text-left">Content</th></tr></thead>
-                <tbody>
-                  {announcements.map(a => (
-                    <tr key={a.id} className="border-b">
-                      <td className="whitespace-nowrap">{a.date}</td>
-                      <td>{a.title}</td>
-                      <td className="text-xs text-fg-muted">{a.content || "—"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table
+              columns={[
+                { key: "date", header: "Date", accessor: (a) => <span className="whitespace-nowrap">{a.date}</span> },
+                { key: "title", header: "Title", accessor: (a) => a.title },
+                { key: "content", header: "Content", accessor: (a) => <span className="text-xs text-fg-muted">{a.content || "—"}</span> },
+              ]}
+              data={announcements}
+              keyAccessor={(a) => a.id}
+              caption="Tenant announcements"
+              sortable={false}
+            />
           )}
         </SectionCard>
         <div className="text-xs text-fg-muted">UX-06 · R3 · depends UX-02 · only backend-persisted announcements are shown.</div>

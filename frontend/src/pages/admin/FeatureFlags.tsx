@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react"
 import { Layout } from "@/components/Layout"
-import { Switch,Alert, Button, EmptyState, LoadingRegion, PageHeader, SectionCard, RetryableAlert, TableSkeleton} from "@/components/ui"
+import { Switch,Alert, Button, EmptyState, LoadingRegion, PageHeader, SectionCard, RetryableAlert, TableSkeleton, Table } from "@/components/ui"
 
 import { useAuth } from "@/context/AuthContext"
 import { useTenant } from "@/context/TenantContext"
@@ -93,29 +93,27 @@ export default function FeatureFlags() {
         {!!error && <RetryableAlert err={error} title="The feature flags & diagnostics could not be read." fallback="The feature flags & diagnostics could not be read." onRetry={load} />}
 
         <SectionCard compact title="Install flags" description="From the install company /onboarding-portal/clients/:id/feature-flags endpoint.">
-          <div className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
-            <table className="w-full text-sm tabular-nums">
-              <thead><tr className="border-b border-[var(--border)] bg-[var(--surface-elevated)]"><th className="text-left px-3 py-2 text-xs font-semibold uppercase tracking-wider text-[var(--fg-muted)]">Key</th><th className="text-left px-3 py-2 text-xs font-semibold uppercase tracking-wider text-[var(--fg-muted)]">Enabled</th></tr></thead>
-              <tbody className="divide-y divide-[var(--border)]">
-                {Object.keys(flags).length === 0 && (
-                  <tr><td colSpan={2} className="px-3 py-3 text-sm text-[var(--fg-muted)] italic">No feature flags are configured for this install yet.</td></tr>
-                )}
-                {Object.entries(flags).map(([k, v]) => (
-                  <tr key={k} className="hover:bg-[var(--surface-hover)] transition-colors">
-                    <td className="px-3 py-2 font-mono text-xs text-[var(--fg)]">{k}</td>
-                    <td className="px-3 py-2">
-                      <Switch
-                        checked={v}
-                        onChange={e => toggleFlag(k, e.target.checked)}
-                        disabled={!canWrite || savingKey === k}
-                        aria-label={`Toggle ${k}`}
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table
+            columns={[
+              { key: "key", header: "Key", accessor: ([k]) => <span className="px-0 font-mono text-xs">{k}</span> },
+              {
+                key: "enabled",
+                header: "Enabled",
+                accessor: ([k, v]) => (
+                  <Switch
+                    checked={v}
+                    onChange={e => toggleFlag(k, e.target.checked)}
+                    disabled={!canWrite || savingKey === k}
+                    aria-label={`Toggle ${k}`}
+                  />
+                ),
+              },
+            ]}
+            data={Object.entries(flags)}
+            keyAccessor={([k]) => k}
+            emptyMessage="No feature flags are configured for this install yet."
+            sortable={false}
+          />
           {!canWrite && (
             <div className="mt-3 text-xs text-[var(--fg-muted)]">
               SuperAdmin controls changes.

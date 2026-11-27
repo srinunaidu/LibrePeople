@@ -8,9 +8,8 @@ import {
   Meter,
   PageHeader,
   SectionCard,
-  StatCard,
-  StatusPill,
-} from "@/components/ui"
+  KPICard,
+  StatusPill, Table } from "@/components/ui"
 import { IconExit, IconCheck, IconX } from "@/components/icons"
 import api from "@/lib/api"
 import { fetchAllEmployees } from "@/lib/employees"
@@ -179,10 +178,10 @@ export default function Offboarding() {
         </LoadingRegion>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
-          <StatCard tone="brand" label="Total terminations" value={terminations.length} />
-          <StatCard tone={openTerms > 0 ? "amber" : "green"} label="In progress" value={openTerms} />
-          <StatCard tone="slate" label="Checklist templates" value={tasks.length} />
-          <StatCard
+          <KPICard tone="brand" label="Total terminations" value={terminations.length} />
+          <KPICard tone={openTerms > 0 ? "amber" : "green"} label="In progress" value={openTerms} />
+          <KPICard tone="slate" label="Checklist templates" value={tasks.length} />
+          <KPICard
             tone="violet"
             label="Selected progress"
             value={selected?.progress ? `${selected.progress.progress_percent}%` : "—"}
@@ -254,35 +253,30 @@ export default function Offboarding() {
             <EmptyState title={failed.includes("terminations") ? "Terminations unavailable" : "No terminations"}
               description={emptyDesc("terminations", "Initiate a termination above to start the exit checklist.")} />
           ) : (
-            <div className="table-scroll max-h-[380px] overflow-y-auto">
-              <table className="table-base table-striped">
-                <caption className="sr-only">All termination records</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Employee</th>
-                    <th scope="col">Last day</th>
-                    <th scope="col">Type</th>
-                    <th scope="col">Status</th>
-                    <th scope="col"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {terminations.map((t) => (
-                    <tr key={t.id} className={selected?.id === t.id ? "bg-[rgba(239,246,255,0.6)]" : ""}>
-                      <td>{empName(t.employee_id)}</td>
-                      <td className="whitespace-nowrap">{t.last_working_date}</td>
-                      <td>{t.termination_type}</td>
-                      <td><StatusPill status={t.status} /></td>
-                      <td className="text-right">
-                        <Button variant="ghost" onClick={() => openTermination(t.id)}>
-                          Open
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table
+              columns={[
+                { key: "employee", header: "Employee", accessor: (t) => empName(t.employee_id) },
+                { key: "lastday", header: "Last day", accessor: (t) => <span className="whitespace-nowrap">{t.last_working_date}</span> },
+                { key: "type", header: "Type", accessor: (t) => t.termination_type },
+                { key: "status", header: "Status", accessor: (t) => <StatusPill status={t.status} /> },
+                {
+                  key: "open",
+                  header: "",
+                  accessor: (t) => (
+                    <span className="text-right">
+                      <Button variant="ghost" onClick={() => openTermination(t.id)}>
+                        Open
+                      </Button>
+                    </span>
+                  ),
+                },
+              ]}
+              data={terminations}
+              keyAccessor={(t) => t.id}
+              caption="All termination records"
+              sortable={false}
+              rowClassName={(t) => (selected?.id === t.id ? "bg-[rgba(239,246,255,0.6)]" : "")}
+            />
           )}
         </SectionCard>
 
@@ -321,59 +315,53 @@ export default function Offboarding() {
               description="Exit tasks are generated from the template set when a termination is initiated."
             />
           ) : (
-            <div className="table-scroll max-h-[320px] overflow-y-auto">
-              <table className="table-base table-striped">
-                <caption className="sr-only">Exit checklist items</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Task</th>
-                    <th scope="col">Category</th>
-                    <th scope="col">Owner</th>
-                    <th scope="col">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {selected.items.map((i) => {
+            <Table
+              columns={[
+                { key: "task", header: "Task", accessor: (i) => i.name },
+                { key: "category", header: "Category", accessor: (i) => <span className="text-text-secondary">{i.category}</span> },
+                { key: "owner", header: "Owner", accessor: (i) => <span className="text-text-secondary">{i.assigned_to || "—"}</span> },
+                {
+                  key: "status",
+                  header: "Status",
+                  accessor: (i) => {
                     const done = i.status === "Completed"
                     return (
-                      <tr key={i.id}>
-                        <td>{i.name}</td>
-                        <td className="text-text-secondary">{i.category}</td>
-                        <td className="text-text-secondary">{i.assigned_to || "—"}</td>
-                        <td>
-                          {/* PUT /offboarding/items/{id} is ADMIN_ROLES
-                              (offboarding.py:195) — other roles read a
-                              status badge instead of a button that 403s. */}
-                          {isAdmin ? (
-                            <button
-                              className={done ? "badge badge-green cursor-default" : "action-link"}
-                              disabled={done || busy === `i${i.id}`}
-                              onClick={() =>
-                                act(`i${i.id}`, () => api.put(`/offboarding/items/${i.id}`, {
-                                  status: done ? "Pending" : "Completed",
-                                }), "Checklist updated")
-                              }
-                            >
-                              {done ? (
-                                <>Completed</>
-                              ) : busy === `i${i.id}` ? (
-                                "Saving…"
-                              ) : (
-                                "Mark complete"
-                              )}
-                            </button>
-                          ) : (
-                            <span className={`badge ${done ? "badge-green" : "badge-slate"}`}>
-                              {i.status}
-                            </span>
-                          )}
-                        </td>
-                      </tr>
+                      /* PUT /offboarding/items/{id} is ADMIN_ROLES
+                         (offboarding.py:195) — other roles read a
+                         status badge instead of a button that 403s. */
+                      isAdmin ? (
+                        done ? (
+                          <button
+                            className="cursor-default"
+                            disabled
+                          >
+                            <StatusPill status="Completed" />
+                          </button>
+                        ) : (
+                          <button
+                            className="action-link"
+                            disabled={busy === `i${i.id}`}
+                            onClick={() =>
+                              act(`i${i.id}`, () => api.put(`/offboarding/items/${i.id}`, {
+                                status: "Completed",
+                              }), "Checklist updated")
+                            }
+                          >
+                            {busy === `i${i.id}` ? "Saving…" : "Mark complete"}
+                          </button>
+                        )
+                      ) : (
+                        <StatusPill status={i.status} tone={done ? "green" : "slate"} />
+                      )
                     )
-                  })}
-                </tbody>
-              </table>
-            </div>
+                  },
+                },
+              ]}
+              data={selected.items}
+              keyAccessor={(i) => i.id}
+              caption="Exit checklist items"
+              sortable={false}
+            />
           )}
         </SectionCard>
       </div>
@@ -414,31 +402,21 @@ export default function Offboarding() {
           <EmptyState title={failed.includes("tasks") ? "Templates unavailable" : "No checklist templates"}
             description={emptyDesc("tasks", "Templates defined here are applied to every new termination.")} />
         ) : (
-          <div className="table-scroll">
-            <table className="table-base table-striped">
-              <caption className="sr-only">Offboarding checklist templates</caption>
-              <thead>
-                <tr>
-                  <th scope="col">Name</th>
-                  <th scope="col">Category</th>
-                  <th scope="col">Required</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tasks.map((t) => (
-                  <tr key={t.id}>
-                    <td>{t.name}</td>
-                    <td className="text-text-secondary">{t.category}</td>
-                    <td>
-                      <span className={`badge ${t.is_required ? "badge-amber" : "badge-slate"}`}>
-                        {t.is_required ? "Required" : "Optional"}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table
+            columns={[
+              { key: "name", header: "Name", accessor: (t) => t.name },
+              { key: "category", header: "Category", accessor: (t) => <span className="text-text-secondary">{t.category}</span> },
+              {
+                key: "required",
+                header: "Required",
+                accessor: (t) => <StatusPill status={t.is_required ? "Required" : "Optional"} tone={t.is_required ? "amber" : "slate"} />,
+              },
+            ]}
+            data={tasks}
+            keyAccessor={(t) => t.id}
+            caption="Offboarding checklist templates"
+            sortable={false}
+          />
         )}
       </section>
     </Layout>

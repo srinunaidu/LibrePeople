@@ -29,11 +29,10 @@ import {
   LoadingRegion,
   PageHeader,
   SectionCard,
-  TableSkeleton, RetryableAlert} from "@/components/ui"
+  TableSkeleton, RetryableAlert, StatusPill } from "@/components/ui"
 import { Field } from "@/components/ui/layout"
 import { Meter } from "@/components/ui/feedback"
 
-import { StatusPill } from "@/components/ui/status-pill"
 import { useAuth } from "@/context/AuthContext"
 import { useTenant } from "@/context/TenantContext"
 import api, { errorMessage } from "@/lib/api"

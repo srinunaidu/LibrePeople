@@ -5,7 +5,7 @@
  */
 import { useCallback, useEffect, useState } from "react"
 import { Layout } from "@/components/Layout"
-import { Input,EmptyState, Alert, Button, LoadingRegion, PageHeader, SectionCard, RetryableAlert, TableSkeleton} from "@/components/ui"
+import { Input,EmptyState, Alert, Button, LoadingRegion, PageHeader, SectionCard, RetryableAlert, TableSkeleton, Table } from "@/components/ui"
 
 import { useAuth } from "@/context/AuthContext"
 import { useTenant } from "@/context/TenantContext"
@@ -113,16 +113,19 @@ export default function MultiLocationAssignments() {
         <SectionCard compact title="Location & project assignment" description="Per-tenant from /clients/:slug/feature-flags.">
           {/* SC-08 reference card — location/project assignment patterns (multi-entity, depends HR-05).
              This is a static pattern table for the assignment UI, not a shift-swaps table. */}
-          <div className="table-scroll">
-            <table className="table-base table-compact table-striped">
-              <thead><tr className="border-b"><th>Pattern</th><th>Description</th></tr></thead>
-              <tbody>
-                <tr className="border-b"><td>List view</td><td>Single-column layout for mobile</td></tr>
-                <tr className="border-b"><td>Grid view</td><td>Two-column layout for tablet</td></tr>
-                <tr className="border-b"><td>Accessible focus</td><td>Keyboard-focusable elements in order</td></tr>
-              </tbody>
-            </table>
-            </div>
+          <Table
+            columns={[
+              { key: "pattern", header: "Pattern", accessor: (p) => p.pattern },
+              { key: "description", header: "Description", accessor: (p) => p.description },
+            ]}
+            data={[
+              { pattern: "List view", description: "Single-column layout for mobile" },
+              { pattern: "Grid view", description: "Two-column layout for tablet" },
+              { pattern: "Accessible focus", description: "Keyboard-focusable elements in order" },
+            ]}
+            keyAccessor={(p) => p.pattern}
+            sortable={false}
+          />
 
           <div className="text-xs text-fg-muted">SC-08 · R3 · depends HR-05 · no fabricated location data.</div>
         </SectionCard>

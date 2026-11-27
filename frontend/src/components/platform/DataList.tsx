@@ -1,8 +1,7 @@
 import { Table, type Column } from "@/components/ui/table"
-import { Card, SectionCard } from "@/components/ui/card"
+import { Card, SectionCard, Skeleton } from "@/components/ui"
 import { Badge } from "@/components/ui/badge"
 import { EmptyState, Alert } from "@/components/ui/feedback"
-import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
 interface Row {

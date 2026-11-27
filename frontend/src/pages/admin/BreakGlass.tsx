@@ -15,9 +15,8 @@
 import { useState, type FormEvent } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Layout } from "@/components/Layout"
-import { Input, Textarea, Alert, Button, EmptyState, LoadingRegion, PageHeader, SectionCard, TableSkeleton, RetryableAlert} from "@/components/ui"
+import { Input, Textarea, Alert, Button, EmptyState, LoadingRegion, PageHeader, SectionCard, TableSkeleton, RetryableAlert, StatusPill, Table } from "@/components/ui"
 
-import { StatusPill } from "@/components/ui/status-pill"
 import { useAuth } from "@/context/AuthContext"
 import { useTenant } from "@/context/TenantContext"
 import api, { errorMessage } from "@/lib/api"
@@ -263,82 +262,63 @@ export default function BreakGlass() {
           ) : grants.length === 0 ? (
             <EmptyState title="No grants" description="No break-glass grants have been issued yet. Create one above — it will appear here and in the audit trail." />
           ) : (
-            <div className="table-scroll overflow-x-auto">
-              <table className="table-base table-compact w-full text-sm" style={{ borderCollapse: "collapse" }}>
-                <caption className="sr-only">Break-glass grants</caption>
-                <thead>
-                  <tr className="border-b border-[color:var(--border)] text-left">
-                    <th scope="col" className="px-3 py-2 text-xs font-semibold text-[color:var(--fg-muted)]">
-                      ID
-                    </th>
-                    <th scope="col" className="px-3 py-2 text-xs font-semibold text-[color:var(--fg-muted)]">
-                      Actor
-                    </th>
-                    <th scope="col" className="px-3 py-2 text-xs font-semibold text-[color:var(--fg-muted)]">
-                      Scope · target tenant
-                    </th>
-                    <th scope="col" className="px-3 py-2 text-xs font-semibold text-[color:var(--fg-muted)]">
-                      Purpose
-                    </th>
-                    <th scope="col" className="px-3 py-2 text-xs font-semibold text-[color:var(--fg-muted)]">
-                      Created
-                    </th>
-                    <th scope="col" className="px-3 py-2 text-xs font-semibold text-[color:var(--fg-muted)]">
-                      Expires
-                    </th>
-                    <th scope="col" className="px-3 py-2 text-xs font-semibold text-[color:var(--fg-muted)]">
-                      Status
-                    </th>
-                    <th scope="col" className="px-3 py-2 text-xs font-semibold text-[color:var(--fg-muted)]">
-                      Action
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {grants.map((g) => (
-                    <tr key={g.id} className="border-b border-[color:var(--border)] hover:bg-[color:var(--surface-hover)]">
-                      <td className="px-3 py-2 font-mono text-xs">#{g.id}</td>
-                      <td className="px-3 py-2 text-xs">{g.actor_id}</td>
-                      <td className="px-3 py-2 font-mono text-xs">{g.target_tenant_id}</td>
-                      <td className="px-3 py-2 text-xs max-w-[260px] truncate" title={g.purpose}>
-                        {g.purpose}
-                      </td>
-                      <td className="px-3 py-2 text-xs whitespace-nowrap">{fmtDate(g.granted_at)}</td>
-                      <td className="px-3 py-2 text-xs whitespace-nowrap">{fmtDate(g.expires_at)}</td>
-                      <td className="px-3 py-2">
-                        {g.revoked_at ? (
-                          <StatusPill status="Revoked" />
-                        ) : g.is_active ? (
-                          <StatusPill status="Active" />
-                        ) : (
-                          <StatusPill status="Expired" />
-                        )}
-                      </td>
-                      <td className="px-3 py-2">
-                        {!g.revoked_at && g.is_active ? (
-                          revokeConfirm === g.id ? (
-                            <span className="inline-flex items-center gap-1">
-                              <Button size="xs" variant="danger" loading={revokeMutation.isPending} onClick={() => revokeMutation.mutate(g.id)}>
-                                Confirm
-                              </Button>
-                              <Button size="xs" variant="ghost" onClick={() => setRevokeConfirm(null)}>
-                                Cancel
-                              </Button>
-                            </span>
-                          ) : (
-                            <Button size="xs" variant="secondary" onClick={() => setRevokeConfirm(g.id)}>
-                              Revoke
-                            </Button>
-                          )
-                        ) : (
-                          <span className="text-xs text-[color:var(--fg-muted)]">—</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table
+              columns={[
+                { key: "id", header: "ID", accessor: (g) => <span className="font-mono text-xs">#{g.id}</span> },
+                { key: "actor", header: "Actor", accessor: (g) => <span className="text-xs">{g.actor_id}</span> },
+                { key: "scope", header: "Scope · target tenant", accessor: (g) => <span className="font-mono text-xs">{g.target_tenant_id}</span> },
+                {
+                  key: "purpose",
+                  header: "Purpose",
+                  accessor: (g) => (
+                    <span className="text-xs max-w-[260px] truncate" title={g.purpose}>
+                      {g.purpose}
+                    </span>
+                  ),
+                },
+                { key: "created", header: "Created", accessor: (g) => <span className="text-xs whitespace-nowrap">{fmtDate(g.granted_at)}</span> },
+                { key: "expires", header: "Expires", accessor: (g) => <span className="text-xs whitespace-nowrap">{fmtDate(g.expires_at)}</span> },
+                {
+                  key: "status",
+                  header: "Status",
+                  accessor: (g) =>
+                    g.revoked_at ? (
+                      <StatusPill status="Revoked" />
+                    ) : g.is_active ? (
+                      <StatusPill status="Active" />
+                    ) : (
+                      <StatusPill status="Expired" />
+                    ),
+                },
+                {
+                  key: "action",
+                  header: "Action",
+                  accessor: (g) =>
+                    !g.revoked_at && g.is_active ? (
+                      revokeConfirm === g.id ? (
+                        <span className="inline-flex items-center gap-1">
+                          <Button size="xs" variant="danger" loading={revokeMutation.isPending} onClick={() => revokeMutation.mutate(g.id)}>
+                            Confirm
+                          </Button>
+                          <Button size="xs" variant="ghost" onClick={() => setRevokeConfirm(null)}>
+                            Cancel
+                          </Button>
+                        </span>
+                      ) : (
+                        <Button size="xs" variant="secondary" onClick={() => setRevokeConfirm(g.id)}>
+                          Revoke
+                        </Button>
+                      )
+                    ) : (
+                      <span className="text-xs text-[color:var(--fg-muted)]">—</span>
+                    ),
+                },
+              ]}
+              data={grants}
+              keyAccessor={(g) => g.id}
+              caption="Break-glass grants"
+              sortable={false}
+            />
           )}
           {grantsQuery.data && grantsQuery.data.length > 0 && (
             <p className="text-xs text-[color:var(--fg-muted)] mt-3 px-1">DELETE /break-glass/grants/{"{id}"} revokes a grant. Revoked and expired grants remain in the ledger.</p>

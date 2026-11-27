@@ -27,11 +27,9 @@ import {
   RetryableAlert,
   SectionCard,
   TableSkeleton,
-  Table,
-} from "@/components/ui"
+  Table, StatusPill } from "@/components/ui"
 
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-import { StatusPill } from "@/components/ui/status-pill"
 import { useAuth } from "@/context/AuthContext"
 import { useTenant } from "@/context/TenantContext"
 import api, { errorMessage, getFiling, isPendingVerification } from "@/lib/api"
@@ -725,6 +723,10 @@ export default function ComplianceCenter() {
                 {filingData && !filingError && (
                   <div className="space-y-3" data-testid="filing-result">
                     <div className="text-xs text-[color:var(--fg-muted)]">Raw txt split by comma → table. Content-Disposition handled for download filename IN_{"{TYPE}"}_{"{PERIOD}"}.txt (PT suffix _{filingState}).</div>
+                    {/* KIT EXCLUSION (contract: design-system-finish) — raw filing-txt
+                        preview: rows are comma-split at runtime with comment/header/body
+                        row kinds and a dynamic column count, not tabular data with
+                        fixed string headers, so this table stays raw by design. */}
                     <div className="table-scroll overflow-x-auto">
                       <table className="table-base table-compact w-full text-sm">
                         <caption className="sr-only">Filing {filingType} — period {filingPeriod}</caption>

@@ -6,7 +6,7 @@
  */
 import { useCallback, useEffect, useState } from "react"
 import { Layout } from "@/components/Layout"
-import { Input,Alert, Button, LoadingRegion, PageHeader, SectionCard, RetryableAlert, TableSkeleton, EmptyState} from "@/components/ui"
+import { Input,Alert, Button, LoadingRegion, PageHeader, SectionCard, RetryableAlert, TableSkeleton, EmptyState, Table } from "@/components/ui"
 
 import { useAuth } from "@/context/AuthContext"
 import { useTenant } from "@/context/TenantContext"
@@ -85,16 +85,19 @@ export default function MobileInteraction() {
           </div>
         </SectionCard>
         <SectionCard compact title="Interaction patterns" description="Predefined mobile/tablet interaction patterns.">
-          <div className="table-scroll">
-            <table className="w-full text-sm">
-              <thead><tr className="border-b"><th>Pattern</th><th>Description</th></tr></thead>
-              <tbody>
-                <tr className="border-b"><td>List view</td><td>Single-column layout for mobile</td></tr>
-                <tr className="border-b"><td>Grid view</td><td>Two-column layout for tablet</td></tr>
-                <tr className="border-b"><td>Accessible focus</td><td>Keyboard-focusable elements in order</td></tr>
-              </tbody>
-            </table>
-          </div>
+          <Table
+            columns={[
+              { key: "pattern", header: "Pattern", accessor: (p) => p.pattern },
+              { key: "description", header: "Description", accessor: (p) => p.description },
+            ]}
+            data={[
+              { pattern: "List view", description: "Single-column layout for mobile" },
+              { pattern: "Grid view", description: "Two-column layout for tablet" },
+              { pattern: "Accessible focus", description: "Keyboard-focusable elements in order" },
+            ]}
+            keyAccessor={(p) => p.pattern}
+            sortable={false}
+          />
         </SectionCard>
 
         <div className="text-xs text-fg-muted">UX-08 · R3 · depends UX-02 + UX-09 · no fabricated mobile interaction patterns.</div>

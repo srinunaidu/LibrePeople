@@ -16,9 +16,8 @@ import {
   LoadingRegion,
   PageHeader,
   SectionCard,
-  TableSkeleton, RetryableAlert} from "@/components/ui"
+  TableSkeleton, RetryableAlert, StatusPill, Table } from "@/components/ui"
 
-import { StatusPill } from "@/components/ui/status-pill"
 import { useAuth } from "@/context/AuthContext"
 import { useTenant } from "@/context/TenantContext"
 import { formatDate } from "@/lib/format"
@@ -237,43 +236,31 @@ export default function UserAdmin() {
             <EmptyState title="No users" description="No accounts exist yet." />
           </div>
         ) : (
-          <div className="table-scroll">
-            <table className="table-base table-compact w-full text-sm">
-              <caption className="sr-only">Users</caption>
-              <thead>
-                <tr>
-                  <th scope="col">Username</th>
-                  <th scope="col">Email</th>
-                  <th scope="col">Role</th>
-                  <th scope="col">Active</th>
-                  <th scope="col">Must change password</th>
-                  <th scope="col">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((u) => (
-                  <tr key={u.id}>
-                    <td className="font-medium">{u.username}</td>
-                    <td className="font-mono text-xs">{u.email}</td>
-                    <td>
-                      <StatusPill status={u.role} />
-                    </td>
-                    <td>{u.is_active ? "Yes" : "No"}</td>
-                    <td>{u.must_change_password ? "Yes" : "No"}</td>
-                    <td>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Select
-                          value={roleDrafts[u.id] ?? u.role}
-                          onChange={(e) => setRoleDrafts((c) => ({ ...c, [u.id]: e.target.value }))}
-                          className="h-8 text-xs min-w-[130px]"
-                          aria-label={`Role for ${u.username}`}
-                        >
-                          {VALID_ROLES.map((r) => (
-                            <option key={r} value={r}>
-                              {r}
-                            </option>
-                          ))}
-                        </Select>
+          <Table
+            columns={[
+              { key: "username", header: "Username", accessor: (u) => <span className="font-medium">{u.username}</span> },
+              { key: "email", header: "Email", accessor: (u) => <span className="font-mono text-xs">{u.email}</span> },
+              { key: "role", header: "Role", accessor: (u) => <StatusPill status={u.role} /> },
+              { key: "active", header: "Active", accessor: (u) => (u.is_active ? "Yes" : "No") },
+              { key: "mcp", header: "Must change password", accessor: (u) => (u.must_change_password ? "Yes" : "No") },
+              {
+                key: "actions",
+                header: "Actions",
+                accessor: (u) => (
+                  <>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Select
+                        value={roleDrafts[u.id] ?? u.role}
+                        onChange={(e) => setRoleDrafts((c) => ({ ...c, [u.id]: e.target.value }))}
+                        className="h-8 text-xs min-w-[130px]"
+                        aria-label={`Role for ${u.username}`}
+                      >
+                        {VALID_ROLES.map((r) => (
+                          <option key={r} value={r}>
+                            {r}
+                          </option>
+                        ))}
+                      </Select>
                         <Button
                           variant="secondary"
                           size="sm"
@@ -329,12 +316,15 @@ export default function UserAdmin() {
                           </Button>
                         </div>
                       )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    </>
+                ),
+              },
+            ]}
+            data={users}
+            keyAccessor={(u) => u.id}
+            caption="Users"
+            sortable={false}
+          />
           )}
       </SectionCard>
 

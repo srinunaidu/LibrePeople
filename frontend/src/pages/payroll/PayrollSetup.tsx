@@ -26,6 +26,7 @@ import {
   RetryableAlert,
   PendingVerificationAlert,
   SectionCard,
+  Table,
   TableSkeleton, } from "@/components/ui"
 
 import { useAuth } from "@/context/AuthContext"
@@ -377,31 +378,19 @@ export default function PayrollSetup() {
             {periods.length === 0 ? (
               <EmptyState title="No pay periods yet" description="A run cannot be created until one does." action={<Button onClick={load}>Retry</Button>} />
             ) : (
-              <div className="table-scroll">
-                <table className="table-base table-compact w-full text-sm">
-                  <caption className="sr-only">Pay periods of this deployment</caption>
-                  <thead>
-                    <tr>
-                      <th scope="col">Name</th>
-                      <th scope="col">Starts</th>
-                      <th scope="col">Ends</th>
-                      <th scope="col">Pay date</th>
-                      <th scope="col">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {periods.map((period) => (
-                      <tr key={period.id}>
-                        <td>{period.name}</td>
-                        <td>{fmtDate(period.start_date)}</td>
-                        <td>{fmtDate(period.end_date)}</td>
-                        <td>{fmtDate(period.pay_date)}</td>
-                        <td>{period.status}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                columns={[
+                  { key: "name", header: "Name", accessor: (period) => period.name },
+                  { key: "starts", header: "Starts", accessor: (period) => fmtDate(period.start_date) },
+                  { key: "ends", header: "Ends", accessor: (period) => fmtDate(period.end_date) },
+                  { key: "paydate", header: "Pay date", accessor: (period) => fmtDate(period.pay_date) },
+                  { key: "status", header: "Status", accessor: (period) => period.status },
+                ]}
+                data={periods}
+                keyAccessor={(period) => period.id}
+                caption="Pay periods of this deployment"
+                sortable={false}
+              />
             )}
           </>
         )}
@@ -516,33 +505,20 @@ export default function PayrollSetup() {
             {components.length === 0 ? (
               <EmptyState title="No pay components yet" description="No pay components exist yet." action={<Button onClick={load}>Retry</Button>} />
             ) : (
-              <div className="table-scroll">
-                <table className="table-base table-compact w-full text-sm">
-                  <caption className="sr-only">Pay components of this deployment</caption>
-                  <thead>
-                    <tr>
-                      <th scope="col">Code</th>
-                      <th scope="col">Name</th>
-                      <th scope="col">Type</th>
-                      <th scope="col">Taxable</th>
-                      <th scope="col">Pre-tax</th>
-                      <th scope="col">Active</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {components.map((component) => (
-                      <tr key={component.id}>
-                        <td className="font-mono text-xs">{component.code}</td>
-                        <td>{component.name}</td>
-                        <td>{component.component_type}</td>
-                        <td>{component.is_taxable ? "Yes" : "No"}</td>
-                        <td>{component.is_pre_tax ? "Yes" : "No"}</td>
-                        <td>{component.is_active ? "Yes" : "No"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                columns={[
+                  { key: "code", header: "Code", accessor: (component) => <span className="font-mono text-xs">{component.code}</span> },
+                  { key: "name", header: "Name", accessor: (component) => component.name },
+                  { key: "type", header: "Type", accessor: (component) => component.component_type },
+                  { key: "taxable", header: "Taxable", accessor: (component) => (component.is_taxable ? "Yes" : "No") },
+                  { key: "pretax", header: "Pre-tax", accessor: (component) => (component.is_pre_tax ? "Yes" : "No") },
+                  { key: "active", header: "Active", accessor: (component) => (component.is_active ? "Yes" : "No") },
+                ]}
+                data={components}
+                keyAccessor={(component) => component.id}
+                caption="Pay components of this deployment"
+                sortable={false}
+              />
             )}
           </>
         )}
@@ -713,33 +689,20 @@ export default function PayrollSetup() {
             {profiles.length === 0 ? (
               <EmptyState title="No pay profiles yet" description="A run writes a payslip only for an employee who has one." action={<Button onClick={load}>Retry</Button>} />
             ) : (
-              <div className="table-scroll">
-                <table className="table-base table-compact w-full text-sm">
-                  <caption className="sr-only">Pay profiles this account may read</caption>
-                  <thead>
-                    <tr>
-                      <th scope="col">Employee</th>
-                      <th scope="col" className="num">Base salary</th>
-                      <th scope="col">Frequency</th>
-                      <th scope="col" className="num">Tax withholding</th>
-                      <th scope="col">Bank account</th>
-                      <th scope="col">PT state</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {profiles.map((profile) => (
-                      <tr key={profile.id}>
-                        <td>{employeeName(profile.employee_id)}</td>
-                        <td className="num tabular-nums">{money(profile.base_salary)}</td>
-                        <td>{profile.pay_frequency}</td>
-                        <td className="num tabular-nums">{money(profile.tax_withholding)}</td>
-                        <td>{profile.bank_account ? "On file" : "—"}</td>
-                        <td>{profile.pt_state || "—"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                columns={[
+                  { key: "employee", header: "Employee", accessor: (profile) => employeeName(profile.employee_id) },
+                  { key: "salary", header: "Base salary", accessor: (profile) => money(profile.base_salary), cellClassName: "num tabular-nums" },
+                  { key: "frequency", header: "Frequency", accessor: (profile) => profile.pay_frequency },
+                  { key: "withholding", header: "Tax withholding", accessor: (profile) => money(profile.tax_withholding), cellClassName: "num tabular-nums" },
+                  { key: "bank", header: "Bank account", accessor: (profile) => (profile.bank_account ? "On file" : "—") },
+                  { key: "pt", header: "PT state", accessor: (profile) => profile.pt_state || "—" },
+                ]}
+                data={profiles}
+                keyAccessor={(profile) => profile.id}
+                caption="Pay profiles this account may read"
+                sortable={false}
+              />
             )}
           </>
         )}

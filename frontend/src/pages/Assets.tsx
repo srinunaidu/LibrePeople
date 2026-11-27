@@ -578,29 +578,18 @@ export default function Assets() {
                   ) : history.length === 0 ? (
                     <p className="text-sm text-fg-muted">No custody spells for this asset.</p>
                   ) : (
-                    <div className="table-scroll max-h-[220px] overflow-y-auto">
-                      <table className="table-base table-striped">
-                        <caption className="sr-only">Custody history for {selected.tag}</caption>
-                        <thead>
-                          <tr>
-                            <th scope="col">Holder</th>
-                            <th scope="col">Ack</th>
-                            <th scope="col">Close reason</th>
-                            <th scope="col">Condition</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {history.map((h) => (
-                            <tr key={h.id}>
-                              <td>{employeeName(h.employee_id)}</td>
-                              <td>{h.acknowledged_at ? h.acknowledged_at.slice(0, 10) : "Pending"}</td>
-                              <td>{h.close_reason ?? (h.status === "open" ? "open" : "—")}</td>
-                              <td>{h.return_condition ?? "—"}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+                    <Table
+                      columns={[
+                        { key: "holder", header: "Holder", accessor: (h) => employeeName(h.employee_id) },
+                        { key: "ack", header: "Ack", accessor: (h) => (h.acknowledged_at ? h.acknowledged_at.slice(0, 10) : "Pending") },
+                        { key: "reason", header: "Close reason", accessor: (h) => h.close_reason ?? (h.status === "open" ? "open" : "—") },
+                        { key: "condition", header: "Condition", accessor: (h) => h.return_condition ?? "—" },
+                      ]}
+                      data={history}
+                      keyAccessor={(h) => h.id}
+                      caption={`Custody history for ${selected.tag}`}
+                      sortable={false}
+                    />
                   )}
                 </div>
               </SectionCard>
@@ -630,27 +619,18 @@ export default function Assets() {
                     <p className="text-sm mb-2" role="status">
                       Employee {clearance.employee_id}: {clearanceStatusText(clearance)}.
                     </p>
-                    <table className="table-base table-striped">
-                      <caption className="sr-only">Outstanding custody</caption>
-                      <thead>
-                        <tr>
-                          <th scope="col">Tag</th>
-                          <th scope="col">Asset</th>
-                          <th scope="col">Assigned</th>
-                          <th scope="col">Receipt</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {clearance.outstanding.map((o) => (
-                          <tr key={o.assignment_id}>
-                            <td className="font-mono">{o.tag}</td>
-                            <td>{o.name}</td>
-                            <td>{o.assigned_at ? o.assigned_at.slice(0, 10) : "—"}</td>
-                            <td>{o.acknowledged_at ? "Acknowledged" : "Pending"}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                    <Table
+                      columns={[
+                        { key: "tag", header: "Tag", accessor: (o) => <span className="font-mono">{o.tag}</span> },
+                        { key: "asset", header: "Asset", accessor: (o) => o.name },
+                        { key: "assigned", header: "Assigned", accessor: (o) => (o.assigned_at ? o.assigned_at.slice(0, 10) : "—") },
+                        { key: "receipt", header: "Receipt", accessor: (o) => (o.acknowledged_at ? "Acknowledged" : "Pending") },
+                      ]}
+                      data={clearance.outstanding}
+                      keyAccessor={(o) => o.assignment_id}
+                      caption="Outstanding custody"
+                      sortable={false}
+                    />
                   </div>
                 )
               )}

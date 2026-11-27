@@ -8,7 +8,7 @@ import {
   LoadingRegion,
   PageHeader,
   SectionCard,
-  StatCard,
+  KPICard,
   StatusPill, RetryableAlert} from "@/components/ui"
 import { IconFile, IconPlus, IconTarget, IconUsers } from "@/components/icons"
 import api, { fileUrl } from "@/lib/api"
@@ -275,10 +275,10 @@ export default function Recruiting() {
         </LoadingRegion>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
-          <StatCard tone="brand" label="Open requisitions" value={openReqs} hint={`${requisitions.length} total`} />
-          <StatCard tone="violet" label="Candidates" value={candidates.length} />
-          <StatCard tone="teal" label="Applications" value={applications.length} />
-          <StatCard tone="green" label="Hired" value={hired} hint={`${offers.length} offers issued`} />
+          <KPICard tone="brand" label="Open requisitions" value={openReqs} hint={`${requisitions.length} total`} />
+          <KPICard tone="violet" label="Candidates" value={candidates.length} />
+          <KPICard tone="teal" label="Applications" value={applications.length} />
+          <KPICard tone="green" label="Hired" value={hired} hint={`${offers.length} offers issued`} />
         </div>
       )}
 

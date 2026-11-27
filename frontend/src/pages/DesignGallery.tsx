@@ -3,14 +3,11 @@ import { useState } from "react"
 import { Link } from "react-router-dom"
 import { Layout } from "@/components/Layout"
 
-import { Card, SectionCard } from "@/components/ui/card"
 import { PageHeader } from "@/components/ui/layout"
 import { Badge } from "@/components/ui/badge"
-import { StatusPill } from "@/components/ui/status-pill"
-
 import { IconGrid } from "@/components/icons"
 import * as React from "react"
-import { Button, Input, Select } from "@/components/ui"
+import { Button, Input, Select, Card, SectionCard, StatusPill, Table } from "@/components/ui"
 
 // ---------------------------------------------------------------------------
 // 5 design directions — token-driven, no hardcoded hex, no inline style{{
@@ -106,6 +103,59 @@ const DIRECTIONS: Direction[] = [
     },
     accent: "var(--accent)",
     preview: { stat: "var(--accent)", tableHead: "var(--surface-hover)", navActive: "var(--accent-tint)" },
+  },
+]
+
+// ---------------------------------------------------------------------------
+// Side-by-side comparison rows — tabular data, rendered with kit Table.
+// The colour dots from the raw table headers are dropped: kit headers are
+// string-only per the design-system-finish contract.
+// ---------------------------------------------------------------------------
+type CompareRow = { aspect: string; cells: React.ReactNode[] }
+
+const COMPARISON_DENSITY = ["Comfortable", "Dense", "Spacious", "Minimal", "Comfortable"]
+
+const COMPARISON_FEELS_LIKE = [
+  "Enterprise baseline",
+  "Linear / Stripe",
+  "Notion / Intercom",
+  "Stripe Docs",
+  "Vercel / Framer",
+]
+
+const COMPARISON_ROWS: CompareRow[] = [
+  {
+    aspect: "Brand",
+    cells: DIRECTIONS.map((d) => (
+      <span key={d.id} className="inline-flex items-center gap-1.5">
+        <span className="h-4 w-4 rounded border" style={{ background: d.vars["--brand-600"] } as React.CSSProperties} />
+        <code className="text-xs">{d.vars["--brand-600"]}</code>
+      </span>
+    )),
+  },
+  {
+    aspect: "Surface",
+    cells: DIRECTIONS.map((d) => (
+      <span key={d.id} className="h-4 w-8 rounded border inline-block" style={{ background: d.vars["--surface-sunken"] } as React.CSSProperties} />
+    )),
+  },
+  {
+    aspect: "Radius",
+    cells: DIRECTIONS.map((d) => (
+      <span key={d.id} className="font-mono text-xs">{d.vars["--radius-lg"]}</span>
+    )),
+  },
+  {
+    aspect: "Density",
+    cells: COMPARISON_DENSITY.map((density, i) => (
+      <span key={DIRECTIONS[i].id} className={i === 1 ? "text-xs font-medium" : "text-xs"}>{density}</span>
+    )),
+  },
+  {
+    aspect: "Feels like",
+    cells: COMPARISON_FEELS_LIKE.map((feelsLike, i) => (
+      <span key={DIRECTIONS[i].id} className="text-xs">{feelsLike}</span>
+    )),
   },
 ]
 
@@ -364,75 +414,20 @@ export default function DesignGallery() {
 
       {/* Comparison table */}
       <SectionCard compact title="Side-by-side comparison" description="Same tokens, five expressions. Pick the row that feels like your product.">
-        <div className="p-0 overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border text-xs text-fg-muted">
-                <th className="text-left px-4 py-2.5 font-semibold">Aspect</th>
-                {DIRECTIONS.map((d) => {
-                  const dotBg = { background: d.accent } as React.CSSProperties
-                  return (
-                    <th key={d.id} className="text-left px-3 py-2.5 font-semibold">
-                      <span className="inline-flex items-center gap-1.5">
-                        <span className="h-2.5 w-2.5 rounded-full" style={dotBg} />
-                        {d.name.split(" — ")[0]}
-                      </span>
-                    </th>
-                  )
-                })}
-              </tr>
-            </thead>
-            <tbody className="text-sm">
-              <tr className="border-b border-border-subtle">
-                <td className="px-4 py-2 font-medium text-fg-muted">Brand</td>
-                {DIRECTIONS.map((d) => {
-                  const brandBg = { background: d.vars["--brand-600"] } as React.CSSProperties
-                  return (
-                    <td key={d.id} className="px-3 py-2">
-                      <span className="inline-flex items-center gap-1.5">
-                        <span className="h-4 w-4 rounded border" style={brandBg} />
-                        <code className="text-xs">{d.vars["--brand-600"]}</code>
-                      </span>
-                    </td>
-                  )
-                })}
-              </tr>
-              <tr className="border-b border-border-subtle">
-                <td className="px-4 py-2 font-medium text-fg-muted">Surface</td>
-                {DIRECTIONS.map((d) => {
-                  const surfBg = { background: d.vars["--surface-sunken"] } as React.CSSProperties
-                  return (
-                    <td key={d.id} className="px-3 py-2">
-                      <span className="h-4 w-8 rounded border inline-block" style={surfBg} />
-                    </td>
-                  )
-                })}
-              </tr>
-              <tr className="border-b border-border-subtle">
-                <td className="px-4 py-2 font-medium text-fg-muted">Radius</td>
-                {DIRECTIONS.map((d) => (
-                  <td key={d.id} className="px-3 py-2 font-mono text-xs">{d.vars["--radius-lg"]}</td>
-                ))}
-              </tr>
-              <tr className="border-b border-border-subtle">
-                <td className="px-4 py-2 font-medium text-fg-muted">Density</td>
-                <td className="px-3 py-2 text-xs">Comfortable</td>
-                <td className="px-3 py-2 text-xs font-medium">Dense</td>
-                <td className="px-3 py-2 text-xs">Spacious</td>
-                <td className="px-3 py-2 text-xs">Minimal</td>
-                <td className="px-3 py-2 text-xs">Comfortable</td>
-              </tr>
-              <tr>
-                <td className="px-4 py-2 font-medium text-fg-muted">Feels like</td>
-                <td className="px-3 py-2 text-xs">Enterprise baseline</td>
-                <td className="px-3 py-2 text-xs">Linear / Stripe</td>
-                <td className="px-3 py-2 text-xs">Notion / Intercom</td>
-                <td className="px-3 py-2 text-xs">Stripe Docs</td>
-                <td className="px-3 py-2 text-xs">Vercel / Framer</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <Table
+          columns={[
+            { key: "aspect", header: "Aspect", accessor: (r: CompareRow) => r.aspect },
+            ...DIRECTIONS.map((d, i) => ({
+              key: d.id,
+              header: d.name.split(" — ")[0],
+              accessor: (r: CompareRow) => r.cells[i],
+            })),
+          ]}
+          data={COMPARISON_ROWS}
+          keyAccessor={(r) => r.aspect}
+          caption="Side-by-side comparison of the five design directions"
+          sortable={false}
+        />
       </SectionCard>
 
       {/* How to choose */}

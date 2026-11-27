@@ -8,7 +8,7 @@
  */
 import { useCallback, useEffect, useState } from "react"
 import { Layout } from "@/components/Layout"
-import { Alert, Button, EmptyState, Input, LoadingRegion, PageHeader, SectionCard, RetryableAlert, TableSkeleton } from "@/components/ui"
+import { Alert, Button, EmptyState, Input, LoadingRegion, PageHeader, SectionCard, RetryableAlert, TableSkeleton, Table } from "@/components/ui"
 import { useAuth } from "@/context/AuthContext"
 import { listInterviews, createInterview, updateInterview, errorMessage, type InterviewOut } from "@/lib/api"
 
@@ -122,44 +122,58 @@ export default function InterviewScheduling() {
           {interviews.length === 0 ? (
             <EmptyState title="No interviews scheduled" description="The live ledger is empty — schedule the first interview above. Nothing is shown that the backend does not store." />
           ) : (
-            <div className="table-scroll">
-              <table className="w-full text-sm">
-                <caption className="sr-only">Scheduled interviews</caption>
-                <thead><tr className="border-b"><th scope="col" className="text-left">ID</th><th scope="col" className="text-left">Candidate</th><th scope="col" className="text-left">Stage</th><th scope="col" className="text-left">Status</th><th scope="col" className="text-left">Feedback</th><th scope="col" className="text-left"><span className="sr-only">Actions</span></th></tr></thead>
-                <tbody>
-                  {interviews.map(iv => (
-                    <tr key={iv.id} className="border-b last:border-0">
-                      <td className="py-2 pr-3 tabular-nums">{iv.id}</td>
-                      <td className="py-2 pr-3 tabular-nums">{iv.candidate_id}</td>
-                      <td className="py-2 pr-3">{iv.stage}</td>
-                      <td className="py-2 pr-3">
-                        <select
-                          aria-label={`Status for interview ${iv.id}`}
-                          value={edits[iv.id]?.status ?? iv.status}
-                          onChange={e => setEdits(prev => ({ ...prev, [iv.id]: { status: e.target.value, feedback: prev[iv.id]?.feedback ?? "" } }))}
-                          className="rounded border px-2 py-1"
-                        >
-                          {STATUSES.map(s => (<option key={s} value={s}>{s}</option>))}
-                        </select>
-                      </td>
-                      <td className="py-2 pr-3">
-                        <Input
-                          aria-label={`Feedback for interview ${iv.id}`}
-                          value={edits[iv.id]?.feedback ?? ""}
-                          onChange={e => setEdits(prev => ({ ...prev, [iv.id]: { status: prev[iv.id]?.status ?? iv.status, feedback: e.target.value } }))}
-                          placeholder="Outcome notes"
-                        />
-                      </td>
-                      <td className="py-2">
-                        <Button variant="secondary" size="sm" onClick={() => saveRow(iv.id)} disabled={updatingId === iv.id}>
-                          {updatingId === iv.id ? "Saving…" : "Save"}
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table
+              columns={[
+                { key: "id", header: "ID", accessor: (iv) => <span className="py-2 pr-3 tabular-nums">{iv.id}</span> },
+                { key: "candidate", header: "Candidate", accessor: (iv) => <span className="py-2 pr-3 tabular-nums">{iv.candidate_id}</span> },
+                { key: "stage", header: "Stage", accessor: (iv) => <span className="py-2 pr-3">{iv.stage}</span> },
+                {
+                  key: "status",
+                  header: "Status",
+                  accessor: (iv) => (
+                    <span className="py-2 pr-3">
+                      <select
+                        aria-label={`Status for interview ${iv.id}`}
+                        value={edits[iv.id]?.status ?? iv.status}
+                        onChange={e => setEdits(prev => ({ ...prev, [iv.id]: { status: e.target.value, feedback: prev[iv.id]?.feedback ?? "" } }))}
+                        className="rounded border px-2 py-1"
+                      >
+                        {STATUSES.map(s => (<option key={s} value={s}>{s}</option>))}
+                      </select>
+                    </span>
+                  ),
+                },
+                {
+                  key: "feedback",
+                  header: "Feedback",
+                  accessor: (iv) => (
+                    <span className="py-2 pr-3">
+                      <Input
+                        aria-label={`Feedback for interview ${iv.id}`}
+                        value={edits[iv.id]?.feedback ?? ""}
+                        onChange={e => setEdits(prev => ({ ...prev, [iv.id]: { status: prev[iv.id]?.status ?? iv.status, feedback: e.target.value } }))}
+                        placeholder="Outcome notes"
+                      />
+                    </span>
+                  ),
+                },
+                {
+                  key: "actions",
+                  header: "",
+                  accessor: (iv) => (
+                    <span className="py-2">
+                      <Button variant="secondary" size="sm" onClick={() => saveRow(iv.id)} disabled={updatingId === iv.id}>
+                        {updatingId === iv.id ? "Saving…" : "Save"}
+                      </Button>
+                    </span>
+                  ),
+                },
+              ]}
+              data={interviews}
+              keyAccessor={(iv) => iv.id}
+              caption="Scheduled interviews"
+              sortable={false}
+            />
           )}
         </SectionCard>
         <div className="text-xs text-fg-muted">RC-04 · reads and writes /api/v1/interviews · no fabricated interview data.</div>

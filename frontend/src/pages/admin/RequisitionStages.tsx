@@ -6,7 +6,7 @@
  */
 import { useCallback, useEffect, useState } from "react"
 import { Layout } from "@/components/Layout"
-import {Alert, Button, EmptyState, LoadingRegion, PageHeader, SectionCard, RetryableAlert, TableSkeleton} from "@/components/ui"
+import {Alert, Button, EmptyState, LoadingRegion, PageHeader, SectionCard, RetryableAlert, TableSkeleton, Table } from "@/components/ui"
 import { useAuth } from "@/context/AuthContext"
 import api, { getClientIdBySlug, errorMessage } from "@/lib/api"
 
@@ -89,20 +89,16 @@ export default function RequisitionStages() {
         </SectionCard>
 
         <SectionCard compact title="Requisition stages" description="The 7-stage lifecycle reference.">
-          <div className="table-scroll">
-            <table className="w-full text-sm">
-              <caption className="sr-only">Requisition stage reference</caption>
-              <thead><tr className="border-b"><th scope="col" className="text-left">Stage</th><th scope="col" className="text-center">Index</th></tr></thead>
-              <tbody>
-                {STATUSES.map((s, i) => (
-                  <tr key={s} className="border-b">
-                    <td>{s}</td>
-                    <td className="text-center">{i + 1}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table
+            columns={[
+              { key: "stage", header: "Stage", accessor: (s) => s.stage },
+              { key: "index", header: "Index", accessor: (s) => s.index },
+            ]}
+            data={STATUSES.map((s, i) => ({ stage: s, index: i + 1 }))}
+            keyAccessor={(s) => s.stage}
+            caption="Requisition stage reference"
+            sortable={false}
+          />
         </SectionCard>
 
         <SectionCard compact title="Current configuration" description="The persisted tenant configuration.">

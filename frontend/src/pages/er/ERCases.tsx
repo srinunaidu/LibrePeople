@@ -5,7 +5,7 @@
  */
 import { useCallback, useEffect, useState } from "react"
 import { Layout } from "@/components/Layout"
-import { Alert, Button, EmptyState, Input, LoadingRegion, PageHeader, RetryableAlert, SectionCard, TableSkeleton } from "@/components/ui"
+import { Alert, Button, EmptyState, Input, LoadingRegion, PageHeader, RetryableAlert, SectionCard, TableSkeleton, Table } from "@/components/ui"
 import { useAuth } from "@/context/AuthContext"
 import api, { errorMessage } from "@/lib/api"
 
@@ -228,18 +228,20 @@ export default function ERCases() {
           {cases.length === 0 ? (
             <EmptyState title="No cases" description="No Employee Relations cases match the current filters." />
           ) : (
-            <table className="w-full text-sm">
-              <thead><tr><th>ID</th><th>Type</th><th>Severity</th><th>Status</th><th>Assignee</th><th></th></tr></thead>
-              <tbody>
-                {cases.map(c => (
-                  <tr key={c.id}>
-                    <td>#{c.id}</td><td>{c.case_type}</td><td>{c.severity}</td>
-                    <td>{c.status}</td><td>{c.assigned_to ?? "—"}</td>
-                    <td><Button onClick={() => selectCase(c)}>Open</Button></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <Table
+              columns={[
+                { key: "id", header: "ID", accessor: (c) => `#${c.id}` },
+                { key: "type", header: "Type", accessor: (c) => c.case_type },
+                { key: "severity", header: "Severity", accessor: (c) => c.severity },
+                { key: "status", header: "Status", accessor: (c) => c.status },
+                { key: "assignee", header: "Assignee", accessor: (c) => c.assigned_to ?? "—" },
+                { key: "open", header: "", accessor: (c) => <Button onClick={() => selectCase(c)}>Open</Button> },
+              ]}
+              data={cases}
+              keyAccessor={(c) => c.id}
+              caption="Employee Relations cases"
+              sortable={false}
+            />
           )}
         </SectionCard>
 
