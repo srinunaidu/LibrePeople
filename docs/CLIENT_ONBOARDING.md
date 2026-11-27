@@ -35,6 +35,13 @@ Use `Authorization: Bearer <jwt>` on every subsequent request.
 
 ### 3.2 Creating a client (tenant)
 
+> **REMOVED — single-tenant install.** `POST /api/v1/onboarding-portal/clients`
+> (the client-registry create endpoint, like the rest of the registry CRUD,
+> the `/tenants` aliases, and the `/clients/by-slug/{slug}` lookup) no longer
+> exists and returns `404`. There is one company per install — read it with
+> `GET /api/v1/onboarding-portal/company` instead. The example below is kept
+> as architectural history only and must not be used.
+
 ```
 POST /api/v1/onboarding-portal/clients
 {
@@ -123,7 +130,7 @@ PUT  /api/v1/onboarding-portal/clients/{client_id}/feature-flags/{key}
 
 ## 4. Admin portal capabilities
 
-- Create / update / delete clients (tenants)
+- ~~Create / update / delete clients (tenants)~~ — REMOVED (single-tenant install; registry CRUD, `/tenants` aliases, and by-slug lookup return `404`). The single company is read via `GET /api/v1/onboarding-portal/company`.
 - Toggle feature flags per client
 - Manage integrations (create, test, delete)
 - Run and monitor migration jobs

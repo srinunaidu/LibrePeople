@@ -1,22 +1,26 @@
 /**
- * Break-glass emergency access — SuperAdmin + MFA grants.
+ * Break-glass emergency access ledger — SuperAdmin + MFA.
  *
  * Gates mirror backend/app/api/v1/endpoints/break_glass.py:
  *  POST /break-glass/access (SuperAdmin + MFA, body: actor_id/target_tenant_id/purpose/ttl_minutes)
  *  GET  /break-glass/grants (SuperAdmin)
  *  DELETE /break-glass/grants/{id} (SuperAdmin)
  *
+ * Single-tenant install: the cross-tenant grant-scope enforcement was
+ * removed — no data endpoint honors a grant to reach another tenant.
+ * Grants are recorded here as a time-boxed, fully audited ledger only.
+ *
  * Every grant is written to the audit trail (create_break_glass_grant / revoke_break_glass_grant).
  */
 import { useState, type FormEvent } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Layout } from "@/components/Layout"
-import { Input, Textarea, Select,Alert, Button, EmptyState, LoadingRegion, PageHeader, SectionCard, TableSkeleton, RetryableAlert} from "@/components/ui"
+import { Input, Textarea, Alert, Button, EmptyState, LoadingRegion, PageHeader, SectionCard, TableSkeleton, RetryableAlert} from "@/components/ui"
 
 import { StatusPill } from "@/components/ui/status-pill"
 import { useAuth } from "@/context/AuthContext"
 import { useTenant } from "@/context/TenantContext"
-import api, { errorMessage, listClients } from "@/lib/api"
+import api, { errorMessage } from "@/lib/api"
 
 interface BreakGlassGrantOut {
   id: number
@@ -53,12 +57,6 @@ export default function BreakGlass() {
   const [revokeError, setRevokeError] = useState("")
   const [revokeConfirm, setRevokeConfirm] = useState<number | null>(null)
 
-  const clientsQuery = useQuery({
-    queryKey: ["clients"],
-    queryFn: listClients,
-    enabled: isSuperAdmin,
-  })
-
   const grantsQuery = useQuery({
     queryKey: ["break-glass-grants"],
     queryFn: async () => {
@@ -80,7 +78,7 @@ export default function BreakGlass() {
       return data
     },
     onSuccess: (data) => {
-      setNotice(`Break-glass grant #${data.id} created for tenant ${data.target_tenant_id} — expires ${fmtDate(data.expires_at)}.`)
+      setNotice(`Break-glass grant #${data.id} recorded (scope "${data.target_tenant_id}") — expires ${fmtDate(data.expires_at)}. Ledger entry only; it confers no access to another tenant.`)
       setRevokeError("")
       qc.invalidateQueries({ queryKey: ["break-glass-grants"] })
       setPurpose("")
@@ -136,7 +134,7 @@ export default function BreakGlass() {
     return (
       <Layout>
         <div data-tenant-slug={tenant?.slug ?? "—"}>
-          <PageHeader compact title="Break-glass" description="Emergency cross-tenant access — SuperAdmin + MFA only. Every grant is written to the audit trail." />
+          <PageHeader compact title="Break-glass" description="Emergency access ledger — SuperAdmin + MFA only. Grants are recorded and audited; they confer no access to another tenant in this single-tenant install." />
           <EmptyState title="Not visible for your role" description={`Break-glass requires SuperAdmin; your role is ${user?.role || "unknown"}.`} />
         </div>
       </Layout>
@@ -151,8 +149,12 @@ export default function BreakGlass() {
         <PageHeader
           compact
           title="Break-glass"
-          description="Emergency cross-tenant access — SuperAdmin + MFA only. Every grant is written to the audit trail."
+          description="Emergency access ledger — SuperAdmin + MFA only. Grants are recorded and audited; they confer no access to another tenant in this single-tenant install."
         />
+
+        <p className="text-xs text-[color:var(--fg-muted)] border border-[color:var(--border)] rounded-[var(--radius-md)] px-3 py-2 bg-[color:var(--surface)]">
+          Single-tenant install: no data endpoint honors a break-glass grant, so a grant cannot open access to any other tenant. This screen is an audited ledger of time-boxed emergency records — nothing here reaches across tenants because there is only one company in this install.
+        </p>
 
         <p className="text-xs text-[color:var(--fg-muted)] border border-[color:var(--border)] rounded-[var(--radius-md)] px-3 py-2 bg-[color:var(--surface)]">
           Audit note: Every grant is written to the audit trail (<code className="font-mono text-xs">create_break_glass_grant</code> / <code className="font-mono text-xs">revoke_break_glass_grant</code>). TTL is capped at 480 minutes (8 hours), default 240. Break-glass is never honored for FSM or registry modification.
@@ -165,7 +167,7 @@ export default function BreakGlass() {
         <SectionCard
           compact
           title="Create grant"
-          description="POST /break-glass/access — SuperAdmin + MFA. The grant is time-boxed and audited. TTL max 480m (default 240m)."
+          description="POST /break-glass/access — SuperAdmin + MFA. The grant is time-boxed and audited. TTL max 480m (default 240m). Ledger entry only — confers no cross-tenant access."
         >
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -187,26 +189,13 @@ export default function BreakGlass() {
                 <label htmlFor="bg-tenant" className="block text-xs font-medium text-[color:var(--fg)] mb-1">
                   Target tenant <span className="text-[color:var(--error)]">(required)</span>
                 </label>
-                {clientsQuery.data && clientsQuery.data.length > 0 ? (
-                  <Select id="bg-tenant" value={targetTenant} onChange={(e) => setTargetTenant(e.target.value)}>
-                    <option value="">Select tenant…</option>
-                    {clientsQuery.data.map((c) => (
-                      <option key={c.id} value={c.slug}>
-                        {c.name} ({c.slug})
-                      </option>
-                    ))}
-                  </Select>
-                ) : (
-                  <Input
-                    id="bg-tenant"
-                    value={targetTenant}
-                    onChange={(e) => setTargetTenant(e.target.value)}
-                    placeholder="tenant slug e.g. acme"
-                  />
-                )}
-                {clientsQuery.isError && (
-                  <p className="text-caption text-[color:var(--error)] mt-1">{errorMessage(clientsQuery.error, "Could not load tenants")}</p>
-                )}
+                <Input
+                  id="bg-tenant"
+                  value={targetTenant}
+                  onChange={(e) => setTargetTenant(e.target.value)}
+                  placeholder="tenant slug e.g. acme"
+                />
+                <p className="text-caption text-[color:var(--fg-muted)] mt-1">Scope label required by the API; recorded in the ledger only. There is no second tenant in this install.</p>
               </div>
               <div>
                 <label htmlFor="bg-ttl" className="block text-xs font-medium text-[color:var(--fg)] mb-1">
@@ -286,7 +275,7 @@ export default function BreakGlass() {
                       Actor
                     </th>
                     <th scope="col" className="px-3 py-2 text-xs font-semibold text-[color:var(--fg-muted)]">
-                      Target tenant
+                      Scope · target tenant
                     </th>
                     <th scope="col" className="px-3 py-2 text-xs font-semibold text-[color:var(--fg-muted)]">
                       Purpose
