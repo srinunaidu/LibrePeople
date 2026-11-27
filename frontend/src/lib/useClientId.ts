@@ -1,17 +1,15 @@
 import { useEffect, useState } from "react"
 import { getClientIdBySlug } from "@/lib/api"
-import { getTenantSlug } from "@/lib/tenantSlugStore"
 
 /**
- * Shared hook for admin pages that need the current tenant's integer client ID.
- * Handles case-insensitive slug resolution, loading, and error without hanging.
- * Future admin pages should use this instead of duplicating getClientIdBySlug logic.
+ * Shared hook for admin pages that need the install's single company ID.
+ * Single-tenant: resolves once via GET /company (no slug state).
+ * Future admin pages should use this instead of duplicating resolution logic.
  */
 export function useClientId() {
   const [clientId, setClientId] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const slug = getTenantSlug()
 
   useEffect(() => {
     let cancelled = false
@@ -20,14 +18,14 @@ export function useClientId() {
       .then((id) => {
         if (cancelled) return
         if (id === null) {
-          setError(`Could not resolve tenant: ${slug ?? "—"}. Try switching to default workspace.`)
+          setError("Could not resolve the company. Check the server connection.")
         } else {
           setClientId(id)
           setError(null)
         }
       })
       .catch(() => {
-        if (!cancelled) setError(`Could not resolve tenant: ${slug ?? "—"}. Try switching to default workspace.`)
+        if (!cancelled) setError("Could not resolve the company. Check the server connection.")
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
@@ -35,7 +33,7 @@ export function useClientId() {
     return () => {
       cancelled = true
     }
-  }, [slug])
+  }, [])
 
-  return { clientId, loading, error, slug }
+  return { clientId, loading, error }
 }

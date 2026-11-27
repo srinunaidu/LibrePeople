@@ -27,7 +27,7 @@ export default function FeatureFlags() {
         const clients = await listClients()
         const match = clients.find(c => c.slug === tenant?.slug)
         if (!match) {
-          setError("No client found for this tenant")
+          setError("No company record found for this install")
           setClientId(null)
           setCanWrite(false)
           return
@@ -76,7 +76,7 @@ export default function FeatureFlags() {
   if (!isSuperAdmin) {
     return (
       <Layout>
-        <PageHeader compact title="Feature Flags & Diagnostics" description="AD-10 · release tracking + diagnostics (feeds AD-02 nav gating)" />
+        <PageHeader compact title="Feature Flags & Diagnostics" description="AD-10 · install-level release tracking + diagnostics (feeds AD-02 nav gating)" />
         <EmptyState title="Not visible for your role" description={`Feature flags require SuperAdmin; your role is ${user?.role || "unknown"}.`} />
       </Layout>
     )
@@ -86,19 +86,19 @@ export default function FeatureFlags() {
 
   return (
     <Layout>
-      <PageHeader compact title="Feature Flags & Diagnostics" description="AD-10 · release tracking + diagnostics (feeds AD-02 nav gating)" />
+      <PageHeader compact title="Feature Flags & Diagnostics" description="AD-10 · install-level release tracking + diagnostics (feeds AD-02 nav gating)" />
       <div className="max-w-3xl mx-auto px-6 py-10 space-y-6">
         {notice && <Alert tone="success">{notice}</Alert>}
         {actionError && <Alert tone="error">{actionError}</Alert>}
         {!!error && <RetryableAlert err={error} title="The feature flags & diagnostics could not be read." fallback="The feature flags & diagnostics could not be read." onRetry={load} />}
 
-        <SectionCard compact title="Feature flags" description="From /onboarding-portal/clients/:id/feature-flags endpoint.">
+        <SectionCard compact title="Install flags" description="From the install company /onboarding-portal/clients/:id/feature-flags endpoint.">
           <div className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
             <table className="w-full text-sm tabular-nums">
               <thead><tr className="border-b border-[var(--border)] bg-[var(--surface-elevated)]"><th className="text-left px-3 py-2 text-xs font-semibold uppercase tracking-wider text-[var(--fg-muted)]">Key</th><th className="text-left px-3 py-2 text-xs font-semibold uppercase tracking-wider text-[var(--fg-muted)]">Enabled</th></tr></thead>
               <tbody className="divide-y divide-[var(--border)]">
                 {Object.keys(flags).length === 0 && (
-                  <tr><td colSpan={2} className="px-3 py-3 text-sm text-[var(--fg-muted)] italic">No feature flags are configured for this tenant yet.</td></tr>
+                  <tr><td colSpan={2} className="px-3 py-3 text-sm text-[var(--fg-muted)] italic">No feature flags are configured for this install yet.</td></tr>
                 )}
                 {Object.entries(flags).map(([k, v]) => (
                   <tr key={k} className="hover:bg-[var(--surface-hover)] transition-colors">

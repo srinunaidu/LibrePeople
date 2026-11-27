@@ -70,7 +70,7 @@ from app.core.presets.loader import (  # noqa: E402
 from app.core.presets.modules import available_modules, served_router_tags  # noqa: E402
 from app.core.presets.readiness import check_readiness, read_facts  # noqa: E402
 from app.core.presets.tenant_state import TenantState, read_state, write_state  # noqa: E402
-from app.core.security import create_access_token, get_password_hash  # noqa: E402
+from app.core.security import get_password_hash  # noqa: E402
 from app.models.audit import AuditLog  # noqa: E402
 from app.models.department import Department  # noqa: E402
 from app.models.employee import Employee  # noqa: E402
@@ -777,51 +777,89 @@ check("the difference report tells the preset's default from the customer's chan
 
 # ==========================================================================
 print("=" * 68)
-print("CLIENT REGISTRY — the tenant matrix on the shared gate")
+print("CLIENT REGISTRY REMOVED — single-tenant install answers 404")
 print("=" * 68)
 
-# Every registry read funnels through the same `_scoped_client_or_404`
-# gate: an unknown id is 404, a bare request is 401, a foreign tenant is
-# refused without disclosure, and the legacy default tenant keeps the
-# global admin view so existing SuperAdmin tooling keeps working.
+# The registry CRUD, /tenants aliases, and by-slug lookup were removed. The
+# install serves one org (GET /onboarding-portal/company); the old
+# multi-tenant registry surface must answer 404 (no route), never data.
 response = client.post("/api/v1/onboarding-portal/clients", headers=ADMIN,
                        json={"name": "Matrix Acme", "slug": "matrix-acme"})
-check("a registry row is created for the matrix",
-      response.status_code == 201, response.text[:200])
-MATRIX_ID = response.json().get("id")
-response = client.post("/api/v1/onboarding-portal/clients", headers=ADMIN,
-                       json={"name": "Matrix Other", "slug": "matrix-other"})
-OTHER_ID = response.json().get("id") if response.status_code == 201 else None
-
-
-def _tenant_admin_headers(tenant: str) -> dict:
-    return {"Authorization": f"Bearer {create_access_token(subject='preset_admin', extra_claims={'tenant': tenant})}"}
-
-
-FOREIGN = _tenant_admin_headers("matrix-foreign")
-
-response = client.get(f"/api/v1/onboarding-portal/clients/{MATRIX_ID}", headers=ADMIN)
-check("the default tenant reads the row (legacy global admin view)",
-      response.status_code == 200 and response.json().get("slug") == "matrix-acme",
-      f"got {response.status_code}: {response.text[:200]}")
+check("the removed registry create answers 404",
+      response.status_code == 404, f"got {response.status_code}: {response.text[:200]}")
 
 response = client.get("/api/v1/onboarding-portal/clients", headers=ADMIN)
-check("the default tenant lists every registry row",
-      response.status_code == 200
-      and {MATRIX_ID, OTHER_ID} <= {row["id"] for row in response.json()},
-      f"got {response.status_code}")
+check("the removed registry list answers 404",
+      response.status_code == 404, f"got {response.status_code}: {response.text[:200]}")
 
-response = client.get(f"/api/v1/onboarding-portal/clients/{MATRIX_ID}", headers=FOREIGN)
-check("a foreign tenant is refused without disclosure",
-      response.status_code == 403, f"got {response.status_code}: {response.text[:200]}")
+response = client.get("/api/v1/onboarding-portal/clients/999999", headers=ADMIN)
+check("the removed registry read answers 404",
+      response.status_code == 404, f"got {response.status_code}: {response.text[:200]}")
+
+response = client.put("/api/v1/onboarding-portal/clients/999999", headers=ADMIN,
+                      json={"status": "Active"})
+check("the removed registry update answers 404",
+      response.status_code == 404, f"got {response.status_code}: {response.text[:200]}")
+
+response = client.delete("/api/v1/onboarding-portal/clients/999999", headers=ADMIN)
+check("the removed registry delete answers 404",
+      response.status_code == 404, f"got {response.status_code}: {response.text[:200]}")
+
+response = client.get("/api/v1/onboarding-portal/clients/by-slug/matrix-acme", headers=ADMIN)
+check("the removed by-slug lookup answers 404",
+      response.status_code == 404, f"got {response.status_code}: {response.text[:200]}")
+
+response = client.get("/api/v1/onboarding-portal/tenants", headers=ADMIN)
+check("the removed tenants alias list answers 404",
+      response.status_code == 404, f"got {response.status_code}: {response.text[:200]}")
 
 response = client.get("/api/v1/onboarding-portal/tenants/999999", headers=ADMIN)
-check("an unknown registry row reads as 404",
-      response.status_code == 404, f"got {response.status_code}")
+check("the removed tenants alias read answers 404",
+      response.status_code == 404, f"got {response.status_code}: {response.text[:200]}")
 
-response = client.get(f"/api/v1/onboarding-portal/clients/{MATRIX_ID}")
-check("a bare request is refused before the handler runs",
-      response.status_code == 401, f"got {response.status_code}")
+response = client.post("/api/v1/onboarding-portal/tenants/999999/provision", headers=ADMIN)
+check("the removed tenants lifecycle answers 404",
+      response.status_code == 404, f"got {response.status_code}: {response.text[:200]}")
+
+# The single company endpoint replaces the registry for the install's org.
+db = SessionLocal()
+try:
+    from app.models.client_onboarding import Client as _Client
+    _company = db.query(_Client).order_by(_Client.id.asc()).first()
+    if _company is None:
+        _company = _Client(name="Matrix Co", slug="matrix-co", status="Active")
+        db.add(_company)
+        db.commit()
+        db.refresh(_company)
+    _company_id = _company.id
+finally:
+    db.close()
+
+response = client.get("/api/v1/onboarding-portal/company")
+check("the single company endpoint answers without auth",
+      response.status_code == 200 and response.json().get("id") == _company_id,
+      f"got {response.status_code}: {response.text[:200]}")
+
+# AC-5: single-org settings round-trip (read -> update -> read-back).
+response = client.get(
+    f"/api/v1/onboarding-portal/clients/{_company_id}/settings", headers=ADMIN)
+check("company settings read", response.status_code == 200, f"got {response.status_code}")
+_before = {row["key"]: row["value"] for row in response.json()}
+
+response = client.put(
+    f"/api/v1/onboarding-portal/clients/{_company_id}/settings/company.tagline",
+    headers=ADMIN, json={"key": "company.tagline", "value": "Single Tenant Co"})
+check("company settings update",
+      response.status_code == 200 and response.json().get("value") == "Single Tenant Co",
+      f"got {response.status_code}: {response.text[:200]}")
+
+response = client.get(
+    f"/api/v1/onboarding-portal/clients/{_company_id}/settings", headers=ADMIN)
+_after = {row["key"]: row["value"] for row in response.json()}
+check("company settings round-trip reads back the update",
+      _after.get("company.tagline") == "Single Tenant Co"
+      and all(_after.get(k) == v for k, v in _before.items()),
+      str(sorted(_after)))
 
 # ==========================================================================
 print()

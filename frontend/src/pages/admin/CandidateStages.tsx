@@ -32,7 +32,7 @@ export default function CandidateStages() {
     const id = await getClientIdBySlug()
     setClientId(id)
     if (id === null) {
-      setError("Could not resolve tenant — switch to default workspace");
+      setError("Could not resolve the company. Check the server connection and retry.");
       setLoading(false);
       return;
     }

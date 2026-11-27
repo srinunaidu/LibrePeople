@@ -3,8 +3,7 @@
  *
  * Four URL-addressable tabs in the People style: /forecasting (runs),
  * /forecasting/demand, /forecasting/scenarios, /forecasting/accuracy —
- * every sidebar link lands on a real URL, both globally and inside
- * /t/:slug tenant workspaces.
+ * every sidebar link lands on a real URL.
  *
  * Role reality: EVERY forecasting endpoint is `require_roles(*MANAGER_ROLES)`
  * server-side (app/api/deps.py) — SuperAdmin, HR and Manager. Anything below

@@ -7,7 +7,6 @@ import { Input,Alert, Button, EmptyState, LoadingRegion, PageHeader, SectionCard
 
 import { useAuth } from "@/context/AuthContext"
 import { useTenant } from "@/context/TenantContext"
-import { getTenantSlug } from "@/lib/tenantSlugStore"
 import api, { getClientIdBySlug, errorMessage } from "@/lib/api"
 
 export default function LocaleConfig() {
@@ -32,7 +31,7 @@ export default function LocaleConfig() {
     const id = await getClientIdBySlug()
     setClientId(id)
     if (id === null) {
-      setError("Could not resolve tenant — switch to default workspace");
+      setError("Could not resolve the company. Check the server connection and retry.");
       setLoading(false);
       return;
     }
@@ -50,7 +49,7 @@ export default function LocaleConfig() {
 
   const save = async () => {
     if (!clientId) {
-      setError(`Could not resolve tenant: ${getTenantSlug() ?? "—"}. Try switching to default workspace.`)
+      setError("Could not resolve the company. Check the server connection and retry.")
       return
     }
     if (clientId === null) return
@@ -71,8 +70,8 @@ export default function LocaleConfig() {
   if (error && !clientId) {
     return (
       <Layout>
-        <SectionCard title="Tenant not resolved" description={`Could not resolve tenant: ${getTenantSlug() ?? "—"}. Try switching to default workspace.`}>
-          <EmptyState title="Could not resolve tenant" description={`Could not resolve tenant: ${getTenantSlug() ?? "—"}. Try switching to default workspace.`} />
+        <SectionCard title="Company not resolved" description="Could not resolve the company. Check the server connection and retry.">
+          <EmptyState title="Could not resolve the company" description="Could not resolve the company. Check the server connection and retry." />
           <div className="mt-4">
             <Button onClick={() => load()}>Retry</Button>
           </div>
@@ -82,7 +81,7 @@ export default function LocaleConfig() {
   }
   return (
       <>
-    <PageHeader compact title="Locale & Working Week" description="AD-03 · locale / TZ / currency / working-start; depends AD-01 (tenant branding verified)" />
+    <PageHeader compact title="Locale & Working Week" description="AD-03 · locale / TZ / currency / working-start; depends AD-01 (company branding verified)" />
       <div className="max-w-3xl mx-auto px-6 py-10 space-y-8">
         {notice && <Alert tone="success">{notice}</Alert>}
         {actionError && <Alert tone="error">{actionError}</Alert>}

@@ -4,7 +4,6 @@ import { cn } from "@/lib/utils"
 import { useTenant } from "@/context/TenantContext"
 import { registerGoto, unregisterGoto } from "@/lib/keyboard"
 import { barePath, useTenantNav } from "@/lib/tenantPath"
-import { TenantSwitcher } from "@/components/shell/TenantSwitcher"
 import {
   Activity,
   BarChart3,
@@ -38,8 +37,8 @@ import {
  * Merges the old icon-only workspace rail and the secondary sidebar into
  * ONE navigation: brand header, "+ Quick Action" command-palette CTA,
  * categorized groups (OVERVIEW / CORE HR & ESS / TIME & PAYROLL /
- * PLATFORM & ADMIN), a collapsible Admin console holding every /admin/*
- * route, and a bottom-pinned TenantSwitcher.
+ * PLATFORM & ADMIN), and a collapsible Admin console holding every /admin/*
+ * route. Single-tenant install: one org, no workspace switcher.
  *
  * Route paths are the exact App.tsx registrations — never renamed here.
  */
@@ -73,8 +72,8 @@ export interface NavGroup {
  */
 const ADMIN_ITEMS: NavItem[] = [
   { label: "User Admin", to: "/admin/users" },
-  { label: "Tenant Branding", to: "/admin/branding" },
-  { label: "Module Entitlements", to: "/admin/entitlements" },
+  { label: "Company branding", to: "/admin/branding" },
+  { label: "Module entitlements", to: "/admin/entitlements" },
   { label: "Workflow Approval", to: "/admin/workflow" },
   { label: "Integration Credentials", to: "/admin/integrations" },
   { label: "Backup / Restore", to: "/admin/backup" },
@@ -236,8 +235,7 @@ export function WorkspaceRail() {
   const navTo = (p: string) => (p.startsWith("/admin") ? p : tenantNav.to(p))
 
   // "g + letter" shortcuts — the registrations the old workspace rail owned.
-  // Client-side navigation: a full-page reload here loses app state and,
-  // in a tenant workspace, the /t/:slug scope itself.
+  // Client-side navigation: a full-page reload here loses app state.
   useEffect(() => {
     GOTO_AREAS.forEach((area) => {
       registerGoto(area.gotoKey, {
@@ -340,10 +338,6 @@ export function WorkspaceRail() {
         </div>
       </div>
 
-      {/* Bottom-pinned tenant switcher */}
-      <div className="shrink-0 border-t border-[color:var(--border)] p-2 bg-[color:var(--bg-shell)]">
-        <TenantSwitcher />
-      </div>
     </nav>
   )
 }

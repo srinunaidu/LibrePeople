@@ -32,7 +32,7 @@ locale fallback, date handling).
 ## Tenant settings (`TenantContext`)
 
 `TenantInfo` carries `locale`, `timezone`, `currency`, populated from
-`GET /onboarding-portal/clients/by-slug/:slug` and defaulted to the table
+`GET /onboarding-portal/company` and defaulted to the table
 above when the server omits them. Consumers: `useTenant()` →
 `tenant?.locale / tenant?.timezone / tenant?.currency`.
 
@@ -45,7 +45,7 @@ above when the server omits them. Consumers: `useTenant()` →
 | `pages/payroll/shared.tsx`               | `money`/`hours`/`days`/`fmtDate`/`fmtDateTime` delegate to `format.ts`; `moneyIn(value, currency)` adds the symbol |
 | `pages/payroll/PayRuns.tsx`              | create-form currency defaults INR; run list shows `run.currency ?? tenant ?? INR` |
 | `pages/payroll/PayRunDetail.tsx`         | rule-pack/currency line shows `run.currency ?? tenant ?? INR` |
-| `pages/ClientOnboarding.tsx`             | new-client defaults `en-IN`/`Asia/Kolkata`/`INR`; profile has editable Currency (PUT `currency`) |
+| `pages/ClientOnboarding.tsx`             | company profile is read-only; locale/currency edits live under Locale config |
 
 ## Server contract (already exists, unchanged)
 

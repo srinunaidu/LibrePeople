@@ -1,6 +1,6 @@
-/* Tenant Branding — AD-01 (tenant setup, branding, theme, WCAG-aware)
+/* Company branding — AD-01 (company setup, branding, theme, WCAG-aware)
  *
- * SuperAdmin writes per-client branding into the client's settings
+ * SuperAdmin writes the company's branding into the company settings
  * (client_settings endpoint: /onboarding-portal/clients/{id}/settings, PUT /settings/{key}).
  * Keys used here: logo_url, brand_primary_hex, brand_font.
  *
@@ -61,7 +61,7 @@ export default function TenantBranding() {
     const id = await getClientIdBySlug()
     setClientId(id)
     if (id === null) {
-      setError("Could not resolve tenant — switch to default workspace");
+      setError("Could not resolve the company. Check the server connection and retry.");
       setLoading(false);
       return;
     }
@@ -106,7 +106,7 @@ export default function TenantBranding() {
 
   if (!canWrite) return <Layout><EmptyState title="Not visible for your role" description={`This screen requires SuperAdmin; your role is ${user?.role || "unknown"}.`} /></Layout>
 
-  if (loading) return <Layout><LoadingRegion label="Tenant Branding">Loading tenant branding…</LoadingRegion></Layout>
+  if (loading) return <Layout><LoadingRegion label="Company branding">Loading company branding…</LoadingRegion></Layout>
 
   const previewBg = { background: primary } as React.CSSProperties
   const previewContainerStyle = { background: `${primary}18`, borderColor: `${primary}30` } as React.CSSProperties
@@ -114,13 +114,13 @@ export default function TenantBranding() {
 
   return (
     <Layout>
-      <PageHeader compact title="Tenant Branding" description="AD-01 · per-client logo, colour, font (WCAG-aware)" />
+      <PageHeader compact title="Company branding" description="AD-01 · company logo, colour, font (WCAG-aware)" />
       <div className="max-w-3xl mx-auto px-6 py-10 space-y-6">
         {notice && <Alert tone="success">{notice}</Alert>}
         {actionError && <Alert tone="error">{actionError}</Alert>}
-        {!!error && <RetryableAlert err={error} title="The tenant branding could not be read." fallback={readableLoadError(error, "The tenant branding could not be read.")} onRetry={load} />}
+        {!!error && <RetryableAlert err={error} title="The company branding could not be read." fallback={readableLoadError(error, "The company branding could not be read.")} onRetry={load} />}
 
-        <SectionCard compact title="Brand settings" description="Stored as client_settings; readable by any session under the tenant, writable by SuperAdmin.">
+        <SectionCard compact title="Brand settings" description="Stored as company settings for this install; writable by SuperAdmin.">
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
               <label htmlFor="logo" className="block text-sm font-medium mb-1.5">Logo URL</label>

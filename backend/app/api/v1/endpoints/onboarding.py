@@ -191,7 +191,6 @@ def read_preset_difference(
         unchanged=[change.as_dict() for change in difference.unchanged],
         overwrites=[change.as_dict() for change in difference.overwrites],
         undecided=[change.as_dict() for change in difference.undecided],
-        tenant_only=[change.as_dict() for change in difference.tenant_only],
         modules_to_enable=list(difference.modules_to_enable),
         modules_left_alone=list(difference.modules_left_alone),
         exclusions=[dict(item) for item in difference.exclusions],

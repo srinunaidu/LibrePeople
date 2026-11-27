@@ -108,8 +108,7 @@ export function Layout({ children }: { children: ReactNode }) {
     }
   }, [drawerOpen])
 
-  // Breadcrumb matching runs on the workspace-relative path; the resolved
-  // hrefs keep the /t/:slug scope.
+  // Breadcrumb matching runs on the bare path (single-tenant: no scope).
   const breadcrumbItems = getBreadcrumbItems(barePath(pathname), tenantNav)
 
   // Mobile navigation drawer items. Icons are lucide-react (2px stroke) — no
@@ -239,8 +238,7 @@ function MobileDrawerLink({
   IconComp: ComponentType<SVGProps<SVGSVGElement>>
   onClick: () => void
 }) {
-  // Client-side navigation: a full-page reload here loses app state and,
-  // in a tenant workspace, the /t/:slug scope itself.
+  // Client-side navigation: a full-page reload here loses app state.
   return (
     <Link
       to={to}
@@ -254,8 +252,7 @@ function MobileDrawerLink({
 }
 
 /**
- * Breadcrumb items for a workspace-relative (bare) pathname, with the
- * hrefs resolved back into the current tenant scope (/t/:slug/...).
+ * Breadcrumb items for a bare pathname (single-tenant: no scope).
  */
 function getBreadcrumbItems(
   pathname: string,

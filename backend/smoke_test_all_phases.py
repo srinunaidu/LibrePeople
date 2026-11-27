@@ -286,9 +286,20 @@ r = client.get("/api/v1/import-export/export/departments", headers=H)
 check("IE. export CSV", r.status_code == 200 and "ImpDept" in r.text)
 
 # --- Client Onboarding ------------------------------------------------------ #
+# Single-tenant install: the registry CRUD is removed — seed the install's
+# company row directly (synthetic fixture) and exercise the kept surface.
+from app.models.client_onboarding import Client as _SmokeClient  # noqa: E402
+from app.crud import crud_client_onboarding as _smoke_crud  # noqa: E402
+from app.schemas.client_onboarding import ClientCreate as _SmokeClientCreate  # noqa: E402
+_db = SessionLocal()
+_smoke_company = _db.query(_SmokeClient).order_by(_SmokeClient.id.asc()).first()
+if _smoke_company is None:
+    _smoke_company = _smoke_crud.create_client(
+        _db, _SmokeClientCreate(name="Test Co", slug="testco", status="Active"))
+cid = _smoke_company.id
+_db.close()
 r = client.post("/api/v1/onboarding-portal/clients", headers=H, json={"name": "Test Co", "slug": "testco"})
-check("CO. create client", r.status_code == 201)
-cid = r.json()["id"]
+check("CO. registry create removed (404)", r.status_code == 404)
 
 r = client.get(f"/api/v1/onboarding-portal/clients/{cid}/feature-flags", headers=H)
 check("CO. feature flags", r.status_code == 200 and len(r.json()) >= 10)

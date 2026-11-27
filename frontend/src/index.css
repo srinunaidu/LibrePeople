@@ -388,8 +388,8 @@
     color-scheme: dark;
   }
 
-  /* ---- tenant-aware dark surfaces ------------------------------------- */
-  .dark[data-tenant] .surface-raised {
+  /* ---- company-branding dark surfaces (single-tenant: install-wide) --------- */
+  .dark .surface-raised {
     background-color: var(--surface-raised);
   }
 
@@ -1031,27 +1031,27 @@
 }
 
 /* ================================================================== */
-/*  Tenant branding — gated on [data-tenant] so the global site is     */
-/*  never affected. Colour overrides come from CSS variables set by    */
-/*  TenantProvider at runtime.                                        */
+/*  Company branding — single-tenant install: applies install-wide.    */
+/*  Colour overrides come from CSS variables set by TenantProvider     */
+/*  at runtime.                                                        */
 /* ================================================================== */
 @layer components {
-  [data-tenant] .btn-primary { background-color: var(--tenant-primary); }
-  [data-tenant] .btn-primary:hover { background-color: var(--tenant-primary-dark); }
+  .btn-primary { background-color: var(--tenant-primary); }
+  .btn-primary:hover { background-color: var(--tenant-primary-dark); }
 
-  [data-tenant] .text-brand,
-  [data-tenant] .text-primary { color: var(--tenant-primary-text); }
+  .text-brand,
+  .text-primary { color: var(--tenant-primary-text); }
 
-  [data-tenant] .bg-brand,
-  [data-tenant] .bg-primary { background-color: var(--tenant-primary); }
+  .bg-brand,
+  .bg-primary { background-color: var(--tenant-primary); }
 
-  [data-tenant] .border-brand { border-color: var(--tenant-primary); }
+  .border-brand { border-color: var(--tenant-primary); }
 
-  [data-tenant] .nav-item-active {
+  .nav-item-active {
     background-color: var(--tenant-primary-light);
     color: var(--tenant-primary-text);
   }
-  [data-tenant] .nav-item-compact.nav-item-active::before {
+  .nav-item-compact.nav-item-active::before {
     background-color: var(--tenant-primary);
   }
 }

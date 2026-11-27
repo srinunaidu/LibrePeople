@@ -45,21 +45,20 @@ app = FastAPI(
 
 # CORS.
 #
-# The API authenticates with a bearer token rather than a cookie, so the safe
-# default is an empty allow-list (no browser origin may read responses). The
-# deployment sets BACKEND_CORS_ORIGINS to the exact frontend origins.
+# Single-tenant install: the API authenticates with a bearer token rather than
+# a cookie, so the safe default is an empty allow-list (no browser origin may
+# read responses). The deployment sets BACKEND_CORS_ORIGINS to the exact
+# frontend origins.
 #
 # `allow_credentials` is deliberately disabled: combined with an explicit
 # allow-list it would additionally let any allowed origin send ambient
 # credentials.
 #
-# The tenant headers are the multi-tenant read path: the frontend sends the
-# workspace slug on every non-auth request (`X-Tenant-Slug`), and integrators
-# may pin a request to a tenant (`X-Tenant-Id`, checked against the resolved
-# tenant). A custom header forces a CORS preflight, so both must be allowed
-# or every cross-origin tenant-scoped read fails the preflight and the
-# screens render empty (the P4 journeys caught this: the employee selectors
-# stayed empty while the same token listed rows over a simple request).
+# Legacy tenant headers are tolerated and ignored: older clients may still
+# send the workspace slug on non-auth requests (`X-Tenant-Slug`), and the
+# `X-Tenant-Id` conflict check lives in tenancy.resolve_tenant (fail-closed),
+# not here. Both stay in the CORS allow-list so older cross-origin clients
+# keep passing preflight; neither header is authoritative for routing.
 _cors_origins = settings.cors_origins
 app.add_middleware(
     CORSMiddleware,
