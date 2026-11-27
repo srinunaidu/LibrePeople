@@ -109,7 +109,7 @@ export default function ManagerHome() {
   if (loading) {
     return (
       <Layout>
-        <PageHeader icon={<IconUsers />} title="My Team" description="Your team's workspace." />
+        <PageHeader compact icon={<IconUsers />} title="My Team" description="Your team's workspace." />
         <LoadingRegion label="Loading team data">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-0">
             {Array.from({ length: 8 }).map((_, i) => <div key={i} className="skeleton h-28" />)}
@@ -122,6 +122,7 @@ export default function ManagerHome() {
   return (
     <Layout>
       <PageHeader
+        compact
         icon={<IconUsers />}
         title="My Team"
         description="Approvals, team attendance, goals and upcoming reviews."
@@ -164,7 +165,7 @@ export default function ManagerHome() {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        <SectionCard icon={<IconClock />} title="Approvals inbox" description="Items waiting for your decision — approve inline or open the full list.">
+        <SectionCard compact icon={<IconClock />} title="Approvals inbox" description="Items waiting for your decision — approve inline or open the full list.">
           {leaveReqs.length + timesheets.length + swaps.length === 0 ? (
             <EmptyState title="Inbox empty" description="No pending approvals at this time." />
           ) : (
@@ -199,7 +200,7 @@ export default function ManagerHome() {
           )}
         </SectionCard>
 
-        <SectionCard icon={<IconTarget />} title="Team goals" description="Progress across your team's objectives.">
+        <SectionCard compact icon={<IconTarget />} title="Team goals" description="Progress across your team's objectives.">
           {goals.length === 0 ? (
             <EmptyState title="No goals set" description="Create goals to track team progress." />
           ) : (

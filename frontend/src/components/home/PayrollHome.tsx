@@ -74,7 +74,7 @@ export default function PayrollHome() {
   if (loading) {
     return (
       <Layout>
-        <PageHeader icon={<IconWallet />} title="Payroll" description="Your payroll workspace." />
+        <PageHeader compact icon={<IconWallet />} title="Payroll" description="Your payroll workspace." />
         <LoadingRegion label="Loading payroll data">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-0">
             {Array.from({ length: 8 }).map((_, i) => <div key={i} className="skeleton h-28" />)}
@@ -87,6 +87,7 @@ export default function PayrollHome() {
   return (
     <Layout>
       <PageHeader
+        compact
         icon={<IconWallet />}
         title="Payroll"
         description="Pay run status, payslip summary, and labour cost analysis."
