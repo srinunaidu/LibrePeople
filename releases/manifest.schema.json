@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://librepeople.example/releases/manifest.schema.json",
+  "title": "LibrePeople release manifest",
+  "description": "Distribution record for one self-hosted LibrePeople release. Checked in CI (manifest-validate). manifest_sha256 is the checksum chain: sha256 of the canonical JSON (sorted keys, compact separators) of the whole document minus the signature block.",
+  "type": "object",
+  "required": [
+    "version",
+    "channel",
+    "released_at",
+    "git_sha",
+    "app_version",
+    "db_head_revision",
+    "min_version",
+    "breaking_changes",
+    "notes_url",
+    "changelog",
+    "artifacts",
+    "manifest_sha256",
+    "signature"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.-]+)?$",
+      "description": "Release version (semver)."
+    },
+    "channel": { "type": "string", "enum": ["stable", "rc"] },
+    "released_at": { "type": "string", "format": "date-time" },
+    "git_sha": { "type": "string", "minLength": 7 },
+    "app_version": {
+      "type": "string",
+      "description": "Must equal app/core/config.py VERSION for this release."
+    },
+    "db_head_revision": {
+      "type": "string",
+      "description": "Must equal the single Alembic head for this release."
+    },
+    "min_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.-]+)?$",
+      "description": "Oldest installed version allowed to update directly."
+    },
+    "breaking_changes": { "type": "array", "items": { "type": "string" } },
+    "notes_url": { "type": "string" },
+    "changelog": { "type": "string" },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "sha256"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string" },
+          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+        }
+      }
+    },
+    "manifest_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "sha256 of canonical JSON minus the signature block."
+    },
+    "signature": {
+      "type": "object",
+      "required": ["alg", "key_id", "sig"],
+      "additionalProperties": false,
+      "properties": {
+        "alg": { "type": "string" },
+        "key_id": {
+          "type": "string",
+          "description": "dev-ephemeral for dev/test only; owner-held minisign key id in production."
+        },
+        "sig": { "type": "string" }
+      }
+    }
+  }
+}

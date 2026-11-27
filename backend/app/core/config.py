@@ -183,6 +183,20 @@ class Settings(BaseSettings):
     BACKUP_LAST_SUCCESS_AT: str | None = None
     BACKUP_MAX_AGE_HOURS: int = 24
 
+    # Update / version management (self-hosted, consent-gated, manual).
+    #
+    # The installed system never pulls code by itself. The local release
+    # manifest is the only source consulted by default; a remote fetch
+    # happens only when the owner explicitly opts in with BOTH the flag
+    # and a URL, and only from an owner-pinned host. Pubkey IDs only here:
+    # private signing keys are never stored in the repo, in CI secrets, or
+    # in logs (dev/test use the clearly-marked `dev-ephemeral` key id).
+    UPDATE_CHECK_ALLOW_REMOTE: bool = False
+    UPDATE_CHECK_REMOTE_URL: str = ""
+    UPDATE_CHECK_REMOTE_HOSTS: str = ""
+    UPDATE_MANIFEST_PATH: str = "releases/manifest.json"
+    UPDATE_SIGNING_KEY_IDS: str = ""
+
     # Content-Security-Policy. When unset, a conservative default is applied
     # (scripts, styles, images, fonts, and connections all restricted to
     # 'self' plus inline styles). Set via CONTENT_SECURITY_POLICY env var to

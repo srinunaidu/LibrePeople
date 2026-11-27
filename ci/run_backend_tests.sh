@@ -93,6 +93,7 @@ SUITES=(
   lifecycle_test_suite
   talent_test_suite
   lp_doc_002_test_suite
+  update_system_test_suite
 )
 
 # Guard: rule_packs/in-standard.json must be a symlink to backend source or byte-identical.

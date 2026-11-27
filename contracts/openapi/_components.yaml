@@ -5273,3 +5273,45 @@ schemas:
             type: array
             items:
               $ref: '#/components/schemas/ForecastAccuracyRecord'
+  UpdateGate:
+    type: object
+    description: >-
+      One fail-closed pre-install gate: name, pass/fail, and the named
+      remediation when it fails. All gates must pass before an install.
+    required:
+      - gate
+      - passed
+      - remediation
+    properties:
+      gate:
+        type: string
+      passed:
+        type: boolean
+      remediation:
+        type: string
+      plan:
+        type: string
+        nullable: true
+  UpdateHistoryEntry:
+    type: object
+    description: >-
+      One recorded install attempt (in-process log; the audit chain is
+      the durable record).
+    properties:
+      version:
+        type: string
+      manifest_sha256:
+        type: string
+      actor:
+        type: string
+      dry_run:
+        type: boolean
+      accepted:
+        type: boolean
+      gates:
+        type: array
+        items:
+          $ref: '#/components/schemas/UpdateGate'
+      recorded_at:
+        type: string
+        format: date-time
