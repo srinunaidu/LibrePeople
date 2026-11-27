@@ -11,7 +11,7 @@ import {
   PageHeader,
   SectionCard,
   StatusPill,
-  type Tone, RetryableAlert, TableSkeleton} from "@/components/ui"
+  type StatusTone, RetryableAlert, TableSkeleton} from "@/components/ui"
 import {
   IconAlert,
   IconCalendar,
@@ -1440,7 +1440,7 @@ export default function RosterBuilder() {
   )
 }
 
-function SummaryBox({ tone, label, value }: { tone: Tone; label: string; value: number }) {
+function SummaryBox({ tone, label, value }: { tone: StatusTone; label: string; value: number }) {
   return (
     <div className="card p-4 relative overflow-hidden">
       <span className={`stat-rail stat-rail-${tone}`} aria-hidden="true" />

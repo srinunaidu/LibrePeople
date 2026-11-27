@@ -8,7 +8,7 @@ import {
   Meter,
   PageHeader,
   SectionCard,
-  StatCard,
+  KPICard,
   StatusPill,
 } from "@/components/ui"
 import { IconExit, IconCheck, IconX } from "@/components/icons"
@@ -179,10 +179,10 @@ export default function Offboarding() {
         </LoadingRegion>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
-          <StatCard tone="brand" label="Total terminations" value={terminations.length} />
-          <StatCard tone={openTerms > 0 ? "amber" : "green"} label="In progress" value={openTerms} />
-          <StatCard tone="slate" label="Checklist templates" value={tasks.length} />
-          <StatCard
+          <KPICard tone="brand" label="Total terminations" value={terminations.length} />
+          <KPICard tone={openTerms > 0 ? "amber" : "green"} label="In progress" value={openTerms} />
+          <KPICard tone="slate" label="Checklist templates" value={tasks.length} />
+          <KPICard
             tone="violet"
             label="Selected progress"
             value={selected?.progress ? `${selected.progress.progress_percent}%` : "—"}

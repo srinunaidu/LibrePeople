@@ -9,7 +9,7 @@ import {
   Meter,
   PageHeader,
   SectionCard,
-  StatCard,
+  KPICard,
   StatusPill, RetryableAlert, TableSkeleton} from "@/components/ui"
 import { IconCheck, IconFile, IconPlus, IconRocket, IconUpload } from "@/components/icons"
 import api, { fileUrl } from "@/lib/api"
@@ -187,10 +187,10 @@ export default function Onboarding() {
 
           {selectedEmployee && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
-              <StatCard tone="brand" label="Tasks" value={`${completed}/${summary?.total_tasks ?? 0}`} hint={`${remaining} remaining`} />
-              <StatCard tone="green" label="Progress" value={`${summary?.progress_percent ?? 0}%`} />
-              <StatCard tone="violet" label="Documents" value={summary?.documents_uploaded ?? 0} />
-              <StatCard tone="slate" label="Employee ID" value={selectedEmployee.employee_id} />
+              <KPICard tone="brand" label="Tasks" value={`${completed}/${summary?.total_tasks ?? 0}`} hint={`${remaining} remaining`} />
+              <KPICard tone="green" label="Progress" value={`${summary?.progress_percent ?? 0}%`} />
+              <KPICard tone="violet" label="Documents" value={summary?.documents_uploaded ?? 0} />
+              <KPICard tone="slate" label="Employee ID" value={selectedEmployee.employee_id} />
             </div>
           )}
 

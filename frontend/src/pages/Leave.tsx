@@ -8,7 +8,7 @@ import {
   LoadingRegion,
   PageHeader,
   SectionCard,
-  StatCard,
+  KPICard,
   StatusPill, RetryableAlert} from "@/components/ui"
 import { IconCheck, IconPalm, IconPlus, IconX } from "@/components/icons"
 import { Link } from "react-router-dom"
@@ -206,10 +206,10 @@ export default function Leave() {
         </LoadingRegion>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
-          <StatCard tone="brand" label="Leave types" value={types.length} />
-          <StatCard tone="amber" label="Pending requests" value={pending} />
-          <StatCard tone="green" label="Days approved" value={`${approvedDays}d`} />
-          <StatCard tone="violet" label="Days available" value={`${availableDays}d`} />
+          <KPICard tone="brand" label="Leave types" value={types.length} />
+          <KPICard tone="amber" label="Pending requests" value={pending} />
+          <KPICard tone="green" label="Days approved" value={`${approvedDays}d`} />
+          <KPICard tone="violet" label="Days available" value={`${availableDays}d`} />
         </div>
       )}
 

@@ -10,7 +10,7 @@ import {
   Meter,
   PageHeader,
   SectionCard,
-  StatCard,
+  KPICard,
   StatusPill,
   ShiftTemplateTable,
   ShiftSwapTable, RetryableAlert} from "@/components/ui"
@@ -183,10 +183,10 @@ export default function Scheduling() {
         </LoadingRegion>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
-          <StatCard tone="brand" label="Shift templates" value={templates.length} />
-          <StatCard tone="violet" label="Night shifts" value={nightShifts} />
-          <StatCard tone="teal" label="Scheduled people" value={scheduledPeople} hint={`${roster.length} roster entries`} />
-          <StatCard tone={pendingSwaps > 0 ? "amber" : "slate"} label="Pending swaps" value={pendingSwaps} />
+          <KPICard tone="brand" label="Shift templates" value={templates.length} />
+          <KPICard tone="violet" label="Night shifts" value={nightShifts} />
+          <KPICard tone="teal" label="Scheduled people" value={scheduledPeople} hint={`${roster.length} roster entries`} />
+          <KPICard tone={pendingSwaps > 0 ? "amber" : "slate"} label="Pending swaps" value={pendingSwaps} />
         </div>
       )}
 

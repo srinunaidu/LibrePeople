@@ -8,6 +8,7 @@
  */
 import { Link } from "react-router-dom"
 import { useTenantNav } from "@/lib/tenantPath"
+import { Table } from "@/components/ui"
 import { formatCurrency, formatDate, formatDateTime, formatNumber } from "@/lib/format"
 import type { PaySlipRow } from "@/types"
 
@@ -222,35 +223,35 @@ export function PayslipDetail({ slip, packStatus }: { slip: PaySlipRow; packStat
           {lines.length === 0 ? (
             <p className="text-sm text-text-secondary">No {title.toLowerCase()} lines on this slip.</p>
           ) : (
-            <div className="table-scroll">
-              <table className="table-base table-compact w-full text-sm">
-                <caption className="sr-only">{title} of this payslip and the rule behind each line</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Code</th>
-                    <th scope="col">Name</th>
-                    <th scope="col" className="num">Amount</th>
-                    <th scope="col">Rule</th>
-                    <th scope="col">Calculation</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {lines.map((line, index) => (
-                    <tr key={`${line.code}-${index}`}>
-                      <td className="font-mono text-xs">{line.code}</td>
-                      <td>{line.name}</td>
-                      <td className="num tabular-nums">{money(line.amount)}</td>
-                      <td className="text-xs text-text-secondary">
-                        {line.rule_id ? `${line.rule_id} v${line.rule_version ?? "?"}` : "—"}
-                      </td>
-                      <td className="text-xs text-text-secondary">
-                        {line.calculation || line.input_source || "—"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table
+              columns={[
+                { key: "code", header: "Code", accessor: (line) => <span className="font-mono text-xs">{line.code}</span> },
+                { key: "name", header: "Name", accessor: (line) => line.name },
+                { key: "amount", header: "Amount", accessor: (line) => money(line.amount), cellClassName: "num tabular-nums" },
+                {
+                  key: "rule",
+                  header: "Rule",
+                  accessor: (line) => (
+                    <span className="text-xs text-text-secondary">
+                      {line.rule_id ? `${line.rule_id} v${line.rule_version ?? "?"}` : "—"}
+                    </span>
+                  ),
+                },
+                {
+                  key: "calc",
+                  header: "Calculation",
+                  accessor: (line) => (
+                    <span className="text-xs text-text-secondary">
+                      {line.calculation || line.input_source || "—"}
+                    </span>
+                  ),
+                },
+              ]}
+              data={lines.map((line, index) => ({ ...line, _rowKey: `${line.code}-${index}` }))}
+              keyAccessor={(row) => row._rowKey}
+              caption={`${title} of this payslip and the rule behind each line`}
+              sortable={false}
+            />
           )}
         </div>
       ))}

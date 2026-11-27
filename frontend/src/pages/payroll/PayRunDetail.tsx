@@ -25,10 +25,11 @@ import {
   PageHeader,
   RetryableAlert,
   SectionCard,
-  StatCard,
+  KPICard,
+  StatusPill,
+  Table,
   TableSkeleton,
 } from "@/components/ui"
-import { StatusPill } from "@/components/ui/status-pill"
 import { useAuth } from "@/context/AuthContext"
 import { useTenant } from "@/context/TenantContext"
 import api, { errorMessage, getFnf, postFnf, previewPayRun, getPayRunHistory, isPendingVerification, readableLoadError } from "@/lib/api"
@@ -371,10 +372,10 @@ export default function PayRunDetail() {
       )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Headcount" value={run.headcount} hint="Payslips this run wrote" />
-        <StatCard label="Gross" value={money(run.total_gross)} hint="No currency is recorded on the run" />
-        <StatCard label="Deductions" value={money(run.total_deductions)} />
-        <StatCard label="Net" value={money(run.total_net)} />
+        <KPICard label="Headcount" value={run.headcount} hint="Payslips this run wrote" />
+        <KPICard label="Gross" value={money(run.total_gross)} hint="No currency is recorded on the run" />
+        <KPICard label="Deductions" value={money(run.total_deductions)} />
+        <KPICard label="Net" value={money(run.total_net)} />
       </div>
 
       <SectionCard compact
@@ -611,33 +612,19 @@ export default function PayRunDetail() {
                   ))}
                 </ul>
               )}
-              <div className="table-scroll">
-                <table className="table-base table-compact w-full text-sm">
-                  <caption className="sr-only">
-                    Every payslip the reconciliation compared, with its stored figures
-                  </caption>
-                  <thead>
-                    <tr>
-                      <th scope="col">Payslip</th>
-                      <th scope="col">Employee</th>
-                      <th scope="col" className="num">Gross</th>
-                      <th scope="col" className="num">Deductions</th>
-                      <th scope="col" className="num">Net</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {report.payslips.map((entry) => (
-                      <tr key={entry.payslip_id}>
-                        <td>#{entry.payslip_id}</td>
-                        <td>{employeeName(entry.employee_id)}</td>
-                        <td className="num tabular-nums">{money(entry.gross)}</td>
-                        <td className="num tabular-nums">{money(entry.total_deductions)}</td>
-                        <td className="num tabular-nums">{money(entry.net)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                columns={[
+                  { key: "payslip", header: "Payslip", accessor: (entry) => `#${entry.payslip_id}` },
+                  { key: "employee", header: "Employee", accessor: (entry) => employeeName(entry.employee_id) },
+                  { key: "gross", header: "Gross", accessor: (entry) => money(entry.gross), cellClassName: "num tabular-nums" },
+                  { key: "deductions", header: "Deductions", accessor: (entry) => money(entry.total_deductions), cellClassName: "num tabular-nums" },
+                  { key: "net", header: "Net", accessor: (entry) => money(entry.net), cellClassName: "num tabular-nums" },
+                ]}
+                data={report.payslips}
+                keyAccessor={(entry) => entry.payslip_id}
+                caption="Every payslip the reconciliation compared, with its stored figures"
+                sortable={false}
+              />
             </div>
           )}
         </div>
@@ -657,57 +644,47 @@ export default function PayRunDetail() {
           </div>
         ) : (
           <>
-            <div className="table-scroll">
-              <table className="table-base table-compact w-full text-sm">
-                <caption className="sr-only">Payslips this run wrote</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Payslip</th>
-                    <th scope="col">Employee</th>
-                    <th scope="col" className="num">Gross</th>
-                    <th scope="col" className="num">Deductions</th>
-                    <th scope="col" className="num">Net</th>
-                    <th scope="col">Status</th>
-                    <th scope="col">Currency</th>
-                    <th scope="col">
-                      <span className="sr-only">Detail</span>
-                    </th>
-                    <th scope="col"><span className="sr-only">PDF</span></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {slips.map((slip) => (
-                    <tr key={slip.id}>
-                      <td>#{slip.id}</td>
-                      <td>{employeeName(slip.employee_id)}</td>
-                      <td className="num tabular-nums">{money(slip.gross_pay)}</td>
-                      <td className="num tabular-nums">{money(slip.total_deductions)}</td>
-                      <td className="num tabular-nums">{money(slip.net_pay)}</td>
-                      <td>{slip.status}</td>
-                      <td className="text-xs">{(slip as any).currency || run.currency || tenantCurrency}</td>
-                      <td>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() =>
-                            setSelectedSlip(selectedSlip === slip.id ? null : slip.id)
-                          }
-                          aria-expanded={selectedSlip === slip.id}
-                        >
-                          {selectedSlip === slip.id ? "Hide" : "View"}
-                          <span className="sr-only"> payslip #{slip.id}</span>
-                        </Button>
-                      </td>
-                      <td>
-                        <Button variant="ghost" size="sm" onClick={() => downloadPayslipPdf(slip.id)}>
-                          PDF
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table
+              columns={[
+                { key: "payslip", header: "Payslip", accessor: (slip) => `#${slip.id}` },
+                { key: "employee", header: "Employee", accessor: (slip) => employeeName(slip.employee_id) },
+                { key: "gross", header: "Gross", accessor: (slip) => money(slip.gross_pay), cellClassName: "num tabular-nums" },
+                { key: "deductions", header: "Deductions", accessor: (slip) => money(slip.total_deductions), cellClassName: "num tabular-nums" },
+                { key: "net", header: "Net", accessor: (slip) => money(slip.net_pay), cellClassName: "num tabular-nums" },
+                { key: "status", header: "Status", accessor: (slip) => slip.status },
+                { key: "currency", header: "Currency", accessor: (slip) => <span className="text-xs">{(slip as any).currency || run.currency || tenantCurrency}</span> },
+                {
+                  key: "detail",
+                  header: "",
+                  accessor: (slip) => (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        setSelectedSlip(selectedSlip === slip.id ? null : slip.id)
+                      }
+                      aria-expanded={selectedSlip === slip.id}
+                    >
+                      {selectedSlip === slip.id ? "Hide" : "View"}
+                      <span className="sr-only"> payslip #{slip.id}</span>
+                    </Button>
+                  ),
+                },
+                {
+                  key: "pdf",
+                  header: "",
+                  accessor: (slip) => (
+                    <Button variant="ghost" size="sm" onClick={() => downloadPayslipPdf(slip.id)}>
+                      PDF
+                    </Button>
+                  ),
+                },
+              ]}
+              data={slips}
+              keyAccessor={(slip) => slip.id}
+              caption="Payslips this run wrote"
+              sortable={false}
+            />
             {selectedSlip !== null &&
               (() => {
                 const slip = slips.find((row) => row.id === selectedSlip)

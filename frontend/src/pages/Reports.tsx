@@ -9,7 +9,7 @@ import {
   LoadingRegion,
   PageHeader,
   SectionCard,
-  StatCard,
+  KPICard,
   TableSkeleton, RetryableAlert} from "@/components/ui"
 import { IconChart, IconRefresh, IconShield, IconUsers, IconWallet } from "@/components/icons"
 import api, { errorMessage } from "@/lib/api"
@@ -174,9 +174,9 @@ function MovementSection({ teamOnly }: { teamOnly: boolean }) {
         ) : (
           <>
             <div className="grid grid-cols-3 gap-4 mb-4">
-              <StatCard tone="green" label="Joiners" value={joiners?.length ?? 0} hint="Hired in range" />
-              <StatCard tone="amber" label="Leavers" value={leavers?.length ?? 0} hint="Terminated in range" />
-              <StatCard tone="brand" label="Attrition" value={attrition ? `${attrition.attrition_pct}%` : "—"} hint={attrition ? `${attrition.leavers} leavers · avg headcount ${attrition.average_headcount}` : "Annual"} />
+              <KPICard tone="green" label="Joiners" value={joiners?.length ?? 0} hint="Hired in range" />
+              <KPICard tone="amber" label="Leavers" value={leavers?.length ?? 0} hint="Terminated in range" />
+              <KPICard tone="brand" label="Attrition" value={attrition ? `${attrition.attrition_pct}%` : "—"} hint={attrition ? `${attrition.leavers} leavers · avg headcount ${attrition.average_headcount}` : "Annual"} />
             </div>
             {(joiners?.length ?? 0) + (leavers?.length ?? 0) === 0 && (
               <EmptyState title="No movement in range" description="Nobody joined or left under these filters in the selected period." />
@@ -344,10 +344,10 @@ export default function Reports() {
 
       {status === "ready" && dash && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
-          <StatCard tone="brand" icon={<IconUsers />} label="Active employees" value={dash.employees.active} hint={`${dash.employees.total} total records`} />
-          <StatCard tone="violet" label="Open requisitions" value={dash.recruiting.open_requisitions} hint={`${dash.recruiting.candidates} candidates · ${dash.recruiting.offers} offers`} />
-          <StatCard tone="amber" label="Pending approvals" value={dash.approvals.pending_leave + dash.approvals.pending_timesheets + dash.approvals.pending_shift_swaps} hint="Leave, timesheets and swaps" />
-          <StatCard tone="green" label="Present today" value={dash.attendance_today.present} hint={`${dash.attendance_today.total_hours || 0}h logged`} />
+          <KPICard tone="brand" icon={<IconUsers />} label="Active employees" value={dash.employees.active} hint={`${dash.employees.total} total records`} />
+          <KPICard tone="violet" label="Open requisitions" value={dash.recruiting.open_requisitions} hint={`${dash.recruiting.candidates} candidates · ${dash.recruiting.offers} offers`} />
+          <KPICard tone="amber" label="Pending approvals" value={dash.approvals.pending_leave + dash.approvals.pending_timesheets + dash.approvals.pending_shift_swaps} hint="Leave, timesheets and swaps" />
+          <KPICard tone="green" label="Present today" value={dash.attendance_today.present} hint={`${dash.attendance_today.total_hours || 0}h logged`} />
         </div>
       )}
 
