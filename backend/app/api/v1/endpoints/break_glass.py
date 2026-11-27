@@ -8,9 +8,11 @@ A grant is never usable for the grantor's own tenant, and break-glass is
 never honored for FSM or registry modification — those endpoints require
 SuperAdmin directly and never accept a grant.
 
-:func:`require_break_glass` is a dependency data endpoints can use to enforce
-that a cross-tenant read is covered by an active, unexpired grant; it raises
-``403 break_glass_expired`` or ``403 break_glass_not_granted``.
+Single-tenant install: the cross-tenant grant-scope enforcement dependency
+was removed (no data endpoint accepts a grant to reach another tenant).
+The grant ledger itself stays — every grant is created with SuperAdmin +
+step-up MFA, is time-boxed, and is fully audited. The ``target_tenant_id``
+column is retained unchanged (no schema change, no migration).
 """
 from __future__ import annotations
 
@@ -21,9 +23,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db, get_current_active_user, require_mfa, require_roles
+from app.api.deps import get_db, require_mfa, require_roles
 from app.core.audit import record_audit
-from app.core.errors import ApiError, ErrorCategory, conflict
+from app.core.errors import ApiError, ErrorCategory
 from app.core.tenancy import tenant_id_for
 from app.models.break_glass import BreakGlassGrant, DEFAULT_TTL_MINUTES, MAX_TTL_MINUTES
 from app.models.user import User
@@ -53,73 +55,6 @@ class BreakGlassGrantOut(BaseModel):
     class Config:
         from_attributes = True
 
-
-# --------------------------------------------------------------------------- #
-# Enforcement dependency — used by data endpoints that allow break-glass access
-# --------------------------------------------------------------------------- #
-
-
-def require_break_glass(target_tenant_id: str):
-    """Dependency: the current actor must hold an active grant on ``target_tenant_id``.
-
-    Raises ``403 break_glass_expired`` when the most recent grant for this
-    actor on the target has passed its TTL, and ``403 break_glass_not_granted``
-    when no active grant exists. Break-glass is never usable for the actor's
-    own tenant.
-    """
-
-    def _dependency(
-        current_user: User = Depends(get_current_active_user),
-        db: Session = Depends(get_db),
-    ) -> BreakGlassGrant:
-        now = datetime.now(timezone.utc)
-        own_tenant = tenant_id_for(db)
-        if own_tenant and own_tenant == target_tenant_id:
-            raise ApiError(
-                "break_glass_not_granted",
-                "Break-glass is not usable for your own tenant.",
-                ErrorCategory.PERMISSION,
-                details={"actor": current_user.username, "target": target_tenant_id},
-            )
-        grant = (
-            db.query(BreakGlassGrant)
-            .filter(
-                BreakGlassGrant.actor_id == current_user.id,
-                BreakGlassGrant.target_tenant_id == target_tenant_id,
-                BreakGlassGrant.revoked_at.is_(None),
-                BreakGlassGrant.expires_at > now,
-            )
-            .first()
-        )
-        if grant is not None:
-            return grant
-        expired = (
-            db.query(BreakGlassGrant)
-            .filter(
-                BreakGlassGrant.actor_id == current_user.id,
-                BreakGlassGrant.target_tenant_id == target_tenant_id,
-                BreakGlassGrant.expires_at <= now,
-            )
-            .order_by(BreakGlassGrant.expires_at.desc())
-            .first()
-        )
-        if expired is not None:
-            raise ApiError(
-                "break_glass_expired",
-                "The break-glass grant has passed its TTL and can no longer be "
-                "used.",
-                ErrorCategory.PERMISSION,
-                details={"grant_id": expired.id, "ttl_minutes": expired.ttl_minutes},
-            )
-        raise ApiError(
-            "break_glass_not_granted",
-            "No active break-glass grant exists for this actor on the target "
-            "tenant.",
-            ErrorCategory.PERMISSION,
-            details={"actor": current_user.username, "target": target_tenant_id},
-        )
-
-    return _dependency
 
 
 # --------------------------------------------------------------------------- #

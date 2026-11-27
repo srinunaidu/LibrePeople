@@ -1,10 +1,9 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom"
 import { AuthProvider, useAuth } from "@/context/AuthContext"
 import { ErrorProvider, useError } from "@/context/ErrorContext"
 import { TenantProvider } from "@/context/TenantContext"
 import { Suspense, lazy } from "react"
 import { ProtectedRoute } from "@/components/ProtectedRoute"
-import { TenantLayout } from "@/components/TenantLayout"
 import { PageSkeleton } from "@/components/ui/page-skeleton"
 import { ThemeProvider } from "@/context/ThemeContext"
 import { QueryProvider } from "@/components/QueryProvider"
@@ -168,6 +167,18 @@ const TransferPromotion = lazy(() => import("@/pages/admin/TransferPromotion"))
 const ValidationDuplicates = lazy(() => import("@/pages/admin/ValidationDuplicates"))
 const BreakGlass = lazy(() => import("@/pages/admin/BreakGlass"))
 const ComplianceCenter = lazy(() => import("@/pages/admin/ComplianceCenter"))
+
+/**
+ * Strips the legacy /t/:slug prefix and navigates to the bare path,
+ * preserving the remainder and the query string. `replace` keeps the
+ * redirect out of the history stack (the 302-like behaviour: the slug URL
+ * is not a real location anymore).
+ */
+export function TenantRedirect() {
+  const { pathname, search } = useLocation()
+  const bare = pathname.replace(/^\/t\/[^/]+/, "") || "/"
+  return <Navigate to={`${bare}${search}`} replace />
+}
 
 function AppRoutes() {
   return (
@@ -389,50 +400,11 @@ function AppRoutes() {
       <Route path="/expenses/new" element={<ProtectedRoute><ExpenseNew /></ProtectedRoute>} />
       <Route path="/expenses/:id" element={<ProtectedRoute><ExpenseDetail /></ProtectedRoute>} />
 
-      {/* Tenant-scoped workplace routes */}
-      <Route path="/t/:slug/*" element={<ProtectedRoute><TenantLayout /></ProtectedRoute>}>
-        <Route index element={<Dashboard />} />
-        <Route path="dashboard" element={<Dashboard />} />
-        <Route path="people" element={<People />} />
-        <Route path="people/departments" element={<People />} />
-        <Route path="people/jobs" element={<People />} />
-        <Route path="people/locations" element={<People />} />
-        <Route path="people/positions" element={<People />} />
-        <Route path="people/cost-centers" element={<People />} />
-        <Route path="recruiting" element={<Recruiting />} />
-        <Route path="onboarding" element={<Onboarding />} />
-        <Route path="time" element={<TimeAttendance />} />
-        <Route path="scheduling" element={<Scheduling />} />
-        <Route path="scheduling/roster" element={<RosterBuilder />} />
-        <Route path="leave" element={<Leave />} />
-        <Route path="leave/ledger" element={<LeaveLedger />} />
-        <Route path="leave/ledger/:employeeId" element={<LeaveLedger />} />
-        <Route path="expenses" element={<Expenses />} />
-        <Route path="expenses/new" element={<ExpenseNew />} />
-        <Route path="expenses/:id" element={<ExpenseDetail />} />
-        <Route path="onboarding-config" element={<OnboardingConfig />} />
-        <Route path="offboarding" element={<Offboarding />} />
-        <Route path="assets" element={<Assets />} />
-        <Route path="my-assets" element={<MyAssets />} />
-        <Route path="reports" element={<Reports />} />
-        <Route path="client-onboarding" element={<ClientOnboarding />} />
-        <Route path="platform/payroll" element={<Platform />} />
-        <Route path="platform/payroll/runs" element={<PayRuns />} />
-        <Route path="platform/payroll/runs/:runId" element={<PayRunDetail />} />
-        <Route path="platform/payroll/setup" element={<PayrollSetup />} />
-        <Route path="platform/performance" element={<PerformanceHub />} />
-        <Route path="platform/benefits" element={<BenefitsHub />} />
-        <Route path="platform/learning" element={<LearningHub />} />
-        <Route path="ess" element={<ESSHub />} />
-        <Route path="forecasting" element={<Forecasting />} />
-        <Route path="project-status" element={<ProjectStatus />} />
-        <Route path="theme" element={<ThemeStudio />} />
-        <Route path="design-gallery" element={<DesignGallery />} />
-        <Route path="data-quality" element={<DataQuality />} />
-        <Route path="import" element={<ImportPage />} />
-        <Route path="jobs" element={<Jobs />} />
-        <Route path="mfa" element={<Mfa />} />
-      </Route>
+      {/* Single-tenant install: legacy /t/:slug/* URLs redirect to the bare
+          path (slug dropped, remainder + query preserved). Client-side
+          equivalent of a 302 compatibility shim for bookmarked workspace URLs.
+          Every nested screen exists at its bare path above. */}
+      <Route path="/t/:slug/*" element={<ProtectedRoute><TenantRedirect /></ProtectedRoute>} />
 
 
     </Routes>

@@ -75,50 +75,20 @@ describe("EmptyState", () => {
   })
 })
 
-/** Tenant slug detection helper — pure function extracted from TenantContext. */
-function detectTenantSlug(hostname: string, pathname: string): string | null {
-  const host = hostname.toLowerCase()
-  const parts = host.split(".")
-  // IP literals (127.0.0.1, ::1, …) have no subdomains — the first octet is
-  // not a tenant slug.
-  const isIpLiteral = /^\d+\.\d+\.\d+\.\d+$/.test(host) || host.includes(":")
-  const platformDomains = ["onrender", "vercel", "netlify", "herokuapp", "github", "localhost"]
-  const isPlatform = platformDomains.some((d) => host.includes(d))
-  if (!isIpLiteral && !isPlatform && parts.length >= 3 && parts[0] && parts[0] !== "www" && parts[0] !== "app") {
-    const mainDomains = ["karmathy"]
-    if (!mainDomains.includes(parts[0])) return parts[0]
-  }
-  const match = pathname.match(/^\/t\/([^/]+)/)
-  if (match) return match[1]
-  return null
-}
+/** Single-tenant install: no slug detection anywhere. Legacy /t/:slug URLs
+ * are stripped to the bare path (see barePath + TenantRedirect). */
+import { barePath } from "@/lib/tenantPath"
 
-describe("detectTenantSlug", () => {
-  test("detects subdomain tenant on custom domain", () => {
-    expect(detectTenantSlug("client1.karmathy.com", "/")).toBe("client1")
+describe("single-tenant bare paths", () => {
+  test("strips a legacy /t/:slug prefix", () => {
+    expect(barePath("/t/acme/leave")).toBe("/leave")
+    expect(barePath("/t/acme/")).toBe("/")
+    expect(barePath("/t/acme")).toBe("/")
   })
 
-  test("ignores www on custom domain", () => {
-    expect(detectTenantSlug("www.karmathy.com", "/")).toBeNull()
-  })
-
-  test("ignores platform domains", () => {
-    expect(detectTenantSlug("client1.onrender.com", "/")).toBeNull()
-    expect(detectTenantSlug("client1.vercel.app", "/")).toBeNull()
-    expect(detectTenantSlug("localhost", "/")).toBeNull()
-  })
-
-  test("detects path-based tenant", () => {
-    expect(detectTenantSlug("karmathy.com", "/t/client1/dashboard")).toBe("client1")
-  })
-
-  test("ignores IP literals (no subdomains on 127.0.0.1 or ::1)", () => {
-    expect(detectTenantSlug("127.0.0.1", "/")).toBeNull()
-    expect(detectTenantSlug("::1", "/")).toBeNull()
-  })
-
-  test("returns null when no tenant found", () => {
-    expect(detectTenantSlug("karmathy.com", "/")).toBeNull()
-    expect(detectTenantSlug("app.karmathy.com", "/")).toBeNull()
+  test("leaves bare paths untouched", () => {
+    expect(barePath("/leave")).toBe("/leave")
+    expect(barePath("/")).toBe("/")
+    expect(barePath("/industries/acme")).toBe("/industries/acme")
   })
 })

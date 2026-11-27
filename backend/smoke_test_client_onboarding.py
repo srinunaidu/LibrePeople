@@ -17,6 +17,10 @@ from app.core.database import Base, engine, SessionLocal  # noqa: E402
 from app.core.security import get_password_hash  # noqa: E402
 from app.models.user import User  # noqa: E402
 
+from app.models.client_onboarding import Client as _Client
+from app.crud import crud_client_onboarding as _crud
+from app.schemas.client_onboarding import ClientCreate as _ClientCreate
+
 Base.metadata.create_all(bind=engine)
 
 db = SessionLocal()
@@ -25,6 +29,17 @@ if not db.query(User).filter(User.username == "admin").first():
                 hashed_password=get_password_hash("secret123"),
                 role="SuperAdmin", is_active=True, mfa_enabled=True))
     db.commit()
+# Single-tenant install: no registry CRUD — seed the install's company row via
+# the production seeding path (same defaults POST /clients used to create).
+# The removed POST /clients must answer 404.
+_company = db.query(_Client).order_by(_Client.id.asc()).first()
+if _company is None:
+    _company = _crud.create_client(db, _ClientCreate(
+        name="Acme", slug="acme", industry="Mfg", country="India",
+        timezone="Asia/Kolkata", primary_color="#1E40AF",
+        contact_name="Jane", contact_email="jane@acme.com",
+        status="Active"))
+cid = _company.id
 db.close()
 
 client = TestClient(app)
@@ -43,14 +58,32 @@ def check(name, ok, extra=""):
         print(f"FAIL  {name} {extra}")
 
 
-# Create client
+# The install's single company replaces the removed registry (AC-3 404s).
 r = client.post("/api/v1/onboarding-portal/clients", headers=H, json={
     "name": "Acme", "slug": "acme", "industry": "Mfg", "country": "India",
     "timezone": "Asia/Kolkata", "primary_color": "#1E40AF",
     "contact_name": "Jane", "contact_email": "jane@acme.com",
 })
-check("create client", r.status_code == 201, str(r.status_code))
-cid = r.json()["id"]
+check("registry create removed (404)", r.status_code == 404, str(r.status_code))
+
+r = client.get("/api/v1/onboarding-portal/clients", headers=H)
+check("registry list removed (404)", r.status_code == 404, str(r.status_code))
+
+r = client.get(f"/api/v1/onboarding-portal/clients/{cid}", headers=H)
+check("registry read removed (404)", r.status_code == 404, str(r.status_code))
+
+r = client.get("/api/v1/onboarding-portal/clients/by-slug/acme", headers=H)
+check("by-slug lookup removed (404)", r.status_code == 404, str(r.status_code))
+
+r = client.get("/api/v1/onboarding-portal/tenants", headers=H)
+check("tenants alias removed (404)", r.status_code == 404, str(r.status_code))
+
+# Single company endpoint: public, deterministic, carries branding + id.
+r = client.get("/api/v1/onboarding-portal/company")
+check("company endpoint public", r.status_code == 200, str(r.status_code))
+check("company carries id + branding",
+      r.json().get("id") == cid and r.json().get("slug") == "acme"
+      and r.json().get("primary_color") == "#1E40AF", str(r.json())[:160])
 check("default feature flags", len(r.json()) >= 0)
 
 # Feature flags seeded
@@ -113,9 +146,9 @@ check("create custom step", r.status_code == 201)
 r = client.get("/api/v1/onboarding-portal/docs/migration-api", headers=H)
 check("migration docs served", r.status_code == 200 and len(r.json().get("content", "")) > 100)
 
-# Client update + activate
+# Client update removed with the registry: the row is managed per install.
 r = client.put(f"/api/v1/onboarding-portal/clients/{cid}", headers=H, json={"status": "Active"})
-check("activate client", r.status_code == 200 and r.json()["status"] == "Active")
+check("registry update removed (404)", r.status_code == 404, str(r.status_code))
 
 # RBAC: an Associate must not be able to reach tenant administration.
 #
@@ -128,8 +161,10 @@ print("  register:", r.status_code, r.text[:120])
 check("self-register cannot request a privileged role", r.status_code != 201 or r.json().get("role") == "Associate")
 if r.status_code == 201:
     at = client.post("/api/v1/auth/login", json={"username": "assoc", "password": "WorkerLogin2024"}).json()["access_token"]
-    r = client.get(f"/api/v1/onboarding-portal/clients/{cid}", headers={"Authorization": f"Bearer {at}"})
-    check("RBAC: associate denied", r.status_code == 403)
+    r = client.get("/api/v1/onboarding-portal/company", headers={"Authorization": f"Bearer {at}"})
+    check("RBAC: company endpoint stays public", r.status_code == 200)
+    r = client.get(f"/api/v1/onboarding-portal/clients/{cid}/settings", headers={"Authorization": f"Bearer {at}"})
+    check("RBAC: associate denied company settings", r.status_code == 403)
     r2 = client.post("/api/v1/auth/users", headers={"Authorization": f"Bearer {at}"}, json={"user_in": {"username": "escalated", "email": "esc@example.com", "password": "EscalatedPass123", "role": "SuperAdmin"}})
     check("RBAC: associate cannot create privileged users", r2.status_code == 403)
 else:

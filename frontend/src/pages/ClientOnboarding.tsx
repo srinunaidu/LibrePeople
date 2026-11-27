@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge"
 import { StatusPill } from "@/components/ui/status-pill"
 
 import { Field, PageHeader } from "@/components/ui/layout"
-import { IconBuilding, IconPlus, IconAlert, IconDownload, IconRefresh, IconFile, IconX } from "@/components/icons"
+import { IconBuilding, IconAlert, IconDownload, IconRefresh, IconFile, IconX } from "@/components/icons"
 import api from "@/lib/api"
 import { useAuth } from "@/context/AuthContext"
 import type {
@@ -46,24 +46,21 @@ export default function ClientOnboarding() {
   const [progress, setProgress] = useState({ total: 0, completed: 0, percent: 0 })
   const [docs, setDocs] = useState("")
 
-  const [clientForm, setClientForm] = useState({
-    name: "", slug: "", industry: "", country: "India", timezone: "Asia/Kolkata",
-    locale: "en-IN", currency: "INR", primary_color: "#2563EB", secondary_color: "#1F2937",
-    contact_name: "", contact_email: "",
-  })
   const [intForm, setIntForm] = useState({
     name: "", kind: "oracle_adb", endpoint: "", username: "", secret: "", notes: "",
   })
   const [settingForm, setSettingForm] = useState({ key: "", value: "" })
   const [migForm, setMigForm] = useState({ integration_id: "", entity: "employees", total: 100 })
 
+  // Single-tenant install: the registry list is removed. The page operates
+  // on the install's single company (GET /company).
   const loadClients = async () => {
     try {
-      const r = await api.get("/onboarding-portal/clients")
-      setClients(r.data)
-      if (r.data.length && selected === "") setSelected(r.data[0].id)
+      const r = await api.get("/onboarding-portal/company")
+      setClients([r.data])
+      if (selected === "") setSelected(r.data.id)
     } catch {
-      setError("Failed to load clients")
+      setError("Failed to load the company")
     }
   }
 
@@ -148,8 +145,8 @@ export default function ClientOnboarding() {
       <Layout>
         <PageHeader compact
           icon={<IconBuilding />}
-          title="Client Onboarding Portal"
-          description="Provision tenants, configure branding and feature flags, wire up integrations, and run data migrations."
+          title="Company Setup"
+          description="Install-level company record, feature flags, integrations, and data migrations for this single-tenant install."
         />
         <RetryableAlert err={user?.role || "unknown"} title="Not visible for your role" fallback="Not visible for your role." />
       </Layout>
@@ -169,12 +166,12 @@ export default function ClientOnboarding() {
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
         {/* Client sidebar */}
-        <SectionCard compact title="Clients" icon={<IconPlus className="h-4 w-4" />}>
+        <SectionCard compact title="Company" icon={<IconBuilding className="h-4 w-4" />}>
           {clients.length === 0 ? (
             <EmptyState
               icon={<IconBuilding />}
-              title="No clients yet"
-              description="Create your first client to begin onboarding."
+              title="No company record"
+              description="The install has no company record yet."
             />
           ) : (
             <div className="space-y-1 mb-4">
@@ -199,93 +196,6 @@ export default function ClientOnboarding() {
             </div>
           )}
 
-          <details className="mt-2">
-            <summary className="cursor-pointer text-sm font-medium text-brand-600">
-              + New client
-            </summary>
-            <div className="mt-3 space-y-3">
-              <Field label="Client name" htmlFor="nc-name" required>
-                <Input
-                  id="nc-name"
-                  placeholder="Name"
-                  aria-label="Client name"
-                  value={clientForm.name}
-                  onChange={(e) => setClientForm({ ...clientForm, name: e.target.value })}
-                />
-              </Field>
-              <Field label="Client slug" htmlFor="nc-slug" required>
-                <Input
-                  id="nc-slug"
-                  placeholder="Slug"
-                  aria-label="Client slug"
-                  value={clientForm.slug}
-                  onChange={(e) => setClientForm({ ...clientForm, slug: e.target.value })}
-                />
-              </Field>
-              <Field label="Industry" htmlFor="nc-industry">
-                <Input
-                  id="nc-industry"
-                  placeholder="Industry"
-                  aria-label="Industry"
-                  value={clientForm.industry}
-                  onChange={(e) => setClientForm({ ...clientForm, industry: e.target.value })}
-                />
-              </Field>
-              <Field label="Contact name" htmlFor="nc-cname">
-                <Input
-                  id="nc-cname"
-                  placeholder="Contact name"
-                  aria-label="Contact name"
-                  value={clientForm.contact_name}
-                  onChange={(e) => setClientForm({ ...clientForm, contact_name: e.target.value })}
-                />
-              </Field>
-              <Field label="Contact email" htmlFor="nc-cemail">
-                <Input
-                  id="nc-cemail"
-                  type="email"
-                  placeholder="Contact email"
-                  aria-label="Contact email"
-                  value={clientForm.contact_email}
-                  onChange={(e) => setClientForm({ ...clientForm, contact_email: e.target.value })}
-                />
-              </Field>
-              <Field label="Primary color" htmlFor="nc-color">
-                <div className="flex gap-2 items-center">
-                  <input
-                    id="nc-color"
-                    type="color"
-                    className="border border-border rounded-md h-8 w-12"
-                    aria-label="Primary colour"
-                    value={clientForm.primary_color}
-                    onChange={(e) => setClientForm({ ...clientForm, primary_color: e.target.value })}
-                  />
-                  <span className="text-xs text-fg-muted">Primary color</span>
-                </div>
-              </Field>
-              <Button
-                className="w-full"
-                disabled={!clientForm.name || !clientForm.slug}
-                onClick={async () => {
-                  setError("")
-                  setNotice("")
-                  try {
-                    const res = await api.post("/onboarding-portal/clients", clientForm)
-                    const slug = res.data?.slug || clientForm.slug
-                    setNotice(
-                      `Client created with default flags & steps. Workspace URL: /t/${slug}/dashboard — sign in as a SuperAdmin or HR user to enter it (path-based workspace; Render free tier has no custom subdomains).`,
-                    )
-                    await loadClients()
-                    setSelected(res.data.id)
-                  } catch (e: any) {
-                    setError(e?.response?.data?.detail || "Action failed")
-                  }
-                }}
-              >
-                Create client
-              </Button>
-            </div>
-          </details>
         </SectionCard>
 
         {/* Main panel */}
@@ -294,8 +204,8 @@ export default function ClientOnboarding() {
             <Card className="p-10 text-center">
               <EmptyState
                 icon={<IconBuilding />}
-                title="Select or create a client"
-                description="Choose a client from the sidebar or create a new one to begin onboarding."
+                title="No company selected"
+                description="The install company could not be loaded."
               />
             </Card>
           ) : busy ? (
@@ -311,12 +221,10 @@ export default function ClientOnboarding() {
                   actions={
                     <>
                       <a
-                        href={`/t/${sel.slug}/dashboard`}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        href="/dashboard"
                         className="text-brand-600 hover:text-brand-700 underline text-sm"
                       >
-                        Open workspace
+                        Open dashboard
                       </a>
                       <StatusPill status={sel.status} dot />
                     </>
@@ -324,7 +232,7 @@ export default function ClientOnboarding() {
                   className="mb-5"
                 >
                   <p className="text-sm mt-2">
-                    Workspace: <span className="font-mono text-xs">/t/{sel.slug}/dashboard</span>
+                    Install company: <span className="font-mono text-xs">/dashboard</span>
                   </p>
                   <Meter
                     percent={progress.percent}
@@ -351,59 +259,30 @@ export default function ClientOnboarding() {
               </nav>
 
               {tab === "profile" && sel && (
+                /* Single-tenant: the company record is read-only here. Branding
+                   edits live under Company branding; locale under Locale config. */
                 <SectionCard compact title="Company Profile & Branding">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Field label="Name" htmlFor="pf-name" required>
-                      <Input
-                        id="pf-name"
-                        defaultValue={sel.name}
-                        onBlur={(e) => act(() => api.put(`/onboarding-portal/clients/${sel.id}`, { name: e.target.value }), "Updated")}
-                      />
+                    <Field label="Name" htmlFor="pf-name">
+                      <Input id="pf-name" defaultValue={sel.name} readOnly />
                     </Field>
                     <Field label="Industry" htmlFor="pf-industry">
-                      <Input
-                        id="pf-industry"
-                        defaultValue={sel.industry || ""}
-                        onBlur={(e) => act(() => api.put(`/onboarding-portal/clients/${sel.id}`, { industry: e.target.value }), "Updated")}
-                      />
+                      <Input id="pf-industry" defaultValue={sel.industry || ""} readOnly />
                     </Field>
-                    <Field label="Timezone" htmlFor="pf-timezone" required>
-                      <Input
-                        id="pf-timezone"
-                        defaultValue={sel.timezone}
-                        onBlur={(e) => act(() => api.put(`/onboarding-portal/clients/${sel.id}`, { timezone: e.target.value }), "Updated")}
-                      />
+                    <Field label="Timezone" htmlFor="pf-timezone">
+                      <Input id="pf-timezone" defaultValue={sel.timezone} readOnly />
                     </Field>
-                    <Field label="Locale" htmlFor="pf-locale" required>
-                      <Input
-                        id="pf-locale"
-                        defaultValue={sel.locale}
-                        onBlur={(e) => act(() => api.put(`/onboarding-portal/clients/${sel.id}`, { locale: e.target.value }), "Updated")}
-                      />
+                    <Field label="Locale" htmlFor="pf-locale">
+                      <Input id="pf-locale" defaultValue={sel.locale} readOnly />
                     </Field>
-                    <Field label="Currency" htmlFor="pf-currency" required>
-                      <Input
-                        id="pf-currency"
-                        defaultValue={sel.currency || "INR"}
-                        onBlur={(e) => act(() => api.put(`/onboarding-portal/clients/${sel.id}`, { currency: e.target.value.toUpperCase() }), "Updated")}
-                      />
+                    <Field label="Currency" htmlFor="pf-currency">
+                      <Input id="pf-currency" defaultValue={sel.currency || "INR"} readOnly />
                     </Field>
                     <Field label="Primary color" htmlFor="pf-color">
-                      <Input
-                        id="pf-color"
-                        type="color"
-                        defaultValue={sel.primary_color}
-                        onChange={(e) => act(() => api.put(`/onboarding-portal/clients/${sel.id}`, { primary_color: e.target.value }), "Updated")}
-                      />
+                      <Input id="pf-color" type="color" defaultValue={sel.primary_color} readOnly />
                     </Field>
-                    <Field label="Status" htmlFor="pf-status" required>
-                      <Select
-                        id="pf-status"
-                        defaultValue={sel.status}
-                        onChange={(e) => act(() => api.put(`/onboarding-portal/clients/${sel.id}`, { status: e.target.value }), "Updated")}
-                      >
-                        {["draft", "active", "suspended"].map((s) => <option key={s}>{s}</option>)}
-                      </Select>
+                    <Field label="Status" htmlFor="pf-status">
+                      <Input id="pf-status" defaultValue={sel.status} readOnly />
                     </Field>
                   </div>
                 </SectionCard>

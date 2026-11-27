@@ -45,7 +45,7 @@ export default function ModuleEntitlements() {
     const id = await getClientIdBySlug()
     setClientId(id)
     if (id === null) {
-      setError("Could not resolve tenant — switch to default workspace");
+      setError("Could not resolve the company. Check the server connection and retry.");
       setLoading(false);
       return;
     }
@@ -82,11 +82,11 @@ export default function ModuleEntitlements() {
 
   if (!canWrite) return <Layout><EmptyState title="Not visible for your role" description={`Module entitlements require SuperAdmin; your role is ${user?.role || "unknown"}.`} /></Layout>
 
-  if (loading) return <Layout><LoadingRegion label="Module Entitlements">Loading module flags…</LoadingRegion></Layout>
+  if (loading) return <Layout><LoadingRegion label="Module entitlements">Loading module flags…</LoadingRegion></Layout>
 
   return (
     <Layout>
-      <PageHeader compact title="Module Entitlements" description="AD-02 · configurable nav + feature flags per module (CF-02 graph enforced)" />
+      <PageHeader compact title="Module entitlements" description="AD-02 · install-level feature flags per module (CF-02 graph enforced)" />
       <div className="max-w-3xl mx-auto px-6 py-10 space-y-8">
         {notice && <Alert tone="success">{notice}</Alert>}
         {actionError && <Alert tone="error">{actionError}</Alert>}
@@ -110,7 +110,7 @@ export default function ModuleEntitlements() {
             ))}
           </div>
           <div className="mt-4 flex items-center gap-4 text-xs text-fg-muted">
-            <span>SuperAdmin writable · CF-02 module-graph enforced · AD-01 tenant branding feeds here.</span>
+            <span>SuperAdmin writable · CF-02 module-graph enforced · AD-01 company branding feeds here.</span>
           </div>
           <div className="mt-3 flex gap-3">
             <Button onClick={save} disabled={!canWrite || saving || !clientId}>{saving ? "Saving flags…" : "Save entitlements"}</Button>

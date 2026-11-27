@@ -1,18 +1,20 @@
-"""Shared-schema multi-tenancy: tenant resolution and request-scoped context.
+"""Single-tenant install: tenant resolution and request-scoped context.
 
-Every tenant-owned row carries ``tenant_id`` (a VARCHAR(60) slug). A request's
-tenant is resolved once, from the JWT ``tenant`` claim (fallback ``tid``) and
-then a verified hostname -> tenant mapping, and stored in a context variable so
-queries, visibility filters and audit writes can all read it without threading
-an argument through every call site.
+Every tenant-owned row carries ``tenant_id`` (a VARCHAR(60) slug). The
+install serves one org: a request's tenant resolves from the JWT ``tenant``
+claim (fallback ``tid``), else the legacy ``DEFAULT_TENANT_SLUG`` default,
+and is stored in a context variable so queries, visibility filters and audit
+writes can all read it without threading an argument through every call site.
+
+Hostname -> tenant mapping was removed: hostnames never switch orgs. The
+request hostname is still recorded on the context for audit purposes only.
 
 Resolution order
 ----------------
 1. JWT claim ``tenant`` (fallback ``tid``) — the authoritative source for an
    authenticated caller.
-2. Verified hostname -> tenant mapping (``X-Forwarded-Host`` / ``Host`` header).
-3. Neither resolves : ``DEFAULT_TENANT_SLUG`` (``"default"``) for legacy JWTs
-   and backfilled rows, *indefinitely* — see decision 3.
+2. Neither resolves : ``DEFAULT_TENANT_SLUG`` (``"default"``) for legacy JWTs
+   and backfilled rows, *indefinitely*.
 
 Fail-closed rules
 -----------------
@@ -23,6 +25,8 @@ Fail-closed rules
   tenant_unresolvable`` — never silently defaulted to a real tenant. The only
   default is the legacy ``"default"`` slug above, which is an explicit,
   documented fallback, not a hole in the isolation.
+* A ``X-Tenant-Slug`` branding header, if sent by an older client, is
+  tolerated and ignored — it is never authoritative.
 * Break-glass grants are not usable for a SuperAdmin's own tenant or for
   FSM/registry modification (enforced by the break-glass endpoints).
 """
@@ -56,12 +60,12 @@ _tenant_context: ContextVar["TenantContext | None"] = ContextVar(
 class TenantContext:
     """The resolved tenant for a request.
 
-    ``source`` is one of ``jwt``, ``hostname``, ``legacy`` — auditable so an
+    ``source`` is one of ``jwt``, ``legacy`` — auditable so an
     operator can tell why a request was attributed to a tenant.
     """
 
     tenant_id: str
-    source: str  # "jwt" | "hostname" | "legacy"
+    source: str  # "jwt" | "legacy"
     hostname: str | None = None
 
 
@@ -163,33 +167,6 @@ def _request_hostname(request: Request) -> str | None:
     return (request.url.hostname or "").lower() or None
 
 
-def _hostname_tenant(hostname: str | None) -> str | None:
-    """Verified hostname -> tenant mapping.
-
-    Read from ``TENANT_HOSTNAME_MAP`` (``host=tenant,host2=tenant2``). A
-    mapping is only trusted when it has been verified by an operator; this is
-    the configuration surface for that verification.
-    """
-    if not hostname:
-        return None
-    raw = _tenant_hostname_map()
-    for pair in raw.split(","):
-        pair = pair.strip()
-        if not pair or "=" not in pair:
-            continue
-        host, tenant = pair.split("=", 1)
-        if host.strip().lower() == hostname:
-            return tenant.strip() or None
-    return None
-
-
-def _tenant_hostname_map() -> str:
-    """The verified hostname -> tenant mapping, if any is configured."""
-    from app.core.config import settings
-
-    return getattr(settings, "TENANT_HOSTNAME_MAP", "") or ""
-
-
 def _client_supplied_tenant(request: Request) -> str | None:
     """A tenant id the client explicitly sent, if any."""
     header = request.headers.get("x-tenant-id")
@@ -199,7 +176,11 @@ def _client_supplied_tenant(request: Request) -> str | None:
 
 
 def resolve_tenant(db: Any, request: Request) -> TenantContext:
-    """Resolve the tenant for ``request``.
+    """Resolve the tenant for ``request`` (single-tenant install).
+
+    Resolution is the install's single org: the JWT ``tenant`` claim (fallback
+    ``tid``) when present, else the legacy ``DEFAULT_TENANT_SLUG`` default.
+    Hostname -> tenant mapping was removed — hostnames never switch orgs.
 
     Raises :class:`fastapi.HTTPException` with ``tenant_unresolvable`` when no
     tenant can be determined, and ``tenant_mismatch`` when a client-supplied
@@ -209,14 +190,11 @@ def resolve_tenant(db: Any, request: Request) -> TenantContext:
 
     jwt_claim = _jwt_tenant_claim(request)
     hostname = _request_hostname(request)
-    mapped = _hostname_tenant(hostname) if hostname else None
 
     resolved: str | None = None
     source: str = "legacy"
     if jwt_claim:
         resolved, source = jwt_claim, "jwt"
-    elif mapped:
-        resolved, source = mapped, "hostname"
     else:
         # Legacy JWT / backfill path: the documented default slug.
         resolved, source = DEFAULT_TENANT_SLUG, "legacy"

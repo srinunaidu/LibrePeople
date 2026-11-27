@@ -1,5 +1,4 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react"
-import { setTenantSlug } from "@/lib/tenantSlugStore"
 import { DEFAULT_CURRENCY, DEFAULT_LOCALE, DEFAULT_TIME_ZONE } from "@/lib/format"
 import api from "@/lib/api"
 
@@ -112,36 +111,8 @@ export function resolveTenantLocaleSettings(input: {
   return { settings: { locale, timezone, currency }, warnings }
 }
 
-// Extract tenant slug from hostname or path — normalized to lowercase
-function detectTenantSlug(): string | null {
-  const host = window.location.hostname.toLowerCase()
-  const parts = host.split(".")
-
-  // IP literals (127.0.0.1, ::1, …) have no subdomains: without this guard
-  // the first octet ("127") was returned as a tenant slug, so every request
-  // carried X-Tenant-Slug: 127 and the branding lookup always missed.
-  const isIpLiteral =
-    /^\d+\.\d+\.\d+\.\d+$/.test(host) || host.includes(":")
-
-  // Known platform domains where the first part is NOT a tenant
-  const platformDomains = ["onrender", "vercel", "netlify", "herokuapp", "github", "localhost"]
-  const isPlatform = platformDomains.some((d) => host.includes(d))
-
-  // 1. Subdomain detection: client1.karmathy.com -> "client1"
-  //    (only on custom domains, not on platform domains or IP literals)
-  if (!isIpLiteral && !isPlatform && parts.length >= 3 && parts[0] && parts[0] !== "www" && parts[0] !== "app") {
-    const mainDomains = ["karmathy"]
-    if (!mainDomains.includes(parts[0])) {
-      return parts[0].toLowerCase()
-    }
-  }
-
-  // 2. Path-based fallback: /t/:slug/...
-  const match = window.location.pathname.match(/^\/t\/([^/]+)/)
-  if (match) return match[1].toLowerCase()
-
-  return null
-}
+// Single-tenant install: no slug detection. The install serves one org;
+// branding comes from GET /onboarding-portal/company.
 
 const HEX_RE = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i
 
@@ -290,23 +261,14 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   const [tenant, setTenant] = useState<TenantInfo | null>(null)
   const [loading, setLoading] = useState(true)
   const [themeError, setThemeError] = useState<string | null>(null)
-  const slug = detectTenantSlug()
-
   useEffect(() => {
-    if (!slug) {
-      setTenantSlug(null)
-      setLoading(false)
-      return
-    }
-    const lowerSlug = slug.toLowerCase()
-    setTenantSlug(lowerSlug)
-    // Fetch with case-insensitive fallback: try lower first, if 404 try original
+    // Single company: branding + locale come from the install's org record.
     api
-      .get(`/onboarding-portal/clients/by-slug/${lowerSlug}`)
+      .get("/onboarding-portal/company")
       .then((r) => {
         const found = r.data
         if (!found) {
-          setThemeError(`No tenant matches "${slug}". Showing the default LibrePeople experience.`)
+          setThemeError("Could not load company branding. Using default LibrePeople branding.")
           setLoading(false)
           return
         }
@@ -318,7 +280,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
         })
         for (const w of resolved.warnings) {
           console.warn(
-            `[tenant] invalid ${w.field} ${JSON.stringify(w.received)} — falling back to ${w.fallback} (read-only, not saved)`,
+            `[company] invalid ${w.field} ${JSON.stringify(w.received)} — falling back to ${w.fallback} (read-only, not saved)`,
           )
         }
         setTenant({
@@ -327,7 +289,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
           primary_color: found.primary_color,
           secondary_color: found.secondary_color,
           logo_url: found.logo_url,
-          // India-first defaults: a tenant without stored settings still
+          // India-first defaults: an install without stored settings still
           // formats en-IN / Asia/Kolkata / INR rather than the browser's.
           // Stored settings are validated in memory only: an invalid value
           // falls back to the default with a console warning and is never
@@ -339,7 +301,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
         })
 
         // Apply branding. deriveTheme validates contrast and refuses unusable
-        // colours, so a tenant cannot break legibility for anyone.
+        // colours, so the install cannot break legibility for anyone.
         const theme = deriveTheme(found.primary_color, found.secondary_color)
         const root = document.documentElement
         if (theme) {
@@ -349,26 +311,23 @@ export function TenantProvider({ children }: { children: ReactNode }) {
           setThemeError(theme.warnings.length ? theme.warnings.join(" ") : null)
         } else {
           setThemeError(
-            `Tenant "${found.name}" has an accent colour that fails WCAG AA contrast. ` +
+            `The company accent colour fails WCAG AA contrast. ` +
               `Using default LibrePeople branding.`
           )
         }
-        // Gate tenant-aware styling so the global site is never affected.
-        root.setAttribute("data-tenant", found.slug.toLowerCase())
         document.title = `${found.name} — LibrePeople`
       })
       .catch(() => {
-        setThemeError("Could not load tenant branding. Using default LibrePeople branding.")
+        setThemeError("Could not load company branding. Using default LibrePeople branding.")
       })
       .finally(() => setLoading(false))
-  }, [slug])
+  }, [])
 
   return (
-    <TenantContext.Provider value={{ tenant, loading, isMultiTenant: !!slug, themeError }}>
+    <TenantContext.Provider value={{ tenant, loading, isMultiTenant: false, themeError }}>
       {children}
     </TenantContext.Provider>
   )
 }
 
 export const useTenant = () => useContext(TenantContext)
-export const detectTenant = detectTenantSlug

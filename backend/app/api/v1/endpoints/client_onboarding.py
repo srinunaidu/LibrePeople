@@ -5,18 +5,13 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db, require_roles
 from app.core.audit import record_audit
-from app.core.errors import conflict, forbidden
-from app.core.security import decrypt_secret
 from app.core.tenancy import DEFAULT_TENANT_SLUG, tenant_id_for, tenant_matches
 from app.crud import crud_client_onboarding as crud
 from app.models.client_onboarding import Client, OnboardingStep
 from app.models.user import User
 from app.schemas.client_onboarding import (
-    ClientCreate,
-    ClientOut,
     ClientSettingCreate,
     ClientSettingOut,
-    ClientUpdate,
     FeatureFlagOut,
     FeatureFlagUpdate,
     IntegrationCreate,
@@ -71,307 +66,40 @@ def _client_or_404(db: Session, client_id: int) -> Any:
     return client
 
 
-# --- Public tenant lookup (no auth) ---------------------------------------- #
+# --- Single company (single-tenant install) ---------------------------------- #
 
 
-@router.get("/clients/by-slug/{slug}", operation_id="onboardingPortalGetOnboardingportalclientsbyslug")
-def get_client_by_slug_public(slug: str, db: Session = Depends(get_db)):
-    """Public endpoint: fetch tenant branding by slug (for multi-tenant portals)."""
-    client = crud.get_client_by_slug(db, slug)
-    if not client:
-        raise HTTPException(status_code=404, detail="Client not found")
+@router.get("/company", operation_id="onboardingPortalGetCompany")
+def get_company(db: Session = Depends(get_db)) -> Any:
+    """Return the install's single company (public branding subset).
+
+    Single-tenant installs have exactly one org. This replaces the removed
+    per-slug lookup and registry list: the frontend resolves the company id
+    and branding from here. Field set mirrors the removed public per-slug lookup
+    (plus ``id`` and ``currency``), so no additional exposure.
+    Deterministic: the lowest-id Client row is the install's company.
+    """
+    company = db.query(Client).order_by(Client.id.asc()).first()
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
     return {
-        "slug": client.slug,
-        "name": client.name,
-        "primary_color": client.primary_color,
-        "secondary_color": client.secondary_color,
-        "logo_url": client.logo_url,
-        "timezone": client.timezone,
-        "locale": client.locale,
-        "status": client.status,
+        "id": company.id,
+        "slug": company.slug,
+        "name": company.name,
+        "primary_color": company.primary_color,
+        "secondary_color": company.secondary_color,
+        "logo_url": company.logo_url,
+        "timezone": company.timezone,
+        "locale": company.locale,
+        "currency": company.currency,
+        "status": company.status,
     }
 
 
-# --- Clients (admin) -------------------------------------------------------- #
-
-
-@router.get("/clients", response_model=list[ClientOut], operation_id="onboardingPortalListOnboardingportalclients")
-def list_clients(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(require_roles("SuperAdmin")),
-) -> Any:
-    return crud.list_clients(db)
-
-
-@router.post("/clients", response_model=ClientOut, status_code=201, operation_id="onboardingPortalCreateOnboardingportalclients")
-def create_client(
-    payload: ClientCreate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(require_roles("SuperAdmin")),
-) -> Any:
-    if crud.get_client_by_slug(db, payload.slug):
-        raise HTTPException(status_code=400, detail="Client slug already exists")
-    client = crud.create_client(db, payload)
-    record_audit(db, current_user, "create_client", "Client", client.id)
-    db.commit()
-    return client
-
-
-@router.get("/clients/{client_id}", response_model=ClientOut, operation_id="onboardingPortalGetOnboardingportalclients")
-def get_client(
-    client_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(require_roles("SuperAdmin")),
-) -> Any:
-    return _scoped_client_or_404(db, client_id)
-
-
-@router.put("/clients/{client_id}", response_model=ClientOut, operation_id="onboardingPortalUpdateOnboardingportalclients")
-def update_client(
-    client_id: int,
-    payload: ClientUpdate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(require_roles("SuperAdmin")),
-) -> Any:
-    client = _scoped_client_or_404(db, client_id)
-    client = crud.update_client(db, client, payload)
-    record_audit(db, current_user, "update_client", "Client", client.id)
-    db.commit()
-    return client
-
-
-@router.delete("/clients/{client_id}", operation_id="onboardingPortalDeleteOnboardingportalclients")
-def delete_client(
-    client_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(require_roles("SuperAdmin")),
-) -> Any:
-    client = _scoped_client_or_404(db, client_id)
-    crud.delete_client(db, client)
-    record_audit(db, current_user, "delete_client", "Client", client_id)
-    db.commit()
-    return {"msg": "deleted"}
-
-
-# --- Tenant lifecycle ------------------------------------------------------- #
-
-def _tenant_admin_or_super_admin(db: Session, client: Client, current_user: User) -> None:
-    """Allow SuperAdmin for every transition; HR only for their own tenant.
-
-    ``own tenant`` is the tenant resolved from the request's JWT ``tenant``
-    claim matching the client's slug. Without a user->client association on
-    ``User`` this is the best-effort binding available in B1; SuperAdmin is
-    always authoritative.
-
-    ``tenant_id_for`` reads the session value persisted by ``resolve_tenant``,
-    because context variables do not cross the thread boundary to the AnyIO
-    worker that runs sync endpoints.
-    """
-    if current_user.role == "SuperAdmin":
-        return
-    if (
-        current_user.role == "HR"
-        and tenant_id_for(db)
-        and client.slug == tenant_id_for(db)
-    ):
-        return
-    raise forbidden("Your role does not permit this operation.")
-
-
-def _audit_lifecycle(db, current_user, action, client):
-    record_audit(
-        db,
-        current_user,
-        action,
-        "Client",
-        client.id,
-        details=f"slug={client.slug} status={client.status}",
-    )
-    db.commit()
-
-
-@router.get("/tenants", response_model=list[ClientOut], operation_id="tenantsListTenants")
-def list_tenants(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(require_roles("SuperAdmin")),
-) -> Any:
-    """List every registered tenant (client registry). SuperAdmin only."""
-    return crud.list_clients(db)
-
-
-@router.get(
-    "/tenants/{client_id}", response_model=ClientOut, operation_id="tenantsGetTenants"
-)
-def get_tenant(
-    client_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(require_roles("SuperAdmin")),
-) -> Any:
-    return _scoped_client_or_404(db, client_id)
-
-
-@router.patch(
-    "/tenants/{client_id}", response_model=ClientOut, operation_id="tenantsPatchTenants"
-)
-def update_tenant(
-    client_id: int,
-    payload: ClientUpdate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(require_roles("SuperAdmin")),
-) -> Any:
-    client = _scoped_client_or_404(db, client_id)
-    client = crud.update_client(db, client, payload)
-    _audit_lifecycle(db, current_user, "update_tenant", client)
-    return client
-
-
-@router.post(
-    "/tenants/{client_id}/provision",
-    response_model=ClientOut,
-    operation_id="tenantsProvisionTenants",
-)
-def provision_tenant(
-    client_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(require_roles("SuperAdmin")),
-) -> Any:
-    """Advance a tenant through provisioning: Draft -> Provisioning -> Active."""
-    client = _client_or_404(db, client_id)
-    _tenant_admin_or_super_admin(db, client, current_user)
-    if client.status == Client.STATUS_DRAFT:
-        client.transition_to(Client.STATUS_PROVISIONING, actor=current_user.username)
-    elif client.status == Client.STATUS_PROVISIONING:
-        client.transition_to(Client.STATUS_ACTIVE, actor=current_user.username)
-    # Active is idempotent; anything else is an illegal transition.
-    elif client.status != Client.STATUS_ACTIVE:
-        raise conflict(
-            "invalid_tenant_transition",
-            f"Cannot provision a tenant in {client.status} status.",
-            details={"from": client.status, "to": Client.STATUS_ACTIVE},
-        )
-    db.add(client)
-    _audit_lifecycle(db, current_user, "provision_tenant", client)
-    return client
-
-
-@router.post(
-    "/tenants/{client_id}/suspend",
-    response_model=ClientOut,
-    operation_id="tenantsSuspendTenants",
-)
-def suspend_tenant(
-    client_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(require_roles("SuperAdmin", "HR")),
-) -> Any:
-    """Suspend a tenant: Active -> Suspended. SuperAdmin any tenant; HR own."""
-    client = _client_or_404(db, client_id)
-    _tenant_admin_or_super_admin(db, client, current_user)
-    client.transition_to(Client.STATUS_SUSPENDED, actor=current_user.username)
-    db.add(client)
-    _audit_lifecycle(db, current_user, "suspend_tenant", client)
-    return client
-
-
-@router.post(
-    "/tenants/{client_id}/reactivate",
-    response_model=ClientOut,
-    operation_id="tenantsReactivateTenants",
-)
-def reactivate_tenant(
-    client_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(require_roles("SuperAdmin", "HR")),
-) -> Any:
-    """Reactivate a tenant: Suspended -> Active or Read-only -> Active."""
-    client = _client_or_404(db, client_id)
-    _tenant_admin_or_super_admin(db, client, current_user)
-    if client.status not in (Client.STATUS_SUSPENDED, Client.STATUS_READ_ONLY):
-        raise conflict(
-            "invalid_tenant_transition",
-            f"Cannot reactivate a tenant in {client.status} status.",
-            details={"from": client.status, "to": Client.STATUS_ACTIVE},
-        )
-    client.transition_to(Client.STATUS_ACTIVE, actor=current_user.username)
-    db.add(client)
-    _audit_lifecycle(db, current_user, "reactivate_tenant", client)
-    return client
-
-
-@router.post(
-    "/tenants/{client_id}/read-only",
-    response_model=ClientOut,
-    operation_id="tenantsReadOnlyTenants",
-)
-def set_read_only_tenant(
-    client_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(require_roles("SuperAdmin")),
-) -> Any:
-    """Set a tenant read-only: Active -> Read-only. SuperAdmin only."""
-    client = _client_or_404(db, client_id)
-    if client.status != Client.STATUS_ACTIVE:
-        raise conflict(
-            "invalid_tenant_transition",
-            f"Cannot set read-only on a tenant in {client.status} status.",
-            details={"from": client.status, "to": Client.STATUS_READ_ONLY},
-        )
-    client.transition_to(Client.STATUS_READ_ONLY, actor=current_user.username)
-    db.add(client)
-    _audit_lifecycle(db, current_user, "set_read_only_tenant", client)
-    return client
-
-
-@router.post(
-    "/tenants/{client_id}/deprovision",
-    response_model=ClientOut,
-    operation_id="tenantsDeprovisionTenants",
-)
-def deprovision_tenant(
-    client_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(require_roles("SuperAdmin")),
-) -> Any:
-    """Deprovision a tenant: Active / Suspended / Read-only -> Deprovisioning."""
-    client = _client_or_404(db, client_id)
-    if client.status not in (
-        Client.STATUS_ACTIVE,
-        Client.STATUS_SUSPENDED,
-        Client.STATUS_READ_ONLY,
-    ):
-        raise conflict(
-            "invalid_tenant_transition",
-            f"Cannot deprovision a tenant in {client.status} status.",
-            details={"from": client.status, "to": Client.STATUS_DEPROVISIONING},
-        )
-    client.transition_to(Client.STATUS_DEPROVISIONING, actor=current_user.username)
-    db.add(client)
-    _audit_lifecycle(db, current_user, "deprovision_tenant", client)
-    return client
-
-
-@router.post(
-    "/tenants/{client_id}/archive",
-    response_model=ClientOut,
-    operation_id="tenantsArchiveTenants",
-)
-def archive_tenant(
-    client_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(require_roles("SuperAdmin")),
-) -> Any:
-    """Archive a tenant: Deprovisioning -> Archived (terminal). SuperAdmin only."""
-    client = _client_or_404(db, client_id)
-    if client.status != Client.STATUS_DEPROVISIONING:
-        raise conflict(
-            "invalid_tenant_transition",
-            f"Cannot archive a tenant in {client.status} status.",
-            details={"from": client.status, "to": Client.STATUS_ARCHIVED},
-        )
-    client.transition_to(Client.STATUS_ARCHIVED, actor=current_user.username)
-    db.add(client)
-    _audit_lifecycle(db, current_user, "archive_tenant", client)
-    return client
+# --- Tenant lifecycle: REMOVED (single-tenant install) ------------------------- #
+# The client registry CRUD, tenant aliases, and the tenant lifecycle FSM
+# were removed. Per-install company settings, feature flags, integrations,
+# migrations, and onboarding steps below are unchanged.
 
 
 # --- Settings --------------------------------------------------------------- #

@@ -1,5 +1,4 @@
 import axios from "axios"
-import { getTenantSlug } from "@/lib/tenantSlugStore"
 import type {
   PayrollPeriodRow,
   PayComponentRow,
@@ -49,13 +48,8 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
-  // Skip tenant header on public/auth routes (e.g. login) where no
-  // tenant context has been established yet.
-  const isPublicAuth = config.url && /^\/auth\/(login|password|mfa)/.test(config.url)
-  const slug = getTenantSlug()
-  if (slug && !isPublicAuth) {
-    config.headers["X-Tenant-Slug"] = slug
-  }
+  // Single-tenant install: no tenant header. The backend tolerates and
+  // ignores legacy X-Tenant-* headers; the frontend no longer sends them.
   return config
 })
 
@@ -258,33 +252,23 @@ export async function rebuildOrgChart(): Promise<{ nodes: number }> {
   return data
 }
 
-/** Client list */
+/** The install's single company, as a one-element list (single-tenant install). */
 export async function listClients(): Promise<ClientOut[]> {
-  const { data } = await api.get<ClientOut[]>("/onboarding-portal/clients")
-  return data
+  const { data } = await api.get<ClientOut & { id: number }>("/onboarding-portal/company")
+  return [data]
 }
 
-/** Resolve the current tenant's slug to its integer client ID.
+/** Resolve the install's single company id (single-tenant: GET /company).
  * Required because admin endpoints use /onboarding-portal/clients/{id}/...
- * (integer), not /clients/{slug}/... (string). Case-insensitive. */
+ * (integer). Kept under its historic name so existing call sites are
+ * untouched; there is exactly one company per install. */
 export async function getClientIdBySlug(): Promise<number | null> {
-  const slug = getTenantSlug()
-  if (!slug) return null
   try {
-    const { data } = await api.get<ClientOut[]>("/onboarding-portal/clients")
-    const lower = slug.toLowerCase()
-    const match = (data ?? []).find(c => c.slug.toLowerCase() === lower)
-    return match?.id ?? null
+    const { data } = await api.get<{ id?: number }>("/onboarding-portal/company")
+    return typeof data?.id === "number" ? data.id : null
   } catch {
     return null
   }
-}
-
-/** Lookup a client by slug (returns full client including numeric id) */
-export async function getClientBySlug(slug: string): Promise<ClientOut | null> {
-  const clients = await listClients()
-  const lower = slug.toLowerCase()
-  return clients.find((c) => c.slug.toLowerCase() === lower) ?? null
 }
 
 /** Feature flags for a client */
