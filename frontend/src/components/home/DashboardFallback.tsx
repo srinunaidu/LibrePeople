@@ -4,7 +4,6 @@ import { IconChart, IconUsers, IconClock, IconPalm } from "@/components/icons"
 import { NextBestActionCards, deriveActionCards } from "@/components/home/NextBestActionCards"
 import { useNavigate } from "react-router-dom"
 import { useTenantNav } from "@/lib/tenantPath"
-import { ProgressRing } from "@/components/ui/progress-ring"
 import { useEffect, useState } from "react"
 import api from "@/lib/api"
 
@@ -76,7 +75,6 @@ export default function DashboardFallback() {
           hint="Connect HR data"
           icon={<IconUsers className="w-5 h-5" />}
           tone="brand"
-          sparklineData={[10, 12, 11, 14, 13, 16, 15, 18, 17, 20, 19, 22]}
         />
         <KPICard
           label="Time Entries"
@@ -84,7 +82,6 @@ export default function DashboardFallback() {
           hint="Clock in to start"
           icon={<IconClock className="w-5 h-5" />}
           tone="green"
-          sparklineData={[5, 8, 7, 10, 9, 12, 11, 14, 13, 16, 15, 18]}
         />
         <KPICard
           label="Leave Balance"
@@ -92,7 +89,6 @@ export default function DashboardFallback() {
           hint="Request leave"
           icon={<IconPalm className="w-5 h-5" />}
           tone="amber"
-          sparklineData={[2, 3, 2, 4, 3, 5, 4, 6, 5, 7, 6, 8]}
         />
         <KPICard
           label="Tasks"
@@ -100,21 +96,21 @@ export default function DashboardFallback() {
           hint="No pending items"
           icon={<IconChart className="w-5 h-5" />}
           tone="violet"
-          sparklineData={[0, 1, 0, 2, 1, 2, 1, 3, 2, 3, 2, 4]}
         />
-      </div>
-      <div className="flex items-center gap-4 mb-6">
-        <ProgressRing percent={72} tone="success" label="Onboarding" />
-        <ProgressRing percent={45} tone="brand" label="Training" />
-        <ProgressRing percent={90} tone="warning" label="Compliance" />
       </div>
       <div className="card p-8 text-center">
         <IconUsers className="w-12 h-12 mx-auto text-fg-muted mb-4" />
         <h2 className="text-h3-app text-fg mb-2">Welcome!</h2>
         <p className="text-sm text-fg-muted max-w-md mx-auto">
-          Use the navigation on the left to explore the platform. Your role-specific
-          dashboard will appear here once configured.
+          Use the navigation on the left to explore the platform. Start with
+          People, Time, Leave, or Reports.
         </p>
+        <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 mt-4 text-sm">
+          <button className="action-link" onClick={() => navigate(tenantNav.to("/people"))}>People</button>
+          <button className="action-link" onClick={() => navigate(tenantNav.to("/time"))}>Time</button>
+          <button className="action-link" onClick={() => navigate(tenantNav.to("/leave"))}>Leave</button>
+          <button className="action-link" onClick={() => navigate(tenantNav.to("/reports"))}>Reports</button>
+        </div>
       </div>
     </Layout>
   )
